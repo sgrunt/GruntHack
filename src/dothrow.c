@@ -13,13 +13,12 @@ STATIC_DCL int FDECL(gem_accept, (struct monst *, struct obj *));
 STATIC_DCL void FDECL(tmiss, (struct obj *, struct monst *));
 STATIC_DCL int FDECL(throw_gold, (struct obj *));
 STATIC_DCL void FDECL(check_shop_obj, (struct obj *,XCHAR_P,XCHAR_P,BOOLEAN_P));
-STATIC_DCL void FDECL(breakobj, (struct obj *,XCHAR_P,XCHAR_P,BOOLEAN_P,BOOLEAN_P));
+STATIC_DCL void FDECL(breakobj, (struct obj *,XCHAR_P,XCHAR_P,BOOLEAN_P,BOOLEAN_P,BOOLEAN_P));
 STATIC_DCL void FDECL(breakmsg, (struct obj *,BOOLEAN_P));
-STATIC_DCL boolean FDECL(toss_up,(struct obj *, BOOLEAN_P));
+STATIC_DCL boolean FDECL(toss_up,(struct obj *, BOOLEAN_P, BOOLEAN_P));
 STATIC_DCL boolean FDECL(throwing_weapon, (struct obj *));
 STATIC_DCL void FDECL(sho_obj_return_to_u, (struct obj *obj));
 STATIC_DCL boolean FDECL(mhurtle_step, (genericptr_t,int,int));
-
 
 static NEARDATA const char toss_objs[] =
 	{ ALLOW_COUNT, COIN_CLASS, ALL_CLASSES, WEAPON_CLASS, 0 };
@@ -84,6 +83,7 @@ int shotlimit;
 	}
 	if ((obj->oartifact == ART_MJOLLNIR && ACURR(A_STR) < STR19(25))
 	   || (obj->otyp == BOULDER &&
+	       (((int)(ACURRSTR)*20/(int)obj->owt) < 1) &&
 	       !maybe_polyd(throws_rocks(youmonst.data),
 	                    Race_if(PM_GIANT)))) {
 		pline("It's too heavy.");
@@ -304,16 +304,32 @@ dofire()
 		if (!flags.autoquiver) {
 			/* Don't automatically fill the quiver */
 			You("have no ammunition readied!");
-			return(dothrow());
+#ifdef QUIVER_FIRED
+			if (iflags.quiver_fired)
+			  dowieldquiver(); /* quiver_fired */
+			if (!uquiver)
+#endif
+			  return(dothrow());
 		}
+#ifdef QUIVER_FIRED
+		else { /* quiver_fired */
+#endif
 		autoquiver();
 		if (!uquiver) {
 			You("have nothing appropriate for your quiver!");
-			return(dothrow());
+#ifdef QUIVER_FIRED
+			if (iflags.quiver_fired)
+			  dowieldquiver(); /* quiver_fired */
+			if (!uquiver)
+#endif
+			  return(dothrow());
 		} else {
 			You("fill your quiver:");
 			prinv((char *)0, uquiver, 0L);
 		}
+#ifdef QUIVER_FIRED
+		} /* quiver_fired */
+#endif
 	}
 
 	/*
@@ -352,7 +368,7 @@ register struct obj *obj;
 		      (obj->quan == 1L) ? "s" : "", surface(u.ux,u.uy));
 
 	if ((obj->oprops & ITEM_DETONATIONS ||
-	     (uwep->oprops & ITEM_DETONATIONS &&
+	     (uwep && (uwep->oprops & ITEM_DETONATIONS) &&
 	      ammo_and_launcher(obj, uwep))) &&
 	    (is_ammo(obj) || is_missile(obj)))
 	{
@@ -365,7 +381,7 @@ register struct obj *obj;
 #define ZT_SPELL_O_FIRE 11 /* value kludge, see zap.c */
 
             explode(bhitpos.x, bhitpos.y, ZT_SPELL_O_FIRE,
-	            dmg, obj->otyp, EXPL_FIERY);
+	            dmg, obj->oclass, EXPL_FIERY);
             scatter(bhitpos.x, bhitpos.y, dmg,
 	            VIS_EFFECTS|MAY_HIT|MAY_DESTROY|MAY_FRACTURE,
 		    NULL);
@@ -374,7 +390,7 @@ register struct obj *obj;
 	}
 
 	if (hero_breaks(obj, u.ux, u.uy, TRUE)) return;
-	if (ship_object(obj, u.ux, u.uy, FALSE)) return;
+	if (ship_object(obj, u.ux, u.uy, FALSE, TRUE)) return;
 	dropy(obj);
 	if (!u.uswallow) container_impact_dmg(obj);
 }
@@ -536,7 +552,7 @@ hurtle_step(arg, x, y)
 
     if ((mon = m_at(x, y)) != 0) {
 	You("bump into %s.", a_monnam(mon));
-	wakeup(mon);
+	wakeup(mon, FALSE);
 	return FALSE;
     }
     if ((u.ux - x) && (u.uy - y) &&
@@ -748,26 +764,30 @@ register boolean broken;
  * Returns FALSE if the object is gone.
  */
 STATIC_OVL boolean
-toss_up(obj, hitsroof)
+toss_up(obj, hitsroof, thrown)
 struct obj *obj;
 boolean hitsroof;
+boolean thrown;
 {
     const char *almost;
     /* note: obj->quan == 1 */
 
     if (hitsroof) {
 	if (breaktest(obj)) {
-		pline("%s hits the %s.", Doname2(obj), ceiling(u.ux, u.uy));
+		if (thrown)
+			pline("%s hits the %s.", Doname2(obj),
+				ceiling(u.ux, u.uy));
 		breakmsg(obj, !Blind);
-		breakobj(obj, u.ux, u.uy, TRUE, TRUE);
+		breakobj(obj, u.ux, u.uy, TRUE, TRUE, TRUE);
 		return FALSE;
 	}
 	almost = "";
     } else {
 	almost = " almost";
     }
-    pline("%s%s hits the %s, then falls back on top of your %s.",
-	  Doname2(obj), almost, ceiling(u.ux,u.uy), body_part(HEAD));
+    if (thrown)
+    	pline("%s%s hits the %s, then falls back on top of your %s.",
+	  	Doname2(obj), almost, ceiling(u.ux,u.uy), body_part(HEAD));
 
     /* object now hits you */
 
@@ -786,7 +806,7 @@ boolean hitsroof;
 		   can_blnd(&youmonst, &youmonst, AT_WEAP, obj) ? rnd(25) : 0;
 
 	breakmsg(obj, !Blind);
-	breakobj(obj, u.ux, u.uy, TRUE, TRUE);
+	breakobj(obj, u.ux, u.uy, TRUE, TRUE, TRUE);
 	obj = 0;	/* it's now gone */
 	switch (otyp) {
 	case EGG:
@@ -812,6 +832,8 @@ boolean hitsroof;
     } else {		/* neither potion nor other breaking object */
 	boolean less_damage = uarmh && is_metallic(uarmh), artimsg = FALSE;
 	int dmg = dmgval(obj, &youmonst);
+	int savequan;
+	char *buf;
 
 	if (obj->oartifact ||
 	    (obj->oclass == WEAPON_CLASS && obj->oprops))
@@ -855,8 +877,14 @@ boolean hitsroof;
 		return obj ? TRUE : FALSE;
 	    }
 	}
+	bhitpos.x = u.ux;
+	bhitpos.y = u.uy;
 	hitfloor(obj);
-	losehp(dmg, "falling object", KILLED_BY_AN);
+	savequan = obj->quan;
+	obj->quan = 1L;
+	buf = killer_xname(obj, "falling", TRUE);
+	obj->quan = savequan;
+	losehp(dmg, buf, KILLED_BY);
     }
     return TRUE;
 }
@@ -902,8 +930,13 @@ boolean twoweap; /* used to restore twoweapon mode if wielded weapon returns */
 	register struct monst *mon;
 	register int range, urange;
 	boolean impaired = (Confusion || Stunned || Blind ||
-			   Hallucination || FUMBLED);
+			   Hallucination || FUMBLED
+#ifdef INVISIBLE_OBJECTS
+			   || (!See_invisible && obj->oinvis)
+#endif
+			   );
 
+	obj->was_thrown = 1;
 	if ((obj->cursed || obj->greased) && (u.dx || u.dy) && !rn2(7)) {
 	    boolean slipok = TRUE;
 	    if (ammo_and_launcher(obj, uwep))
@@ -954,7 +987,7 @@ boolean twoweap; /* used to restore twoweapon mode if wielded weapon returns */
 		u.twoweap = twoweap;
 	    } else if (u.dz < 0 && !Is_airlevel(&u.uz) &&
 		    !Underwater && !Is_waterlevel(&u.uz)) {
-		(void) toss_up(obj, rn2(5));
+		(void) toss_up(obj, rn2(5), TRUE);
 	    } else {
 		hitfloor(obj);
 	    }
@@ -964,7 +997,13 @@ boolean twoweap; /* used to restore twoweapon mode if wielded weapon returns */
 	} else if(obj->otyp == BOOMERANG && !Underwater) {
 		if(Is_airlevel(&u.uz) || Levitation)
 		    hurtle(-u.dx, -u.dy, 1, TRUE);
-		mon = boomhit(u.dx, u.dy);
+		mon = boomhit(u.dx, u.dy,
+#ifdef INVISIBLE_OBJECTS
+			!obj->oinvis || See_invisible
+#else
+			TRUE
+#endif
+		);
 		if(mon == &youmonst) {		/* the thing was caught */
 			exercise(A_DEX, TRUE);
 			obj = addinv(obj);
@@ -1008,8 +1047,10 @@ boolean twoweap; /* used to restore twoweapon mode if wielded weapon returns */
 		    if(range < 1) range = 1;
 		}
 
-		if (obj->otyp == BOULDER)
-		    range = 20;		/* you must be giant */
+		if (obj->otyp == BOULDER && 
+	       		maybe_polyd(throws_rocks(youmonst.data),
+	                    Race_if(PM_GIANT))) 
+		    range = 20;	
 		else if (obj->oartifact == ART_MJOLLNIR)
 		    range = (range + 1) / 2;	/* it's heavy */
 		else if (obj == uball && u.utrap && u.utraptype == TT_INFLOOR)
@@ -1025,6 +1066,8 @@ boolean twoweap; /* used to restore twoweapon mode if wielded weapon returns */
 		/* have to do this after bhit() so u.ux & u.uy are correct */
 		if(Is_airlevel(&u.uz) || Levitation)
 		    hurtle(-u.dx, -u.dy, urange, TRUE);
+
+		if (!obj) return; /* may have been a potion that hit bars */
 	}
 
 	if (mon) {
@@ -1087,7 +1130,7 @@ boolean twoweap; /* used to restore twoweapon mode if wielded weapon returns */
 			    losehp(dmg, xname(obj),
 				obj_is_pname(obj) ? KILLED_BY : KILLED_BY_AN);
 			}
-			if (ship_object(obj, u.ux, u.uy, FALSE)) {
+			if (ship_object(obj, u.ux, u.uy, FALSE, TRUE)) {
 		    	    thrownobj = (struct obj*)0;
 			    return;
 			}
@@ -1104,14 +1147,14 @@ boolean twoweap; /* used to restore twoweapon mode if wielded weapon returns */
 		    delay_output();
 		    tmp_at(DISP_END, 0);
 		    breakmsg(obj, cansee(bhitpos.x, bhitpos.y));
-		    breakobj(obj, bhitpos.x, bhitpos.y, TRUE, TRUE);
+		    breakobj(obj, bhitpos.x, bhitpos.y, TRUE, TRUE, FALSE);
 		    return;
 		}
 		if(flooreffects(obj,bhitpos.x,bhitpos.y,"fall")) return;
 		obj_no_longer_held(obj);
 		if ((obj->oprops & ITEM_DETONATIONS ||
-		     (uwep->oprops & ITEM_DETONATIONS &&
-		      ammo_and_launcher(obj, uwep))) &&
+		     (uwep && (uwep->oprops & ITEM_DETONATIONS &&
+		      ammo_and_launcher(obj, uwep)))) &&
 		    (is_ammo(obj) || is_missile(obj)))
 		{
                     int dmg = d(4, 4);
@@ -1120,7 +1163,7 @@ boolean twoweap; /* used to restore twoweapon mode if wielded weapon returns */
 		    obfree(obj, (struct obj *)0);
 
                     explode(bhitpos.x, bhitpos.y, ZT_SPELL_O_FIRE,
-		            dmg, obj->otyp, EXPL_FIERY);
+		            dmg, obj->oclass, EXPL_FIERY);
                     scatter(bhitpos.x, bhitpos.y, dmg,
 		            VIS_EFFECTS|MAY_HIT|MAY_DESTROY|MAY_FRACTURE,
 			    NULL);
@@ -1138,7 +1181,7 @@ boolean twoweap; /* used to restore twoweapon mode if wielded weapon returns */
 		    return;
 		}
 		(void) snuff_candle(obj);
-		if (!mon && ship_object(obj, bhitpos.x, bhitpos.y, FALSE)) {
+		if (!mon && ship_object(obj, bhitpos.x, bhitpos.y, FALSE, TRUE)) {
 		    thrownobj = (struct obj*)0;
 		    return;
 		}
@@ -1217,7 +1260,7 @@ struct monst *mon;
 	pline("%s %s.", The(missile), otense(obj, "miss"));
     else
 	miss(missile, mon);
-    if (!rn2(3)) wakeup(mon);
+    if (!rn2(3)) wakeup(mon, TRUE);
     return;
 }
 
@@ -1328,7 +1371,25 @@ register struct obj   *obj;
 	    return(0);
 	}
 
-	if (obj->oclass == WEAPON_CLASS || is_weptool(obj) ||
+	if (mon->mtame && mon->mcanmove &&
+		(!is_animal(mon->data)) && (!mindless(mon->data)) &&
+		could_use_item(mon, obj, FALSE)) {
+	    if (could_use_item(mon, obj, TRUE)) {
+	        pline("%s catches %s.", Monnam(mon), the(xname(obj)));
+		obj_extract_self(obj);
+		(void) mpickobj(mon,obj);
+		if (attacktype(mon->data, AT_WEAP) &&
+		    mon->weapon_check == NEED_WEAPON) {
+		    mon->weapon_check = NEED_HTH_WEAPON;
+		    (void) mon_wield_item(mon, FALSE);
+	    	}
+	        m_dowear(mon, FALSE);
+	    	newsym(mon->mx, mon->my);
+	        return 1;
+	    }
+	    miss(xname(obj), mon);
+	}
+	else if (obj->oclass == WEAPON_CLASS || is_weptool(obj) ||
 		obj->oclass == GEM_CLASS) {
 	    if (is_ammo(obj)) {
 		if (!ammo_and_launcher(obj, uwep)) {
@@ -1372,7 +1433,7 @@ register struct obj   *obj;
 		/* projectiles other than magic stones
 		   sometimes disappear when thrown */
 		if ((obj->oprops & ITEM_DETONATIONS ||
-		     (uwep->oprops & ITEM_DETONATIONS &&
+		     (uwep && uwep->oprops & ITEM_DETONATIONS &&
 		      ammo_and_launcher(obj, uwep))) &&
 		    (is_ammo(obj) || is_missile(obj)))
 		{
@@ -1381,7 +1442,7 @@ register struct obj   *obj;
 		    obfree(obj, (struct obj *)0);
 
                     explode(bhitpos.x, bhitpos.y, ZT_SPELL_O_FIRE,
-		            dmg, obj->otyp, EXPL_FIERY);
+		            dmg, obj->oclass, EXPL_FIERY);
                     scatter(bhitpos.x, bhitpos.y, dmg,
 		            VIS_EFFECTS|MAY_HIT|MAY_DESTROY|MAY_FRACTURE,
 			    NULL);
@@ -1468,7 +1529,7 @@ register struct obj   *obj;
 	    }
 	} else if (guaranteed_hit) {
 	    /* this assumes that guaranteed_hit is due to swallowing */
-	    wakeup(mon);
+	    wakeup(mon, TRUE);
 	    if ((obj->otyp == CORPSE ||
 	        (obj->otyp == ROCK && obj->corpsenm != 0))
 		&& touch_petrifies(&mons[obj->corpsenm])) {
@@ -1485,7 +1546,14 @@ register struct obj   *obj;
 		Tobjnam(obj, "vanish"), s_suffix(mon_nam(mon)),
 		is_animal(u.ustuck->data) ? "entrails" : "currents");
 	} else {
-	    tmiss(obj, mon);
+	    if (tmp >= rnd(20)) {
+		if (hmon(mon,obj,1)) {	/* mon still alive */
+		    cutworm(mon, bhitpos.x, bhitpos.y, obj);
+		}
+		passive_obj(mon, obj, (struct attack *)0);
+	    } else {
+	        tmiss(obj, mon);
+	    }
 	}
 
 	return 0;
@@ -1604,7 +1672,7 @@ boolean from_invent;	/* thrown or dropped by player; maybe on shop bill */
 	boolean in_view = !Blind;
 	if (!breaktest(obj)) return 0;
 	breakmsg(obj, in_view);
-	breakobj(obj, x, y, TRUE, from_invent);
+	breakobj(obj, x, y, TRUE, from_invent, FALSE);
 	return 1;
 }
 
@@ -1622,7 +1690,7 @@ xchar x, y;		/* object location (ox, oy may not be right) */
 
 	if (!breaktest(obj)) return 0;
 	breakmsg(obj, in_view);
-	breakobj(obj, x, y, FALSE, FALSE);
+	breakobj(obj, x, y, FALSE, FALSE, FALSE);
 	return 1;
 }
 
@@ -1631,13 +1699,40 @@ xchar x, y;		/* object location (ox, oy may not be right) */
  * and break messages have been delivered prior to getting here.
  */
 STATIC_OVL void
-breakobj(obj, x, y, hero_caused, from_invent)
+breakobj(obj, x, y, hero_caused, from_invent, hitceiling)
 struct obj *obj;
 xchar x, y;		/* object location (ox, oy may not be right) */
 boolean hero_caused;	/* is this the hero's fault? */
 boolean from_invent;
+boolean hitceiling;	/* from hitting the ceiling, i.e should objects drop? */
 {
 	switch (obj->oclass == POTION_CLASS ? POT_WATER : obj->otyp) {
+		case LARGE_BOX:
+		case CHEST:
+		{
+			struct obj *otmp;
+			boolean broken = FALSE;
+	    		while ((otmp = obj->cobj) != 0) {
+				obj_extract_self(otmp);
+				place_object(otmp, x, y);
+				if (hero_caused)
+					broken =
+						hero_breaks(otmp, x, y,
+							    from_invent);
+				else
+					broken = breaks(otmp, x, y);
+				if (!broken && hitceiling)
+				{
+					obj_extract_self(otmp);
+					if (hero_caused) {
+						toss_up(otmp, FALSE, FALSE);
+					}
+					else
+						impossible("hitceiling not by hero?");
+				}
+			}
+			break;
+		}
 		case MIRROR:
 			if (hero_caused)
 			    change_luck(-2);
@@ -1695,7 +1790,29 @@ boolean from_invent;
 		}
 	    }
 	}
-	delobj(obj);
+	if (obj->oclass != POTION_CLASS &&
+	    obj->otyp != MIRROR &&
+	    obj->otyp != EGG &&
+	    obj->otyp != ROCK &&
+	    obj->omaterial != VEGGY &&
+	    obj->omaterial != FLESH &&
+	    obj->omaterial != LIQUID)
+	{
+	    fracture_rock(obj);
+	    if (hitceiling) {
+		if (hero_caused) {
+	    	    obj_extract_self(obj);
+		    toss_up(obj, FALSE, FALSE);
+		} else {
+		    impossible("hitceiling not by hero?");
+		}
+	    } else {
+	    	obj_extract_self(obj);
+	    	place_object(obj, x, y);
+	    }
+	}
+	else
+	    delobj(obj);
 }
 
 /*
@@ -1708,7 +1825,7 @@ struct obj *obj;
 {
 	if (obj_resists(obj, 1, 99)) return 0;
 	if (obj->omaterial == GLASS && !obj->oartifact &&
-		obj->oclass != GEM_CLASS)
+		!(obj->oclass == GEM_CLASS && obj->otyp != ROCK))
 	    return 1;
 	switch (obj->oclass == POTION_CLASS ? POT_WATER : obj->otyp) {
 #ifdef TOURIST
@@ -1761,7 +1878,6 @@ boolean in_view;
 			    You_hear("%s shatter!", something);
 			else
 			    pline("%s shatter%s%s!", The(xname(obj)),
-			                           //Doname2(obj),
 				(obj->quan==1) ? "s" : "", to_pieces);
 			break;
 		case EGG:
@@ -1843,7 +1959,7 @@ struct obj *obj;
 			    if (ghitm(mon, obj))	/* was it caught? */
 				return 1;
 			} else {
-			    if(ship_object(obj, bhitpos.x, bhitpos.y, FALSE))
+			    if(ship_object(obj, bhitpos.x, bhitpos.y, FALSE, TRUE))
 				return 1;
 			}
 		}

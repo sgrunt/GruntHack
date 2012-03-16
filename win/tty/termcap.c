@@ -331,8 +331,9 @@ int *wid, *hgt;
 # endif
 	*wid = CO;
 	*hgt = LI;
-	if (!(CL = Tgetstr("cl")))	/* last thing set */
-		error("NetHack needs CL.");
+	CL = "\033[2J";		/* last thing set */
+/*	if (!(CL = Tgetstr("cl")))
+		error("NetHack needs CL.");*/
 	if ((int)(tbufptr - tbuf) > (int)(sizeof tbuf))
 		error("TERMCAP entry too big...\n");
 	free((genericptr_t)tptr);

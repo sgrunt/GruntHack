@@ -13,6 +13,10 @@
 **********************************************************************/
 
 #include "qttableview.h"
+//Added by qt3to4:
+#include <Q3Frame>
+#include <QResizeEvent>
+#include <QPaintEvent>
 #if QT_VERSION >= 300
 #ifndef QT_NO_QTTABLEVIEW
 #include <qscrollbar.h>
@@ -144,8 +148,8 @@ void QCornerSquare::paintEvent( QPaintEvent * )
 
 */
 
-QtTableView::QtTableView( QWidget *parent, const char *name, WFlags f )
-    : QFrame( parent, name, f )
+QtTableView::QtTableView( QWidget *parent, const char *name, Qt::WFlags f )
+    : Q3Frame( parent, name, f )
 {
     nRows		 = nCols      = 0;	// zero rows/cols
     xCellOffs		 = yCellOffs  = 0;	// zero offset
@@ -242,7 +246,7 @@ void QtTableView::repaint( int x, int y, int w, int h, bool erase )
     if ( r.isEmpty() )
 	return; // nothing to do
     QPaintEvent e( r );
-    if ( erase && backgroundMode() != NoBackground )
+    if ( erase && backgroundMode() != Qt::NoBackground )
 	eraseInPaint = TRUE;			// erase when painting
     paintEvent( &e );
     eraseInPaint = FALSE;
@@ -1316,7 +1320,7 @@ void QtTableView::paintEvent( QPaintEvent *e )
     QRect cellR;
     QRect cellUR;
 #ifndef QT_NO_TRANSFORMATIONS
-    QWMatrix matrix;
+    QMatrix matrix;
 #endif
 
     while ( yPos <= maxY && row < nRows ) {
@@ -1439,14 +1443,14 @@ QScrollBar *QtTableView::verticalScrollBar() const
 {
     QtTableView *that = (QtTableView*)this; // semantic const
     if ( !vScrollBar ) {
-	QScrollBar *sb = new QScrollBar( QScrollBar::Vertical, that );
+	QScrollBar *sb = new QScrollBar( Qt::Vertical, that );
 #ifndef QT_NO_CURSOR
-	sb->setCursor( arrowCursor );
+	sb->setCursor( Qt::arrowCursor );
 #endif
         sb->resize( sb->sizeHint() ); // height is irrelevant
 	Q_CHECK_PTR(sb);
 	sb->setTracking( FALSE );
-	sb->setFocusPolicy( NoFocus );
+	sb->setFocusPolicy( Qt::NoFocus );
 	connect( sb, SIGNAL(valueChanged(int)),
 		 SLOT(verSbValue(int)));
 	connect( sb, SIGNAL(sliderMoved(int)),
@@ -1470,12 +1474,12 @@ QScrollBar *QtTableView::horizontalScrollBar() const
 {
     QtTableView *that = (QtTableView*)this; // semantic const
     if ( !hScrollBar ) {
-	QScrollBar *sb = new QScrollBar( QScrollBar::Horizontal, that );
+	QScrollBar *sb = new QScrollBar( Qt::Horizontal, that );
 #ifndef QT_NO_CURSOR
-	sb->setCursor( arrowCursor );
+	sb->setCursor( Qt::arrowCursor );
 #endif
 	sb->resize( sb->sizeHint() ); // width is irrelevant
-	sb->setFocusPolicy( NoFocus );
+	sb->setFocusPolicy( Qt::NoFocus );
 	Q_CHECK_PTR(sb);
 	sb->setTracking( FALSE );
 	connect( sb, SIGNAL(valueChanged(int)),

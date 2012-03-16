@@ -4,7 +4,7 @@
 
 #include "hack.h"
 
-STATIC_DCL const char *NDECL(dev_name);
+/*STATIC_DCL*/ const char *NDECL(dev_name);
 STATIC_DCL void FDECL(get_mplname, (struct monst *, char *));
 STATIC_DCL void FDECL(mk_mplayer_armor, (struct monst *, SHORT_P));
 
@@ -38,7 +38,8 @@ static const char *developers[] = {
 
 
 /* return a randomly chosen developer name */
-STATIC_OVL const char *
+/*STATIC_OVL*/
+const char *
 dev_name()
 {
 	register int i, m = 0, n = SIZE(developers);
@@ -234,7 +235,7 @@ register boolean special;
 		    if (!rn2(5))
 		        otmp = mk_artifact(otmp, A_NONE);
 		    else
-		        otmp = create_oprop(otmp);
+		        otmp = create_oprop(otmp, FALSE);
 		}
 		/* mplayers knew better than to overenchant Magicbane */
 		if (otmp->oartifact == ART_MAGICBANE)
@@ -268,7 +269,7 @@ register boolean special;
 #endif
 		quan = rn2(10);
 		while(quan--)
-		    (void) mpickobj(mtmp, mkobj(RANDOM_CLASS, FALSE));
+		    (void) mpickobj(mtmp, mkobj(RANDOM_CLASS, NO_MO_FLAGS));
 	    }
 	    quan = rnd(3);
 	    while(quan--)

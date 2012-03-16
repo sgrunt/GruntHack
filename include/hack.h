@@ -105,8 +105,12 @@ NEARDATA extern coord bhitpos;	/* place where throw or zap hits or stops */
 #define FLASHED_LIGHT	3
 #define INVIS_BEAM	4
 
-#define MATCH_WARN_OF_MON(mon)	 (Warn_of_mon && flags.warntype && \
-		   		 (flags.warntype & (mon)->data->mflags2))
+#define MATCH_WARN_OF_MON(mon)	 (Warn_of_mon && (flags.warntype && \
+				 ((is_racial((mon)->data) && \
+				 	(flags.warntype & (mon)->mrace)) || \
+		   		 (((!is_racial((mon)->data)) && \
+				 	(flags.warntype & (mon)->data->mflags2))))) || \
+					(flags.warnsym && (mon)->data->mlet == flags.warnsym))
 
 #include "trap.h"
 #include "flag.h"
@@ -146,6 +150,12 @@ NEARDATA extern coord bhitpos;	/* place where throw or zap hits or stops */
 #define MM_NOCOUNTBIRTH	  0x40  /* don't increment born counter (for revival) */
 #define MM_IGNOREWATER	  0x80	/* ignore water when positioning */
 #define MM_ADJACENTOK	  0x100 /* it is acceptable to use adjacent coordinates */
+
+/* flags to control mkobj() */
+#define NO_MO_FLAGS	  0x00 /* use this rather than plain 0 */
+#define MO_ALLOW_ARTIFACT 0x01 /* allow artifacts */
+#define MO_MAGIC          0x02 /* force magical item */
+#define MO_NOMAGIC        0x04 /* force nonmagical item */
 
 /* special mhpmax value when loading bones monster to flag as extinct or genocided */
 #define DEFUNCT_MONSTER	(-100)

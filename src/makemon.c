@@ -10,7 +10,7 @@
 #include <ctype.h>
 #endif
 
-//STATIC_VAR NEARDATA
+/*STATIC_VAR NEARDATA*/
 struct monst zeromonst;
 
 /* this assumes that a human quest leader or nemesis is an archetype
@@ -27,9 +27,9 @@ STATIC_DCL int FDECL(align_shift, (struct permonst *));
 STATIC_DCL boolean FDECL(wrong_elem_type, (struct permonst *));
 STATIC_DCL void FDECL(m_initgrp,(struct monst *,int,int,int));
 STATIC_DCL void FDECL(m_initthrow,(struct monst *,int,int));
-STATIC_DCL void FDECL(m_initweap,(struct monst *));
+void FDECL(m_initweap,(struct monst *));
 #ifdef OVL1
-STATIC_DCL void FDECL(m_initinv,(struct monst *));
+void FDECL(m_initinv,(struct monst *));
 #endif /* OVL1 */
 
 extern const int monstr[];
@@ -131,7 +131,7 @@ register int x, y, n;
 	mm.x = x;
 	mm.y = y;
 	while(cnt--) {
-		//if (peace_minded(mtmp)) continue;
+		/*if (peace_minded(mtmp)) continue;*/
 		/* Don't create groups of peaceful monsters since they'll get
 		 * in our way.  If the monster has a percentage chance so some
 		 * are peaceful and some are not, the result will just be a
@@ -170,8 +170,266 @@ int otyp,oquan;
 #endif /* OVLB */
 #ifdef OVL2
 
+struct trobj {
+	short trotyp;
+	schar trspe;
+	char trclass;
+	Bitfield(trquan,6);
+	Bitfield(trbless,2);
+};
+
+#define UNDEF_TYP	0
+#define UNDEF_SPE	'\177'
+#define RND_SPE         (0x80)
+#define UNDEF_BLESS	2
+
+extern struct trobj Archeologist[];
+extern struct trobj Barbarian[];
+extern struct trobj Cave_man[];
+extern struct trobj Healer[];
+extern struct trobj Knight[];
+extern struct trobj Monk[];
+extern struct trobj Priest[];
+extern struct trobj Ranger[];
+extern struct trobj Rogue[];
+extern struct trobj Samurai[];
+extern struct trobj Tourist[];
+extern struct trobj Valkyrie[];
+extern struct trobj Wizard[];
+extern struct trobj Tinopener[];
+extern struct trobj Magicmarker[];
+extern struct trobj Lamp[];
+extern struct trobj Blindfold[];
+extern struct trobj Instrument[];
+extern struct trobj Xtra_food[];
+extern struct trobj Leash[];
+extern struct trobj Towel[];
+extern struct trobj Wishing[];
+extern struct trobj Money[];
+
+struct trobj Level20Kit1[] = {
+	{ SILVER_DRAGON_SCALE_MAIL, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ GAUNTLETS_OF_POWER, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ CLOAK_OF_MAGIC_RESISTANCE, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ SPEED_BOOTS, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ HELMET, (3|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
+	{ AMULET_OF_LIFE_SAVING, 0, AMULET_CLASS, 1, UNDEF_BLESS },
+	{ LONG_SWORD, (5|RND_SPE), WEAPON_CLASS, 1, 1 },
+	{ BAG_OF_HOLDING, 0, TOOL_CLASS, 1, 1 }, 
+	{ 0, 0, 0, 0, 0 }
+};
+
+struct trobj Level20Kit2[] = {
+	{ GRAY_DRAGON_SCALE_MAIL, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ GAUNTLETS_OF_POWER, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ JUMPING_BOOTS, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ ROBE, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ HELM_OF_BRILLIANCE, (3|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
+	{ AMULET_OF_REFLECTION, 0, AMULET_CLASS, 1, UNDEF_BLESS },
+	{ LONG_SWORD, (5|RND_SPE), WEAPON_CLASS, 1, 1 },
+	{ BAG_OF_HOLDING, 0, TOOL_CLASS, 1, 1 },
+	{ 0, 0, 0, 0, 0 }
+};
+
+struct trobj Level10Kit[] = {
+	{ ARMOR, (1|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
+	{ HELMET, (1|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
+	{ HIGH_BOOTS, (1|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
+	{ GLOVES, (1|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
+	{ SACK, 0, TOOL_CLASS, 1, UNDEF_BLESS },
+	{ 0, 0, 0, 0, 0 }
+};
+
+#define B_MAJOR	0	/* two-handed sword or battle-axe  */
+#define B_MINOR	1	/* matched with axe or short sword */
+#define C_AMMO	2
+#define M_BOOK 2
+#define RAN_BOW			1
+#define RAN_TWO_ARROWS	2
+#define RAN_ZERO_ARROWS	3
+#define R_DAGGERS	1
+#define S_ARROWS	3
+#define T_DARTS		0
+#define W_MULTSTART	2
+#define W_MULTEND	6
+
+struct inv_sub { short race_pm, item_otyp, subs_otyp; };
+extern struct inv_sub inv_subs[];
+
+extern int FDECL(isqrt,(int));
+
+/**
+ * mashup of ini_inv from u_init.c to give mplayers items
+ */
 STATIC_OVL void
-m_initweap(mtmp)
+ini_mon_inv(mtmp, origtrop, chance)
+register struct monst *mtmp;
+register struct trobj *origtrop;
+unsigned short chance;
+{
+	struct obj *obj;
+	struct trobj temptrop;
+	register struct trobj *trop = &temptrop;
+	int otyp, i;
+	int race = PM_HUMAN;
+	     if (is_elf(mtmp))    race = PM_ELF;
+	else if (is_dwarf(mtmp))  race = PM_DWARF;
+	else if (is_gnome(mtmp))  race = PM_GNOME;
+	else if (is_orc(mtmp))    race = PM_ORC;
+	else if (is_giant(mtmp))  race = PM_GIANT;
+	else if (is_ettin(mtmp))  race = PM_ETTIN;
+	else if (is_kobold(mtmp)) race = PM_KOBOLD;
+	else if (is_ogre(mtmp))   race = PM_OGRE;
+	
+	memcpy(&temptrop, origtrop, sizeof(struct trobj));
+
+	while (origtrop->trclass) {
+		if ((chance <= 0) || !rn2(chance)) {
+			if (trop->trotyp != UNDEF_TYP) {
+				otyp = (int)trop->trotyp;
+				if (race != PM_HUMAN) {
+				    /* substitute specific items for generic ones */
+				    for (i = 0; inv_subs[i].race_pm != NON_PM; ++i)
+					if (inv_subs[i].race_pm == race &&
+						otyp == inv_subs[i].item_otyp) {
+					    otyp = inv_subs[i].subs_otyp;
+					    break;
+					}
+				}
+				obj = mksobj(otyp, TRUE, FALSE);
+			} else {	/* UNDEF_TYP */
+				static NEARDATA short nocreate = STRANGE_OBJECT;
+				static NEARDATA short nocreate2 = STRANGE_OBJECT;
+				static NEARDATA short nocreate3 = STRANGE_OBJECT;
+				static NEARDATA short nocreate4 = STRANGE_OBJECT;
+			/*
+			 * For random objects, do not create certain overly powerful
+			 * items: wand of wishing, ring of levitation, or the
+			 * polymorph/polymorph control combination.  Specific objects,
+			 * i.e. the discovery wishing, are still OK.
+			 * Also, don't get a couple of really useless items.  (Note:
+			 * punishment isn't "useless".  Some players who start out with
+			 * one will immediately read it and use the iron ball as a
+			 * weapon.)
+			 */
+				obj = mkobj(trop->trclass, NO_MO_FLAGS);
+				otyp = obj->otyp;
+				while (otyp == WAN_WISHING
+					|| otyp == nocreate
+					|| otyp == nocreate2
+					|| otyp == nocreate3
+					|| otyp == nocreate4
+#ifdef ELBERETH
+					|| otyp == RIN_LEVITATION
+#endif
+					/* 'useless' items */
+					|| otyp == POT_HALLUCINATION
+					|| otyp == POT_ACID
+					|| otyp == SCR_AMNESIA
+					|| otyp == SCR_FIRE
+					|| otyp == SCR_BLANK_PAPER
+					|| otyp == SPE_BLANK_PAPER
+					|| otyp == RIN_AGGRAVATE_MONSTER
+					|| otyp == RIN_HUNGER
+					|| otyp == WAN_NOTHING
+					|| (otyp == SCR_ENCHANT_WEAPON &&
+					    mtmp->mnum == PM_MONK)
+					|| (otyp == SPE_FORCE_BOLT &&
+					    mtmp->mnum == PM_WIZARD)
+					|| (obj->oclass == SPBOOK_CLASS &&
+					    objects[otyp].oc_level > 3)) { 
+					dealloc_obj(obj);
+					obj = mkobj(trop->trclass, 
+						NO_MO_FLAGS);
+					otyp = obj->otyp;
+				}
+
+				if (objects[otyp].oc_charged && obj->spe <= 0)
+					obj->spe = rne(3);
+
+				/* Heavily relies on the fact that 1) we create wands
+				 * before rings, 2) that we create rings before
+				 * spellbooks, and that 3) not more than 1 object of a
+				 * particular symbol is to be prohibited.  (For more
+				 * objects, we need more nocreate variables...)
+				 */
+				switch (otyp) {
+				    case WAN_POLYMORPH:
+				    case RIN_POLYMORPH:
+				    case POT_POLYMORPH:
+					nocreate = RIN_POLYMORPH_CONTROL;
+					break;
+				    case RIN_POLYMORPH_CONTROL:
+					nocreate = RIN_POLYMORPH;
+					nocreate2 = SPE_POLYMORPH;
+					nocreate3 = POT_POLYMORPH;
+				}
+				/* Don't have 2 of the same ring or spellbook */
+				if (obj->oclass == RING_CLASS ||
+				    obj->oclass == SPBOOK_CLASS)
+					nocreate4 = otyp;
+			}
+
+#ifdef GOLDOBJ
+			if (trop->trclass == COIN_CLASS) {
+				/* no "blessed" or "identified" money */
+				obj->quan = u.umoney0;
+			} else {
+#endif
+				obj->cursed = 0;
+				if (obj->opoisoned && u.ualign.type != A_CHAOTIC)
+				    obj->opoisoned = 0;
+				if (obj->oclass == WEAPON_CLASS ||
+					obj->oclass == TOOL_CLASS) {
+				    obj->quan = (long) trop->trquan;
+				    trop->trquan = 1;
+				} else if (obj->oclass == GEM_CLASS &&
+					is_graystone(obj) && obj->otyp != FLINT) {
+				    obj->quan = 1L;
+				}
+				if (trop->trspe != UNDEF_SPE)
+				{
+				    obj->spe = (trop->trspe & ~RND_SPE);
+				    if (trop->trspe & RND_SPE) {
+				      obj->spe -= 2;
+				      obj->spe += rn2(5);
+				      if (sgn(trop->trspe & ~RND_SPE) !=
+				          sgn(obj->spe))
+					  obj->spe = 0;
+				    }
+				}
+				if (trop->trbless != UNDEF_BLESS)
+				    obj->blessed = trop->trbless;
+				if ((obj->oclass == WEAPON_CLASS ||
+					obj->oclass == ARMOR_CLASS)
+					&& chance > 1)
+				{
+				    obj->spe =
+					(obj->spe * rn2(chance)) / chance;
+				}
+#ifdef GOLDOBJ
+			}
+#endif
+			/* defined after setting otyp+quan + blessedness */
+			obj->owt = weight(obj);
+			(void) mpickobj(mtmp, obj);
+		}
+
+#if !defined(PYRAMID_BUG) && !defined(MAC)
+		if(--trop->trquan) continue;	/* make a similar object */
+#else
+		if(trop->trquan) {		/* check if zero first */
+			--trop->trquan;
+			if(trop->trquan)
+				continue;	/* make a similar object */
+		}
+#endif
+		origtrop++;
+		memcpy(&temptrop, origtrop, sizeof(struct trobj));
+	}
+}
+
+void m_initweap(mtmp)
 register struct monst *mtmp;
 {
 	register struct permonst *ptr = mtmp->data;
@@ -183,6 +441,187 @@ register struct monst *mtmp;
 #ifdef REINCARNATION
 	if (Is_rogue_level(&u.uz)) return;
 #endif
+/*
+ * 	treat mplayers differently
+ */
+	if (is_mplayer(mtmp->data) && monsndx(mtmp->data) == mtmp->morigdata)
+	{
+		if (mtmp->m_lev > 1)
+		{
+			if (mtmp->m_lev > 10 || !rn2(10))
+				ini_mon_inv(mtmp, !rn2(2) ? Level20Kit1 : Level20Kit2,
+					(mtmp->m_lev >= 20) ? 1 : 
+					isqrt(23 - mtmp->m_lev));
+
+			ini_mon_inv(mtmp, Level10Kit,
+				(mtmp->m_lev >= 10) ? 1 : 
+				isqrt(13 - mtmp->m_lev));
+		}
+		switch (mtmp->mnum) {
+		case PM_ARCHEOLOGIST:
+			ini_mon_inv(mtmp, Archeologist, 1);
+			if(!rn2(10)) ini_mon_inv(mtmp, Tinopener);
+			else if(!rn2(4)) ini_mon_inv(mtmp, Lamp);
+			else ini_mon_inv(mtmp, Magicmarker, 10);
+			break;
+		case PM_BARBARIAN:
+			if (rn2(100) >= 50) {	/* see above comment */
+			    Barbarian[B_MAJOR].trotyp = BATTLE_AXE;
+			    Barbarian[B_MINOR].trotyp = SHORT_SWORD;
+			}
+			else
+			{
+			    Barbarian[B_MAJOR].trotyp = TWO_HANDED_SWORD;
+			    Barbarian[B_MINOR].trotyp = AXE;
+			}
+			ini_mon_inv(mtmp, Barbarian, 1);
+			ini_mon_inv(mtmp, Lamp, 6);
+			break;
+		case PM_CAVEMAN:
+		case PM_CAVEWOMAN:
+			Cave_man[C_AMMO].trquan = rn1(11, 10);	/* 10..20 */
+			ini_mon_inv(mtmp, Cave_man, 1);
+			break;
+		case PM_HEALER:
+#ifndef GOLDOBJ
+		    	mtmp->mgold = (long)rn1(1000,1001);
+#else
+		    	mkmonmoney(mtmp,(long)rn1(1000,1001));
+#endif
+			ini_mon_inv(mtmp, Healer, 1);
+			ini_mon_inv(mtmp, Lamp, 25);
+			break;
+		case PM_KNIGHT:
+			ini_mon_inv(mtmp, Knight, 1);
+			break;
+		case PM_MONK:
+			switch (rn2(90) / 30) {
+			case 0: Monk[M_BOOK].trotyp = SPE_HEALING; break;
+			case 1: Monk[M_BOOK].trotyp = SPE_PROTECTION; break;
+			case 2: Monk[M_BOOK].trotyp = SPE_SLEEP; break;
+			}
+			ini_mon_inv(mtmp, Monk, 1);
+			if(!rn2(5)) ini_mon_inv(mtmp, Magicmarker, 1);
+			else ini_mon_inv(mtmp, Lamp, 10);
+			break;
+		case PM_PRIEST:
+		case PM_PRIESTESS:
+			ini_mon_inv(mtmp, Priest, 1);
+			if(!rn2(10)) ini_mon_inv(mtmp, Magicmarker, 1);
+			else ini_mon_inv(mtmp, Lamp, 10);
+			break;
+		case PM_RANGER:
+			Ranger[RAN_TWO_ARROWS].trquan = rn1(10, 50);
+			Ranger[RAN_ZERO_ARROWS].trquan = rn1(10, 30);
+			ini_mon_inv(mtmp, Ranger, 1);
+			break;
+		case PM_ROGUE:
+			Rogue[R_DAGGERS].trquan = rn1(10, 6);
+#ifndef GOLDOBJ
+		    	mtmp->mgold = 0;
+#endif
+			ini_mon_inv(mtmp, Rogue, 1);
+			ini_mon_inv(mtmp, Blindfold, 5);
+			break;
+		case PM_SAMURAI:
+			Samurai[S_ARROWS].trquan = rn1(20, 26);
+			ini_mon_inv(mtmp, Samurai, 1);
+			ini_mon_inv(mtmp, Blindfold, 5);
+			break;
+#ifdef TOURIST
+		case PM_TOURIST:
+			Tourist[T_DARTS].trquan = rn1(20, 21);
+#ifndef GOLDOBJ
+		    	mtmp->mgold = (long)rnd(1000);
+#else
+		    	mkmonmoney(mtmp,(long)rnd(1000));
+#endif
+			ini_mon_inv(mtmp, Tourist, 1);
+			if(!rn2(25)) ini_mon_inv(mtmp, Tinopener, 1);
+			else if(!rn2(25)) ini_mon_inv(mtmp, Leash, 1);
+			else if(!rn2(25)) ini_mon_inv(mtmp, Towel, 1);
+			else if(!rn2(25)) ini_mon_inv(mtmp, Magicmarker, 1);
+			break;
+#endif
+		case PM_VALKYRIE:
+			ini_mon_inv(mtmp, Valkyrie, 1);
+			ini_mon_inv(mtmp, Lamp, 6);
+			break;
+		case PM_WIZARD:
+			ini_mon_inv(mtmp, Wizard, 1);
+			ini_mon_inv(mtmp, Magicmarker, 5);
+			ini_mon_inv(mtmp, Blindfold, 5);
+			break;
+	
+		default:	/* impossible */
+			break;
+		}
+		if (is_elf(mtmp) &&
+			(mtmp->mnum == PM_PRIEST ||
+			 mtmp->mnum == PM_PRIESTESS))
+			ini_mon_inv(mtmp, Instrument, 1);
+
+		if ((is_orc(mtmp) || is_kobold(mtmp)) &&
+			mtmp->mnum != PM_WIZARD)
+			ini_mon_inv(mtmp, Xtra_food, 1);
+
+		{
+			struct obj *otmp = mtmp->minvent,
+				   *bag = (struct obj *)0;
+			if (mtmp->m_lev > 1) {
+				for (; otmp; otmp = otmp->nobj)
+				{
+					if (otmp->oclass == WEAPON_CLASS) {
+						if (mtmp->m_lev >= 20 ||
+						    rn2(400) <
+						    mtmp->m_lev*mtmp->m_lev) {
+							if (!rn2(100 +
+						        	 10*nartifact_exist())) {
+								 mk_artifact(otmp,
+								 	sgn(mtmp->data->maligntyp));
+							} else {
+								create_oprop(otmp, FALSE);
+							}
+						}
+					}
+				}
+			}
+			for (otmp = mtmp->minvent; otmp; otmp = otmp->nobj)
+			{
+				if (Is_container(otmp) &&
+				    otmp->otyp != BAG_OF_TRICKS)
+					bag = otmp;
+				if (otmp->otyp == BAG_OF_HOLDING)
+					break;
+			}
+			if (bag) {
+				int count = (mtmp->m_lev * mtmp->m_lev) / 25;
+				if (count < 1) count = 1;
+				if (count > 15) count = 15;
+				count += rn2((mtmp->m_lev / 5) + 2);
+				while(count-- > 0) {
+					int otyp =
+						(rn2(2) ? rnd_offensive_item(mtmp) :
+						 rn2(2) ? rnd_defensive_item(mtmp) :
+							  rnd_misc_item(mtmp));
+		    			otmp = mksobj(otyp, FALSE, FALSE);
+					if (otmp->oclass == WAND_CLASS)
+					{
+						int lim = (otmp->otyp == WAN_WISHING) ? 3 :
+						(objects[otmp->otyp].oc_dir != NODIR) ? 8 : 15;
+						otmp->spe = rn2(lim);
+					}
+					if (otmp->otyp == WAN_CANCELLATION ||
+					    otmp->otyp == BAG_OF_TRICKS)
+						(void) mpickobj(mtmp, otmp);
+					else
+						(void) add_to_container(bag, otmp);
+				}
+			}
+		}
+		return;
+	}
+
 /*
  *	first a few special cases:
  *
@@ -273,7 +712,7 @@ register struct monst *mtmp;
 			otmp = oname(otmp, artiname(
 				rn2(2) ? ART_DEMONBANE : ART_SUNSWORD));
 			if (!otmp->oartifact)
-			    create_oprop(otmp);
+			    create_oprop(otmp, FALSE);
 		    }
 		    bless(otmp);
 		    otmp->oerodeproof = TRUE;
@@ -354,15 +793,21 @@ register struct monst *mtmp;
 	        if (ptr == &mons[PM_VLAD_THE_IMPALER]) {
 		    int i = rn2(4);
 		    
-		    // impaling tool:
-		    (void)mongets(mtmp, SPETUM);
+		    /* impaling tool: */
+		    otmp = mksobj(SPETUM, FALSE, FALSE);
+		    if (otmp) {
+		    	otmp->oprops = ITEM_DRLI;
+			(void)mpickobj(mtmp, otmp);
+		    }
 
-                    // escape route:
+                    /* escape route: */
                     while (i-- > 0)
 		    {
 		        otmp = mksobj(SCR_TELEPORTATION, FALSE, FALSE);
-		        curse(otmp);
-		        (void) mpickobj(mtmp, otmp);
+			if (otmp) {
+		            curse(otmp);
+		            (void) mpickobj(mtmp, otmp);
+			}
 		    }
 		}
 	        else
@@ -530,7 +975,13 @@ register struct monst *mtmp;
 	      break;
 	}
 	if ((int) mtmp->m_lev > rn2(75))
-		(void) mongets(mtmp, rnd_offensive_item(mtmp));
+	{
+		int otyp = rnd_offensive_item(mtmp);
+		(void) mongets(mtmp, otyp);
+		if (objects[otyp].oc_class == WAND_CLASS &&
+			(int)mtmp->m_lev > rn2(75))
+			(void) mongets(mtmp, SCR_CHARGING);
+	}
 }
 
 #endif /* OVL2 */
@@ -552,8 +1003,7 @@ long amount;
 }
 #endif
 
-STATIC_OVL void
-m_initinv(mtmp)
+void m_initinv(mtmp)
 register struct	monst	*mtmp;
 {
 	register int cnt;
@@ -625,12 +1075,13 @@ register struct	monst	*mtmp;
 				(void) mongets(mtmp, TIN_WHISTLE);
 		} else if (ptr == &mons[PM_SHOPKEEPER]) {
 		    (void) mongets(mtmp,SKELETON_KEY);
-		    switch (rn2(4)) {
+		    switch (rn2(5)) {
 		    /* MAJOR fall through ... */
-		    case 0: (void) mongets(mtmp, WAN_MAGIC_MISSILE);
-		    case 1: (void) mongets(mtmp, POT_EXTRA_HEALING);
-		    case 2: (void) mongets(mtmp, POT_HEALING);
-		    case 3: (void) mongets(mtmp, WAN_STRIKING);
+		    case 0: (void) mongets(mtmp, SCR_CHARGING);
+		    case 1: (void) mongets(mtmp, WAN_MAGIC_MISSILE);
+		    case 2: (void) mongets(mtmp, POT_EXTRA_HEALING);
+		    case 3: (void) mongets(mtmp, POT_HEALING);
+		    case 4: (void) mongets(mtmp, WAN_STRIKING);
 		    }
 		} else if (ptr->msound == MS_PRIEST ||
 			quest_mon_represents_role(ptr,PM_PRIEST)) {
@@ -723,6 +1174,10 @@ register struct	monst	*mtmp;
 		(void) mongets(mtmp, rnd_defensive_item(mtmp));
 	if ((int) mtmp->m_lev > rn2(100))
 		(void) mongets(mtmp, rnd_misc_item(mtmp));
+#ifdef COMBINED_SPELLS
+	if (is_spellcaster(mtmp->data) && (int) mtmp->m_lev > rn2(30))
+		(void) mongets(mtmp, POT_GAIN_ENERGY);
+#endif
 #ifndef GOLDOBJ
 	if (likes_gold(ptr) && !mtmp->mgold && !rn2(5))
 		mtmp->mgold =
@@ -880,6 +1335,8 @@ boolean ghostly;
 	return result;
 }
 
+extern const char *NDECL(dev_name);
+
 /*
  * called with [x,y] = coordinates;
  *	[0,0] means anyplace
@@ -976,14 +1433,21 @@ register int	mmflags;
 	mtmp->m_id = flags.ident++;
 	if (!mtmp->m_id) mtmp->m_id = flags.ident++;	/* ident overflowed */
 	set_mon_data(mtmp, ptr, 0);
+	mtmp->morigdata = monsndx(ptr);
+	if (is_racial(ptr) && !mtmp->mrace) {
+	    mongone(mtmp);
+	    return (struct monst *)0;
+	}
 	if (mtmp->data->msound == MS_LEADER)
 	    quest_status.leader_m_id = mtmp->m_id;
 	mtmp->mxlth = xlth;
 	mtmp->mnum = mndx;
 
+
 	mtmp->m_lev = adj_lev(ptr);
-	if (-race_lev_mod(mtmp->mrace) > mtmp->m_lev) mtmp->m_lev = 0;
-	else
+	if (-race_lev_mod(mtmp->mrace) > mtmp->m_lev)
+		mtmp->m_lev = (is_mplayer(ptr)) ? 1 : 0;
+	else if (!is_mplayer(ptr))
 	{
 	    mtmp->m_lev += race_lev_mod(mtmp->mrace);
 	    if (mtmp->m_lev > 49) mtmp->m_lev = 49;
@@ -1035,7 +1499,7 @@ register int	mmflags;
 		case S_SNAKE:
 			if(in_mklev)
 			    if(x && y)
-				(void) mkobj_at(0, x, y, TRUE);
+				(void) mkobj_at(0, x, y, MO_ALLOW_ARTIFACT);
 			if(hides_under(ptr) && OBJ_AT(x, y))
 			    mtmp->mundetected = TRUE;
 			break;
@@ -1154,6 +1618,8 @@ register int	mmflags;
 		m_initweap(mtmp);	/* equip with weapons / armor */
 	    m_initinv(mtmp);  /* add on a few special items incl. more armor */
 	    m_dowear(mtmp, TRUE);
+	    mon_wield_item(mtmp, TRUE);
+	    (void) m_stash_stuff(mtmp, TRUE);
 	} else {
 	    /* no initial inventory is allowed */
 	    if (mtmp->minvent) discard_minvent(mtmp);
@@ -1164,6 +1630,26 @@ register int	mmflags;
 			mtmp->mstrategy |= STRAT_WAITFORU;
 		if (ptr->mflags3 & M3_CLOSE)
 			mtmp->mstrategy |= STRAT_CLOSE;
+	}
+	
+	if (is_mplayer(ptr)) {
+	    char nam[BUFSZ];
+	    const char *devnam = rn2(15) ? rndghostname() : dev_name();
+	    while (devnam && (!strcmp(devnam, "Izchak") ||
+	    		      !strcmp(devnam, plname)))
+	    	devnam = rn2(15) ? rndghostname() : dev_name();
+	    if (!devnam)
+	    	Strcpy(nam, is_female(ptr) ? "Eve" : "Adam");
+	    else if (is_female(ptr) && !!strcmp(devnam, "Janet"))
+		Strcpy(nam, rn2(2) ? "Maud" : "Eve");
+	    else Strcpy(nam, devnam);
+
+	    if (is_female(ptr) || !strcmp(nam, "Janet"))
+	        mtmp->female = 1;
+	    else
+	        mtmp->female = 0;
+
+	    mtmp = christen_monst(mtmp, nam);
 	}
 
 	if (!in_mklev)
@@ -1433,7 +1919,7 @@ int	spc;
 		     (mons[last].mflags2 & racemask)))) {
 		/* consider it */
 	      
-		// Insert into the sorted class table.
+		/* Insert into the sorted class table. */
 	        for (i = classnum; i; i--) {
 		    if (monstr[last] > monstr[classes[i-1]]) break;
 		    classes[i] = classes[i-1];
@@ -1452,7 +1938,7 @@ int	spc;
 
 	if(!num) return((struct permonst *) 0);
 
-        //TODO: sort classes
+        /* TODO: sort classes */
 
         i = 0;
 	for(num = rnd(num); num > 0; i++)
@@ -1482,6 +1968,14 @@ register struct permonst *ptr;
 		 */
 		tmp = ptr->mlevel + mvitals[PM_WIZARD_OF_YENDOR].died;
 		if (tmp > 49) tmp = 49;
+		return tmp;
+	}
+
+	if (is_mplayer(ptr))
+	{
+		tmp = rn1(5, u.ulevel-2);
+		if (tmp < 1) tmp = 1;
+		if (tmp > 30) tmp = 30;
 		return tmp;
 	}
 
@@ -1577,10 +2071,16 @@ struct monst *mtmp, *victim;
 			an(ptr->mname), mhe(mtmp),
 			nonliving(ptr) ? "expires" : "dies");
 		set_mon_data(mtmp, ptr, -1);	/* keep mvitals[] accurate */
+		mtmp->morigdata = newtype;
 		mondied(mtmp);
 		return (struct permonst *)0;
 	    }
 	    set_mon_data(mtmp, ptr, 1);		/* preserve intrinsics */
+	    mtmp->morigdata = newtype;
+	    if (is_racial(ptr) && !mtmp->mrace) {
+	    	mondied(mtmp);
+		return (struct permonst *)0;
+	    }
 	    newsym(mtmp->mx, mtmp->my);	        /* color may change */
 	    newsym(mtmp->mix, mtmp->miy);
 	    lev_limit = (int)mtmp->m_lev;	/* never undo increment */
@@ -1692,9 +2192,7 @@ register struct monst *mtmp;
 		return TRUE;
 	if (ptr->msound == MS_NEMESIS)	return FALSE;
 
-	//if (race_peaceful(ptr)) return TRUE;
 	if (race_peaceful(&mons[mons_to_corpse(mtmp)])) return TRUE;
-	//if (race_hostile(ptr)) return FALSE;
 	if (race_hostile(&mons[mons_to_corpse(mtmp)])) return FALSE;
 
 	/* the monster is hostile if its alignment is different from the
@@ -1772,6 +2270,12 @@ struct monst *mtmp;
 			mtmp->malign = max(3,absmal);
 	} else	/* not coaligned and therefore hostile */
 		mtmp->malign = abs(mal);
+
+	/* it's a bit of a kludge to have this here, but whatever */
+	if (mtmp->mpeaceful && mtmp->mtarget == &youmonst) {
+		mtmp->mtarget = (struct monst *)0;
+		mtmp->mtarget_id = 0;
+	}
 }
 
 #endif /* OVL1 */
@@ -1882,7 +2386,7 @@ assign_sym:
 			if (s_sym == S_MIMIC_DEF) {
 				appear = STRANGE_OBJECT;
 			} else {
-				otmp = mkobj( (char) s_sym, FALSE );
+				otmp = mkobj( (char) s_sym, NO_MO_FLAGS );
 				appear = otmp->otyp;
 				/* make sure container contents are free'ed */
 				obfree(otmp, (struct obj *) 0);

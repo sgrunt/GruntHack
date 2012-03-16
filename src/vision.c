@@ -173,13 +173,21 @@ does_block(x,y,lev)
 
     /* Boulders block light. */
     for (obj = level.objects[x][y]; obj; obj = obj->nexthere)
-	if (obj->otyp == BOULDER) return 1;
+	if (obj->otyp == BOULDER
+#ifdef INVISIBLE_OBJECT
+		&& (!obj->oinvis)
+#endif
+	) return 1;
 
     /* Mimics mimicing a door or boulder block light. */
     if ((mon = m_at(x,y)) && (!mon->minvis || See_invisible) &&
 	  ((mon->m_ap_type == M_AP_FURNITURE &&
 	  (mon->mappearance == S_hcdoor || mon->mappearance == S_vcdoor)) ||
-	  (mon->m_ap_type == M_AP_OBJECT && mon->mappearance == BOULDER)))
+	  (mon->m_ap_type == M_AP_OBJECT && mon->mappearance == BOULDER
+#ifdef INVISIBLE_OBJECT
+	  && !mon->minvis
+#endif
+	   )))
 	return 1;
 
     return 0;
@@ -302,7 +310,7 @@ rogue_vision(next, rmin, rmax)
     char *rmin, *rmax;
 {
     int rnum = levl[u.ux][u.uy].roomno - ROOMOFFSET; /* no SHARED... */
-    int start, stop, in_door, xhi, xlo, yhi, ylo;
+    int start, stop, xhi, xlo, yhi, ylo;
     register int zx, zy;
 
     /* If in a lit room, we are able to see to its boundaries. */
@@ -321,8 +329,6 @@ rogue_vision(next, rmin, rmax)
 	    }
 	}
     }
-
-    in_door = levl[u.ux][u.uy].typ == DOOR;
 
     /* Can always see adjacent. */
     ylo = max(u.uy - 1, 0);
@@ -492,10 +498,8 @@ void
 vision_recalc(control)
     int control;
 {
-    char **temp_array;	/* points to the old vision array */
     char **next_array;	/* points to the new vision array */
     char *next_row;	/* row pointer for the new array */
-    char *old_row;	/* row pointer for the old array */
     char *next_rmin;	/* min pointer for the new array */
     char *next_rmax;	/* max pointer for the new array */
     char *ranges;	/* circle ranges -- used for xray & night vision */
@@ -508,7 +512,6 @@ vision_recalc(control)
     extern unsigned char seenv_matrix[3][3];	/* from display.c */
     static unsigned char colbump[COLNO+1];	/* cols to bump sv */
     unsigned char *sv;				/* ptr to seen angle bits */
-    int oldseenv;				/* previous seenv value */
 
     vision_full_recalc = 0;			/* reset flag */
     if (in_mklev || !iflags.vision_inited) return;
@@ -526,7 +529,7 @@ vision_recalc(control)
     get_unused_cs(&next_array, &next_rmin, &next_rmax);
 
     /* You see nothing, nothing can see you --- if swallowed or refreshing. */
-    if (u.uswallow || control == 2) {
+    if (u.uswallow || u.uburied || control == 2) {
 	/* do nothing -- get_unused_cs() nulls out the new work area */
 
     } else if (Blind) {
@@ -548,18 +551,15 @@ vision_recalc(control)
 	 * anything, so we only need update positions we used to be able
 	 * to see.
 	 */
-	temp_array = viz_array;	/* set viz_array so newsym() will work */
 	viz_array = next_array;
 
 	for (row = 0; row < ROWNO; row++) {
-	    old_row = temp_array[row];
-
 	    /* Find the min and max positions on the row. */
 	    start = min(viz_rmin[row], next_rmin[row]);
 	    stop  = max(viz_rmax[row], next_rmax[row]);
 
 	    for (col = start; col <= stop; col++)
-		/*if (old_row[col] & IN_SIGHT) */ newsym(col,row);
+		newsym(col,row);
 	}
 
 	/* skip the normal update loop */
@@ -622,13 +622,9 @@ vision_recalc(control)
 		    stop  = min(COLNO-1, u.ux + ranges[dy]);
 
 		    for (col = start; col <= stop; col++) {
-			char old_row_val = next_row[col];
 			next_row[col] |= IN_SIGHT;
-			oldseenv = levl[col][row].seenv;
 			levl[col][row].seenv = SVALL;	/* see all! */
-			/* Update if previously not in sight or new angle. */
-			//if (!(old_row_val & IN_SIGHT) || oldseenv != SVALL)
-			    newsym(col,row);
+			newsym(col,row);
 		    }
 
 		    next_rmin[row] = min(start, next_rmin[row]);
@@ -676,7 +672,6 @@ vision_recalc(control)
     /*
      * Make the viz_array the new array so that cansee() will work correctly.
      */
-    temp_array = viz_array;
     viz_array = next_array;
 
     /*
@@ -698,7 +693,7 @@ vision_recalc(control)
     colbump[u.ux] = colbump[u.ux+1] = 1;
     for (row = 0; row < ROWNO; row++) {
 	dy = u.uy - row;                dy = sign(dy);
-	next_row = next_array[row];     old_row = temp_array[row];
+	next_row = next_array[row];
 
 	/* Find the min and max positions on the row. */
 	start = min(viz_rmin[row], next_rmin[row]);
@@ -713,11 +708,10 @@ vision_recalc(control)
 		/*
 		 * We see this position because of night- or xray-vision.
 		 */
-		oldseenv = lev->seenv;
 		lev->seenv |= new_angle(lev,sv,row,col); /* update seen angle */
 
 		/* Update pos if previously not in sight or new angle. */
-		//if ( !(old_row[col] & IN_SIGHT) || oldseenv != lev->seenv)
+		/*if ( !(old_row[col] & IN_SIGHT) || oldseenv != lev->seenv)*/
 		    newsym(col,row);
 	    }
 
@@ -739,24 +733,18 @@ vision_recalc(control)
 		    if (flev->lit || next_array[row+dy][col+dx] & TEMP_LIT) {
 			next_row[col] |= IN_SIGHT;	/* we see it */
 
-			oldseenv = lev->seenv;
 			lev->seenv |= new_angle(lev,sv,row,col);
 
-			/* Update pos if previously not in sight or new angle.*/
-			//if (!(old_row[col] & IN_SIGHT) || oldseenv!=lev->seenv)
-			    newsym(col,row);
+			newsym(col,row);
 		    } else
 			goto not_in_sight;	/* we don't see it */
 
 		} else {
 		    next_row[col] |= IN_SIGHT;	/* we see it */
 
-		    oldseenv = lev->seenv;
 		    lev->seenv |= new_angle(lev,sv,row,col);
 
-		    /* Update pos if previously not in sight or new angle. */
-		    //if ( !(old_row[col] & IN_SIGHT) || oldseenv != lev->seenv)
-			newsym(col,row);
+		    newsym(col,row);
 		}
 	    } else if ((next_row[col] & COULD_SEE) && lev->waslit) {
 		/*
@@ -784,9 +772,9 @@ vision_recalc(control)
 	     */
 	    else {
 not_in_sight:
-		//if ((old_row[col] & IN_SIGHT)
-		//	|| ((next_row[col] & COULD_SEE)
-		//		^ (old_row[col] & COULD_SEE)))
+		/*if ((old_row[col] & IN_SIGHT)*/
+		/*	|| ((next_row[col] & COULD_SEE)*/
+		/*		^ (old_row[col] & COULD_SEE)))*/
 		    newsym(col,row);
 	    }
 
@@ -2205,9 +2193,7 @@ right_side(row, left, right_mark, limits)
     char	  *row_max;	/* right most [used by macro set_max()] */
     int		  lim_max;	/* right most limit of circle */
 
-#ifdef GCC_WARN
     rowp = row_min = row_max = 0;
-#endif
     nrow    = row + step;
     /*
      * Can go deeper if the row is in bounds and the next row is within
@@ -2380,9 +2366,7 @@ left_side(row, left_mark, right, limits)
     char	  *row_min, *row_max;
     int		  lim_min;
 
-#ifdef GCC_WARN
     rowp = row_min = row_max = 0;
-#endif
     nrow    = row+step;
     deeper  = good_row(nrow) && (!limits || (*limits >= *(limits+1)));
     if(!vis_func) {

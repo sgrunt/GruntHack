@@ -169,7 +169,7 @@ extern INPUT_RECORD ir;
 char dllname[512];
 char *shortdllname;
 
-int FDECL(__declspec(dllexport) __stdcall
+int FDECL(__declspec(dllexport) __cdecl
 ProcessKeystroke, (HANDLE hConIn, INPUT_RECORD *ir, 
     boolean *valid, BOOLEAN_P numberpad, int portdebug));
 
@@ -179,7 +179,7 @@ int WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, PVOID pvReserved)
 {
 	char dlltmpname[512];
 	char *tmp = dlltmpname, *tmp2;
-	*(tmp + GetModuleFileName(hInstance, tmp, 511)) = '\0';
+	*(tmp + GetModuleFileNameA(hInstance, tmp, 511)) = '\0';
 	(void)strcpy(dllname, tmp);
 	tmp2 = strrchr(dllname, '\\');
 	if (tmp2) {
@@ -278,7 +278,7 @@ unsigned long shiftstate;
     }
 }
 
-int __declspec(dllexport) __stdcall
+int __declspec(dllexport) __cdecl
 ProcessKeystroke(hConIn, ir, valid, numberpad, portdebug)
 HANDLE hConIn;
 INPUT_RECORD *ir;
@@ -446,7 +446,7 @@ boolean *valid;
 	return ch;
 }
 
-int __declspec(dllexport) __stdcall
+int __declspec(dllexport) __cdecl
 CheckInput(hConIn, ir, count, numpad, mode, mod, cc)
 HANDLE hConIn;
 INPUT_RECORD *ir;
@@ -482,13 +482,13 @@ coord *cc;
 			ReadConsoleInput(hConIn,ir,1,count);
 			if (ir->EventType == MOUSE_EVENT) {
 			    if ((ir->Event.MouseEvent.dwEventFlags == 0) &&
-		   	        (ir->Event.MouseEvent.dwButtonState & MOUSEMASK)) {
+		   	        (ir->Event.MouseEvent.dwButtonState)) {
 			  	cc->x = ir->Event.MouseEvent.dwMousePosition.X + 1;
 			  	cc->y = ir->Event.MouseEvent.dwMousePosition.Y - 1;
 
-			  	if (ir->Event.MouseEvent.dwButtonState & LEFTBUTTON)
+			  	if (ir->Event.MouseEvent.dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED)
 		  	       		*mod = CLICK_1;
-			  	else if (ir->Event.MouseEvent.dwButtonState & RIGHTBUTTON)
+			  	else if (ir->Event.MouseEvent.dwButtonState & RIGHTMOST_BUTTON_PRESSED)
 					*mod = CLICK_2;
 #if 0	/* middle button */			       
 				else if (ir->Event.MouseEvent.dwButtonState & MIDBUTTON)
@@ -513,7 +513,7 @@ coord *cc;
 	return ch;
 }
 
-int __declspec(dllexport) __stdcall
+int __declspec(dllexport) __cdecl
 NHkbhit(hConIn, ir)
 HANDLE hConIn;
 INPUT_RECORD *ir;
@@ -552,7 +552,7 @@ INPUT_RECORD *ir;
 
 		}
 		else if ((ir->EventType == MOUSE_EVENT &&
-		  (ir->Event.MouseEvent.dwButtonState & MOUSEMASK))) {
+		  (ir->Event.MouseEvent.dwButtonState))) {
 			done = 1;
 			retval = 1;
 		}
@@ -568,7 +568,7 @@ INPUT_RECORD *ir;
 }
 
 
-int __declspec(dllexport) __stdcall
+int __declspec(dllexport) __cdecl
 SourceWhere(buf)
 char **buf;
 {
@@ -577,7 +577,7 @@ char **buf;
 	return 1;
 }
 
-int __declspec(dllexport) __stdcall
+int __declspec(dllexport) __cdecl
 SourceAuthor(buf)
 char **buf;
 {
@@ -586,7 +586,7 @@ char **buf;
 	return 1;
 }
 
-int __declspec(dllexport) __stdcall
+int __declspec(dllexport) __cdecl
 KeyHandlerName(buf, full)
 char **buf;
 int full;

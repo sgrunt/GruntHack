@@ -83,6 +83,7 @@ struct monst {
 
 	Bitfield(mcan,1);	/* has been cancelled */
 	Bitfield(mburied,1);	/* has been buried */
+	Bitfield(muburied,1);	/* if you buried it */
 	Bitfield(mspeed,2);	/* current speed */
 	Bitfield(permspeed,2);	/* intrinsic mspeed value */
 	Bitfield(mrevived,1);	/* has been revived from the dead */
@@ -106,6 +107,7 @@ struct monst {
 	Bitfield(mleashed,1);	/* monster is on a leash */
 	Bitfield(isshk,1);	/* is shopkeeper */
 	Bitfield(isminion,1);	/* is a minion */
+	Bitfield(isaggr,1);     /* other monsters are aggravated at it */
 
 	Bitfield(isgd,1);	/* is guard */
 	Bitfield(ispriest,1);	/* is a priest */
@@ -152,6 +154,11 @@ struct monst {
 	/* in order to prevent alignment problems mextra should
 	   be (or follow) a long int */
 	int meating;		/* monster is eating timeout */
+	int mlevitating;	/* levitation spell / potion timeout */
+	uchar mprotection;	/* how many points of protection from spells */
+	uchar mprottime;	/* timeout for protection */
+	struct monst *mtarget;  /* are we targetting anyone? */
+	unsigned mtarget_id;   /* what's the ID of our target? */
 	long mextra[1]; /* monster dependent info */
 };
 

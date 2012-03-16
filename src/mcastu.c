@@ -7,6 +7,7 @@
 extern const int monstr[];
 extern void demonpet();
 
+#ifndef COMBINED_SPELLS
 /* monster mage spells */
 #define MGC_PSI_BOLT	 0
 #define MGC_CURE_SELF	 1
@@ -20,6 +21,7 @@ extern void demonpet();
 #define MGC_SUMMON_MONS	 9
 #define MGC_CLONE_WIZ	10
 #define MGC_DEATH_TOUCH	11
+#endif
 
 /* monster cleric spells */
 #define CLC_OPEN_WOUNDS	 0
@@ -33,20 +35,61 @@ extern void demonpet();
 #define CLC_FIRE_PILLAR	 8
 #define CLC_GEYSER	 9
 
-void you_aggravate(struct monst *);
+extern void you_aggravate(struct monst *);
 
 STATIC_DCL void FDECL(cursetxt,(struct monst *,BOOLEAN_P));
-STATIC_DCL int FDECL(choose_magic_spell, (int));
+STATIC_DCL int FDECL(choose_magic_spell, (struct monst *, int));
 STATIC_DCL int FDECL(choose_clerical_spell, (int));
 STATIC_DCL void FDECL(cast_wizard_spell,(struct monst *, int,int));
 STATIC_DCL void FDECL(cast_cleric_spell,(struct monst *, int,int));
 STATIC_DCL boolean FDECL(is_undirected_spell,(unsigned int,int));
 STATIC_DCL boolean FDECL(spell_would_be_useless,(struct monst *,unsigned int,int));
-STATIC_DCL boolean FDECL(uspell_would_be_useless,(unsigned int,int));
+STATIC_DCL boolean FDECL(uspell_would_be_useless,(struct monst *,unsigned int,int));
 STATIC_DCL void FDECL(ucast_wizard_spell,(struct monst *,struct monst *,int,int));
 STATIC_DCL void FDECL(ucast_cleric_spell,(struct monst *,struct monst *,int,int));
 
 #ifdef OVL0
+
+#ifdef COMBINED_SPELLS
+boolean
+is_spellcaster(ptr)
+register struct permonst *ptr;
+{
+	int i = 0;
+	for (; i < NATTK; i++) {
+		if(ptr->mattk[i].aatyp == AT_MAGC &&
+		   ptr->mattk[i].adtyp == AD_SPEL) {
+		   	return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+boolean
+can_cast_spells(mtmp)
+register struct monst *mtmp;
+{
+	return mtmp->mspec_used <= maxspelltimeout(mtmp);
+}
+
+int maxspelltimeout(mtmp)
+register struct monst *mtmp;
+{
+	if (mtmp->m_lev >= 38)
+		return 255;
+	return 8*mtmp->m_lev*((38-mtmp->m_lev)*2/3);
+}
+
+int spelltimeout(mtmp, level)
+register struct monst *mtmp;
+register int level;
+{
+	if (mtmp->m_lev >= 38)
+		return 0;
+	return 5*level*((38-mtmp->m_lev)*2/3);
+}
+#endif
 
 extern const char * const flash_types[];	/* from zap.c */
 
@@ -85,9 +128,148 @@ boolean undirected;
 /* convert a level based random selection into a specific mage spell;
    inappropriate choices will be screened out by spell_would_be_useless() */
 STATIC_OVL int
-choose_magic_spell(spellval)
+choose_magic_spell(mtmp, spellval)
+struct monst *mtmp;
 int spellval;
 {
+#ifdef COMBINED_SPELLS
+    int level = 1;
+
+    if (mtmp == &youmonst) {
+	/* special cases */
+	if (Sick && abs(spellval) >= 5)
+	    return SPE_CURE_SICKNESS;
+
+	if (Blind && abs(spellval) >= 3)
+    	    return SPE_CURE_BLINDNESS;
+
+	if (mtmp->mhp * 4 < mtmp->mhpmax)
+	{
+    	    if (abs(spellval >= 5))
+		return SPE_EXTRA_HEALING;
+	    else
+		return SPE_HEALING;
+	}
+
+	if (u.uspellprot == 0)
+    	    return SPE_PROTECTION;
+
+	if (!Levitation && !Flying && abs(spellval) >= 7)
+	    return SPE_LEVITATION;
+    } else {
+	/* special cases */
+	if (mtmp->msick && abs(spellval) >= 5)
+	    return SPE_CURE_SICKNESS;
+
+	if (mtmp->mblinded && abs(spellval) >= 3)
+    	    return SPE_CURE_BLINDNESS;
+
+	if (mtmp->mhp * 4 < mtmp->mhpmax)
+	{
+    	    if (abs(spellval >= 5))
+		return SPE_EXTRA_HEALING;
+	    else
+		return SPE_HEALING;
+	}
+
+	if (!mtmp->mprotection)
+    	    return SPE_PROTECTION;
+
+	if ((Levitation || Flying) && !levitating(mtmp) && !is_flyer(mtmp->data) &&
+    	    abs(spellval) >= 7)
+	  return SPE_LEVITATION;
+    }
+    
+    /* spellval < 0 indicates friendly spellcasting; */
+    /* we want that to be better with luck */
+    if (spellval < 0) {
+        int efflevel = (-spellval + 1) / 2;
+    	level += efflevel - rnl(efflevel);
+    }
+    else level += rnl((spellval + 1) / 2);
+    if (level > 7) level = 7;
+    switch(level) {
+    	case 7:
+	    switch (rn2(3)) {
+	    	case 0: return SPE_FINGER_OF_DEATH;
+		case 1: return SPE_CANCELLATION;
+	        /* double trouble - use a spellbook that's not a spellbook. */
+		case 2: return SPE_BOOK_OF_THE_DEAD;
+	    }
+	    break;
+	case 6:
+	    switch (rn2(5)) {
+	    	case 0: return SPE_CREATE_FAMILIAR;
+		case 1: return SPE_TURN_UNDEAD;
+		case 2: return SPE_TELEPORT_AWAY;
+		case 3: return SPE_POLYMORPH;
+		case 4: return SPE_ACID_BLAST;
+	    }
+	    break;
+	case 5:
+	    switch (rn2(4)) {
+	    	case 0: return SPE_MAGIC_MAPPING;
+		case 1: return SPE_DIG;
+		case 2: return SPE_TOUCH_OF_DEATH;
+		case 3: return SPE_POISON_BLAST;
+	    }
+	    break;
+	case 4:
+	    switch (rn2(8)) {
+	    	case 0: return SPE_CONE_OF_COLD;
+		case 1: return SPE_FIREBALL;
+		case 2: return SPE_LIGHTNING;
+		case 3: return SPE_DETECT_TREASURE;
+		case 4: return SPE_INVISIBILITY;
+		case 5: return SPE_LEVITATION;
+		case 6: return SPE_RESTORE_ABILITY;
+		case 7: return SPE_CAUSE_AGGRAVATION;
+	    }
+	    break;
+	case 3:
+	    switch (rn2(9)) {
+	    	case 0: return SPE_REMOVE_CURSE;
+		case 1: return SPE_CLAIRVOYANCE;
+		case 2: return SPE_DETECT_UNSEEN;
+		case 3: return SPE_IDENTIFY;
+		case 4: return SPE_CAUSE_FEAR;
+		case 5: return SPE_CHARM_MONSTER;
+		case 6: return SPE_HASTE_SELF;
+		case 7: return SPE_CURE_SICKNESS;
+		case 8: return SPE_EXTRA_HEALING;
+	    }
+	    break;
+	case 2:
+	    switch (rn2(8)) {
+	    	case 0: return SPE_DRAIN_LIFE;
+		case 1: return SPE_MAGIC_MISSILE;
+		case 2: return SPE_CREATE_MONSTER;
+		case 3: return SPE_DETECT_FOOD;
+		case 4: return SPE_CONFUSE_MONSTER;
+		case 5: return SPE_SLOW_MONSTER;
+		case 6: return SPE_CURE_BLINDNESS;
+		case 7: return SPE_WIZARD_LOCK;
+	    }
+	    break;
+	case 1:
+	default:
+	    switch (rn2(11)) {
+	    	case 0: return SPE_FORCE_BOLT;
+		case 1: return SPE_PSI_BOLT;
+		case 2: return SPE_PROTECTION;
+		case 3: return SPE_DETECT_MONSTERS;
+		case 4: return SPE_LIGHT;
+		case 5: return SPE_SLEEP;
+		case 6: return SPE_JUMPING;
+		case 7: return SPE_HEALING;
+		case 8: return SPE_KNOCK;
+		case 9: return SPE_FLAME_SPHERE;
+		case 10: return SPE_FREEZE_SPHERE;
+	    }
+	    break;
+    }
+    return SPE_PSI_BOLT;
+#else
     switch (spellval) {
     case 22:
     case 21:
@@ -126,6 +308,7 @@ int spellval;
     default:
 	return MGC_PSI_BOLT;
     }
+#endif
 }
 
 /* convert a level based random selection into a specific cleric spell */
@@ -193,11 +376,14 @@ castmu(mtmp, mattk, thinks_it_foundyou, foundyou)
 	    int cnt = 40;
 
 	    do {
-		spellnum = rn2(ml);
 		if (mattk->adtyp == AD_SPEL)
-		    spellnum = choose_magic_spell(spellnum);
+#ifdef COMBINED_SPELLS
+		    spellnum = choose_magic_spell(mtmp, ml);
+#else
+		    spellnum = choose_magic_spell(mtmp, rn2(ml));
+#endif
 		else
-		    spellnum = choose_clerical_spell(spellnum);
+		    spellnum = choose_clerical_spell(rn2(ml));
 		/* not trying to attack?  don't allow directed spells */
 		if (!thinks_it_foundyou) {
 		    if (!is_undirected_spell(mattk->adtyp, spellnum) ||
@@ -214,15 +400,30 @@ castmu(mtmp, mattk, thinks_it_foundyou, foundyou)
 	}
 
 	/* monster unable to cast spells? */
-	if(mtmp->mcan || mtmp->mspec_used || !ml) {
+	if(mtmp->mcan ||
+#ifdef COMBINED_SPELLS
+		((mattk->adtyp == AD_SPEL && !can_cast_spells(mtmp)) ||
+		(mattk->adtyp != AD_SPEL && mtmp->mspec_used))
+#else
+		mtmp->mspec_used
+#endif
+	   || !ml) {
 	    cursetxt(mtmp, is_undirected_spell(mattk->adtyp, spellnum));
 	    return(0);
 	}
 
 	if (mattk->adtyp == AD_SPEL || mattk->adtyp == AD_CLRC) {
 	    register struct obj *obj;
+#ifdef COMBINED_SPELLS
+            if (mattk->adtyp == AD_SPEL)
+	    {
+	    	mtmp->mspec_used +=
+			spelltimeout(mtmp, objects[spellnum].oc_level); 
+	    }
+	    else
+#endif
 	    mtmp->mspec_used = 10 - mtmp->m_lev;
-	    if (mtmp->mspec_used < 2) mtmp->mspec_used = 2;
+	    if (mtmp->mspec_used < 1) mtmp->mspec_used = 1;
 	    for (obj = mtmp->minvent; obj; obj = obj->nobj)
 	        if (obj->oartifact &&
 		    obj->oartifact == ART_EYE_OF_THE_AETHIOPICA)
@@ -236,7 +437,12 @@ castmu(mtmp, mattk, thinks_it_foundyou, foundyou)
 	   wrong place?  If so, give a message, and return.  Do this *after*
 	   penalizing mspec_used. */
 	if (!foundyou && thinks_it_foundyou &&
-		!is_undirected_spell(mattk->adtyp, spellnum)) {
+		!is_undirected_spell(mattk->adtyp, spellnum)
+#ifdef COMBINED_SPELLS
+	        && (mattk->adtyp != AD_SPEL && mattk->adtyp != AD_CLRC)
+#endif
+		
+		) {
 	    pline("%s casts a spell at %s!",
 		canseemon(mtmp) ? Monnam(mtmp) : "Something",
 		levl[mtmp->mux][mtmp->muy].typ == WATER
@@ -245,7 +451,11 @@ castmu(mtmp, mattk, thinks_it_foundyou, foundyou)
 	}
 
 	nomul(0);
+#ifdef COMBINED_SPELLS
+	if (mtmp->mconf) {
+#else
 	if(rn2(ml*10) < (mtmp->mconf ? 100 : 20)) {	/* fumbled attack */
+#endif
 	    if (canseemon(mtmp) && flags.soundok)
 		pline_The("air crackles around %s.", mon_nam(mtmp));
 	    return(0);
@@ -266,6 +476,7 @@ castmu(mtmp, mattk, thinks_it_foundyou, foundyou)
  *	As these are spells, the damage is related to the level
  *	of the monster casting the spell.
  */
+#ifndef COMBINED_SPELLS
 	if (!foundyou) {
 	    dmg = 0;
 	    if (mattk->adtyp != AD_SPEL && mattk->adtyp != AD_CLRC) {
@@ -274,12 +485,22 @@ castmu(mtmp, mattk, thinks_it_foundyou, foundyou)
 			   Monnam(mtmp), mattk->adtyp);
 		return(0);
 	    }
-	} else if (mattk->damd)
+	} else
+#endif
+	if (mattk->damd)
 	    dmg = d((int)((ml/2) + mattk->damn), (int)mattk->damd);
 	else dmg = d((int)((ml/2) + 1), 6);
 	if (Half_spell_damage) dmg = (dmg+1) / 2;
 
+#ifdef COMBINED_SPELLS
+	/* this short-circuit behaviour prevents attacks from */
+	/* after spells from being used unless there's no */
+	/* magical energy to cast the spell. */
+	ret = (mattk->adtyp == AD_SPEL &&
+		is_racial(mtmp->data)) ? 3 : 1;
+#else
 	ret = 1;
+#endif
 
 	switch (mattk->adtyp) {
 
@@ -319,9 +540,14 @@ castmu(mtmp, mattk, thinks_it_foundyou, foundyou)
 		break;
 	    }
 	}
-	if(dmg) mdamageu(mtmp, dmg);
+	if(dmg) mdamageu(mtmp, mattk, dmg);
 	return(ret);
 }
+
+int FDECL(mbhitm, (struct monst *,struct obj *));
+void FDECL(mbhit,
+	(struct monst *,int,int FDECL((*),(MONST_P,OBJ_P)),
+	int FDECL((*),(OBJ_P,OBJ_P)),struct obj *));
 
 /* monster wizard and cleric spellcasting functions */
 /*
@@ -339,13 +565,21 @@ struct monst *mtmp;
 int dmg;
 int spellnum;
 {
+    struct obj *pseudo = 0;
+    int tmp1, tmp2;
+    coord bypos;
+
     if (dmg == 0 && !is_undirected_spell(AD_SPEL, spellnum)) {
 	impossible("cast directed wizard spell (%d) with dmg=0?", spellnum);
 	return;
     }
 
     switch (spellnum) {
+#ifdef COMBINED_SPELLS
+    case SPE_TOUCH_OF_DEATH:
+#else
     case MGC_DEATH_TOUCH:
+#endif
 	pline("Oh no, %s's using the touch of death!", mhe(mtmp));
 	if (nonliving(youmonst.data) || is_demon(youmonst.data)) {
 	    You("seem no deader than before.");
@@ -366,7 +600,11 @@ int spellnum;
 	}
 	dmg = 0;
 	break;
+#ifdef COMBINED_SPELLS
+    case SPE_BOOK_OF_THE_DEAD:
+#else
     case MGC_CLONE_WIZ:
+#endif
 	if (mtmp->iswiz && flags.no_of_wizards == 1) {
 	    pline("Double Trouble...");
 	    clonewiz();
@@ -374,6 +612,7 @@ int spellnum;
 	} else
 	    impossible("bad wizard cloning?");
 	break;
+#ifndef COMBINED_SPELLS
     case MGC_SUMMON_MONS:
     {
 	int count;
@@ -427,11 +666,16 @@ int spellnum;
 	    if (Half_spell_damage) dmg = (dmg + 1) / 2;
 	    losestr(rnd(dmg));
 	    if (u.uhp < 1)
-		done_in_by(mtmp);
+		done_in_by(mtmp, NULL);
 	}
 	dmg = 0;
 	break;
+#endif
+#ifdef COMBINED_SPELLS
+    case SPE_INVISIBILITY:
+#else
     case MGC_DISAPPEAR:		/* makes self invisible */
+#endif
 	if (!mtmp->minvis && !mtmp->invis_blkd) {
 	    if (canseemon(mtmp))
 		pline("%s suddenly %s!", Monnam(mtmp),
@@ -441,6 +685,7 @@ int spellnum;
 	} else
 	    impossible("no reason for monster to cast disappear spell?");
 	break;
+#ifndef COMBINED_SPELLS
     case MGC_STUN_YOU:
 	if (Antimagic || Free_action) {
 	    shieldeff(u.ux, u.uy);
@@ -455,10 +700,35 @@ int spellnum;
 	}
 	dmg = 0;
 	break;
+#endif
+#ifdef COMBINED_SPELLS
+    case SPE_HASTE_SELF:
+#else
     case MGC_HASTE_SELF:
+#endif
 	mon_adjust_speed(mtmp, 1, (struct obj *)0);
 	dmg = 0;
 	break;
+#ifdef COMBINED_SPELLS
+    case SPE_EXTRA_HEALING:
+	if (mtmp->mhp < mtmp->mhpmax) {
+	    if (canseemon(mtmp))
+		pline("%s looks much better.", Monnam(mtmp));
+	    if ((mtmp->mhp += d(6,8)) > mtmp->mhpmax)
+		mtmp->mhp = mtmp->mhpmax;
+	    dmg = 0;
+	}
+	break;
+    case SPE_HEALING:
+	if (mtmp->mhp < mtmp->mhpmax) {
+	    if (canseemon(mtmp))
+		pline("%s looks better.", Monnam(mtmp));
+	    if ((mtmp->mhp += d(6,4)) > mtmp->mhpmax)
+		mtmp->mhp = mtmp->mhpmax;
+	    dmg = 0;
+	}
+	break;
+#else
     case MGC_CURE_SELF:
 	if (mtmp->mhp < mtmp->mhpmax) {
 	    if (canseemon(mtmp))
@@ -469,7 +739,12 @@ int spellnum;
 	    dmg = 0;
 	}
 	break;
+#endif
+#ifdef COMBINED_SPELLS
+    case SPE_PSI_BOLT:
+#else
     case MGC_PSI_BOLT:
+#endif
 	/* prior to 3.4.0 Antimagic was setting the damage to 1--this
 	   made the spell virtually harmless to players with magic res. */
 	if (Antimagic) {
@@ -485,13 +760,273 @@ int spellnum;
 	else
 	    Your("%s suddenly aches very painfully!", body_part(HEAD));
 	break;
+#ifdef COMBINED_SPELLS
+    case SPE_FORCE_BOLT:
+    case SPE_DRAIN_LIFE:
+    case SPE_SLOW_MONSTER:
+    case SPE_TELEPORT_AWAY:
+    case SPE_KNOCK:
+    case SPE_WIZARD_LOCK:
+    case SPE_POLYMORPH:
+    case SPE_CANCELLATION:
+	pseudo = mksobj(spellnum, FALSE, FALSE);
+	pseudo->blessed = pseudo->cursed = 0;
+	pseudo->quan = 20L;
+	tmp1 = tbx; tmp2 = tby;
+	tbx = mtmp->mux - mtmp->mx;
+	tby = mtmp->muy - mtmp->my;
+	mbhit(mtmp,rn1(8,6),mbhitm,bhito,pseudo);
+	obfree(pseudo, (struct obj *)0);
+	tbx = tmp1; tby = tmp2;
+	dmg = 0;
+    	break;
+    case SPE_FIREBALL:
+    case SPE_CONE_OF_COLD:
+    case SPE_POISON_BLAST:
+    case SPE_ACID_BLAST:
+    	if (mtmp->iswiz || is_prince(mtmp->data) || is_lord(mtmp->data) ||
+		mtmp->data->msound == MS_NEMESIS)
+	{
+		int n = rnd(8) + 1;
+		coord pos;
+		pos.x = mtmp->mux;
+		pos.y = mtmp->muy;
+		You("are blasted by %s!",
+			spellnum == SPE_FIREBALL ? "a fireball" :
+			spellnum == SPE_CONE_OF_COLD ? "a cone of cold" :
+			spellnum == SPE_POISON_BLAST ? "poison gas" :
+			spellnum == SPE_ACID_BLAST ? "acid" :
+			"a strange effect");
+		while(n--) {
+		    explode(pos.x, pos.y,
+			    spellnum - SPE_MAGIC_MISSILE + 10,
+			    mtmp->m_lev/2 + 1, 0,
+				(spellnum == SPE_CONE_OF_COLD) ?
+					EXPL_FROSTY :
+				(spellnum == SPE_POISON_BLAST) ?
+					EXPL_NOXIOUS :
+				(spellnum == SPE_ACID_BLAST) ?
+					EXPL_WET :
+				EXPL_FIERY);
+		    if (spellnum != SPE_CONE_OF_COLD)
+		        scatter(pos.x, pos.y,
+				mtmp->m_lev/2 + 1,
+				VIS_EFFECTS|MAY_HIT|
+				MAY_DESTROY|MAY_FRACTURE, NULL);
+		}
+		pos.x = mtmp->mux+rnd(3)-2; pos.y = mtmp->muy+rnd(3)-2;
+		if (!isok(pos.x,pos.y) || !cansee(pos.x,pos.y) ||
+		    IS_STWALL(levl[pos.x][pos.y].typ)) {
+		    /* Spell is reflected back to center */
+		    pos.x = mtmp->mux; pos.y = mtmp->muy;
+	        }
+		dmg = 0;
+		break;
+	}
+    case SPE_SLEEP:
+    case SPE_MAGIC_MISSILE:
+    case SPE_FINGER_OF_DEATH:
+    case SPE_LIGHTNING:
+	buzz(-(spellnum - SPE_MAGIC_MISSILE + 10),
+	     mtmp->m_lev / 2 + 1,
+	     mtmp->mx, mtmp->my,
+	     sgn(mtmp->mux-mtmp->mx), sgn(mtmp->muy-mtmp->my));
+	dmg = 0;
+    	break;
+    case SPE_CAUSE_FEAR:
+    {
+	int count = rnl(73);
+	
+	dmg = 0;
+
+        if (mtmp->mux != u.ux || mtmp->muy != u.uy)
+	    break;
+
+	if (Antimagic) {
+		count = 3;
+	}
+	frighten_player(count);
+        break;
+    }
+    case SPE_CONFUSE_MONSTER:
+	dmg = 0;
+
+        if (mtmp->mux != u.ux || mtmp->muy != u.uy)
+	    break;
+	if (Antimagic) {
+	    if (Confusion)
+	        You("feel even dizzier.");
+	    else You("feel slightly dizzy.");
+	    make_confused(HConfusion + 1 + rnl(3), FALSE);
+	} else {
+	    if(Confusion)
+		You("are getting even more confused.");
+	    else You("are getting confused.");
+	    make_confused(HConfusion + 1 + rnl(100), FALSE);
+	}
+        break;
+    case SPE_CREATE_MONSTER:
+    {
+    	int count = 1 + (!rn2(73)) ? rnd(4) : 0;
+	int seencount = 0;
+	boolean confused = mtmp->mconf;
+	register struct monst *mpet;
+	bypos.x = mtmp->mx;
+	bypos.y = mtmp->my;
+	dmg = 0;
+	for (; count > 0; count--)
+	{
+		if (enexto(&bypos, mtmp->mx, mtmp->my, (struct permonst *)0))
+		{
+        		mpet = makemon(
+				confused ? &mons[PM_ACID_BLOB]
+				         : (struct permonst *)0,
+				bypos.x, bypos.y, NO_MM_FLAGS);
+			if (mpet && canspotmon(mpet))
+				seencount++;
+		}
+	}
+	if (seencount)
+	    	pline("%s from nowhere!", 
+			seencount == 1 ? "A monster appears"
+			               : "Monsters appear");
+    	break;
+    }
+    case SPE_FLAME_SPHERE:
+    case SPE_FREEZE_SPHERE:
+    case SPE_SHOCK_SPHERE:
+    case SPE_CREATE_FAMILIAR:
+    {
+    	int count = 1, seencount = 0, heardcount = 0;
+    	register struct monst *mpet = 0;
+	register struct permonst *montype =
+		spellnum == SPE_FLAME_SPHERE  ? &mons[PM_FLAMING_SPHERE] :
+		spellnum == SPE_FREEZE_SPHERE ? &mons[PM_FREEZING_SPHERE] :
+		spellnum == SPE_SHOCK_SPHERE  ? &mons[PM_SHOCKING_SPHERE] :
+		(!rn2(3) ? (rn2(2) ? &mons[PM_LITTLE_DOG] : &mons[PM_KITTEN])
+			    : rndmonst() );
+	if (spellnum != SPE_CREATE_FAMILIAR)
+	{
+		if (mtmp->iswiz || is_prince(mtmp->data) ||
+		    mtmp->data->msound == MS_NEMESIS)
+			count += rn1(3,2);
+		else if (is_lord(mtmp->data))
+			count += rn1(2,1);
+	}
+	bypos.x = mtmp->mx;
+	bypos.y = mtmp->my;
+	
+	dmg = 0;
+	
+	for (; count > 0; count--)
+	{
+		if (enexto(&bypos, mtmp->mx, mtmp->my, montype))
+			mpet = makemon(montype, bypos.x, bypos.y,
+				(mtmp->mtame) ? MM_EDOG :  NO_MM_FLAGS);
+		if (mpet)
+		{
+	                mpet->msleeping = 0;
+	                if (mtmp->mtame)
+			    initedog(mpet);
+			else if (mtmp->mpeaceful)
+			        mpet->mpeaceful = 1;
+			else mpet->mpeaceful = mpet->mtame = 0;
+
+			if (spellnum != SPE_CREATE_FAMILIAR)
+			{
+				mpet->m_lev = mtmp->m_lev;
+	    		    	mpet->mhpmax = mpet->mhp =
+					d((int)mpet->m_lev, 8);
+			}
+	
+			set_malign(mpet);
+			if (canspotmon(mpet)) {
+				seencount++;
+				/*pline("%s appears from nowhere!", Amonnam(mpet));*/
+			} else {
+				heardcount++;
+			}
+		}
+	}
+	if (seencount > 0)
+	{
+		pline("%s%s appear%s from nowhere!", 
+			seencount > 1 ? "Some " : "",
+			seencount > 1 ? makeplural(m_monnam(mpet))
+			              : Amonnam(mpet),
+			seencount == 1 ? "s" : "");
+	}
+	else if (heardcount > 0 && flags.soundok && spellnum != SPE_CREATE_FAMILIAR)
+		You_hear("crackling.");
+    	break;
+    }
+    case SPE_LEVITATION:
+    	dmg = 0;
+
+    	if (!levitating(mtmp) && canseemon(mtmp))
+	        pline("%s begins to float in the air!", Monnam(mtmp));
+	
+	mtmp->mlevitating += (mtmp->iswiz ||
+	                      mtmp->data->msound == MS_NEMESIS ||
+			      is_prince(mtmp->data) ||
+			      is_lord(mtmp->data))
+		? rn1(50,250) : rn1(140, 10);
+	break;
+    case SPE_PROTECTION:
+    {
+    	int natac = find_mac(mtmp) + mtmp->mprotection;
+	int loglev = 0, l = mtmp->m_lev;
+	int gain = 0;
+
+    	dmg = 0;
+	
+	for (; l > 0; l /= 2)
+		loglev++;
+
+	gain = loglev - mtmp->mprotection / (4 - min(3,(10 - natac)/10));
+
+    	if (canseemon(mtmp) && gain)
+	{
+		if (mtmp->mprotection)
+		{
+			pline_The("%s haze around %s becomes more dense.",
+				hcolor(NH_GOLDEN), mon_nam(mtmp));
+		}
+		else
+		{
+			mtmp->mprottime =
+				(mtmp->iswiz || is_prince(mtmp->data)
+				|| mtmp->data->msound == MS_NEMESIS)
+				? 20 : 10;
+			pline_The("air around %s begins to shimmer with a %s haze.",
+				mon_nam(mtmp), hcolor(NH_GOLDEN));
+		}
+	}
+	mtmp->mprotection += gain;
+    	break;
+    }
+    case SPE_CAUSE_AGGRAVATION:
+    	dmg = 0;
+	aggravate();
+    	break;
+    case SPE_CURE_BLINDNESS:
+    	mtmp->mblinded = 0;
+	if (canseemon(mtmp)) pline("%s can see again.", Monnam(mtmp));
+	dmg = 0;
+	break;
+    case SPE_CURE_SICKNESS:
+    	mtmp->msick = 0;
+	if (canseemon(mtmp)) pline("%s looks relieved.", Monnam(mtmp));
+	dmg = 0;
+	break;
+#endif
     default:
 	impossible("mcastu: invalid magic spell (%d)", spellnum);
 	dmg = 0;
 	break;
     }
 
-    if (dmg) mdamageu(mtmp, dmg);
+    if (dmg) mdamageu(mtmp, NULL, dmg);
 }
 
 STATIC_OVL
@@ -558,9 +1093,9 @@ int spellnum;
 	struct permonst *pm = mkclass(S_ANT,0);
 	struct monst *mtmp2 = (struct monst *)0;
 	char let = (pm ? S_ANT : S_SNAKE);
+	coord bypos;
 	boolean success;
 	int i;
-	coord bypos;
 	int quan;
 
 	quan = (mtmp->m_lev < 2) ? 1 : rnd((int)mtmp->m_lev / 2);
@@ -676,7 +1211,7 @@ int spellnum;
 	break;
     }
 
-    if (dmg) mdamageu(mtmp, dmg);
+    if (dmg) mdamageu(mtmp, NULL, dmg);
 }
 
 STATIC_DCL
@@ -687,12 +1222,37 @@ int spellnum;
 {
     if (adtyp == AD_SPEL) {
 	switch (spellnum) {
+#ifdef COMBINED_SPELLS
+	case SPE_LIGHT:
+	case SPE_DETECT_MONSTERS:
+	case SPE_HEALING:
+	case SPE_CREATE_MONSTER:
+	case SPE_DETECT_FOOD:
+	case SPE_CLAIRVOYANCE:
+	case SPE_CURE_SICKNESS:
+	case SPE_HASTE_SELF:
+	case SPE_DETECT_UNSEEN:
+	case SPE_LEVITATION:
+	case SPE_EXTRA_HEALING:
+	case SPE_RESTORE_ABILITY:
+	case SPE_INVISIBILITY:
+	case SPE_DETECT_TREASURE:
+	case SPE_REMOVE_CURSE:
+	case SPE_MAGIC_MAPPING:
+	case SPE_IDENTIFY:
+	case SPE_CREATE_FAMILIAR:
+	case SPE_PROTECTION:
+	case SPE_FLAME_SPHERE:
+	case SPE_FREEZE_SPHERE:
+	case SPE_SHOCK_SPHERE:
+#else
 	case MGC_CLONE_WIZ:
 	case MGC_SUMMON_MONS:
 	case MGC_AGGRAVATION:
 	case MGC_DISAPPEAR:
 	case MGC_HASTE_SELF:
 	case MGC_CURE_SELF:
+#endif
 	    return TRUE;
 	default:
 	    break;
@@ -726,6 +1286,164 @@ int spellnum;
     boolean mcouldseeu = couldsee(mtmp->mx, mtmp->my);
 
     if (adtyp == AD_SPEL) {
+#ifdef COMBINED_SPELLS
+	if ((spellnum == SPE_PSI_BOLT ||
+	     spellnum == SPE_TOUCH_OF_DEATH ||
+	     spellnum == SPE_CONFUSE_MONSTER ||
+	     spellnum == SPE_CAUSE_FEAR) &&
+             um_dist(mtmp->mx,mtmp->my, 1))
+	     return TRUE;
+	/* haste self when already fast */
+	if (mtmp->permspeed == MFAST && spellnum == SPE_HASTE_SELF)
+	    return TRUE;
+	/* invisibility when already invisible */
+	if ((mtmp->minvis || mtmp->invis_blkd) && spellnum == SPE_INVISIBILITY)
+	    return TRUE;
+	/* peaceful monster won't cast invisibility if you can't see invisible,
+	   same as when monsters drink potions of invisibility.  This doesn't
+	   really make a lot of sense, but lets the player avoid hitting
+	   peaceful monsters by mistake */
+	if (mtmp->mpeaceful && !See_invisible && spellnum == SPE_INVISIBILITY)
+	    return TRUE;
+	/* healing when already healed */
+	if (mtmp->mhp == mtmp->mhpmax &&
+	    (spellnum == SPE_HEALING || spellnum == SPE_EXTRA_HEALING))
+	    return TRUE;
+	/* don't summon monsters if it doesn't think you're around */
+	if (!mcouldseeu && (spellnum == SPE_CREATE_MONSTER ||
+	                    spellnum == SPE_CREATE_FAMILIAR ||
+		(!mtmp->iswiz && spellnum == SPE_BOOK_OF_THE_DEAD)))
+	    return TRUE;
+	if ((!mtmp->iswiz || flags.no_of_wizards > 1)
+					&& spellnum == SPE_BOOK_OF_THE_DEAD)
+	    return TRUE;
+	
+	if (spellnum == SPE_REMOVE_CURSE)
+	{
+            register struct obj *otmp;
+	    for (otmp = mtmp->minvent; otmp; otmp = otmp->nobj)
+	    {
+		    if (otmp->cursed && 
+		        (otmp->otyp == LOADSTONE ||
+			 otmp->owornmask))
+		{
+	      	    return FALSE;
+	        } 
+	    }
+	    return TRUE;
+	}
+	
+	if ((spellnum == SPE_FIREBALL ||
+	     spellnum == SPE_CONE_OF_COLD ||
+	     spellnum == SPE_POISON_BLAST ||
+	     spellnum == SPE_ACID_BLAST) &&
+	     EReflecting &&
+	     !mtmp->iswiz && !is_prince(mtmp->data) && !is_lord(mtmp->data) &&
+	     mtmp->data->msound != MS_NEMESIS)
+	    return TRUE;
+
+	if ((spellnum == SPE_SLEEP ||
+	     spellnum == SPE_MAGIC_MISSILE ||
+	     spellnum == SPE_FINGER_OF_DEATH ||
+	     spellnum == SPE_LIGHTNING) && EReflecting)
+	    return TRUE;
+
+	if ((spellnum == SPE_TOUCH_OF_DEATH ||
+	     spellnum == SPE_FINGER_OF_DEATH) &&
+	     (nonliving(youmonst.data) || is_demon(youmonst.data)))
+	     return TRUE;
+
+	if ((spellnum == SPE_TOUCH_OF_DEATH ||
+	     spellnum == SPE_SLEEP ||
+	     spellnum == SPE_FINGER_OF_DEATH ||
+	     spellnum == SPE_MAGIC_MISSILE ||
+	     spellnum == SPE_POLYMORPH ||
+	     spellnum == SPE_FORCE_BOLT) && Antimagic)
+	    return TRUE;
+
+	if ((spellnum == SPE_DRAIN_LIFE) && (Antimagic || Drain_resistance))
+	    return TRUE;
+
+	if ((spellnum == SPE_TELEPORT_AWAY) && Teleport_control)
+	    return TRUE;
+
+	if ((((spellnum == SPE_FIREBALL || spellnum == SPE_FLAME_SPHERE)
+		&& Fire_resistance) ||
+	    ((spellnum == SPE_CONE_OF_COLD || spellnum == SPE_FREEZE_SPHERE)
+	    	&& Cold_resistance) ||
+	    ((spellnum == SPE_LIGHTNING || spellnum == SPE_SHOCK_SPHERE)
+	    	&& Shock_resistance) ||
+	    (spellnum == SPE_POISON_BLAST && Poison_resistance) ||
+	    (spellnum == SPE_ACID_BLAST && Acid_resistance)))
+	    return TRUE;
+
+	if (spellnum == SPE_TURN_UNDEAD)
+	    return TRUE;
+
+	if (spellnum == SPE_DETECT_MONSTERS)
+	    return TRUE;
+
+	if (spellnum == SPE_LIGHT)
+	    return TRUE;
+
+	if (spellnum == SPE_DETECT_FOOD)
+	    return TRUE;
+
+	if (spellnum == SPE_CLAIRVOYANCE)
+	    return TRUE;
+
+	if (spellnum == SPE_DETECT_UNSEEN
+	    /* && (!Invisible || !sees_invis(mtmp))*/)
+	    return TRUE;
+
+	if (spellnum == SPE_IDENTIFY)
+	    return TRUE;
+
+	if (spellnum == SPE_DETECT_TREASURE)
+	    return TRUE;
+
+	if (spellnum == SPE_MAGIC_MAPPING)
+	    return TRUE;
+
+	if (spellnum == SPE_CHARM_MONSTER)
+	    return TRUE;
+
+	if (spellnum == SPE_JUMPING)
+	    return TRUE;
+	
+	if (spellnum == SPE_LEVITATION && (is_flyer(mtmp->data) || levitating(mtmp)))
+	    return TRUE;
+
+	if (spellnum == SPE_DIG)
+	    return TRUE;
+
+	if (spellnum == SPE_CURE_BLINDNESS && !mtmp->mblinded)
+	    return TRUE;
+
+	if (spellnum == SPE_CURE_SICKNESS && !mtmp->msick)
+	    return TRUE;
+
+	if (spellnum == SPE_STONE_TO_FLESH)
+	    return TRUE;
+
+	if (spellnum == SPE_RESTORE_ABILITY)
+	    return TRUE;
+
+	if (spellnum == SPE_KNOCK)
+	    return TRUE;
+
+	if (spellnum == SPE_WIZARD_LOCK)
+	    return TRUE;
+
+	if (spellnum == SPE_CREATE_MONSTER && mtmp->mtame)
+	    return TRUE;
+
+#ifndef TAME_SUMMONING
+	/* not going to include spheres in this; they're harmless enough */
+	if (spellnum == SPE_CREATE_FAMILIAR && mtmp->mtame)
+	    return TRUE;
+#endif
+#else
 	/* aggravate monsters, etc. won't be cast by peaceful monsters */
 	if (mtmp->mpeaceful && (spellnum == MGC_AGGRAVATION ||
 		spellnum == MGC_SUMMON_MONS || spellnum == MGC_CLONE_WIZ))
@@ -752,6 +1470,7 @@ int spellnum;
 	if ((!mtmp->iswiz || flags.no_of_wizards > 1)
 						&& spellnum == MGC_CLONE_WIZ)
 	    return TRUE;
+#endif
     } else if (adtyp == AD_CLRC) {
 	/* summon insects/sticks to snakes won't be cast by peaceful monsters */
 	if (mtmp->mpeaceful && spellnum == CLC_INSECTS)
@@ -778,6 +1497,151 @@ unsigned int adtyp;
 int spellnum;
 {
     if (adtyp == AD_SPEL) {
+#ifdef COMBINED_SPELLS
+	if ((spellnum == SPE_PSI_BOLT ||
+	     spellnum == SPE_TOUCH_OF_DEATH ||
+	     spellnum == SPE_CONFUSE_MONSTER ||
+	     spellnum == SPE_CAUSE_FEAR) &&
+             dist2(mtmp->mx,mtmp->my,mdef->mx,mdef->my) > 2)
+	     return TRUE;
+	/* haste self when already fast */
+	if (mtmp->permspeed == MFAST && spellnum == SPE_HASTE_SELF)
+	    return TRUE;
+	/* invisibility when already invisible */
+	if ((mtmp->minvis || mtmp->invis_blkd) && spellnum == SPE_INVISIBILITY)
+	    return TRUE;
+	/* healing when already healed */
+	if (mtmp->mhp == mtmp->mhpmax && (spellnum == SPE_HEALING
+				       || spellnum == SPE_EXTRA_HEALING))
+	    return TRUE;
+	/* don't summon monsters if it doesn't think you're around */
+	if ((!mtmp->iswiz || flags.no_of_wizards > 1)
+			&& spellnum == SPE_BOOK_OF_THE_DEAD)
+	    return TRUE;
+	if (spellnum == SPE_CREATE_MONSTER)
+	    return TRUE;
+#ifndef TAME_SUMMONING
+	if (spellnum == SPE_CREATE_FAMILIAR)
+	    return TRUE;
+#endif
+	
+	if (spellnum == SPE_REMOVE_CURSE)
+	{
+            register struct obj *otmp;
+	    for (otmp = mtmp->minvent; otmp; otmp = otmp->nobj)
+	    {
+		    if (otmp->cursed && 
+		        (otmp->otyp == LOADSTONE ||
+			 otmp->owornmask))
+		{
+	      	    return FALSE;
+	        } 
+	    }
+	    return TRUE;
+	}
+	
+	if ((spellnum == SPE_FIREBALL ||
+	     spellnum == SPE_CONE_OF_COLD ||
+	     spellnum == SPE_POISON_BLAST ||
+	     spellnum == SPE_ACID_BLAST) &&
+	     mon_reflects(mdef, (char *)0) &&
+	     !mtmp->iswiz && !is_prince(mtmp->data) && !is_lord(mtmp->data) &&
+	     mtmp->data->msound != MS_NEMESIS)
+	    return TRUE;
+	
+	if ((spellnum == SPE_TOUCH_OF_DEATH ||
+	     spellnum == SPE_FINGER_OF_DEATH) &&
+	     (nonliving(mdef->data) || is_demon(mdef->data)))
+	     return TRUE;
+
+	if ((spellnum == SPE_SLEEP ||
+	     spellnum == SPE_MAGIC_MISSILE ||
+	     spellnum == SPE_FINGER_OF_DEATH ||
+	     spellnum == SPE_LIGHTNING) && mon_reflects(mdef, (char *)0))
+	    return TRUE;
+
+	if ((spellnum == SPE_TOUCH_OF_DEATH ||
+	     spellnum == SPE_SLEEP ||
+	     spellnum == SPE_FINGER_OF_DEATH ||
+	     spellnum == SPE_MAGIC_MISSILE ||
+	     spellnum == SPE_POLYMORPH ||
+	     spellnum == SPE_FORCE_BOLT) && resists_magm(mdef))
+	    return TRUE;
+
+	if ((spellnum == SPE_DRAIN_LIFE) &&
+	    (resists_magm(mdef) || resists_drli(mdef)))
+	    return TRUE;
+
+	if ((spellnum == SPE_TELEPORT_AWAY) && control_teleport(mdef->data))
+	    return TRUE;
+
+	if ((((spellnum == SPE_FIREBALL || spellnum == SPE_FLAME_SPHERE)
+		&& resists_fire(mdef)) ||
+	    ((spellnum == SPE_CONE_OF_COLD || spellnum == SPE_FREEZE_SPHERE)
+	    	&& resists_cold(mdef)) ||
+	    ((spellnum == SPE_LIGHTNING || spellnum == SPE_SHOCK_SPHERE)
+	    	&& resists_elec(mdef)) ||
+	    (spellnum == SPE_POISON_BLAST && resists_poison(mdef)) ||
+	    (spellnum == SPE_ACID_BLAST && resists_acid(mdef))))
+	    return TRUE;
+
+	if (spellnum == SPE_TURN_UNDEAD)
+	    return TRUE;
+
+	if (spellnum == SPE_DETECT_MONSTERS)
+	    return TRUE;
+
+	if (spellnum == SPE_LIGHT)
+	    return TRUE;
+
+	if (spellnum == SPE_DETECT_FOOD)
+	    return TRUE;
+
+	if (spellnum == SPE_CLAIRVOYANCE)
+	    return TRUE;
+
+	if (spellnum == SPE_DETECT_UNSEEN)
+	    return TRUE;
+
+	if (spellnum == SPE_IDENTIFY)
+	    return TRUE;
+
+	if (spellnum == SPE_DETECT_TREASURE)
+	    return TRUE;
+
+	if (spellnum == SPE_MAGIC_MAPPING)
+	    return TRUE;
+
+	if (spellnum == SPE_CHARM_MONSTER)
+	    return TRUE;
+
+	if (spellnum == SPE_JUMPING)
+	    return TRUE;
+	
+	if (spellnum == SPE_LEVITATION && (is_flyer(mtmp->data) || levitating(mtmp)))
+	    return TRUE;
+	
+	if (spellnum == SPE_DIG)
+	    return TRUE;
+
+	if (spellnum == SPE_CURE_BLINDNESS && !mtmp->mblinded)
+	    return TRUE;
+
+	if (spellnum == SPE_CURE_SICKNESS && !mtmp->msick)
+	    return TRUE;
+
+	if (spellnum == SPE_STONE_TO_FLESH)
+	    return TRUE;
+
+	if (spellnum == SPE_RESTORE_ABILITY)
+	    return TRUE;
+
+	if (spellnum == SPE_KNOCK)
+	    return TRUE;
+
+	if (spellnum == SPE_WIZARD_LOCK)
+	    return TRUE;
+#else
 	/* haste self when already fast */
 	if (mtmp->permspeed == MFAST && spellnum == MGC_HASTE_SELF)
 	    return TRUE;
@@ -795,6 +1659,7 @@ int spellnum;
         if (spellnum == MGC_SUMMON_MONS)
 	    return TRUE;
 #endif
+#endif
     } else if (adtyp == AD_CLRC) {
 	/* healing when already healed */
 	if (mtmp->mhp == mtmp->mhpmax && spellnum == CLC_CURE_SELF)
@@ -808,11 +1673,187 @@ int spellnum;
 
 STATIC_DCL
 boolean
-uspell_would_be_useless(adtyp, spellnum)
+uspell_would_be_useless(mdef, adtyp, spellnum)
+register struct monst *mdef;
 unsigned int adtyp;
 int spellnum;
 {
     if (adtyp == AD_SPEL) {
+#ifdef COMBINED_SPELLS
+	/* aggravate monsters, etc. won't be cast by peaceful monsters */
+	if (spellnum == SPE_BOOK_OF_THE_DEAD)
+	    return TRUE;
+	/* haste self when already fast */
+	if (Fast && spellnum == SPE_HASTE_SELF)
+	    return TRUE;
+	/* invisibility when already invisible */
+	if ((HInvis & INTRINSIC) && spellnum == SPE_INVISIBILITY)
+	    return TRUE;
+	/* healing when already healed */
+	if (u.mh == u.mhmax && (spellnum == SPE_HEALING || spellnum == SPE_EXTRA_HEALING))
+	    return TRUE;
+#ifndef TAME_SUMMONING
+        if (spellnum == SPE_CREATE_FAMILIAR)
+	    return TRUE;
+#endif
+	if (spellnum == SPE_LEVITATION && (Flying || Levitation))
+	    return TRUE;
+	
+	if (spellnum == SPE_DIG)
+	    return TRUE;
+	
+	if (spellnum == SPE_REMOVE_CURSE)
+	{
+            register struct obj *otmp;
+	    for (otmp = invent; otmp; otmp = otmp->nobj)
+	    {
+		    if (otmp->cursed && 
+		        (otmp->otyp == LOADSTONE ||
+			 otmp->owornmask))
+		{
+	      	    return FALSE;
+	        } 
+	    }
+	    return TRUE;
+	}
+	
+	if ((spellnum == SPE_FIREBALL ||
+	     spellnum == SPE_CONE_OF_COLD ||
+	     spellnum == SPE_POISON_BLAST ||
+	     spellnum == SPE_ACID_BLAST ||
+	     spellnum == SPE_SLEEP ||
+	     spellnum == SPE_MAGIC_MISSILE ||
+	     spellnum == SPE_TOUCH_OF_DEATH ||
+	     spellnum == SPE_FINGER_OF_DEATH ||
+	     spellnum == SPE_LIGHTNING ||
+	     spellnum == SPE_FORCE_BOLT ||
+	     spellnum == SPE_PSI_BOLT ||
+	     spellnum == SPE_POLYMORPH ||
+	     spellnum == SPE_DRAIN_LIFE ||
+	     spellnum == SPE_TELEPORT_AWAY) && (mdef == (struct monst *)0))
+	     return TRUE;
+	
+	if ((spellnum == SPE_FIREBALL ||
+	     spellnum == SPE_CONE_OF_COLD ||
+	     spellnum == SPE_POISON_BLAST ||
+	     spellnum == SPE_ACID_BLAST) &&
+	     (mdef)) { 
+	     if (mon_reflects(mdef, (char *)0) &&
+	     !youmonst.iswiz &&
+	     !is_prince(youmonst.data) && !is_lord(youmonst.data) &&
+	     youmonst.data->msound != MS_NEMESIS)
+	    return TRUE;
+	}
+
+	if ((spellnum == SPE_SLEEP ||
+	     spellnum == SPE_MAGIC_MISSILE ||
+	     spellnum == SPE_FINGER_OF_DEATH ||
+	     spellnum == SPE_LIGHTNING) &&
+	     (mdef)) {
+	     if (mon_reflects(mdef, (char *)0))
+		    return TRUE;
+	}
+	
+	if ((spellnum == SPE_TOUCH_OF_DEATH ||
+	     spellnum == SPE_FINGER_OF_DEATH) &&
+	     (mdef)) {
+	     if (nonliving(mdef->data) || is_demon(mdef->data))
+		     return TRUE;
+	}
+
+	if ((spellnum == SPE_TOUCH_OF_DEATH ||
+	     spellnum == SPE_SLEEP ||
+	     spellnum == SPE_FINGER_OF_DEATH ||
+	     spellnum == SPE_MAGIC_MISSILE ||
+	     spellnum == SPE_POLYMORPH ||
+	     spellnum == SPE_FORCE_BOLT) && mdef) {
+	     if (!mdef || resists_magm(mdef))
+		    return TRUE;
+	}
+
+	if ((spellnum == SPE_DRAIN_LIFE) &&
+	    (mdef)) {
+	    if (resists_magm(mdef) || resists_drli(mdef))
+		    return TRUE;
+	}
+
+	if ((spellnum == SPE_TELEPORT_AWAY) && mdef) {
+		if (control_teleport(mdef->data))
+		    return TRUE;
+	}
+
+	if ((((spellnum == SPE_FIREBALL || spellnum == SPE_FLAME_SPHERE)
+		&& (!mdef || resists_fire(mdef))) ||
+	    ((spellnum == SPE_CONE_OF_COLD || spellnum == SPE_FREEZE_SPHERE)
+	    	&& (!mdef || resists_cold(mdef))) ||
+	    ((spellnum == SPE_LIGHTNING || spellnum == SPE_SHOCK_SPHERE)
+	    	&& (!mdef || resists_elec(mdef))) ||
+	    (spellnum == SPE_POISON_BLAST
+	        && (!mdef || resists_poison(mdef))) ||
+	    (spellnum == SPE_ACID_BLAST 
+	        && (!mdef || resists_acid(mdef)))))
+	    return TRUE;
+
+	if (spellnum == SPE_TURN_UNDEAD)
+	    return TRUE;
+
+	if (spellnum == SPE_DETECT_MONSTERS)
+	    return TRUE;
+
+	if (spellnum == SPE_LIGHT)
+	    return TRUE;
+
+	if (spellnum == SPE_DETECT_FOOD)
+	    return TRUE;
+
+	if (spellnum == SPE_CLAIRVOYANCE)
+	    return TRUE;
+
+	if (spellnum == SPE_DETECT_UNSEEN/* && See_invisible*/)
+	    return TRUE;
+
+	if (spellnum == SPE_IDENTIFY)
+	    return TRUE;
+
+	if (spellnum == SPE_DETECT_TREASURE)
+	    return TRUE;
+
+	if (spellnum == SPE_MAGIC_MAPPING)
+	    return TRUE;
+
+	if (spellnum == SPE_CHARM_MONSTER)
+	    return TRUE;
+
+	if (spellnum == SPE_JUMPING)
+	    return TRUE;
+	
+	if (spellnum == SPE_LEVITATION && (Flying || Levitation))
+	    return TRUE;
+	
+	if (spellnum == SPE_DIG)
+	    return TRUE;
+
+	if (spellnum == SPE_CURE_BLINDNESS && !Blind)
+	    return TRUE;
+
+	if (spellnum == SPE_CURE_SICKNESS && !Sick)
+	    return TRUE;
+
+	if (spellnum == SPE_STONE_TO_FLESH)
+	    return TRUE;
+
+	if (spellnum == SPE_RESTORE_ABILITY)
+	    return TRUE;
+
+	if (spellnum == SPE_KNOCK)
+	    return TRUE;
+
+	if (spellnum == SPE_WIZARD_LOCK)
+	    return TRUE;
+
+	if (spellnum == SPE_CREATE_MONSTER)
+	    return TRUE;
+#else
 	/* aggravate monsters, etc. won't be cast by peaceful monsters */
 	if (spellnum == MGC_CLONE_WIZ)
 	    return TRUE;
@@ -829,9 +1870,10 @@ int spellnum;
         if (spellnum == MGC_SUMMON_MONS)
 	    return TRUE;
 #endif
+#endif
     } else if (adtyp == AD_CLRC) {
 	/* healing when already healed */
-	if (u.mh == u.mhmax && spellnum == MGC_CURE_SELF)
+	if (u.mh == u.mhmax && spellnum == SPE_HEALING)
 	    return TRUE;
     }
     return FALSE;
@@ -850,7 +1892,15 @@ buzzmu(mtmp, mattk)		/* monster uses spell (ranged) */
 	/* don't print constant stream of curse messages for 'normal'
 	   spellcasting monsters at range */
 	if (mattk->adtyp > AD_SPC2)
+	{
+#ifdef COMBINED_SPELLS
+	    if (mattk->adtyp == AD_SPEL) {
+	    	if (!mtmp->mpeaceful && !mtmp->mtame && lined_up(mtmp))
+		    return castmu(mtmp,mattk,TRUE,(mtmp->mux==u.ux && mtmp->muy==u.uy));
+	    }
+#endif
 	    return(0);
+	}
 
 	if (mtmp->mcan) {
 	    cursetxt(mtmp, FALSE);
@@ -888,20 +1938,31 @@ castmm(mtmp, mdef, mattk)
 	    int cnt = 40;
 
 	    do {
-		spellnum = rn2(ml);
 		if (mattk->adtyp == AD_SPEL)
-		    spellnum = choose_magic_spell(spellnum);
+#ifdef COMBINED_SPELLS
+		    spellnum = choose_magic_spell(mtmp, mtmp->mtame ? -ml : ml);
+#else
+		    spellnum = choose_magic_spell(mtmp, rn2(ml));
+#endif
 		else
-		    spellnum = choose_clerical_spell(spellnum);
+		    spellnum = choose_clerical_spell(rn2(ml));
 		/* not trying to attack?  don't allow directed spells */
 	    } while(--cnt > 0 &&
 		    mspell_would_be_useless(mtmp, mdef,
 		                            mattk->adtyp, spellnum));
 	    if (cnt == 0) return 0;
+
 	}
 
 	/* monster unable to cast spells? */
-	if(mtmp->mcan || mtmp->mspec_used || !ml) {
+	if(mtmp->mcan ||
+#ifdef COMBINED_SPELLS
+		((mattk->adtyp == AD_SPEL && !can_cast_spells(mtmp)) ||
+		 (mattk->adtyp != AD_SPEL && mtmp->mspec_used))
+#else
+		mtmp->mspec_used
+#endif
+		|| !ml) {
 	    if (canseemon(mtmp) && couldsee(mtmp->mx, mtmp->my))
 	    {
                 char buf[BUFSZ];
@@ -921,8 +1982,14 @@ castmm(mtmp, mdef, mattk)
 
 	if (mattk->adtyp == AD_SPEL || mattk->adtyp == AD_CLRC) {
 	    register struct obj *obj;
+#ifdef COMBINED_SPELLS
+            if (mattk->adtyp == AD_SPEL)
+	    	mtmp->mspec_used +=
+			spelltimeout(mtmp, objects[spellnum].oc_level);
+	    else
+#endif
 	    mtmp->mspec_used = 10 - mtmp->m_lev;
-	    if (mtmp->mspec_used < 2) mtmp->mspec_used = 2;
+	    if (mtmp->mspec_used < 1) mtmp->mspec_used = 1;
 	    for (obj = mtmp->minvent; obj; obj = obj->nobj)
 	        if (obj->oartifact &&
 		    obj->oartifact == ART_EYE_OF_THE_AETHIOPICA)
@@ -932,7 +1999,11 @@ castmm(mtmp, mdef, mattk)
 		}
 	}
 
+#ifdef COMBINED_SPELLS
+	if (mtmp->mconf) {
+#else
 	if(rn2(ml*10) < (mtmp->mconf ? 100 : 20)) {	/* fumbled attack */
+#endif
 	    if (canseemon(mtmp) && flags.soundok)
 		pline_The("air crackles around %s.", mon_nam(mtmp));
 	    return(0);
@@ -950,7 +2021,15 @@ castmm(mtmp, mdef, mattk)
 	    dmg = d((int)((ml/2) + mattk->damn), (int)mattk->damd);
 	else dmg = d((int)((ml/2) + 1), 6);
 
+#ifdef COMBINED_SPELLS
+	/* this short-circuit behaviour prevents attacks from */
+	/* after spells from being used unless there's no */
+	/* magical energy to cast the spell. */
+	ret = (mattk->adtyp == AD_SPEL &&
+		is_racial(mtmp->data)) ? 3 : 1;
+#else
 	ret = 1;
+#endif
 
 	switch (mattk->adtyp) {
 
@@ -989,13 +2068,16 @@ castmm(mtmp, mdef, mattk)
 	    case AD_SPEL:	/* wizard spell */
 	    case AD_CLRC:       /* clerical spell */
 	    {
-	        //aggravation is a special case;
-		//it's undirected but should still target the
-		//victim so as to aggravate you
-	        if (is_undirected_spell(mattk->adtyp, spellnum) &&
-		    (mattk->adtyp != AD_SPEL ||
-		     (spellnum != MGC_AGGRAVATION &&
-		      spellnum != MGC_SUMMON_MONS)))
+	        /*aggravation is a special case;*/
+		/*it's undirected but should still target the*/
+		/*victim so as to aggravate you*/
+	        if (is_undirected_spell(mattk->adtyp, spellnum)
+#ifndef COMBINED_SPELLS
+		&& (mattk->adtyp != AD_SPEL
+		    || (spellnum != MGC_AGGRAVATION &&
+		      spellnum != MGC_SUMMON_MONS))
+#endif
+		      )
 		{
 		    if (mattk->adtyp == AD_SPEL)
 		        cast_wizard_spell(mtmp, dmg, spellnum);
@@ -1050,30 +2132,34 @@ castum(mtmp, mattk)
 	    int cnt = 40;
 
 	    do {
-		spellnum = rn2(ml);
 		if (mattk->adtyp == AD_SPEL)
-		    spellnum = choose_magic_spell(spellnum);
+#ifdef COMBINED_SPELLS
+		    spellnum = choose_magic_spell(&youmonst, -ml);
+#else
+		    spellnum = choose_magic_spell(&youmonst, rn2(ml));
+#endif
 		else
-		    spellnum = choose_clerical_spell(spellnum);
+		    spellnum = choose_clerical_spell(rn2(ml));
 		/* not trying to attack?  don't allow directed spells */
 		if (!mtmp || mtmp->mhp < 1) {
 		    if (is_undirected_spell(mattk->adtyp, spellnum) && 
-			!uspell_would_be_useless(mattk->adtyp, spellnum)) {
+			!uspell_would_be_useless(mtmp, mattk->adtyp, spellnum)) {
 		        break;
 		    }
 		}
 	    } while(--cnt > 0 &&
 	            ((!mtmp && !is_undirected_spell(mattk->adtyp, spellnum))
-		    || uspell_would_be_useless(mattk->adtyp, spellnum)));
+		    || uspell_would_be_useless(mtmp, mattk->adtyp, spellnum)));
 	    if (cnt == 0) {
 	        You("have no spells to cast right now!");
 		return 0;
 	    }
 	}
 
+#ifndef COMBINED_SPELLS
 	if (spellnum == MGC_AGGRAVATION && !mtmp)
 	{
-	    // choose a random monster on the level
+	    /* choose a random monster on the level */
 	    int j = 0, k = 0;
 	    for(mtmp = fmon; mtmp; mtmp = mtmp->nmon)
 	        if (!mtmp->mtame && !mtmp->mpeaceful) j++;
@@ -1085,11 +2171,16 @@ castum(mtmp, mattk)
 		        if (--k < 0) break;
 	    }
 	}
+#endif
 
 	directed = mtmp && !is_undirected_spell(mattk->adtyp, spellnum);
 
 	/* unable to cast spells? */
+#ifdef COMBINED_SPELLS
+	if(u.uen < 5*objects[spellnum].oc_level) {
+#else
 	if(u.uen < ml) {
+#endif
 	    if (directed)
 	        You("point at %s, then curse.", mon_nam(mtmp));
 	    else
@@ -1097,11 +2188,23 @@ castum(mtmp, mattk)
 	    return(0);
 	}
 
+#ifdef COMBINED_SPELLS
+	if (mattk->adtyp == AD_SPEL) {
+	    u.uen -= 5*objects[spellnum].oc_level;
+	} else if (mattk->adtyp == AD_CLRC) {
+	    u.uen -= ml;
+	}
+#else
 	if (mattk->adtyp == AD_SPEL || mattk->adtyp == AD_CLRC) {
 	    u.uen -= ml;
 	}
+#endif
 
+#ifdef COMBINED_SPELLS
+	if (Confusion) {
+#else
 	if(rn2(ml*10) < (Confusion ? 100 : 20)) {	/* fumbled attack */
+#endif
 	    pline_The("air crackles around you.");
 	    return(0);
 	}
@@ -1118,7 +2221,15 @@ castum(mtmp, mattk)
 	    dmg = d((int)((ml/2) + mattk->damn), (int)mattk->damd);
 	else dmg = d((int)((ml/2) + 1), 6);
 
+#ifdef COMBINED_SPELLS
+	/* this short-circuit behaviour prevents attacks from */
+	/* after spells from being used unless there's no */
+	/* magical energy to cast the spell. */
+	ret = (mattk->adtyp == AD_SPEL &&
+		is_racial(youmonst.data)) ? 3 : 1;
+#else
 	ret = 1;
+#endif
 
 	switch (mattk->adtyp) {
 
@@ -1171,6 +2282,7 @@ castum(mtmp, mattk)
 }
 
 extern NEARDATA const int nasties[];
+extern void NDECL(cast_protection);
 
 /* monster wizard and cleric spellcasting functions */
 /*
@@ -1191,6 +2303,9 @@ int spellnum;
 {
     boolean resisted = FALSE;
     boolean yours = (mattk == &youmonst);
+    struct obj *pseudo = 0;
+    int tmp1, tmp2;
+    coord bypos;
 
     if (dmg == 0 && !is_undirected_spell(AD_SPEL, spellnum)) {
 	impossible("cast directed wizard spell (%d) with dmg=0?", spellnum);
@@ -1204,7 +2319,11 @@ int spellnum;
     }
 
     switch (spellnum) {
+#ifdef COMBINED_SPELLS
+    case SPE_TOUCH_OF_DEATH:
+#else
     case MGC_DEATH_TOUCH:
+#endif
 	if (!mtmp || mtmp->mhp < 1) {
 	    impossible("touch of death with no mtmp");
 	    return;
@@ -1243,6 +2362,7 @@ int spellnum;
 	}
 	dmg = 0;
 	break;
+#ifndef COMBINED_SPELLS
     case MGC_SUMMON_MONS:
     {
 	int count = 0;
@@ -1254,7 +2374,6 @@ int spellnum;
 	} else {
 	    register int i, j;
             int makeindex, tmp = (u.ulevel > 3) ? u.ulevel / 3 : 1;
-	    coord bypos;
 
 	    if (mtmp)
 	        bypos.x = mtmp->mx, bypos.y = mtmp->my;
@@ -1314,8 +2433,8 @@ int spellnum;
 	    You_feel("lonely.");
 	    return;
 	}
-	//You_feel("that monsters are aware of %s presence.",
-	//    s_suffix(mon_nam(mtmp)));
+	/*You_feel("that monsters are aware of %s presence.",
+	 *    s_suffix(mon_nam(mtmp))); */
 	you_aggravate(mtmp);
 	dmg = 0;
 	break;
@@ -1384,7 +2503,7 @@ int spellnum;
 	    }
 	    if (yours || canseemon(mtmp))
 	        pline("%s suddenly seems weaker!", Monnam(mtmp));
-            // monsters don't have strength, so drain max hp instead
+            /* monsters don't have strength, so drain max hp instead */
 	    mtmp->mhpmax -= dmg;
 	    if ((mtmp->mhp -= dmg) <= 0) {
 	        if (yours) killed(mtmp);
@@ -1393,7 +2512,12 @@ int spellnum;
 	}
 	dmg = 0;
 	break;
+#endif
+#ifdef COMBINED_SPELLS
+    case SPE_INVISIBILITY:
+#else
     case MGC_DISAPPEAR:		/* makes self invisible */
+#endif
         if (!yours) {
 	    impossible("ucast disappear but not yours?");
 	    return;
@@ -1405,6 +2529,7 @@ int spellnum;
 	} else
 	    impossible("no reason for player to cast disappear spell?");
 	break;
+#ifndef COMBINED_SPELLS
     case MGC_STUN_YOU:
 	if (!mtmp || mtmp->mhp < 1) {
 	    impossible("stun spell with no mtmp");
@@ -1427,7 +2552,12 @@ int spellnum;
 	}
 	dmg = 0;
 	break;
+#endif
+#ifdef COMBINED_SPELLS
+    case SPE_HASTE_SELF:
+#else
     case MGC_HASTE_SELF:
+#endif
         if (!yours) {
 	    impossible("ucast haste but not yours?");
 	    return;
@@ -1437,6 +2567,28 @@ int spellnum;
 	HFast |= INTRINSIC;
 	dmg = 0;
 	break;
+#ifdef COMBINED_SPELLS
+    case SPE_EXTRA_HEALING:
+        if (!yours) impossible("ucast healing but not yours?");
+	else if (u.mh < u.mhmax) {
+	    You("feel better.");
+	    if ((u.mh += d(6,8)) > u.mhmax)
+		u.mh = u.mhmax;
+	    flags.botl = 1;
+	    dmg = 0;
+	}
+	break;
+    case SPE_HEALING:
+        if (!yours) impossible("ucast healing but not yours?");
+	else if (u.mh < u.mhmax) {
+	    You("feel better.");
+	    if ((u.mh += d(6,4)) > u.mhmax)
+		u.mh = u.mhmax;
+	    flags.botl = 1;
+	    dmg = 0;
+	}
+	break;
+#else
     case MGC_CURE_SELF:
         if (!yours) impossible("ucast healing but not yours?");
 	else if (u.mh < u.mhmax) {
@@ -1447,7 +2599,12 @@ int spellnum;
 	    dmg = 0;
 	}
 	break;
+#endif
+#ifdef COMBINED_SPELLS
+    case SPE_PSI_BOLT:
+#else
     case MGC_PSI_BOLT:
+#endif
 	if (!mtmp || mtmp->mhp < 1) {
 	    impossible("psibolt spell with no mtmp");
 	    return;
@@ -1459,13 +2616,204 @@ int spellnum;
 	if (canseemon(mtmp))
 	    pline("%s winces%s", Monnam(mtmp), (dmg <= 5) ? "." : "!");
 	break;
+#ifdef COMBINED_SPELLS
+    case SPE_FORCE_BOLT:
+    case SPE_DRAIN_LIFE:
+    case SPE_SLOW_MONSTER:
+    case SPE_TELEPORT_AWAY:
+    case SPE_KNOCK:
+    case SPE_WIZARD_LOCK:
+    case SPE_POLYMORPH:
+    case SPE_CANCELLATION:
+	pseudo = mksobj(spellnum, FALSE, FALSE);
+	pseudo->blessed = pseudo->cursed = 0;
+	pseudo->quan = 20L;
+	if (yours) {
+		u.dx = mtmp->mx - u.ux;
+		u.dy = mtmp->my - u.uy;
+		(void) weffects(pseudo);
+	} else {
+		tmp1 = tbx; tmp2 = tby;
+		tbx = mtmp->mx - mattk->mx;
+		tby = mtmp->my - mattk->my;
+		mbhit(mattk,rn1(8,6),mbhitm,bhito,pseudo);
+	}
+	obfree(pseudo, (struct obj *)0);
+	if (!yours) {
+		tbx = tmp1; tby = tmp2;
+	}
+	dmg = 0;
+    	break;
+    case SPE_FIREBALL:
+    case SPE_CONE_OF_COLD:
+    case SPE_POISON_BLAST:
+    case SPE_ACID_BLAST:
+    	if (mattk->iswiz || is_prince(mattk->data) || is_lord(mattk->data) ||
+		mattk->data->msound == MS_NEMESIS)
+	{
+		int n = rnd(8) + 1;
+		coord pos;
+		pos.x = mattk->mx;
+		pos.y = mattk->my;
+		while(n--) {
+		    explode(pos.x, pos.y,
+			    spellnum - SPE_MAGIC_MISSILE + 10,
+			    yours ? u.ulevel/2 + 1 : 
+			    mattk->m_lev/2 + 1,
+			    0,
+				(spellnum == SPE_CONE_OF_COLD) ?
+					EXPL_FROSTY :
+				(spellnum == SPE_POISON_BLAST) ?
+					EXPL_NOXIOUS :
+				(spellnum == SPE_ACID_BLAST) ?
+					EXPL_WET :
+				EXPL_FIERY);
+		    if (spellnum != SPE_CONE_OF_COLD)
+		        scatter(pos.x, pos.y,
+				yours ? u.ulevel/2 + 1 : 
+				mattk->m_lev/2 + 1,
+				VIS_EFFECTS|MAY_HIT|
+				MAY_DESTROY|MAY_FRACTURE, NULL);
+		}
+		pos.x = mtmp->mx+rnd(3)-2; pos.y = mtmp->my+rnd(3)-2;
+		if (!isok(pos.x,pos.y) || !cansee(pos.x,pos.y) ||
+		    IS_STWALL(levl[pos.x][pos.y].typ)) {
+		    /* Spell is reflected back to center */
+		    pos.x = mtmp->mx; pos.y = mtmp->my;
+	        }
+		dmg = 0;
+		break;
+	}
+    case SPE_SLEEP:
+    case SPE_MAGIC_MISSILE:
+    case SPE_FINGER_OF_DEATH:
+    case SPE_LIGHTNING:
+    {
+    	int eff = (spellnum - SPE_MAGIC_MISSILE + 10) * ((yours) ? 1 : -1);
+	buzz(eff,
+	     mattk->m_lev / 2 + 1,
+	     yours ? u.ux : mattk->mx,
+	     yours ? u.uy : mattk->my,
+	     yours ? sgn(mtmp->mx-u.ux) : sgn(mtmp->mx-mattk->mx),
+	     yours ? sgn(mtmp->my-u.uy) : sgn(mtmp->my-mattk->my));
+	dmg = 0;
+    	break;
+    }
+    case SPE_CAUSE_FEAR:
+	dmg = 0;
+    	monflee(mtmp, rnd(6), FALSE, TRUE);
+        break;
+    case SPE_CONFUSE_MONSTER:
+	dmg = 0;
+	if (canseemon(mtmp)) pline("%s looks confused.", Monnam(mtmp));
+    	mtmp->mconf = 1;
+        break;
+    case SPE_CREATE_MONSTER:
+    {
+    	int count = 1 + (!rn2(73)) ? rnd(4) : 0;
+	boolean confused = (yours) ? (Confusion > 0) : mattk->mconf;
+	const char *mappear =
+		(count == 1) ? "A monster appears" : "Monsters appear";
+	bypos.x = mattk->mx;
+	bypos.y = mattk->my;
+	dmg = 0;
+	for (; count > 0; count--)
+	{
+		if (enexto(&bypos, mattk->mx, mattk->my, (struct permonst *)0))
+        		(void) makemon(
+				confused ? &mons[PM_ACID_BLOB]
+				         : (struct permonst *)0,
+				bypos.x, bypos.y, NO_MM_FLAGS);
+	}
+	pline("%s from nowhere!", mappear);
+    	break;
+    }
+    case SPE_CAUSE_AGGRAVATION:
+    	dmg = 0;
+	you_aggravate(mtmp);
+	break;
+    case SPE_FLAME_SPHERE:
+    case SPE_FREEZE_SPHERE:
+    case SPE_SHOCK_SPHERE:
+    case SPE_CREATE_FAMILIAR:
+    {
+    	register struct monst *mpet = 0;
+	register struct permonst *montype =
+		spellnum == SPE_FLAME_SPHERE  ? &mons[PM_FLAMING_SPHERE] :
+		spellnum == SPE_FREEZE_SPHERE ? &mons[PM_FREEZING_SPHERE] :
+		spellnum == SPE_SHOCK_SPHERE  ? &mons[PM_SHOCKING_SPHERE] :
+		(!rn2(3) ? (rn2(2) ? &mons[PM_LITTLE_DOG] : &mons[PM_KITTEN])
+			    : rndmonst() );
+	bypos.x = mattk->mx;
+	bypos.y = mattk->my;
+	
+	dmg = 0;
+	
+	if (enexto(&bypos, mattk->mx, mattk->my, montype))
+		mpet = makemon(montype, bypos.x, bypos.y,
+			(yours || mattk->mtame) ? MM_EDOG :  NO_MM_FLAGS);
+	if (mpet)
+	{
+                mpet->msleeping = 0;
+                if (yours || mattk->mtame)
+		    initedog(mpet);
+		else if (mattk->mpeaceful)
+		        mpet->mpeaceful = 1;
+		else mpet->mpeaceful = mpet->mtame = 0;
+
+		set_malign(mpet);
+		if (canseemon(mpet))
+			pline("%s appears from nowhere!", Amonnam(mpet));
+	}
+		break;
+	case SPE_CURE_BLINDNESS:
+	{
+		if (yours)
+			healup(0, 0, FALSE, TRUE);
+		dmg = 0;
+		break;
+	}
+	case SPE_CURE_SICKNESS:
+		if (yours) {
+			if (Sick) You("are no longer ill.");
+			if (Slimed) {
+			    pline_The("slime disappears!");
+			    Slimed = 0;
+			 /* flags.botl = 1; -- healup() handles this */
+			}
+			healup(0, 0, TRUE, FALSE);
+		}
+		dmg = 0;
+		break;
+	case SPE_PROTECTION:
+		if (yours)
+			cast_protection();
+		dmg = 0;
+		break;
+	case SPE_LEVITATION:
+		if (yours) {
+			struct obj *pseudo = mksobj(spellnum, FALSE, FALSE);
+			pseudo->cursed = 0;
+			pseudo->blessed =
+				(youmonst.iswiz ||
+				 is_lord(youmonst.data) ||
+				 is_prince(youmonst.data) ||
+				 youmonst.data->msound == MS_NEMESIS);
+			pseudo->quan = 20L;
+			(void) peffects(pseudo);
+			obfree(pseudo, (struct obj *)0);
+		}
+		dmg = 0;
+    		break;
+    }
+#endif
     default:
-	impossible("mcastu: invalid magic spell (%d)", spellnum);
+	impossible("ucastm: invalid magic spell (%d)", spellnum);
 	dmg = 0;
 	break;
     }
 
-    if (dmg > 0 && mtmp->mhp > 0)
+    if (dmg > 0 && mtmp && mtmp->mhp > 0)
     {
         mtmp->mhp -= dmg;
         if (mtmp->mhp < 1) {
@@ -1666,8 +3014,6 @@ int spellnum;
 	    if (yours || canseemon(mtmp))
 	        pline("%s seems momentarily dizzy.", Monnam(mtmp));
 	} else {
-	    boolean oldprop = !!Confusion;
-
 	    if (yours || canseemon(mtmp))
 	        pline("%s seems %sconfused!", Monnam(mtmp),
 	              mtmp->mconf ? "more " : "");
@@ -1694,7 +3040,7 @@ int spellnum;
 	    shieldeff(mtmp->mx, mtmp->my);
 	    dmg = (dmg + 1) / 2;
 	}
-	// not canseemon; if you can't see it you don't know it was wounded
+	/* not canseemon; if you can't see it you don't know it was wounded */
 	if (yours)
 	{
 	    if (dmg <= 5)
@@ -1708,7 +3054,7 @@ int spellnum;
 	}
 	break;
     default:
-	impossible("mcastu: invalid clerical spell (%d)", spellnum);
+	impossible("ucastm: invalid clerical spell (%d)", spellnum);
 	dmg = 0;
 	break;
     }

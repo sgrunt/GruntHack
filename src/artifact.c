@@ -131,13 +131,14 @@ aligntyp alignment;	/* target alignment, or A_NONE */
 	boolean unique = !by_align && otmp && objects[o_typ].oc_unique;
 	short eligible[NROFARTIFACTS];
 
-        // Don't artifactise already wpecial weapons
-	// TODO: strip items of properties properly when
-	// they get here
-	if (otmp && otmp->oprops) return otmp;
-	if (otmp->oartifact)      return otmp;
+        /* Don't artifactise already wpecial weapons
+	 * TODO: strip items of properties properly when
+	 * they get here */
+	if (otmp && otmp->oprops)    return otmp;
+	if (otmp && otmp->oartifact) return otmp;
 
-	if (otmp->omaterial != objects[otmp->otyp].oc_material)
+	if (otmp &&
+	    otmp->omaterial != objects[otmp->otyp].oc_material)
 	    otmp->omaterial  = objects[otmp->otyp].oc_material,
 	    otmp->owt = weight(otmp);
 
@@ -145,7 +146,7 @@ aligntyp alignment;	/* target alignment, or A_NONE */
 	for (n = 0, a = artilist+1, m = 1; a->otyp; a++, m++)
 	    if ((!by_align ? a->otyp == o_typ :
 		    (a->alignment == alignment ||
-			(a->alignment == A_NONE && u.ugifts > 0))) &&
+			(a->alignment == A_NONE && u.uartigifts > 0))) &&
 		(!(a->spfx & SPFX_NOGEN) || unique) && !artiexist[m]) {
 		if (by_align && a->race != NON_PM && race_hostile(&mons[a->race]))
 		    continue;	/* skip enemies' equipment */
@@ -163,12 +164,16 @@ aligntyp alignment;	/* target alignment, or A_NONE */
 make_artif: if (by_align) otmp = mksobj((int)a->otyp, TRUE, FALSE);
 	    otmp = oname(otmp, a->name);
 	    otmp->oartifact = m;
+#ifdef INVISIBLE_OBJECTS
+            if (otmp->oartifact == ART_MAGICBANE && otmp->oinvis)
+	    	otmp->oinvis = FALSE;
+#endif
 	    artiexist[m] = TRUE;
 	    if (m == ART_WEREBANE || m == ART_GRAYSWANDIR)
 	        otmp->omaterial = SILVER, otmp->owt = weight(otmp);
 	} else {
 	    /* spruce up the object if there's no matching artifact for it */ 
-	     otmp = create_oprop(otmp);
+	     otmp = create_oprop(otmp, FALSE);
 	}
 	return otmp;
 }
@@ -177,32 +182,71 @@ make_artif: if (by_align) otmp = mksobj((int)a->otyp, TRUE, FALSE);
  * Create an item with special properties, or grant the item those properties.
  */
 struct obj *
-create_oprop(obj)
+create_oprop(obj, allow_detrimental)
 register struct obj *obj;
+boolean allow_detrimental;
 {
     register struct obj *otmp = obj;
     int i, j;
 
     if (!otmp)
     {
-        // This probably is only ever done for weapons, y'know?
-	//otmp = mksobj(WEAPON_CLASS, TRUE, FALSE);
-	otmp = mkobj(WEAPON_CLASS, FALSE);
+    	int type = 0, skill = P_NONE,
+	    candidates[128], ccount,
+	    threshold = P_EXPERT, i;
+        /* This probably is only ever done for weapons, y'know?
+	 * Find an appropriate type of weapon */
+	while (threshold > P_UNSKILLED) {
+	    ccount = 0;
+	    for (i = P_FIRST_WEAPON; i < P_LAST_WEAPON; i++)
+	    {
+	    	if (P_MAX_SKILL(i) >= threshold &&
+		    P_SKILL(i) >= min(threshold, P_BASIC))
+		   candidates[ccount++] = i;
+		if (ccount >= 128) break;
+	    }
+	    if (ccount == 0) {
+	        threshold--;
+		continue;
+	    }
+	    skill = candidates[rn2(ccount)];
+	    ccount = 0;
+	    for (i = ARROW; i <= CROSSBOW; i++)
+	    {
+	        if (objects[i].oc_skill == skill)
+		    candidates[ccount++] = i;
+		if (ccount == 128) break;
+	    }
+	    if (!ccount) {
+	        impossible("found no weapons for skill %d?", skill);
+	        threshold--;
+		continue;
+	    }
+	    type = candidates[rn2(ccount)];
+	    break;
+	}
+	/* Now make one, if we can */
+	if (type != 0)
+	    otmp = mksobj(type, TRUE, FALSE);
+	else
+	    otmp = mkobj(WEAPON_CLASS, NO_MO_FLAGS);
     }
 
-    // Regardless if it's special or not, fix it up as necessary
-    if (otmp->cursed) uncurse(otmp);
-    else bless(otmp);
+    /* Regardless if it's special or not, fix it up as necessary */
+    if (!allow_detrimental) {
+        if (otmp->cursed) uncurse(otmp);
+        else bless(otmp);
     
-    if (otmp->oclass == WEAPON_CLASS ||
-        otmp->oclass == ARMOR_CLASS ||
-	(otmp->oclass == RING_CLASS && objects[otmp->otyp].oc_charged))
-    {
-        if (otmp->spe < 0) otmp->spe = 0;
-        else if (otmp->spe == 0) otmp->spe = rn1(2, 1);
+        if (otmp->oclass == WEAPON_CLASS ||
+            otmp->oclass == ARMOR_CLASS ||
+	    (otmp->oclass == RING_CLASS && objects[otmp->otyp].oc_charged))
+        {
+            if (otmp->spe < 0) otmp->spe = 0;
+            else if (otmp->spe == 0) otmp->spe = rn1(2, 1);
+        }
     }
 
-    // Don't spruce up artifacts
+    /* Don't spruce up artifacts */
     if (otmp->oartifact) return otmp;
     else if (objects[otmp->otyp].oc_unique) return otmp;
 
@@ -216,11 +260,15 @@ register struct obj *obj;
     while (!otmp->oprops || !rn2(250))
     {
         i = rn2(MAX_ITEM_PROPS);
-	j = 1 << i; // pick an item property
+	j = 1 << i; /* pick an item property */
 
 	if (otmp->oprops & j) continue;
 
-	// check for restrictions
+	if ((j & (ITEM_FUMBLING|ITEM_HUNGER|ITEM_AGGRAVATE)) &&
+	    !allow_detrimental)
+	    continue;
+
+	/* check for restrictions */
 	if (!((otmp->oclass == WEAPON_CLASS || is_weptool(otmp)) &&
 	      is_blade(otmp)) &&
 	    (j & ITEM_VORPAL))
@@ -240,16 +288,20 @@ register struct obj *obj;
 	       |ITEM_SPEED|ITEM_FUMBLING|ITEM_CLAIRVOYANCE)))
 	    continue;
 	
+	if ((is_ammo(otmp) || is_missile(otmp)) &&
+	    (j & (ITEM_REFLECTION|ITEM_ESP|ITEM_SEARCHING|ITEM_WARNING)))
+	    continue;
+	
 	if ((otmp->oprops & (ITEM_FIRE|ITEM_FROST|ITEM_DRLI)) &&
 	    (j & (ITEM_FIRE|ITEM_FROST|ITEM_DRLI)))
-	    continue; // the three are mutually exclusive
+	    continue; /* the three are mutually exclusive */
 
 	    if (otmp->omaterial != CLOTH &&
 	        (j & ITEM_OILSKIN)) continue;
 
 	    otmp->oprops |= j;
             
-	    // reflecting items should probably be silver
+	    /* reflecting items should probably be silver */
 	    if (j == ITEM_REFLECTION &&
 	        (otmp->oclass == WEAPON_CLASS || is_weptool(otmp) ||
 		 otmp->oclass == ARMOR_CLASS) &&
@@ -257,6 +309,12 @@ register struct obj *obj;
 		rn2(5))
 		otmp->omaterial = SILVER,
 		otmp->owt = weight(obj);
+	}
+	
+	if (otmp->oprops & (ITEM_FUMBLING|ITEM_HUNGER|ITEM_AGGRAVATE) &&
+	    allow_detrimental)
+	{
+	    curse(otmp);
 	}
 
 	return otmp;
@@ -360,7 +418,7 @@ struct obj *obj;
     /* might as well check for this too */
     if (obj->otyp == LUCKSTONE) return TRUE;
 
-    return (obj->oartifact && spec_ability(obj, SPFX_LUCK));
+    return (obj->oartifact && (spec_ability(obj, SPFX_LUCK)));
 }
 
 /* used to check whether a monster is getting reflection from an artifact */
@@ -591,6 +649,17 @@ long wp_mask;
 	    		flags.warntype &= ~spec_m2(otmp);
 		}
 		see_monsters();
+	    } else if (spec_sym(otmp)) {
+	        /* assumption: that you can only wield one weapon at a time
+		 * that has this ability */
+	    	if (on) {
+			EWarn_of_mon |= wp_mask;
+			flags.warnsym = spec_sym(otmp);
+	    	} else {
+			EWarn_of_mon &= ~wp_mask;
+	    		flags.warnsym = 0;
+		}
+		see_monsters();
 	    } else {
 		if (on) EWarning |= wp_mask;
 	    	else EWarning &= ~wp_mask;
@@ -765,7 +834,17 @@ spec_m2(otmp)
 struct obj *otmp;
 {
 	register const struct artifact *artifact = get_artifact(otmp);
-	if (artifact)
+	if (artifact && (artifact->spfx & SPFX_DFLAG2))
+		return artifact->mtype;
+	return 0L;
+}
+
+int
+spec_sym(otmp)
+struct obj *otmp;
+{
+	register const struct artifact *artifact = get_artifact(otmp);
+	if (artifact && (artifact->spfx & SPFX_DCLAS))
 		return artifact->mtype;
 	return 0L;
 }
@@ -794,18 +873,23 @@ struct monst *mon;
 int tmp;
 {
 	register const struct artifact *weap = get_artifact(otmp);
+	boolean yours = (mon == &youmonst);
+	    
+	spec_dbon_applies = FALSE;
 
 	if (!weap && otmp->oprops &&
 	    (otmp->oclass == WEAPON_CLASS || is_weptool(otmp)))
 	{
-	    // until we know otherwise:
+	    /* until we know otherwise: */
 
-	    if ((attacks(AD_FIRE, otmp) && !resists_fire(mon)) ||
-	        (attacks(AD_COLD, otmp) && !resists_cold(mon)))
+	    if ((attacks(AD_FIRE, otmp) &&
+	        ((yours) ? (!Fire_resistance) : (!resists_fire(mon)))) ||
+	        (attacks(AD_COLD, otmp) &&
+		((yours) ? (!Cold_resistance) : (!resists_cold(mon)))))
 	    {
-	        spec_dbon_applies = TRUE;
-		
 		int tmp;
+
+	        spec_dbon_applies = TRUE;
 
 	        if (bigmonst(mon->data))
 	            tmp = rnd(objects[otmp->otyp].oc_wldam);
@@ -814,11 +898,12 @@ int tmp;
 
 		tmp += otmp->spe;
 
-		if (tmp < 1) tmp = 1;  // be nice, somehow ;)
+		if (tmp < 1) tmp = 1;  /* be nice, somehow ;) */
 
 		return tmp;
             }	
-	    if ((otmp->oprops & ITEM_DRLI) && !resists_drli(mon))
+	    if ((otmp->oprops & ITEM_DRLI) &&
+	        ((yours) ? (!Drain_resistance) : (!resists_drli(mon))))
 	    {
                 spec_dbon_applies = TRUE; 
 	        return 0;
@@ -1127,7 +1212,7 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	boolean vis = (!youattack && magr && cansee(magr->mx, magr->my))
 	    || (!youdefend && cansee(mdef->mx, mdef->my))
 	    || (youattack && u.uswallow && mdef == u.ustuck && !Blind);
-	boolean realizes_damage;
+	boolean realizes_damage, msgprinted = FALSE;
 	const char *wepdesc;
 	static const char you[] = "you";
 	char hittee[BUFSZ];
@@ -1157,7 +1242,10 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 
 	/* the four basic attacks: fire, cold, shock and missiles */
 	if (attacks(AD_FIRE, otmp)) {
-	    if (realizes_damage)
+	    if (realizes_damage &&
+	        (otmp->oartifact || 
+		 ((otmp->oprops & ITEM_FIRE) && 
+		  (spec_dbon_applies || (otmp->oprops_known & ITEM_FIRE)))))
 	    {
                 if (otmp->oartifact &&
 		    otmp->oartifact == ART_FIRE_BRAND)
@@ -1168,30 +1256,53 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 			(mdef->data == &mons[PM_WATER_ELEMENTAL]) ?
 			"vaporizes part of" : "burns",
 			hittee, !spec_dbon_applies ? '.' : '!');
+		if ((otmp->oprops & ITEM_FIRE) && spec_dbon_applies)
+		    otmp->oprops_known |= ITEM_FIRE;
+		msgprinted = TRUE;
+	    }
+	    if (!rn2(4)) {
+	        if (destroy_mitem(mdef, POTION_CLASS, AD_FIRE) &&
+		    (otmp->oprops & ITEM_FIRE))
+		    otmp->oprops_known |= ITEM_FIRE;
+	    }
+	    if (!rn2(4)) {
+	        if (destroy_mitem(mdef, SCROLL_CLASS, AD_FIRE) &&
+		    (otmp->oprops & ITEM_FIRE))
+		    otmp->oprops_known |= ITEM_FIRE;
+	    }
+	    if (!rn2(7)) {
+	        if (destroy_mitem(mdef, SPBOOK_CLASS, AD_FIRE) &&
+		    (otmp->oprops & ITEM_FIRE))
+		    otmp->oprops_known |= ITEM_FIRE;
+	    }
+	    if (youdefend && Slimed) {
+	        burn_away_slime();
 		if (otmp->oprops & ITEM_FIRE)
 		    otmp->oprops_known |= ITEM_FIRE;
 	    }
-	    if (!rn2(4)) (void) destroy_mitem(mdef, POTION_CLASS, AD_FIRE);
-	    if (!rn2(4)) (void) destroy_mitem(mdef, SCROLL_CLASS, AD_FIRE);
-	    if (!rn2(7)) (void) destroy_mitem(mdef, SPBOOK_CLASS, AD_FIRE);
-	    if (youdefend && Slimed) burn_away_slime();
-	    //return realizes_damage;
 	}
 	if (attacks(AD_COLD, otmp)) {
-	    if (realizes_damage)
+	    if (realizes_damage &&
+	        (otmp->oartifact || 
+		 ((otmp->oprops & ITEM_FROST) && 
+		  (spec_dbon_applies || (otmp->oprops_known & ITEM_FROST)))))
 	    {
                 if (otmp->oartifact &&
-		    otmp->oartifact == ART_FIRE_BRAND)
+		    otmp->oartifact == ART_FROST_BRAND)
 		    wepdesc = "The ice-cold blade";
 		pline("%s %s %s%c",
 		        wepdesc,
 			!spec_dbon_applies ? "hits" : "freezes",
 			hittee, !spec_dbon_applies ? '.' : '!');
-		if (otmp->oprops & ITEM_FROST)
+		if ((otmp->oprops & ITEM_FROST) && spec_dbon_applies)
+		    otmp->oprops_known |= ITEM_FROST;
+		msgprinted = TRUE;
+	    }
+	    if (!rn2(4)) {
+	        if (destroy_mitem(mdef, POTION_CLASS, AD_COLD) &&
+	    	    (otmp->oprops & ITEM_FROST))
 		    otmp->oprops_known |= ITEM_FROST;
 	    }
-	    if (!rn2(4)) (void) destroy_mitem(mdef, POTION_CLASS, AD_COLD);
-	    //return realizes_damage;
 	}
 	if (attacks(AD_ELEC, otmp)) {
 	    if (realizes_damage)
@@ -1200,7 +1311,7 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 			  hittee, !spec_dbon_applies ? '.' : '!');
 	    if (!rn2(5)) (void) destroy_mitem(mdef, RING_CLASS, AD_ELEC);
 	    if (!rn2(5)) (void) destroy_mitem(mdef, WAND_CLASS, AD_ELEC);
-	    //return realizes_damage;
+            msgprinted = TRUE;
 	}
 	if (attacks(AD_MAGM, otmp)) {
 	    if (realizes_damage)
@@ -1208,7 +1319,7 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 			  !spec_dbon_applies ? "" :
 				"!  A hail of magic missiles strikes",
 			  hittee, !spec_dbon_applies ? '.' : '!');
-	    //return realizes_damage;
+            msgprinted = TRUE;
 	}
 
 	if (attacks(AD_STUN, otmp) && dieroll <= MB_MAX_DIEROLL) {
@@ -1217,7 +1328,7 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	        return 
 	            Mb_hit(magr, mdef, otmp, dmgptr, dieroll, vis, hittee);
             else
-	        return FALSE;
+	        return msgprinted;
 	}
 
 
@@ -1225,7 +1336,7 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	    !(otmp->oprops & ITEM_VORPAL)) {
 	    /* since damage bonus didn't apply, nothing more to do;  
 	       no further attacks have side-effects on inventory */
-	    return realizes_damage;
+	    return msgprinted;
 	}
 
 	/* We really want "on a natural 20" but Nethack does it in */
@@ -1264,7 +1375,8 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 			}
 			*dmgptr = 2 * mdef->mhp + FATAL_DAMAGE_MODIFIER;
 			pline("%s cuts %s in half!", wepdesc, mon_nam(mdef));
-			otmp->dknown = TRUE;
+			if (otmp->oartifact)
+				otmp->dknown = TRUE;
 			return TRUE;
 		} else {
 			if (maybe_polyd(bigmonst(youmonst.data), 
@@ -1283,7 +1395,8 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 			 */
 			*dmgptr = 2 * (Upolyd ? u.mh : u.uhp) + FATAL_DAMAGE_MODIFIER;
 			pline("%s cuts you in half!", wepdesc);
-			otmp->dknown = TRUE;
+			if (otmp->oartifact)
+				otmp->dknown = TRUE;
 			return TRUE;
 		}
 	    } else if (/*otmp->oartifact == ART_VORPAL_BLADE && */
@@ -1320,9 +1433,10 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 			pline(behead_msg[rn2(SIZE(behead_msg))],
 			      wepdesc, mon_nam(mdef));
 			if (mdef->data == &mons[PM_ZOMBIE])
-			    mdef->mcan = 1; // prevent zombie from reviving
-			                    // if it suffers head damage
-			otmp->dknown = TRUE;
+			    mdef->mcan = 1; /* prevent zombie from reviving
+			                     * if it suffers head damage */
+			if (otmp->oartifact)
+				otmp->dknown = TRUE;
 			return TRUE;
 		} else {
 			if (!has_head(youmonst.data)) {
@@ -1340,7 +1454,8 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 				  + FATAL_DAMAGE_MODIFIER;
 			pline(behead_msg[rn2(SIZE(behead_msg))],
 			      wepdesc, "you");
-			otmp->dknown = TRUE;
+			if (otmp->oartifact)
+				otmp->dknown = TRUE;
 			/* Should amulets fall off? */
 			return TRUE;
 		}
@@ -1354,10 +1469,13 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 				pline_The("%s blade draws the life from %s!",
 				      hcolor(NH_BLACK),
 				      mon_nam(mdef));
-			    else
+			    else {
 				pline("%s draws the life from %s!",
 				      The(distant_name(otmp, xname)),
 				      mon_nam(mdef));
+				if (otmp->oprops & ITEM_DRLI)
+				    otmp->oprops_known |= ITEM_DRLI;
+			    }
 			}
 			if (mdef->m_lev == 0) {
 			    *dmgptr = 2 * mdef->mhp + FATAL_DAMAGE_MODIFIER;
@@ -1380,10 +1498,20 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 			else if (otmp->oartifact == ART_STORMBRINGER)
 				pline_The("%s blade drains your life!",
 				      hcolor(NH_BLACK));
-			else
+			else {
 				pline("%s drains your life!",
 				      The(distant_name(otmp, xname)));
-			losexp("life drainage");
+				if (otmp->oprops & ITEM_DRLI)
+				    otmp->oprops_known |= ITEM_DRLI;
+			}
+			if (curmonst && curmonst != &youmonst) {
+			    Strcpy(killer_buf, s_suffix(done_in_name(curmonst)));
+			    Sprintf(eos(killer_buf), " %s life drainage",
+				    s_suffix(killer_xname(otmp, "", FALSE)));
+			} else
+			    Sprintf(killer_buf, "%s life drainage",
+			            s_suffix(killer_xname(otmp, "", FALSE)));
+			losexp(killer_buf);
 			if (magr && magr->mhp < magr->mhpmax) {
 			    magr->mhp += (oldhpmax - u.uhpmax)/2;
 			    if (magr->mhp > magr->mhpmax) magr->mhp = magr->mhpmax;
@@ -1398,15 +1526,16 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	    ((get_artifact(otmp)->spfx) & 
 	     (SPFX_DMONS|SPFX_DCLAS|SPFX_DFLAG2|SPFX_DALIGN)))
 	{
-            if (!spec_dbon_applies)
+            if (!spec_dbon_applies) {
 	        if (realizes_damage)
 	            pline("%s hits %s%s",
 	                  artilist[otmp->oartifact].name, hittee,
 		          youdefend ? "!" : ".");
+	    }
 	    else if (dieroll == 1)
 	    {
 	        if (realizes_damage)
-		    // we know it's an artifact by now, so...
+		    /* we know it's an artifact by now, so... */
                     pline("%s slays %s!",
 		           artilist[otmp->oartifact].name, hittee);
 
@@ -1450,11 +1579,11 @@ int dieroll; /* needed for Magicbane and vorpal blades */
                 pline("%s sears %s!",
 	            artilist[otmp->oartifact].name, hittee);
 	    if (mdef->data->mlet == S_TROLL)
-	        mdef->mcan = 1; // trollsbane; prevent troll from reviving
-            return vis;
+	        mdef->mcan = 1; /* trollsbane; prevent troll from reviving */
+            return realizes_damage;
 	}
 
-	return FALSE;
+	return msgprinted;
 }
 
 static NEARDATA const char recharge_type[] = { ALLOW_COUNT, ALL_CLASSES, 0 };
@@ -1562,7 +1691,7 @@ arti_invoke(obj)
 	    }
 	    b_effect = obj->blessed &&
 		(Role_switch == oart->role || !oart->role);
-	    recharge(otmp, b_effect ? 1 : obj->cursed ? -1 : 0);
+	    recharge(otmp, b_effect ? 1 : obj->cursed ? -1 : 0, &youmonst);
 	    update_inventory();
 	    break;
 	  }
@@ -1706,7 +1835,7 @@ boolean
 artifact_light(obj)
     struct obj *obj;
 {
-    return (get_artifact(obj) && obj->oartifact == ART_SUNSWORD);
+    return (get_artifact(obj) && (obj->oartifact == ART_SUNSWORD));
 }
 
 /* KMH -- Talking artifacts are finally implemented */

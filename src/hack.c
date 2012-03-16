@@ -235,12 +235,19 @@ moverock()
 			  maybe_polyd(throws_rocks(youmonst.data),
 			              Race_if(PM_GIANT))
 				      ? "little" : "great",
+#ifdef INVISIBLE_OBJECTS
+			otmp->oinvis && !See_invisible ? an(xname(otmp)) :
+#endif
 			  the(xname(otmp)));
 		  exercise(A_STR, TRUE);
 #ifdef STEED
 		} else 
 		    pline("%s moves %s.",
-			  upstart(y_monnam(u.usteed)), the(xname(otmp)));
+			  upstart(y_monnam(u.usteed)),
+#ifdef INVISIBLE_OBJECTS
+			otmp->oinvis && !See_invisible ? an(xname(otmp)) :
+#endif
+			  the(xname(otmp)));
 #endif
 		lastmovetime = moves;
 	    }
@@ -1102,8 +1109,8 @@ domove()
 	/* specifying 'F' with no monster wastes a turn */
 	if (flags.forcefight ||
 	    /* remembered an 'I' && didn't use a move command */
-	    ((glyph_is_invisible(levl[x][y].glyph) ||
-	      (m_img_at(x, y) != 0 && displaced_image(m_img_at(x, y))) &&
+	    ((((glyph_is_invisible(levl[x][y].glyph)) ||
+	      (m_img_at(x, y) != 0 && displaced_image(m_img_at(x, y)))) &&
 	       !flags.nopick))) { 
 		boolean expl = (Upolyd && attacktype(youmonst.data, AT_EXPL));
 	    	char buf[BUFSZ];
@@ -1146,6 +1153,10 @@ domove()
 		    Levitation || Is_airlevel(&u.uz) || Is_waterlevel(&u.uz) ?
 		    "in place" : "to the ground");
 		nomul(0);
+		return;
+	}
+	if(u.uburied) {
+		You_cant("get very far trying to walk through solid rock.");
 		return;
 	}
 	if(u.utrap) {
@@ -1281,6 +1292,14 @@ domove()
 	/* Check regions entering/leaving */
 	if (!in_out_region(x,y))
 	    return;
+	
+	if (!Blind) {
+		struct obj *otmp = level.objects[u.ux][u.uy];
+		for (; otmp; otmp = otmp->nexthere) {
+			if (otmp->oinvis && !See_invisible)
+				otmp->opresenceknown = FALSE;
+		}
+	}
 
  	/* now move the hero */
 	mtmp = m_at(x, y);
@@ -1559,7 +1578,7 @@ stillinwater:;
 				x_monnam(mtmp, ARTICLE_A, "falling", 0, TRUE));
 			    dmg = d(4,6);
 			    if(Half_physical_damage) dmg = (dmg+1) / 2;
-			    mdamageu(mtmp, dmg);
+			    mdamageu(mtmp, NULL, dmg);
 			}
 			break;
 		    default:	/* monster surprises you. */

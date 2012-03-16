@@ -232,7 +232,7 @@ int force;
 	if (end_y >= ROWNO) end_y = ROWNO - 1;
 	for (x=start_x; x<=end_x; x++) for (y=start_y; y<=end_y; y++) {
 	    if ((mtmp = m_at(x,y)) != 0) {
-		wakeup(mtmp);	/* peaceful monster will become hostile */
+		wakeup(mtmp, TRUE); /* peaceful monster will become hostile */
 		if (mtmp->mundetected && is_hider(mtmp->data)) {
 		    mtmp->mundetected = 0;
 		    if (cansee(x,y))
@@ -333,6 +333,8 @@ do_pit:		    chasm = maketrap(x,y,PIT);
 		    break;
 		  case DOOR : /* Make the door collapse */
 		    if (levl[x][y].doormask == D_NODOOR) goto do_pit;
+		    if (In_sokoban(&u.uz) && (levl[x][y].doormask | D_TRAPPED))
+		    	break;
 		    if (cansee(x,y))
 			pline_The("door collapses.");
 		    if (*in_rooms(x, y, SHOPBASE))
@@ -550,8 +552,9 @@ struct obj *instr;
 				close_drawbridge(x,y);
 			    else
 				open_drawbridge(x,y);
-			    return 0;
+			    break;
 			}
+		return 1;
 	    } else if(flags.soundok) {
 		if (u.uevent.uheard_tune < 1) u.uevent.uheard_tune = 1;
 		/* Okay, it wasn't the right tune, but perhaps

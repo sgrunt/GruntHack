@@ -25,7 +25,11 @@ int explcolors[] = {
 
 #ifdef TEXTCOLOR
 #define zap_color(n)  color = iflags.use_color ? zapcolors[n] : NO_COLOR
+#ifndef USER_DUNGEONCOLOR
 #define cmap_color(n) color = iflags.use_color ? defsyms[n].color : NO_COLOR
+#else
+#define cmap_color(n) color = iflags.use_color ? showsymcolors[n] : NO_COLOR
+#endif
 #define obj_color(n)  color = iflags.use_color ? objects[n].oc_color : NO_COLOR
 #define mon_color(n)  color = iflags.use_color ? mons[n].mcolor : NO_COLOR
 #define invis_color(n) color = NO_COLOR
@@ -122,7 +126,7 @@ unsigned *ospecial;
 		color = NO_COLOR;
 	} else
 #endif
-        // corridor darkening deferred elsewhere
+        /* corridor darkening deferred elsewhere */
 	    cmap_color(offset);
     } else if ((offset = (glyph - GLYPH_OBJ_OFF)) >= 0) {	/* object */
         struct obj *otmp = vobj_at(x, y);
@@ -194,6 +198,8 @@ unsigned *ospecial;
     } else if ((offset = (glyph - GLYPH_PET_OFF)) >= 0) {	/* a pet */
 #ifdef TEXTCOLOR
         register struct monst *mtmp = m_at(x, y);
+	if (!mtmp)
+		mtmp = m_img_at(x, y);
 #endif
 	ch = monsyms[(int)mons[offset].mlet];
 #ifdef ROGUE_COLOR
@@ -221,15 +227,27 @@ unsigned *ospecial;
 #endif
 	{
 #ifdef TEXTCOLOR
-	    register struct monst *mtmp = m_at(x, y);
+	    register struct monst *mtmp;
+	    if (x == u.ux && y == u.uy)
+	    	mtmp = &youmonst;
+	    else
+	    	mtmp = m_at(x, y);
+	    if (!mtmp)
+	    	mtmp = m_img_at(x, y);
 #endif
 
 	    mon_color(glyph);
 	    /* special case the hero for `showrace' option */
 #ifdef TEXTCOLOR
-	    if (iflags.use_color && x == u.ux && y == u.uy &&
-		    iflags.showrace && !Upolyd)
-		color = HI_DOMESTIC;
+            if (iflags.use_color && mtmp->m_ap_type == M_AP_MONSTER) {
+	    	color = mons[mtmp->mappearance].mcolor;
+	    } else if (iflags.use_color && (mtmp == &youmonst)
+	    	       && iflags.showrace) {
+		/*if (!Upolyd)
+		    color = HI_DOMESTIC;
+		else*/
+		    color = mons[u.umonnum].mcolor;
+	    }
 	    else if (iflags.use_color && iflags.showrace &&
 	             mtmp && mtmp->mrace)
 		color = mtmp->data->mcolor;

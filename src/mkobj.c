@@ -79,7 +79,7 @@ const struct icp hellprobs[] = {
 };
 
 /* material probabilities. */
-// normal weapon/armour
+/* normal weapon/armour */
 const struct icp materialprobs[] = {
 {80, IRON},
 { 5, WOOD},
@@ -92,10 +92,10 @@ const struct icp materialprobs[] = {
 { 1, PLASTIC}
 };
 
-// wooden items 
+/* wooden items */
 const struct icp wmaterialprobs[] = {
 {80, WOOD},
-{10, MINERAL}, //stone
+{10, MINERAL}, /*stone*/
 { 5, IRON},
 { 3, BONE},
 { 1, COPPER},
@@ -103,7 +103,7 @@ const struct icp wmaterialprobs[] = {
 };
 
 
-// cloth 
+/* cloth  */
 const struct icp cmaterialprobs[] = {
 {60, CLOTH},
 {33, LEATHER},
@@ -111,7 +111,7 @@ const struct icp cmaterialprobs[] = {
 { 1, FLESH},
 };
 
-// dwarvish equipment
+/* dwarvish equipment */
 const struct icp dmaterialprobs[] = {
 {85, IRON},
 {10, MITHRIL},
@@ -121,7 +121,7 @@ const struct icp dmaterialprobs[] = {
 { 1, PLATINUM}
 };
 
-// elven weapons 
+/* elven weapons  */
 const struct icp ematerialprobs[] = {
 {80, WOOD},
 {10, COPPER},
@@ -130,13 +130,13 @@ const struct icp ematerialprobs[] = {
 { 2, GOLD}
 };
 
-//elven chain mail 
+/* elven chain mail */
 const struct icp eamaterialprobs[] = {
 {80, COPPER},
 {20, MITHRIL}
 };
 
-// elven helm
+/* elven helm */
 const struct icp ehmaterialprobs[] = {
 {50, LEATHER},
 {45, COPPER},
@@ -144,14 +144,14 @@ const struct icp ehmaterialprobs[] = {
 };
 
 struct obj *
-mkobj_at(let, x, y, artif)
+mkobj_at(let, x, y, flags)
 char let;
 int x, y;
-boolean artif;
+int flags;
 {
 	struct obj *otmp;
 
-	otmp = mkobj(let, artif);
+	otmp = mkobj(let, flags);
 	place_object(otmp, x, y);
 	return(otmp);
 }
@@ -169,9 +169,9 @@ boolean init, artif;
 }
 
 struct obj *
-mkobj(oclass, artif)
+mkobj(oclass, flags)
 char oclass;
-boolean artif;
+int flags;
 {
 	int tprob, i, prob = rnd(1000);
 
@@ -193,10 +193,21 @@ boolean artif;
 	i = bases[(int)oclass];
 	while((prob -= objects[i].oc_prob) > 0) i++;
 
+	if (flags & (MO_MAGIC|MO_NOMAGIC)) {
+	    int tries = 100;
+	    while ((tries-- > 0) &&
+	            (((!objects[i].oc_magic) && (flags & MO_MAGIC)) ||
+	             (objects[i].oc_magic && (flags & MO_NOMAGIC)))) {
+		prob = rnd(1000);
+		i = bases[(int)oclass];
+		while((prob -= objects[i].oc_prob) > 0) i++;
+	    }
+	}
+
 	if(objects[i].oc_class != oclass || !OBJ_NAME(objects[i]))
 		panic("probtype error, oclass=%d i=%d", (int) oclass, i);
 
-	return(mksobj(i, TRUE, artif));
+	return(mksobj(i, TRUE, !!(flags & MO_ALLOW_ARTIFACT)));
 }
 
 STATIC_OVL void
@@ -238,7 +249,7 @@ struct obj *box;
 
 		for (tprob = rnd(100); (tprob -= iprobs->iprob) > 0; iprobs++)
 		    ;
-		if (!(otmp = mkobj(iprobs->iclass, TRUE))) continue;
+		if (!(otmp = mkobj(iprobs->iclass, MO_ALLOW_ARTIFACT))) continue;
 
 		/* handle a couple of special cases */
 		if (otmp->oclass == COIN_CLASS) {
@@ -450,7 +461,9 @@ boolean artif;
 	if (!objects[otmp->otyp].oc_uses_known)
 		otmp->known = 1;
 #ifdef INVISIBLE_OBJECTS
-	otmp->oinvis = !rn2(1250);
+	otmp->oinvis = (can_be_invisible(otmp) && !rn2(1250)) ||
+		(often_invisible(otmp) && rn2(50));
+	otmp->opresenceknown = !otmp->oinvis;
 #endif
         otmp->omaterial = objects[otmp->otyp].oc_material;
 	{
@@ -466,7 +479,9 @@ boolean artif;
 		materials = dmaterialprobs;
 	    else if ((otmp->otyp == WEAPON_CLASS ||
 	              is_weptool(otmp) ||
-	              otmp->otyp == ARMOR_CLASS))
+	              otmp->otyp == ARMOR_CLASS ||
+		      otmp->otyp == CHEST ||
+		      otmp->otyp == LARGE_BOX))
             {
 		if (objects[otmp->otyp].oc_material == IRON)
 		    materials = materialprobs;
@@ -500,7 +515,7 @@ boolean artif;
 		if (artif && !rn2(20))
 		    otmp = mk_artifact(otmp, (aligntyp)A_NONE);
 		else if (!rn2(100))
-		    otmp = create_oprop(otmp);
+		    otmp = create_oprop(otmp, TRUE);
 		break;
 	case FOOD_CLASS:
 	    otmp->oeaten = 0;
@@ -595,6 +610,7 @@ boolean artif;
 		case EXPENSIVE_CAMERA:
 #endif
 		case TINNING_KIT:
+		case FELT_MARKER:
 		case MAGIC_MARKER:	otmp->spe = rn1(70,30);
 					break;
 		case CAN_OF_GREASE:	otmp->spe = rnd(25);
@@ -665,7 +681,7 @@ boolean artif;
 		if (artif && !rn2(20)) 
 		    otmp = mk_artifact(otmp, (aligntyp)A_NONE);
 		else if (!rn2(100))
-		    otmp = create_oprop(otmp);
+		    otmp = create_oprop(otmp, TRUE);
 		/* simulate lacquered armor for samurai */
 		if (Role_if(PM_SAMURAI) && otmp->otyp == SPLINT_MAIL &&
 		    (moves <= 1 || In_quest(&u.uz))) {
@@ -712,7 +728,8 @@ boolean artif;
 			if (!verysmall(&mons[otmp->corpsenm]) &&
 				rn2(level_difficulty()/2 + 10) > 10)
 			    (void) add_to_container(otmp,
-						    mkobj(SPBOOK_CLASS,FALSE));
+						    mkobj(SPBOOK_CLASS,
+						    	NO_MO_FLAGS));
 		}
 		break;
 	case COIN_CLASS:
@@ -757,7 +774,8 @@ start_corpse_timeout(body)
 #define ROT_AGE (250L)		/* age when corpses rot away */
 
 	/* lizards and lichen don't rot or revive */
-	if (body->corpsenm == PM_LIZARD || body->corpsenm == PM_LICHEN) return;
+	if (body->corpsenm == PM_LIZARD || body->corpsenm == PM_LICHEN ||
+	    body->oerodeproof) return;
 
 	action = ROT_CORPSE;		/* default action: rot away */
 	rot_adjust = in_mklev ? 25 : 10;	/* give some variation */
@@ -901,27 +919,27 @@ register struct obj *otmp;
 STATIC_DCL
 const int matweights[] = {
      0,
-     1, // LIQUID
-     1, // WAX
-     1, // VEGGY
-     1, // FLESH
-     1, // PAPER
-     2, // CLOTH
-     3, // LEATHER
-     4, // WOOD
-     5, // BONE
-     2, // DRAGON_HIDE
-    12, // IRON
-    12, // METAL
-    10, // COPPER
-    12, // SILVER
-    14, // GOLD
-    10, // PLATINUM
-     6, // MITHRIL
-     3, // PLASTIC
-     5, // GLASS
-    16, // GEMSTONE
-    14  // MINERAL
+     1, /* LIQUID */
+     1, /* WAX */
+     1, /* VEGGY */
+     1, /* FLESH */
+     1, /* PAPER */
+     2, /* CLOTH */
+     3, /* LEATHER */
+     4, /* WOOD */
+     5, /* BONE */
+     2, /* DRAGON_HIDE */
+    12, /* IRON */
+    12, /* METAL */
+    10, /* COPPER */
+    12, /* SILVER */
+    14, /* GOLD */
+    10, /* PLATINUM */
+     6, /* MITHRIL */
+     3, /* PLASTIC */
+     5, /* GLASS */
+    16, /* GEMSTONE */
+    14  /* MINERAL */
 };
 
 /*
@@ -997,27 +1015,27 @@ register struct obj *obj;
 STATIC_DCL
 const int matac[] = {
      0,
-    -5, // LIQUID
-    -4, // WAX
-    -4, // VEGGY
-    -2, // FLESH
-    -4, // PAPER
-    -3, // CLOTH
-    -2, // LEATHER
-    -1, // WOOD
-     1, // BONE
-     5, // DRAGON_HIDE
-     0, // IRON
-     0, // METAL
-    -1, // COPPER
-     0, // SILVER
-    -2, // GOLD
-    -1, // PLATINUM
-     0, // MITHRIL
-    -2, // PLASTIC
-     0, // GLASS
-     2, // GEMSTONE
-     3  // MINERAL
+    -5, /* LIQUID */
+    -4, /* WAX */
+    -4, /* VEGGY */
+    -2, /* FLESH */
+    -4, /* PAPER */
+    -3, /* CLOTH */
+    -2, /* LEATHER */
+    -1, /* WOOD */
+     1, /* BONE */
+     5, /* DRAGON_HIDE */
+     0, /* IRON */
+     0, /* METAL */
+    -1, /* COPPER */
+     0, /* SILVER */
+    -2, /* GOLD */
+    -1, /* PLATINUM */
+     0, /* MITHRIL */
+    -2, /* PLASTIC */
+     0, /* GLASS */
+     2, /* GEMSTONE */
+     3  /* MINERAL */
 };
 
 int
@@ -1295,7 +1313,11 @@ int x, y;
 	panic("place_object: obj not free");
 
     obj_no_longer_held(otmp);
-    if (otmp->otyp == BOULDER) block_point(x,y);	/* vision */
+    if (otmp->otyp == BOULDER
+#ifdef INVISIBLE_OBJECTS
+	&& (!otmp->oinvis)
+#endif
+    ) block_point(x,y);	/* vision */
 
     /* obj goes under boulders */
     if (otmp2 && (otmp2->otyp == BOULDER)) {
@@ -1491,6 +1513,10 @@ void
 obj_extract_self(obj)
     struct obj *obj;
 {
+#ifdef INVISIBLE_OBJECTS
+    if (obj->oinvis)
+    	obj->opresenceknown = FALSE;
+#endif
     switch (obj->where) {
 	case OBJ_FREE:
 	    break;

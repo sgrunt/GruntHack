@@ -7,7 +7,10 @@
 #include <qtabwidget.h>
 #include <qpixmap.h>
 #include <qimage.h>
-#include <qvbox.h>
+#include <q3vbox.h>
+//Added by qt3to4:
+#include <QMouseEvent>
+#include <QPaintEvent>
 
 class TilePickerTab : public QWidget {
     Q_OBJECT
@@ -107,7 +110,7 @@ private:
     QRgb *rgb;
 };
 
-class TileEditor : public QVBox {
+class TileEditor : public Q3VBox {
     Q_OBJECT
 public:
     TileEditor(QWidget* parent);

@@ -295,7 +295,14 @@ dosit()
 		uegg->quan = 1;
 		uegg->owt = weight(uegg);
 		uegg->corpsenm = egg_type_from_parent(u.umonnum, FALSE);
-		uegg->known = uegg->dknown = 1;
+		uegg->known = uegg->dknown =
+#ifdef INVISIBLE_OBJECTS
+			uegg->iknown =
+#endif
+			1;
+#ifdef INVISIBLE_OBJECTS
+            	uegg->oinvis = !!Invisible;
+#endif
 		attach_egg_hatch_timeout(uegg);
 		You("lay an egg.");
 		dropy(uegg);
@@ -495,6 +502,7 @@ attrcurse()			/* remove a random INTRINSIC ability */
 		}
 	case 10: if (HProtection & INTRINSIC) {
 			HProtection &= ~INTRINSIC;
+			u.ublessed = 0;
 			You_feel("vulnerable.");
 			break;
 		}

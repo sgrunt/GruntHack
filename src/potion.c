@@ -83,14 +83,16 @@ boolean talk;
 		    You_feel("%s now.",
 			Hallucination ? "less wobbly" : "a bit steadier");
 	}
-	if (xtime && !old) {
-		if (talk) {
+	if (xtime && talk) {
+		if (!old) {
 #ifdef STEED
 			if (u.usteed)
 				You("wobble in the saddle.");
 			else
 #endif
 			You("%s...", stagger(youmonst.data, "stagger"));
+		} else {
+			You("struggle to keep your balance.");
 		}
 	}
 	if ((!xtime && old) || (xtime && !old)) flags.botl = TRUE;
@@ -135,11 +137,11 @@ int type;
 
 	if (Sick) {
 	    exercise(A_CON, FALSE);
-	    if (cause) {
+	    if (!old && cause) {
 		(void) strncpy(u.usick_cause, cause, sizeof(u.usick_cause));
 		u.usick_cause[sizeof(u.usick_cause)-1] = 0;
 		}
-	    else
+	    else if (!cause)
 		u.usick_cause[0] = 0;
 	} else
 	    u.usick_cause[0] = 0;
@@ -235,7 +237,12 @@ boolean talk;
 	if (u_could_see ^ can_see_now) {  /* one or the other but not both */
 	    flags.botl = 1;
 	    vision_full_recalc = 1;	/* blindness just got toggled */
-	    if (Blind_telepat || Infravision) see_monsters();
+	    if (Blind_telepat || Infravision) {
+	    	see_monsters();
+	    }
+#ifdef INVISIBLE_OBJECTS
+	    see_objects();
+#endif
 	}
 }
 
@@ -304,6 +311,16 @@ long mask;	/* nonzero if resistance status should change by mask */
 	return changed;
 }
 
+void
+frighten_player(duration)
+int duration;
+{
+	if(flags.verbose)
+	    You("are frightened to death, and unable to move.");
+	nomul2(-duration, "scared");
+	nomovemsg = "You regain your composure.";
+}
+
 STATIC_OVL void
 ghost_from_bottle()
 {
@@ -319,10 +336,7 @@ ghost_from_bottle()
 	}
 	pline("As you open the bottle, an enormous %s emerges!",
 		Hallucination ? rndmonnam() : (const char *)"ghost");
-	if(flags.verbose)
-	    You("are frightened to death, and unable to move.");
-	nomul2(-3, "scared");
-	nomovemsg = "You regain your composure.";
+	frighten_player(3);
 }
 
 /* "Quaffing is like drinking, except you spill more."  -- Terry Pratchett
@@ -560,6 +574,7 @@ peffects(otmp)
 	case POT_FRUIT_JUICE:
 	    {
 		int msg = Invisible && !Blind;
+		boolean previously_blind = FALSE;
 
 		unkn++;
 		if (otmp->cursed)
@@ -576,18 +591,25 @@ peffects(otmp)
 		    newuhs(FALSE);
 		    break;
 		}
+		if (otmp->blessed)
+			HSee_invisible |= FROMOUTSIDE;
+		else
+			incr_itimeout(&HSee_invisible, rn1(100,750));
 		if (!otmp->cursed) {
 			/* Tell them they can see again immediately, which
 			 * will help them identify the potion...
 			 */
 			make_blinded(0L,TRUE);
 		}
-		if (otmp->blessed)
-			HSee_invisible |= FROMOUTSIDE;
-		else
-			incr_itimeout(&HSee_invisible, rn1(100,750));
+		if (Blind && !previously_blind) {
+			Your("vision is suddenly blocked.");
+		        vision_full_recalc = 1; /* boulders */
+		}
 		set_mimic_blocking(); /* do special mimic handling */
 		see_monsters();	/* see invisible monsters */
+#ifdef INVISIBLE_OBJECTS
+		see_objects(); /* see invisible objects */
+#endif
 		newsym(u.ux,u.uy); /* see yourself! */
 		if (msg && !Blind) { /* Blind possible if polymorphed */
 		    You("can see through yourself, but you are visible!");
@@ -1178,7 +1200,7 @@ boolean your_fault;
 */
 	}
 	if (angermon)
-	    wakeup(mon);
+	    wakeup(mon, TRUE);
 	else
 	    mon->msleeping = 0;
     }
@@ -1633,6 +1655,9 @@ dodip()
 	register struct obj *potion, *obj;
 	struct obj *singlepotion;
 	const char *tmp;
+#ifdef PARANOID
+	char *objname;
+#endif
 	uchar here;
 	char allowall[2];
 	short mixture;
@@ -1643,15 +1668,27 @@ dodip()
 		return(0);
 
 	here = levl[u.ux][u.uy].typ;
+#ifdef PARANOID
+	objname = the(xname(obj));
+#endif
 	/* Is there a fountain to dip into here? */
 	if (IS_FOUNTAIN(here)) {
+#ifdef PARANOID
+		Sprintf(qbuf, "Dip %s into the fountain?", strlen(objname) < 50? objname: "it");
+		if(yn(qbuf) == 'y') {
+#else
 		if(yn("Dip it into the fountain?") == 'y') {
+#endif
 			dipfountain(obj);
 			return(1);
 		}
 	} else if (is_pool(u.ux,u.uy)) {
 		tmp = waterbody_name(u.ux,u.uy);
+#ifdef PARANOID
+		Sprintf(qbuf, "Dip %s into the %s?", strlen(objname)+strlen(tmp) < 50? objname: "it", tmp);
+#else
 		Sprintf(qbuf, "Dip it into the %s?", tmp);
+#endif
 		if (yn(qbuf) == 'y') {
 		    if (Levitation) {
 			floating_above(tmp);
@@ -1668,7 +1705,12 @@ dodip()
 		}
 	}
 
+#ifdef PARANOID
+	Sprintf(qbuf, "dip %s into", strlen(objname) < 50? objname: "it");
+	if(!(potion = getobj(beverages, qbuf)))
+#else
 	if(!(potion = getobj(beverages, "dip into")))
+#endif
 		return(0);
 	if (potion == obj && potion->quan == 1L) {
 		pline("That is a potion bottle, not a Klein bottle!");
@@ -1790,7 +1832,11 @@ dodip()
 		}
 
 		obj->blessed = obj->cursed = obj->bknown = 0;
-		if (Blind || Hallucination) obj->dknown = 0;
+		if (Blind || Hallucination
+#ifdef INVISIBLE_OBJECTS
+			|| (obj->oinvis && !See_invisible)
+#endif
+		) obj->dknown = 0;
 
 		if ((mixture = mixtype(obj, potion)) != 0) {
 			obj->otyp = mixture;
@@ -1806,7 +1852,7 @@ dodip()
 			case 4:
 				{
 				  struct obj *otmp;
-				  otmp = mkobj(POTION_CLASS,FALSE);
+				  otmp = mkobj(POTION_CLASS,NO_MO_FLAGS);
 				  obj->otyp = otmp->otyp;
 				  obfree(otmp, (struct obj *)0);
 				}
@@ -1835,7 +1881,8 @@ dodip()
 	}
 
 #ifdef INVISIBLE_OBJECTS
-	if (potion->otyp == POT_INVISIBILITY && !obj->oinvis) {
+	if (potion->otyp == POT_INVISIBILITY && !obj->oinvis
+		&& can_be_invisible(obj)) {
 		obj->oinvis = TRUE;
 		if (!Blind) {
 		    if (!See_invisible) pline("Where did %s go?",
@@ -1898,7 +1945,7 @@ dodip()
 	            pline("%s %s for a moment.",
 		           Tobjnam(obj, "glow"), hcolor(NH_BLUE));
 
-                //shamelessly borrowed from mkobj
+                /*shamelessly borrowed from mkobj*/
 	        i = bases[WAND_CLASS];
 	        while((prob -= objects[i].oc_prob) > 0) i++;
 	        
@@ -2035,7 +2082,11 @@ dodip()
 		else
 		    singlepotion->cursed = obj->cursed;  /* odiluted left as-is */
 		singlepotion->bknown = FALSE;
-		if (Blind) {
+		if (Blind
+#ifdef INVISIBLE_OBJECTS
+		|| (singlepotion->oinvis || !See_invisible)
+#endif
+		) {
 		    singlepotion->dknown = FALSE;
 		} else {
 		    singlepotion->dknown = !Hallucination;
@@ -2090,9 +2141,9 @@ register struct obj *obj;
 		pline("%s speaks.", Something);
 	}
 
-	chance = rn2(5);
-	if (obj->blessed) chance = (chance == 4) ? rnd(4) : 0;
-	else if (obj->cursed) chance = (chance == 0) ? rn2(4) : 4;
+	chance = rnl(5);
+	if (obj->blessed) chance = (chance == 4) ? 1+rnl(4) : 0;
+	else if (obj->cursed) chance = (chance == 0) ? rnl(4) : 4;
 	/* 0,1,2,3,4:  b=80%,5,5,5,5; nc=20%,20,20,20,20; c=5%,5,5,5,80 */
 
 	switch (chance) {

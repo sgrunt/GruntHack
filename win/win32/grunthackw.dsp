@@ -1,24 +1,24 @@
-# Microsoft Developer Studio Project File - Name="NetHackW" - Package Owner=<4>
+# Microsoft Developer Studio Project File - Name="GruntHackW" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Application" 0x0101
 
-CFG=NetHackW - Win32 Debug
+CFG=GruntHackW - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "NetHackW.mak".
+!MESSAGE NMAKE /f "GruntHackW.mak".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "NetHackW.mak" CFG="NetHackW - Win32 Debug"
+!MESSAGE NMAKE /f "GruntHackW.mak" CFG="GruntHackW - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "NetHackW - Win32 Release" (based on "Win32 (x86) Application")
-!MESSAGE "NetHackW - Win32 Debug" (based on "Win32 (x86) Application")
+!MESSAGE "GruntHackW - Win32 Release" (based on "Win32 (x86) Application")
+!MESSAGE "GruntHackW - Win32 Debug" (based on "Win32 (x86) Application")
 !MESSAGE 
 
 # Begin Project
@@ -29,7 +29,7 @@ CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
 
-!IF  "$(CFG)" == "NetHackW - Win32 Release"
+!IF  "$(CFG)" == "GruntHackW - Win32 Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -54,22 +54,22 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib comctl32.lib advapi32.lib winmm.lib /nologo /subsystem:windows /map /debug /machine:I386 /MAPINFO:EXPORTS /MAPINFO:LINES
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib comctl32.lib advapi32.lib winmm.lib /nologo /subsystem:windows /map /debug /machine:I386 /MAPINFO:EXPORTS
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 OutDir=.\Release
 SOURCE="$(InputPath)"
 PostBuild_Desc=Install exe
-PostBuild_Cmds=copy $(OutDir)\NetHackW.exe ..\binary	\
-copy ..\dat\nhdat ..\binary	\
+PostBuild_Cmds=copy $(OutDir)\GruntHackW.exe ..\binary	\
+copy ..\dat\ghdat ..\binary	\
 copy ..\dat\license ..\binary	\
 if exist tiles.bmp copy tiles.bmp ..\binary	\
 if exist ..\doc\Guidebook.txt copy ..\doc\Guidebook.txt ..\binary\Guidebook.txt	\
-if exist ..\doc\nethack.txt copy ..\doc\nethack.txt ..\binary\NetHack.txt	\
-copy ..\sys\winnt\defaults.nh ..\binary\defaults.nh
+if exist ..\doc\grunthack.txt copy ..\doc\grunthack.txt ..\binary\GruntHack.txt	\
+copy ..\sys\winnt\defaults.gh ..\binary\defaults.gh
 # End Special Build Tool
 
-!ELSEIF  "$(CFG)" == "NetHackW - Win32 Debug"
+!ELSEIF  "$(CFG)" == "GruntHackW - Win32 Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -100,21 +100,21 @@ OutDir=.\Debug
 SOURCE="$(InputPath)"
 PostBuild_Desc=Install exe
 PostBuild_Cmds=if NOT exist ..\binary\*.* mkdir ..\binary	\
-copy $(OutDir)\NetHackW.exe ..\binary	\
-copy ..\dat\nhdat ..\binary	\
+copy $(OutDir)\GruntHackW.exe ..\binary	\
+copy ..\dat\ghdat ..\binary	\
 copy ..\dat\license ..\binary	\
 if exist tiles.bmp copy tiles.bmp ..\binary	\
 if exist ..\doc\Guidebook.txt copy ..\doc\Guidebook.txt ..\binary\Guidebook.txt	\
-if exist ..\doc\nethack.txt copy ..\doc\nethack.txt ..\binary\NetHack.txt	\
-copy ..\sys\winnt\defaults.nh ..\binary\defaults.nh
+if exist ..\doc\nethack.txt copy ..\doc\nethack.txt ..\binary\GruntHack.txt	\
+copy ..\sys\winnt\defaults.gh ..\binary\defaults.gh
 # End Special Build Tool
 
 !ENDIF 
 
 # Begin Target
 
-# Name "NetHackW - Win32 Release"
-# Name "NetHackW - Win32 Debug"
+# Name "GruntHackW - Win32 Release"
+# Name "GruntHackW - Win32 Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
@@ -960,7 +960,7 @@ SOURCE=..\win\win32\mnunsel.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=..\win\win32\NETHACK.ICO
+SOURCE=..\win\win32\GRUNTHACK.ICO
 # End Source File
 # Begin Source File
 

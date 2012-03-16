@@ -2,9 +2,9 @@
 /* Copyright (c) Gregg Wonderly, Naperville, Illinois,  1991,1992,1993,1996. */
 /* NetHack may be freely redistributed.  See license for details. */
 
-#include "NH:sys/amiga/windefs.h"
-#include "NH:sys/amiga/winext.h"
-#include "NH:sys/amiga/winproto.h"
+#include "GH:sys/amiga/windefs.h"
+#include "GH:sys/amiga/winext.h"
+#include "GH:sys/amiga/winproto.h"
 
 /* Start building the text for a menu */
 void
@@ -580,10 +580,10 @@ DoMenuScroll( win, blocking, how, retmip )
 		    }
 		    else if( win == WIN_MESSAGE )
 		    {
-			lastmsg.MinX = w->LeftEdge;
-			lastmsg.MinY = w->TopEdge;
-			lastmsg.MaxX = w->Width;
-			lastmsg.MaxY = w->Height;
+			lastmsgwin.MinX = w->LeftEdge;
+			lastmsgwin.MinY = w->TopEdge;
+			lastmsgwin.MaxX = w->Width;
+			lastmsgwin.MaxY = w->Height;
 		    }
 
 		    /* Find the gadget */
@@ -1004,10 +1004,10 @@ DoMenuScroll( win, blocking, how, retmip )
 		    }
 		    else if( win == WIN_MESSAGE )
 		    {
-			lastmsg.MinX = w->LeftEdge;
-			lastmsg.MinY = w->TopEdge;
-			lastmsg.MaxX = w->Width;
-			lastmsg.MaxY = w->Height;
+			lastmsgwin.MinX = w->LeftEdge;
+			lastmsgwin.MinY = w->TopEdge;
+			lastmsgwin.MaxX = w->Width;
+			lastmsgwin.MaxY = w->Height;
 		    }
 		    aredone = 1;
 		    morc = '\33';

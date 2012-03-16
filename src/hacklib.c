@@ -455,11 +455,22 @@ fuzzymatch(s1, s2, ignore_chars, caseblind)
 #if defined(AMIGA) && !defined(AZTEC_C) && !defined(__SASC_60) && !defined(_DCC) && !defined(__GNUC__)
 extern struct tm *FDECL(localtime,(time_t *));
 #endif
-static struct tm *NDECL(getlt);
+struct tm *NDECL(getlt);
 
 void
 setrandom()
 {
+  
+	int rnd = 0;
+
+#ifdef UNIX
+	FILE *fptr = NULL;
+	fptr = fopen("/dev/urandom","r");
+	if (fptr)
+		fread((void *)&rnd, sizeof(int),1,fptr);
+	fclose(fptr);
+#endif
+  
 	/* the types are different enough here that sweeping the different
 	 * routine names into one via #defines is even more confusing
 	 */
@@ -471,21 +482,21 @@ setrandom()
 #   if defined(SUNOS4)
 	(void)
 #   endif
-		srandom((int) time((long *)0));
+		srandom((int) time((long *)0) + rnd);
 #  else
-		srandom((int) time((time_t *)0));
+		srandom((int) time((time_t *)0) + rnd);
 #  endif
 # else
 #  ifdef UNIX	/* system srand48() */
-	srand48((long) time((time_t *)0));
+	srand48((long) time((time_t *)0) + rnd);
 #  else		/* poor quality system routine */
-	srand((int) time((time_t *)0));
+	srand((int) time((time_t *)0) + rnd);
 #  endif
 # endif
 #endif
 }
 
-static struct tm *
+struct tm *
 getlt()
 {
 	time_t date;

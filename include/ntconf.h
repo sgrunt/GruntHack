@@ -65,6 +65,34 @@
 extern void FDECL(interject_assistance, (int,int,genericptr_t,genericptr_t));
 extern void FDECL(interject, (int));
 
+/*
+ *===============================================
+ * Compiler-specific adjustments
+ *===============================================
+ */
+#ifdef _MSC_VER
+/* Visual C 8 warning elimination */
+# ifndef _CRT_SECURE_NO_DEPRECATE
+#define _CRT_SECURE_NO_DEPRECATE
+# endif
+# ifndef _SCL_SECURE_NO_DEPRECATE
+#define _SCL_SECURE_NO_DEPRECATE
+# endif
+# ifndef _CRT_NONSTDC_NO_DEPRECATE
+#define _CRT_NONSTDC_NO_DEPRECATE
+# endif
+#pragma warning(disable:4761)	/* integral size mismatch in arg; conv supp*/
+# ifdef YYPREFIX
+#pragma warning(disable:4102)	/* unreferenced label */
+# endif
+#pragma warning(disable:4996)	/* VC8 deprecation warnings */
+#pragma warning(disable:4142)	/* benign redefinition */
+# if 0
+#pragma warning(disable:4018)	/* signed/unsigned mismatch */
+#pragma warning(disable:4305)	/* init, conv from 'const int' to 'char' */
+# endif
+#endif
+
 /* The following is needed for prototypes of certain functions */
 #if defined(_MSC_VER)
 #include <process.h>	/* Provides prototypes of exit(), spawn()      */
@@ -94,11 +122,13 @@ extern void FDECL(interject, (int));
 # endif
 #endif
 
-
 #define NO_SIGNAL
 #define index	strchr
 #define rindex	strrchr
+
+/* Time stuff */
 #include <time.h>
+
 #define USE_STDARG
 #ifdef RANDOM
 /* Use the high quality random number routines. */
@@ -107,7 +137,8 @@ extern void FDECL(interject, (int));
 #define Rand()	rand()
 #endif
 
-#define FCMASK	0660	/* file creation mask */
+#include <sys/stat.h>
+#define FCMASK (_S_IREAD|_S_IWRITE)	       /* file creation mask */
 #define regularize	nt_regularize
 #define HLOCK "NHPERM"
 
@@ -172,11 +203,6 @@ int  _RTLENTRY _EXPFUNC read  (int __handle, void _FAR *__buf, unsigned __len);
 
 #ifndef alloca
 #define ALLOCA_HACK	/* used in util/panic.c */
-#endif
-
-#ifndef REDO
-#undef	Getchar
-#define Getchar nhgetch
 #endif
 
 #ifdef _MSC_VER

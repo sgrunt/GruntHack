@@ -83,7 +83,7 @@
 # define NEED_VARARGS
 # undef UNIX
 # define DLB
-# define HACKDIR "NetHack:"
+# define HACKDIR "GruntHack:"
 # define NO_MACRO_CPATH
 #endif
 
@@ -113,6 +113,10 @@
 # ifndef WIN32
 # define WIN32
 # endif
+#endif
+
+#if defined(_WIN32) && !defined(WIN32)
+#define WIN32
 #endif
 
 #ifdef WIN32

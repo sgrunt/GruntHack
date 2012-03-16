@@ -3,7 +3,7 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
-Project: "NetHackW"=.\build\NetHackW.dsp - Package Owner=<4>
+Project: "GruntHackW"=.\build\GruntHackW.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

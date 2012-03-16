@@ -234,6 +234,10 @@ boolean allow_drag;
 	boolean ball_active = (Punished && uball->where != OBJ_FREE),
 		ball_still_in_range = FALSE;
 
+	if (u.uburied) {
+		unearth_you();
+	}
+
 	/* If they have to move the ball, then drag if allow_drag is true;
 	 * otherwise they are teleporting, so unplacebc().  
 	 * If they don't have to move the ball, then always "drag" whether or
@@ -325,6 +329,9 @@ boolean allow_drag;
 	 */
 	newsym(u.ux0,u.uy0);
 	see_monsters();
+#ifdef INVISIBLE_OBJECTS
+	see_objects();
+#endif
 	vision_full_recalc = 1;
 	nomul(0);
 	vision_recalc(0);	/* vision before effects */

@@ -137,7 +137,9 @@ int x,y;
 const char *verb;
 {
 	struct trap *t;
-	struct monst *mtmp;
+	struct monst *mtmp = (struct monst *)0;
+
+	boolean trap_player = FALSE;
 
 	if (obj->where != OBJ_FREE)
 	    panic("flooreffects: obj not free");
@@ -160,20 +162,53 @@ const char *verb;
 			if (!passes_walls(mtmp->data) && 
 			    !throws_rocks(mtmp->data)) {
 			    if (hmon(mtmp, obj, TRUE) && !is_whirly(mtmp->data))
-				return FALSE;	/* still alive */
+				/* return FALSE;	/* still alive */
+				;
+			    if (!DEADMONSTER(mtmp)) {
+				mtmp->mtrapped = 0;
+			    }
+			} else {
+			    mtmp->mtrapped = 0;
+			    mtmp = (struct monst *)0; /* don't bury it */
 			}
-			mtmp->mtrapped = 0;
 		    } else {
 			if (!Passes_walls &&
-			    !maybe_polyd(throws_rocks(mtmp->data),
+			    !maybe_polyd(throws_rocks(youmonst.data),
 				         Race_if(PM_GIANT))) {
-			    losehp(rnd(15), "squished under a boulder",
+			    char buf[BUFSZ];
+			    /* This is done sooner for bones purposes:
+			     * if the boulder kills them, we want the
+			     * results to be buried as per the
+			     * aftereffects here. */
+			    boolean buriedbak = u.uburied;
+			    deltrap(t); 
+		    	    obfree(obj, (struct obj *)0);
+		    	    bury_objs(x, y);
+			    u.uburied = TRUE;
+	    		    if (curmonst == &youmonst)
+			        Sprintf(buf, "squished under %s own %s", uhis(),
+					killer_xname(obj, "", FALSE));
+	    		    else if (curmonst && curmonst != &youmonst)
+	        		Sprintf(buf, "squished under %s %s", 
+	       			     	s_suffix(done_in_name(curmonst)),
+					killer_xname(obj, "", FALSE));
+	    		    else
+			    	Sprintf(buf, "squished under %s",
+					killer_xname(obj, "", TRUE));
+			    losehp(rnd(15), buf,
 				   NO_KILLER_PREFIX);
-			    return FALSE;	/* player remains trapped */
-			} else u.utrap = 0;
+			    u.uburied = buriedbak;
+			    /* return FALSE;	/* player remains trapped */
+			    You("are buried by the boulder!");
+			    trap_player = TRUE;
+			    u.utrap = 0;
+			} else {
+			    u.utrap = 0;
+			    vision_full_recalc = 1;
+			}
 		    }
 		}
-		if (*verb) {
+		if (*verb && !trap_player) {
 			if (Blind) {
 				if ((x == u.ux) && (y == u.uy))
 					You_hear("a CRASH! beneath you.");
@@ -187,9 +222,18 @@ const char *verb;
 				    "fills a pit");
 			}
 		}
-		deltrap(t);
-		obfree(obj, (struct obj *)0);
-		bury_objs(x, y);
+		if (!trap_player) { /* done above if player */
+		    deltrap(t);
+		    obfree(obj, (struct obj *)0);
+		    bury_objs(x, y);
+		}
+
+		if (mtmp && !DEADMONSTER(mtmp))
+			bury_monst(mtmp);
+		if (trap_player) {
+			bury_you();
+			escape_tomb();
+		}
 		newsym(x,y);
 		return TRUE;
 	} else if (is_lava(x, y)) {
@@ -210,15 +254,15 @@ const char *verb;
 		    map_background(x, y, 0);
 		    newsym(x, y);
 		}
-		water_damage(obj, FALSE, FALSE);
+		return water_damage(obj, FALSE, FALSE);
 	} else if (u.ux == x && u.uy == y &&
 		(!u.utrap || u.utraptype != TT_PIT) &&
 		(t = t_at(x,y)) != 0 && t->tseen &&
 			(t->ttyp==PIT || t->ttyp==SPIKED_PIT)) {
 		/* you escaped a pit and are standing on the precipice */
 		if (Blind && flags.soundok)
-			You_hear("%s %s downwards.",
-				The(xname(obj)), otense(obj, "tumble"));
+			You_hear("%s tumble downwards.",
+				the(xname(obj)));
 		else
 			pline("%s %s into %s pit.",
 				The(xname(obj)), otense(obj, "tumble"),
@@ -476,6 +520,22 @@ register struct obj *obj;
 		setuswapwep((struct obj *)0);
 	}
 
+	if ((obj->otyp == CORPSE ||
+	     (obj->otyp == ROCK && obj->corpsenm)) &&
+	     touch_petrifies(&mons[obj->corpsenm]) &&
+	    !Stone_resistance && !uarmg) {
+	    char kbuf[BUFSZ];
+
+	    You("grab %s with your bare %s.",
+		    the(corpse_xname(obj, FALSE)), body_part(HAND));
+	    Sprintf(kbuf, "%s",
+	    	type_is_pname(&mons[obj->corpsenm])
+		? corpse_xname(obj, TRUE)
+		: an(corpse_xname(obj, TRUE)));
+	    instapetrify(kbuf);
+	    return(0);
+	}
+
 	if (u.uswallow) {
 		/* barrier between you and the floor */
 		if(flags.verbose)
@@ -528,7 +588,7 @@ register struct obj *obj;
         freeinv(obj);
 #endif
 	if (!u.uswallow) {
-	    if (ship_object(obj, u.ux, u.uy, FALSE)) return;
+	    if (ship_object(obj, u.ux, u.uy, FALSE, TRUE)) return;
 	    if (IS_ALTAR(levl[u.ux][u.uy].typ))
 		doaltarobj(obj); /* set bknown */
 	}
@@ -791,6 +851,18 @@ dodown()
 	    return (0);   /* didn't move */
 	}
 	if (!stairs_down && !ladder_down) {
+		if ((trap = t_at(u.ux,u.uy)) &&
+		    (trap->ttyp == PIT || trap->ttyp == SPIKED_PIT) &&
+		    trap->tseen &&
+		    !u.utrap) {
+		    You("carefully %s down into the pit.",
+		        locomotion(youmonst.data, "climb"));
+		    if (!Passes_walls)
+		        u.utrap = rn1(6,2);
+		    u.utraptype = TT_PIT;
+		    vision_full_recalc = 1;
+		    return(1);
+		}
 		if (!(trap = t_at(u.ux,u.uy)) ||
 			(trap->ttyp != TRAPDOOR && trap->ttyp != HOLE)
 			|| !Can_fall_thru(&u.uz) || !trap->tseen) {
@@ -817,6 +889,9 @@ dodown()
 			return(0);
 		else pline("So be it.");
 		u.uevent.gehennom_entered = 1;	/* don't ask again */
+#ifdef LIVELOG
+  	        livelog_write_string("entered Gehennom for the first time");
+#endif
 	}
 
 	if(!next_to_u()) {
@@ -841,6 +916,9 @@ dodown()
 int
 doup()
 {
+	if (u.uburied && flags.autodig && !flags.nopick
+		&& uwep && is_pick(uwep))
+		return use_pick_axe2(uwep);
 	if( (u.ux != xupstair || u.uy != yupstair)
 	     && (!xupladder || u.ux != xupladder || u.uy != yupladder)
 	     && (!sstairs.sx || u.ux != sstairs.sx || u.uy != sstairs.sy
@@ -974,8 +1052,12 @@ boolean at_stairs, falling, portal;
 	        d_level newlev;
 		newlev.dnum = astral_level.dnum;
 		newlev.dlevel = dungeons[astral_level.dnum].entry_lev;
-		if (u.uhave.amulet)
+		if (u.uhave.amulet) {
+#ifdef LIVELOG
+		    livelog_write_string("entered the planes");
+#endif
 		    assign_level(newlevel, &newlev);
+		}
 		else return;
 	}
 	new_ledger = ledger_no(newlevel);
@@ -1035,7 +1117,7 @@ boolean at_stairs, falling, portal;
 	if (fd < 0) return;
 
 	if (falling) /* assuming this is only trap door or hole */
-	    impact_drop((struct obj *)0, u.ux, u.uy, newlevel->dlevel);
+	    impact_drop((struct obj *)0, u.ux, u.uy, newlevel->dlevel, TRUE);
 
 	check_special_room(TRUE);		/* probably was a trap door */
 	if (Punished) unplacebc();
@@ -1293,6 +1375,10 @@ boolean at_stairs, falling, portal;
 #endif
 		You_hear("groans and moans everywhere.");
 	    } else pline("It is hot here.  You smell smoke...");
+
+#ifdef RECORD_ACHIEVE
+            achieve.enter_gehennom = 1;
+#endif
 	}
 
 	if (familiar) {
@@ -1366,6 +1452,10 @@ boolean at_stairs, falling, portal;
 	/* assume this will always return TRUE when changing level */
 	(void) in_out_region(u.ux, u.uy);
 	(void) pickup(1);
+
+#ifdef WHEREIS_FILE
+	touch_whereis();
+#endif
 }
 
 STATIC_OVL void
@@ -1607,7 +1697,7 @@ donull()
 #ifdef OVLB
 
 STATIC_PTR int
-wipeoff()
+wipeoff(VOID_ARGS)
 {
 	if(u.ucreamed < 4)	u.ucreamed = 0;
 	else			u.ucreamed -= 4;

@@ -9,8 +9,8 @@
 #define IDM_ABOUT                       104
 #define IDM_EXIT                        105
 #define IDS_HELLO                       106
-#define IDI_NETHACKW                    107
-#define IDC_NETHACKW                    109
+#define IDI_GRUNTHACKW                    107
+#define IDC_GRUNTHACKW                    109
 #define IDS_APP_TITLE_SHORT             110
 #define IDR_MAINFRAME                   128
 #define IDB_TILES                       129

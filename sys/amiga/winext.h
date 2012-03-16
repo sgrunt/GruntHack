@@ -109,7 +109,7 @@ extern struct NewScreen NewHackScreen;
 extern int topl_addspace;
 extern char spaces[ 76 ];
 extern int wincnt;   /* # of nh windows opened */
-extern struct Rectangle lastinvent, lastmsg;
+extern struct Rectangle lastinvent, lastmsgwin;
 
 typedef struct {
 	UWORD w, h;

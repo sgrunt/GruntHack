@@ -2,10 +2,10 @@
 .ds h0 "GruntHack Guidebook
 .ds h1
 .ds h2 %
-.ds vr "GruntHack 0.1
+.ds vr "GruntHack 0.2
 .ds f0 "\*(vr
 .ds f1
-.ds f2 "October 21, 2006
+.ds f2 "March 15, 2012
 .mt
 A Guide to the Mazes of Menace
 (Guidebook for GruntHack)
@@ -1720,6 +1720,8 @@ into account the blessed/cursed status, enchantment, damage, or
 quality of the weapon; you are free to manually fill your quiver with
 the `Q' command instead.  If no weapon is found or the option is
 false, the `t' (throw) command is executed instead.  (default false)
+.lp bones
+Allow bones files to be loaded (default true).
 .lp boulder
 Set the character used to display boulders (default is rock class symbol).
 .lp catname
@@ -2054,6 +2056,15 @@ Specify the order to list object types in (default ``")[%?+!=/(*`0_'').
 The value of this option should be a string containing the
 symbols for the various object types.  Any omitted types are filled in
 at the end from the previous order.
+.lp paranoid_hit
+If true, asks you to type the word ``yes'' when hitting any peaceful
+monster, not just the letter ``y''.
+.lp paranoid_quit
+If true, asks you to type the word ``yes'' when quitting or entering
+Explore mode, not just the letter ``y''.
+.lp paranoid_remove
+If true, always show menu with the R and T commands even when there is
+only one item to remove or take off.
 .lp perm_invent
 If true, always display your current inventory in a window.  This only
 makes sense for windowing system interfaces that implement this feature.
@@ -2067,6 +2078,12 @@ When you pick up an item that would exceed this encumbrance
 level (Unburdened, Burdened, streSsed, straiNed, overTaxed,
 or overLoaded), you will be asked if you want to continue.
 (Default `S').
+.lp pickup_thrown
+If this boolean option is true and
+.op autopickup
+is on, try to pick up things that you threw, even if they aren't in
+.op pickup_types .
+Default is on.
 .lp pickup_types
 Specify the object types to be picked up when
 .op autopickup
@@ -2081,6 +2098,9 @@ Prompt for confirmation before praying (default on).
 .lp pushweapon
 Using the `w' (wield) command when already wielding
 something pushes the old item into your alternate weapon slot (default off).
+.lp quiver_fired
+Using the 'f' (fire) command when nothing is quivered, prompts for ammunition 
+to quiver, then fires it (default off).
 .lp race
 Selects your race (for example, ``race:human'').  Default is random.
 Cannot be set with the `O' command.
@@ -2115,6 +2135,10 @@ Prevent you from (knowingly) attacking your pets (default on).
 Control what parts of the score list you are shown at the end (ex.
 ``scores:5 top scores/4 around my score/own scores'').  Only the first
 letter of each category (`t', `a', or `o') is necessary.
+.lp showborn
+When the game ends, show the number of each monster created
+in the "Vanquished creatures" list, if it differs from the
+number of those monsters killed.
 .lp showexp
 Show your accumulated experience points on bottom line (default off).
 .lp showrace
@@ -2197,6 +2221,8 @@ Provide more commentary during the game (default on).
 Select which windowing system to use, such as ``tty'' or ``X11''
 (default depends on version).
 Cannot be set with the `O' command.
+.lp win_edge
+Align menus and text windows in tty left instead of right. (default off)
 .hn 2
 Window Port Customization options
 .pg

@@ -2,9 +2,9 @@
 /* Copyright (c) Gregg Wonderly, Naperville, Illinois,  1991,1992,1993,1996. */
 /* NetHack may be freely redistributed.  See license for details. */
 
-#include "NH:sys/amiga/windefs.h"
-#include "NH:sys/amiga/winext.h"
-#include "NH:sys/amiga/winproto.h"
+#include "GH:sys/amiga/windefs.h"
+#include "GH:sys/amiga/winext.h"
+#include "GH:sys/amiga/winproto.h"
 #include "dlb.h"
 
 #ifdef AMIGA_INTUITION
@@ -12,7 +12,7 @@
 static int FDECL( put_ext_cmd, ( char *, int, struct amii_WinDesc *, int ) );
 
 struct amii_DisplayDesc *amiIDisplay;	/* the Amiga Intuition descriptor */
-struct Rectangle lastinvent, lastmsg;
+struct Rectangle lastinvent, lastmsgwin;
 int clipping = 0;
 int clipx=0;
 int clipy=0;
@@ -245,7 +245,7 @@ extern struct Hook fillhook;
 struct TagItem tags[] =
 {
     { WA_BackFill, (ULONG)&fillhook },
-    { WA_PubScreenName, (ULONG)"NetHack" },
+    { WA_PubScreenName, (ULONG)"GruntHack" },
     { TAG_DONE, 0 },
 };
 #endif
@@ -404,7 +404,7 @@ UWORD amii_defpens[ 20 ];
 
 struct TagItem scrntags[] =
 {
-    { SA_PubName, (ULONG)"NetHack" },
+    { SA_PubName, (ULONG)"GruntHack" },
     { SA_Overscan, OSCAN_TEXT },
     { SA_AutoScroll, TRUE },
 #if LIBRARY_VERSION >= 39
@@ -463,7 +463,7 @@ amii_askname()
 }
 
 /* Discarded ... -jhsa
-#include "NH:sys/amiga/char.c"
+#include "GH:sys/amiga/char.c"
 */
 
 /* Get the player selection character */
@@ -616,7 +616,7 @@ amii_player_selection()
 
 #if 0 /* Unused ... -jhsa */
 
-#include "NH:sys/amiga/randwin.c"
+#include "GH:sys/amiga/randwin.c"
 
 void
 RandomWindow( name )

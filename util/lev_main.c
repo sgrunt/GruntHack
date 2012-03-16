@@ -37,7 +37,7 @@
 #endif
 
 #if defined(AMIGA) && defined(DLB)
-# define PREFIX "NH:slib/"
+# define PREFIX "GH:slib/"
 #endif
 
 #ifndef O_WRONLY

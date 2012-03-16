@@ -95,7 +95,12 @@
 #define Confusion		HConfusion
 
 #define Blinded			u.uprops[BLINDED].intrinsic
+#ifdef INVISIBLE_OBJECTS
+#define Blindfolded		(ublindf && ublindf->otyp != LENSES && \
+				 (!ublindf->oinvis))
+#else
 #define Blindfolded		(ublindf && ublindf->otyp != LENSES)
+#endif
 		/* ...means blind because of a cover */
 #define Blind	((Blinded || Blindfolded || !haseyes(youmonst.data)) && \
 		 !(ublindf && ublindf->oartifact == ART_EYES_OF_THE_OVERWORLD))
@@ -191,7 +196,8 @@
 		/* Note: invisibility also hides inventory and steed */
 
 #define EDisplaced		u.uprops[DISPLACED].extrinsic
-#define Displaced		EDisplaced
+#define Displaced		(EDisplaced || \
+				 (youmonst.data == &mons[PM_SHIMMERING_DRAGON]))
 
 #define HStealth		u.uprops[STEALTH].intrinsic
 #define EStealth		u.uprops[STEALTH].extrinsic

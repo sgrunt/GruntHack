@@ -36,7 +36,7 @@ OPTIONS AND ARGUMENTS
      v           verbose output
 
      f archive   specify the archive.  Default if f not specified
-     is LIBFILE (usually the nhdat file in the playground).
+     is LIBFILE (usually the ghdat file in the playground).
 
      I lfile     specify the file containing the list of files to
      put in to or extract from the archive if no files are listed

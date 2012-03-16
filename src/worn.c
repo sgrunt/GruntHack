@@ -6,7 +6,7 @@
 
 STATIC_DCL void FDECL(m_lose_armor, (struct monst *,struct obj *));
 STATIC_DCL void FDECL(m_dowear_type, (struct monst *,long, BOOLEAN_P, BOOLEAN_P));
-//STATIC_DCL
+/*STATIC_DCL*/
 int FDECL(extra_pref, (struct monst *, struct obj *));
 
 const struct worn {
@@ -186,7 +186,9 @@ struct obj *obj;	/* item to make known if effect can be seen */
     else
 	mon->mspeed = mon->permspeed;
 
-    if (give_msg && (mon->mspeed != oldspeed || petrify) && canseemon(mon)) {
+    if (give_msg &&
+        mon->data->mmove > 0 &&
+        (mon->mspeed != oldspeed || petrify) && canseemon(mon)) {
 	/* fast to slow (skipping intermediate state) or vice versa */
 	const char *howmuch = (mon->mspeed + oldspeed == MFAST + MSLOW) ?
 				"much " : "";
@@ -208,7 +210,7 @@ struct obj *obj;	/* item to make known if effect can be seen */
     }
 }
 
-// kludge to grant monsters intrinsic strength from e.g. ]oP
+/* kludge to grant monsters intrinsic strength from e.g. ]oP */
 #define _STRENGTH 127
 
 boolean
@@ -225,20 +227,24 @@ register int which;
     {
         case FIRE_RES:    return !!(obj->oclass != WEAPON_CLASS &&
 	                            !is_weptool(obj) &&
-				    obj->oprops & ITEM_FIRE);
+				    (obj->oprops & ITEM_FIRE));
         case COLD_RES:    return !!(obj->oclass != WEAPON_CLASS &&
 	                            !is_weptool(obj) &&
-				    obj->oprops & ITEM_FROST);
+				    (obj->oprops & ITEM_FROST));
         case DRAIN_RES:   return !!(obj->oclass != WEAPON_CLASS &&
 	                            !is_weptool(obj) &&
-				    obj->oprops & ITEM_DRLI);
-	case REFLECTING:  return (obj->oprops & ITEM_REFLECTION);
-	case FAST:        return (obj->oprops & ITEM_SPEED);
-	case TELEPAT:     return (obj->oprops & ITEM_ESP);
-	case DISPLACED:   return (obj->oprops & ITEM_DISPLACEMENT);
-	case FUMBLING:    return (obj->oprops & ITEM_FUMBLING);
+				    (obj->oprops & ITEM_DRLI));
+	case REFLECTING:  return !!(obj->oprops & ITEM_REFLECTION);
+	case FAST:        return !!(obj->oprops & ITEM_SPEED);
+	case TELEPAT:     return !!(obj->oprops & ITEM_ESP);
+	case DISPLACED:   return !!(obj->oprops & ITEM_DISPLACEMENT);
+	case FUMBLING:    return !!(obj->oprops & ITEM_FUMBLING);
 
-	case _STRENGTH:   return (obj->oprops & ITEM_POWER);
+	case _STRENGTH:   return !!(obj->oprops & ITEM_POWER);
+	case HUNGER:
+			  return !!(obj->oprops & ITEM_HUNGER);
+	case AGGRAVATE_MONSTER:
+			  return !!(obj->oprops & ITEM_AGGRAVATE);
     }
 
     return FALSE;
@@ -285,7 +291,7 @@ new_property:
 	/* newly handled properties */
 	 case LEVITATION:
 	    if (!silently && canseemon(mon) &&
-	        !(mon->mintrinsics & MR2_LEVITATE))
+	        !levitating(mon))
 	    {
                 makeknown(obj->otyp);
 	        pline("%s begins to float in the air!", Monnam(mon));
@@ -294,6 +300,9 @@ new_property:
 	    break;
 	 case WWALKING:
 	    mon->mintrinsics |= MR2_WATERWALK;
+	    break;
+	 case AGGRAVATE_MONSTER:
+	    mon->isaggr = 1;
 	    break;
 	 case DISPLACED:
 	    if (!silently && canseemon(mon) &&
@@ -328,6 +337,7 @@ new_property:
 	 case CLAIRVOYANT:
 	 case STEALTH:
 	 case TELEPAT:
+	 case HUNGER:
 	    break;
 	/* properties which should have an effect but aren't implemented */
 	/* properties which maybe should have an effect but don't */
@@ -345,6 +355,9 @@ new_property:
     } else {	    /* off */
         mask = 0;
 	switch (which) {
+	 case AGGRAVATE_MONSTER:
+	    mon->isaggr = 0;
+	    break;
 	 case INVIS:
 	    mon->minvis = mon->perminvis;
 	    break;
@@ -395,7 +408,7 @@ new_property:
 		    mon->mintrinsics &= ~((unsigned short) mask);
 		    if (!silently && canseemon(mon))
 		    {
-                        if (mask & MR2_LEVITATE)
+                        if ((mask & MR2_LEVITATE) && !levitating(mon))
 			{
                             makeknown(obj->otyp);
 			    pline("%s floats gently to the %s.",
@@ -463,6 +476,7 @@ new_property:
 		case ITEM_DISPLACEMENT: which = DISPLACED; break;
 		case ITEM_FUMBLING:     which = FUMBLING; break;
 		case ITEM_POWER:        which = _STRENGTH; break;
+		case ITEM_AGGRAVATE:    which = AGGRAVATE_MONSTER; break;
 	    }
 	    if (which) goto new_property;
 	}
@@ -483,7 +497,7 @@ find_mac(mon)
 register struct monst *mon;
 {
 	register struct obj *obj;
-	int base = mon->data->ac;
+	int base = mon->data->ac - mon->mprotection;
 	long mwflags = mon->misc_worn_check;
 
 	for (obj = mon->minvent; obj; obj = obj->nobj) {
@@ -514,36 +528,37 @@ m_dowear(mon, creation)
 register struct monst *mon;
 boolean creation;
 {
+	struct permonst *ptr = &mons[mons_to_corpse(mon)];
 #define RACE_EXCEPTION TRUE
 	/* Note the restrictions here are the same as in dowear in do_wear.c
 	 * except for the additional restriction on intelligence.  (Players
 	 * are always intelligent, even if polymorphed).
 	 */
-	if (verysmall(mon->data) || nohands(mon->data) || is_animal(mon->data))
+	if (verysmall(ptr) || nohands(ptr) || is_animal(ptr))
 		return;
 	/* give mummies a chance to wear their wrappings
 	 * and let skeletons wear their initial armor */
-	if (mindless(mon->data) && (!creation ||
-	    (mon->data->mlet != S_MUMMY && mon->data != &mons[PM_SKELETON])))
+	if (mindless(ptr) && (!creation ||
+	    (ptr->mlet != S_MUMMY && ptr != &mons[PM_SKELETON])))
 		return;
 
 	m_dowear_type(mon, W_AMUL, creation, FALSE);
 #ifdef TOURIST
 	/* can't put on shirt if already wearing suit */
-	if (!cantweararm(mon->data) || (mon->misc_worn_check & W_ARM))
+	if (!cantweararm(ptr) || (mon->misc_worn_check & W_ARM))
 	    m_dowear_type(mon, W_ARMU, creation, FALSE);
 #endif
 	/* treating small as a special case allows
 	   hobbits, gnomes, and kobolds to wear cloaks */
-	if (!cantweararm(mon->data) || mon->data->msize == MZ_SMALL)
+	if (!cantweararm(ptr) || ptr->msize == MZ_SMALL)
 	    m_dowear_type(mon, W_ARMC, creation, FALSE);
 	m_dowear_type(mon, W_ARMH, creation, FALSE);
 	if (!MON_WEP(mon) || !bimanual(MON_WEP(mon)))
 	    m_dowear_type(mon, W_ARMS, creation, FALSE);
 	m_dowear_type(mon, W_ARMG, creation, FALSE);
-	if (!slithy(mon->data) && mon->data->mlet != S_CENTAUR)
+	if (!slithy(ptr) && ptr->mlet != S_CENTAUR)
 	    m_dowear_type(mon, W_ARMF, creation, FALSE);
-	if (!cantweararm(mon->data))
+	if (!cantweararm(ptr))
 	    m_dowear_type(mon, W_ARM, creation, FALSE);
 	else
 	    m_dowear_type(mon, W_ARM, creation, RACE_EXCEPTION);
@@ -665,6 +680,7 @@ outer_break:
 	}
 }
 #undef RACE_EXCEPTION
+
 
 struct obj *
 which_armor(mon, flag)
@@ -907,7 +923,7 @@ boolean polyspot;
 }
 
 /* bias a monster's preferences towards armor that has special benefits. */
-//static
+/*static*/
 int
 extra_pref(mon, obj)
 struct monst *mon;
@@ -916,7 +932,7 @@ struct obj *obj;
     int bias = 0;
     if (obj) {
 	if (obj_has_prop(obj, DISPLACED))
-	    bias += 30;  // greatly annoys the player!
+	    bias += 30;  /* greatly annoys the player! */
         if (obj_has_prop(obj, FAST) && mon->permspeed != MFAST) 
 	    bias += 20;
 	if (obj_has_prop(obj, _STRENGTH) && !strongmonst(mon->data))

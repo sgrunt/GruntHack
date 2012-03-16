@@ -325,7 +325,7 @@ char *basename;
 	int in, out;
 
 	(void) sprintf(iconfile, "%s.info", savename);
-	in = open("NetHack:default.icon", O_RDONLY);
+	in = open(DEFAULT_ICON, O_RDONLY);
 	out = open(iconfile, O_WRONLY | O_TRUNC | O_CREAT);
 	if(in > -1 && out > -1){
 		copy_bytes(in,out);

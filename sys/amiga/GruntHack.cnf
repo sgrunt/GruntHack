@@ -13,17 +13,13 @@
 #OPTIONS=packorder:")[%?+/=!(*0_`,scores:10t/2a,noverbose
 #OPTIONS=gender:male
 #OPTIONS=role:random
-#OPTIONS=race:random 
+#OPTIONS=race:random
 #OPTIONS=align:chaotic
 # Other general options
 #OPTIONS=time,rest_on_space,noautopickup
 
 # The search path for files like record, help, opthelp, etc.
-PATH=NetHack:
-
-# My own setup
-#OPTIONS=nolegacy,fruit:lemon,time,autopickup,checkpoint,showexp,showscore,standout,nonews
-#OPTIONS=nomail,flush,eight_bit_tty,scores:10t/2a,pickup_types:$,suppress_alert:3.3.0,autoquiver
+PATH=GruntHack:
 
 # The windowtype option must be set before any options regarding colors and palette
 # are set otherwise previously set values will be overridden by the defaults
@@ -36,15 +32,15 @@ OPTIONS=windowtype:amii
 #
 # A hard disk configuration.
 #
-HACKDIR=NetHack:
-LEVELS=Nethack:Levels
-SAVE=Nethack:Save
-BONESDIR=Nethack:Levels
-SCOREDIR=Nethack:
-LOCKDIR=Nethack:
-CONFIGDIR=Nethack:
-DATADIR=Nethack:
-TROUBLEDIR=Nethack:
+HACKDIR=GruntHack:
+LEVELS=GruntHack:Levels
+SAVE=GruntHack:Save
+BONESDIR=GruntHack:Levels
+SCOREDIR=GruntHack:
+LOCKDIR=GruntHack:
+CONFIGDIR=GruntHack:
+DATADIR=GruntHack:
+TROUBLEDIR=GruntHack:
 
 # *** CHARACTER GRAPHICS ***
 #
@@ -56,9 +52,9 @@ TROUBLEDIR=Nethack:
 # An example using the hack.font graphics character set:
 DUNGEON =  032 192 193 194 195 196 197 198 216 214 \
 	   215 213 217 145 146 147 148 035 035 217 \
-	   218 229 060 062 060 062 095 124 092 035 \
-	   123 125 042 125 042 042 035 035 046 035 \
-	   125
+	   217 218 229 060 062 060 062 095 124 092 \
+	   035 123 125 042 125 042 042 035 035 046 \
+	   035 125
 
 TRAPS =    094 094 094 094 094 094 094 094 094 094 \
 	   094 094 094 094 094 094 094 034 094 094 \
@@ -79,7 +75,7 @@ WARNINGS =  048 049 050 051 052 053
 #
 #CBM 1960, set color/contrast for good pure red, green, and blue. True colors.
 #PENS=000,fff,a61,7bb,0f0,e0c,00f,f00
-#CBM 1960, set color/contrast as above, better colors for NetHack.
+#CBM 1960, set color/contrast as above, better colors for GruntHack.
 #PENS=667,fff,da1,7bb,2f0,e0d,0af,f42
 #and other suggestions:
 #PENS=888,ffc,840,0b8,4e4,e8b,7be,a04
@@ -108,7 +104,7 @@ WARNINGS =  048 049 050 051 052 053
 #
 #DEPTH=5
 #DRIPENS=0,0,0,17,27,23,1,23,15,0,23,27
-# 
+#
 # The APEN and BPEN values in the various types of windows can be set in
 # the manner shown below.  These values are for the 16 color version of
 # the tile game.
@@ -133,7 +129,7 @@ WARNINGS =  048 049 050 051 052 053
 #defaults for fontmode:
 #PENS=000,fff,830,7ac,181,c06,23e,c00
 #DRIPENS=0,6,2,1,6,3,1,3,7,1,3,6
-# 
+#
 # The APEN and BPEN values in the various types of windows can be set in
 # the manner shown below.  These values are for a 32 color version of
 # the tile game.
@@ -155,9 +151,9 @@ WARNINGS =  048 049 050 051 052 053
 # bright green, yellow, bright blue, bright magenta, bright cyan, white
 #
 DEPTH=4
-PENS=000,fff,830,7ac,181,c06,23e,c00,888,f60,4f4,ff0,4af,f8f,8ff,f00
-FGPENS= 0, 7, 4, 2, 6, 5, 3, 8, 1, 9,10,11,12,13,14, 1
-BGPENS= 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+PENS=000,fff,830,7ac,181,c06,23e,c00,888,f60,4f4,ff0,4af,f8f,8ff,222
+FGPENS=15, 7, 4, 2, 6, 5, 3, 8, 1, 9,10,11,12,13,14, 1
+BGPENS= 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 #
 # Screen mode selections below should all work for either the font or tile
 # version of the game.  Other modes can be tried and as long as they are at

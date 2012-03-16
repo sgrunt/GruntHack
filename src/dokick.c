@@ -242,7 +242,7 @@ register struct obj *gold;
 
 	if(!likes_gold(mtmp->data) && !mtmp->isshk && !mtmp->ispriest
 			&& !is_mercenary(mtmp->data)) {
-		wakeup(mtmp);
+		wakeup(mtmp, FALSE);
 	} else if (!mtmp->mcanmove) {
 		/* too light to do real damage */
 		if (canseemon(mtmp)) {
@@ -505,6 +505,9 @@ xchar x, y;
 	    return 1;
 	}
 
+	/* fragile objects should not be kicked */
+	if (hero_breaks(kickobj, kickobj->ox, kickobj->oy, FALSE)) return 1;
+
 	/* a box gets a chance of breaking open here */
 	if(Is_box(kickobj)) {
 		boolean otrp = kickobj->otrapped;
@@ -518,22 +521,19 @@ xchar x, y;
 			You("break open the lock!");
 			kickobj->olocked = 0;
 			kickobj->obroken = 1;
-			if (otrp) (void) chest_trap(kickobj, LEG, FALSE);
+			if (otrp) (void) chest_trap(&youmonst, kickobj, LEG, FALSE);
 			return(1);
 		    }
 		} else {
 		    if (!rn2(3) || (martial() && !rn2(2))) {
 			pline_The("lid slams open, then falls shut.");
-			if (otrp) (void) chest_trap(kickobj, LEG, FALSE);
+			if (otrp) (void) chest_trap(&youmonst, kickobj, LEG, FALSE);
 			return(1);
 		    }
 		}
 		if(range < 2) return(1);
 		/* else let it fall through to the next cases... */
 	}
-
-	/* fragile objects should not be kicked */
-	if (hero_breaks(kickobj, kickobj->ox, kickobj->oy, FALSE)) return 1;
 
 	/* too heavy to move.  range is calculated as potential distance from
 	 * player, so range == 2 means the object may move up to one square
@@ -985,7 +985,7 @@ dokick()
 			if(!(maploc->looted & S_LRING)) { /* once per sink */
 			    if (!Blind)
 				You("see a ring shining in its midst.");
-			    (void) mkobj_at(RING_CLASS, x, y, TRUE);
+			    (void) mkobj_at(RING_CLASS, x, y, MO_ALLOW_ARTIFACT);
 			    newsym(x, y);
 			    exercise(A_DEX, TRUE);
 			    exercise(A_WIS, TRUE);	/* a discovery! */
@@ -1150,9 +1150,10 @@ schar loc;
 }
 
 void
-impact_drop(missile, x, y, dlev)
+impact_drop(missile, x, y, dlev, verbose)
 struct obj *missile;
 xchar x, y, dlev;
+boolean verbose;
 {
 	schar toloc;
 	register struct obj *obj, *obj2;
@@ -1227,7 +1228,7 @@ xchar x, y, dlev;
 		dct += obj->quan;
 	}
 
-	if (dct && cansee(x,y)) {	/* at least one object fell */
+	if (dct && (cansee(x,y)) && verbose) {	/* at least one object fell */
 	    const char *what = (dct == 1L ? "object falls" : "objects fall");
 
 	    if (missile)
@@ -1272,10 +1273,11 @@ xchar x, y, dlev;
  * otmp is either a kicked, dropped, or thrown object.
  */
 boolean
-ship_object(otmp, x, y, shop_floor_obj)
+ship_object(otmp, x, y, shop_floor_obj, verbose)
 xchar  x, y;
 struct obj *otmp;
 boolean shop_floor_obj;
+boolean verbose;
 {
 	schar toloc;
 	xchar ox, oy;
@@ -1293,7 +1295,7 @@ boolean shop_floor_obj;
 	/* objects other than attached iron ball always fall down ladder,
 	   but have a chance of staying otherwise */
 	nodrop = (otmp == uball) || (otmp == uchain) ||
-		(toloc != MIGR_LADDER_UP && rn2(3));
+		(toloc != MIGR_LADDER_UP && (verbose && rn2(3)));
 
 	container = Has_contents(otmp);
 	unpaid = (otmp->unpaid || (container && count_unpaid(otmp->cobj)));
@@ -1308,15 +1310,15 @@ boolean shop_floor_obj;
 	if (otmp->otyp == BOULDER &&
 		((t = t_at(x, y)) != 0) &&
 		(t->ttyp == TRAPDOOR || t->ttyp == HOLE)) {
-	    if (impact) impact_drop(otmp, x, y, 0);
+	    if (impact) impact_drop(otmp, x, y, 0, verbose);
 	    return FALSE;		/* let caller finish the drop */
 	}
 
-	if (cansee(x, y))
+	if (cansee(x, y) && verbose)
 	    otransit_msg(otmp, nodrop, n);
 
 	if (nodrop) {
-	    if (impact) impact_drop(otmp, x, y, 0);
+	    if (impact) impact_drop(otmp, x, y, 0, verbose);
 	    return(FALSE);
 	}
 
@@ -1363,6 +1365,15 @@ boolean shop_floor_obj;
 	    }
 	    You_hear("a muffled %s.",result);
 	    obj_extract_self(otmp);
+	    if (otmp->otyp == LARGE_BOX ||
+	        otmp->otyp == CHEST) {
+	        struct obj *otmp2;
+		while ((otmp2 = otmp->cobj)) {
+		    obj_extract_self(otmp2);
+		    if (!ship_object(otmp2, x, y, shop_floor_obj, FALSE))
+		    	place_object(otmp2, x, y);
+		}
+	    }
 	    obfree(otmp, (struct obj *) 0);
 	    return TRUE;
 	}
@@ -1384,7 +1395,7 @@ boolean shop_floor_obj;
 	     * fall down a trap door--thereby getting two shopkeepers
 	     * angry at the hero in one shot.
 	     */
-	    impact_drop(otmp, x, y, 0);
+	    impact_drop(otmp, x, y, 0, verbose);
 	    newsym(x,y);
 	}
 	return(TRUE);
@@ -1439,10 +1450,12 @@ long num;
 {
 	char obuf[BUFSZ];
 
-	Sprintf(obuf, "%s%s",
-		 (otmp->otyp == CORPSE &&
-			type_is_pname(&mons[otmp->corpsenm])) ? "" : "The ",
-		 xname(otmp));
+	Sprintf(obuf, "%s",
+		otmp->otyp == CORPSE && type_is_pname(&mons[otmp->corpsenm])
+		? corpse_xname(otmp, FALSE) :
+		The(
+		otmp->otyp == CORPSE ? corpse_xname(otmp, FALSE)
+				     : xname(otmp)));
 
 	if(num) { /* means: other objects are impacted */
 	    Sprintf(eos(obuf), " %s %s object%s",

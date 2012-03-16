@@ -160,6 +160,10 @@ dosave0()
 		return(0);
 	}
 
+#ifdef WHEREIS_FILE
+	touch_whereis();
+#endif
+
 	vision_recalc(2);	/* shut down vision to prevent problems
 				   in the event of an impossible() call */
 	
@@ -214,6 +218,7 @@ dosave0()
 #ifdef STEED
 	usteed_id = (u.usteed ? u.usteed->m_id : 0);
 #endif
+
 	savelev(fd, ledger_no(&u.uz), WRITE_SAVE | FREE_SAVE);
 	savegamestate(fd, WRITE_SAVE | FREE_SAVE);
 
@@ -269,6 +274,9 @@ dosave0()
 	/* get rid of current level --jgm */
 	delete_levelfile(ledger_no(&u.uz));
 	delete_levelfile(0);
+#ifdef WHEREIS_FILE
+	delete_whereis();
+#endif
 	compress(fq_save);
 	return(1);
 }
@@ -278,6 +286,10 @@ savegamestate(fd, mode)
 register int fd, mode;
 {
 	int uid;
+#if defined(RECORD_REALTIME) || defined(REALTIME_ON_BOTL)
+        time_t realtime;
+#endif
+
 
 #ifdef MFLOPPY
 	count_only = (mode & COUNT_SAVE);
@@ -323,6 +335,15 @@ register int fd, mode;
 	savefruitchn(fd, mode);
 	savenames(fd, mode);
 	save_waterlevel(fd, mode);
+
+#ifdef RECORD_ACHIEVE
+        bwrite(fd, (genericptr_t) &achieve, sizeof achieve);
+#endif
+#if defined(RECORD_REALTIME) || defined(REALTIME_ON_BOTL)
+        realtime = get_realtime();
+        bwrite(fd, (genericptr_t) &realtime, sizeof realtime);
+#endif
+
 	bflush(fd);
 }
 
@@ -984,7 +1005,10 @@ freedynamicdata()
 	free_youbuf();	/* You_buf,&c (pline.c) */
 #ifdef MENU_COLOR
 	free_menu_coloring();
-#endif
+#endif /* MENU_COLOR */
+#ifdef MSGTYPE
+	msgpline_free();
+#endif /* MSGTYPE */
 	tmp_at(DISP_FREEMEM, 0);	/* temporary display effects */
 #ifdef FREE_ALL_MEMORY
 # define freeobjchn(X)	(saveobjchn(0, X, FREE_SAVE),  X = 0)

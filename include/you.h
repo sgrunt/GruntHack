@@ -265,10 +265,20 @@ struct you {
 
 	unsigned umconf;
 	char usick_cause[PL_PSIZ+20]; /* sizeof "unicorn horn named "+1 */
-	Bitfield(usick_type,2);
+
+	int ustone_fmt;
+	int uslime_fmt;
+	int usuff_fmt;
+	int ugeno_fmt;
+	char ustone_cause[BUFSZ];
+	char uslime_cause[BUFSZ];
+	char usuff_cause[BUFSZ];
+	char ugeno_cause[BUFSZ];
+	Bitfield(usick_type,3);
 #define SICK_VOMITABLE 0x01
 #define SICK_NONVOMITABLE 0x02
-#define SICK_ALL 0x03
+#define SICK_ZOMBIE 0x04
+#define SICK_ALL 0x07
 
 	/* These ranges can never be more than MAX_RANGE (vision.h). */
 	int nv_range;		/* current night vision range */
@@ -334,7 +344,8 @@ struct you {
 	int	uhp,uhpmax;
 	int	uen, uenmax;		/* magical energy - M. Stephenson */
 	int ugangr;			/* if the gods are angry at you */
-	int ugifts;			/* number of artifacts bestowed */
+	int ugifts;			/* number of divine gifts bestowed */
+	int uartigifts;			/* number of artifacts bestowed */
 	int ublessed, ublesscnt;	/* blessing/duration from #pray */
 #ifndef GOLDOBJ
 	long	ugold, ugold0;

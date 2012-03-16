@@ -134,4 +134,4 @@ spotless :	clean
       - if f$search("$(X11TILES)").nes."" then  delete $(X11TILES)
       - if f$search("*.x%m").nes."" then  delete *.x%m;		!*.xbm,*.xpm
       - if f$search("nh*.dlb").nes."" then  delete nh*.dlb;
-      - if f$search("nhdat.lst").nes."" then  delete nhdat.lst;
+      - if f$search("ghdat.lst").nes."" then  delete nhdat.lst;

@@ -10,8 +10,6 @@ STATIC_PTR int NDECL(stealarm);
 STATIC_DCL const char *FDECL(equipname, (struct obj *));
 STATIC_DCL void FDECL(mdrop_obj, (struct monst *,struct obj *,BOOLEAN_P));
 
-extern boolean FDECL(could_use_item,(struct monst *, struct obj *));
-
 STATIC_OVL const char *
 equipname(otmp)
 register struct obj *otmp;
@@ -145,7 +143,7 @@ unsigned int stealoid;		/* object to be stolen */
 unsigned int stealmid;		/* monster doing the stealing */
 
 STATIC_PTR int
-stealarm()
+stealarm(VOID_ARGS)
 {
 	register struct monst *mtmp;
 	register struct obj *otmp;
@@ -546,6 +544,12 @@ boolean verbosely;
 	}
 	obj->owornmask = 0L;
     }
+    if (mon->mburied) {
+	place_object(obj, omx, omy);
+	stackobj(obj);
+    	bury_an_obj(obj);
+	return;
+    }
     if (verbosely && cansee(omx, omy))
 	pline("%s drops %s.", Monnam(mon), distant_name(obj, doname));
     if (!flooreffects(obj, omx, omy, "fall")) {
@@ -575,6 +579,9 @@ struct monst *mon;
 }
 
 static struct obj *propellor;
+
+extern boolean FDECL(would_prefer_hwep,(struct monst *,struct obj *));
+extern boolean FDECL(would_prefer_rwep,(struct monst *,struct obj *));
 
 /* release the objects the creature is carrying */
 void
@@ -609,9 +616,9 @@ boolean is_pet;		/* If true, pet should keep wielded/worn items */
 		/* (It is a coincidence that these can also be wielded.) */
 		if (otmp->owornmask || otmp == wep ||
 		    otmp == hwep || otmp == rwep || otmp == proj ||
-		    would_prefer_hwep(mtmp, otmp) || //cursed item in hand?
+		    would_prefer_hwep(mtmp, otmp) || /*cursed item in hand?*/
 		    would_prefer_rwep(mtmp, otmp) ||
-		    could_use_item(mtmp, otmp) ||
+		    could_use_item(mtmp, otmp, FALSE) ||
 		    ((!rwep || rwep == &zeroobj) &&
 		        (is_ammo(otmp) || is_launcher(otmp))) ||
 		    (rwep && rwep != &zeroobj &&

@@ -265,7 +265,7 @@ int sx, sy;
 	    if (atype < 0)
 		(void) mksobj_at(-atype, sx, sy, TRUE, TRUE);
 	    else
-		(void) mkobj_at(atype, sx, sy, TRUE);
+		(void) mkobj_at(atype, sx, sy, MO_ALLOW_ARTIFACT);
 	}
 }
 
@@ -418,6 +418,25 @@ struct mkroom	*sroom;
 	if (shp->shknms == shkrings)
 	    (void) mongets(shk, TOUCHSTONE);
 	nameshk(shk, shp->shknms);
+
+	if (!strcmp(shkname(shk), "Izchak")) {
+		struct obj *otmp;
+		otmp = mksobj(LONG_SWORD, FALSE, FALSE);
+		if (otmp) {
+			bless(otmp);
+			otmp->spe = rn2(4);
+			otmp->oerodeproof = TRUE;
+			(void)mpickobj(shk, otmp);
+		}
+		otmp = mksobj(SHIELD_OF_REFLECTION, FALSE, FALSE);
+		if (otmp) {
+			bless(otmp);
+			otmp->spe = rn2(4);
+			otmp->oerodeproof = TRUE;
+			(void)mpickobj(shk, otmp);
+		}
+		m_dowear(shk, TRUE);
+	}
 
 	return(sh);
 }

@@ -1,14 +1,14 @@
-              GruntHack 0.1.0 -- General information
+              GruntHack 0.2.0 -- General information
 
 GruntHack is a derivative of NetHack, the classic dungeon exploration game.
-Significant changes from the original game include
-* a substantially remodelled Gehennom
-* improved use of colour with the tty windowing system
-* more intelligent behaviour for intelligent pets and covetous monsters
-* more interactions with certain classes of items
+Significant changes from the 0.1.x series include: 
+* More levels in Sokoban and new demon strongholds in Gehennom
+* An overhauled monster spellcasting system
+* More items usable by monsters
 
-A fuller list of changes for this release can be found in the file 
-doc/changes01.0 in the source distribution.
+A fuller list of changes for this release can be found in the files
+doc/changes02.0, doc/changes01.1, and doc/changes01.0 in the source
+distribution.
 
 The following HOWTO derives from NetHack's original information for
 compiling the code tree.  GruntHack is still in a very experimental stage,

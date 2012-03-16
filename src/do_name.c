@@ -28,6 +28,7 @@ const char *goal;
     putstr(tmpwin, 0, "Or enter a background symbol (ex. <).");
     /* disgusting hack; the alternate selection characters work for any
        getpos call, but they only matter for dowhatis (and doquickwhatis) */
+    putstr(tmpwin, 0, "Use m and M to select a monster.");
     doing_what_is = (goal == what_is_an_unknown_object);
     Sprintf(sbuf, "Type a .%s when you are at the right place.",
             doing_what_is ? " or , or ; or :" : "");
@@ -38,6 +39,96 @@ const char *goal;
     display_nhwindow(tmpwin, TRUE);
     destroy_nhwindow(tmpwin);
 }
+
+struct _getpos_monarr {
+    coord pos;
+    long du;
+};
+static int getpos_monarr_len = 0;
+static int getpos_monarr_idx = 0;
+static struct _getpos_monarr *getpos_monarr_pos = NULL;
+
+void
+getpos_freemons()
+{
+    if (getpos_monarr_pos) free(getpos_monarr_pos);
+    getpos_monarr_pos = NULL;
+    getpos_monarr_len = 0;
+}
+
+static int
+getpos_monarr_cmp(a, b)
+     const void *a;
+     const void *b;
+{
+    const struct _getpos_monarr *m1 = (const struct _getpos_monarr *)a;
+    const struct _getpos_monarr *m2 = (const struct _getpos_monarr *)b;
+    return (m1->du - m2->du);
+}
+
+void
+getpos_initmons()
+{
+    struct monst *mtmp = fmon;
+    if (getpos_monarr_pos) getpos_freemons();
+    while (mtmp) {
+	if (!DEADMONSTER(mtmp) && canspotmon(mtmp)) getpos_monarr_len++;
+	mtmp = mtmp->nmon;
+    }
+    if (getpos_monarr_len) {
+	int idx = 0;
+	getpos_monarr_pos = (struct _getpos_monarr *)malloc(sizeof(struct _getpos_monarr) * getpos_monarr_len);
+	mtmp = fmon;
+	while (mtmp) {
+	    if (!DEADMONSTER(mtmp) && canspotmon(mtmp)) {
+		getpos_monarr_pos[idx].pos.x = mtmp->mx;
+		getpos_monarr_pos[idx].pos.y = mtmp->my;
+		getpos_monarr_pos[idx].du = distu(mtmp->mx, mtmp->my);
+		idx++;
+	    }
+	    mtmp = mtmp->nmon;
+	}
+	qsort(getpos_monarr_pos, getpos_monarr_len, sizeof(struct _getpos_monarr), getpos_monarr_cmp);
+    }
+}
+
+struct monst *
+getpos_nextmon()
+{
+    if (!getpos_monarr_pos) {
+	getpos_initmons();
+	if (getpos_monarr_len < 1) return NULL;
+	getpos_monarr_idx = -1;
+    }
+    if (getpos_monarr_idx >= -1 && getpos_monarr_idx < getpos_monarr_len) {
+	struct monst *mon;
+	getpos_monarr_idx = (getpos_monarr_idx + 1) % getpos_monarr_len;
+	mon = m_at(getpos_monarr_pos[getpos_monarr_idx].pos.x,
+		   getpos_monarr_pos[getpos_monarr_idx].pos.y);
+	return mon;
+    }
+    return NULL;
+}
+
+struct monst *
+getpos_prevmon()
+{
+    if (!getpos_monarr_pos) {
+	getpos_initmons();
+	if (getpos_monarr_len < 1) return NULL;
+	getpos_monarr_idx = getpos_monarr_len;
+    }
+    if (getpos_monarr_idx >= 0 && getpos_monarr_idx <= getpos_monarr_len) {
+	struct monst *mon;
+	getpos_monarr_idx = (getpos_monarr_idx - 1);
+	if (getpos_monarr_idx < 0) getpos_monarr_idx = getpos_monarr_len - 1;
+	mon = m_at(getpos_monarr_pos[getpos_monarr_idx].pos.x,
+		   getpos_monarr_pos[getpos_monarr_idx].pos.y);
+	return mon;
+    }
+    return NULL;
+}
+
 
 int
 getpos(cc, force, goal)
@@ -124,10 +215,17 @@ const char *goal;
 
 	if(c == '?'){
 	    getpos_help(force, goal);
+	} else if (c == 'm' || c == 'M') {
+	    struct monst *tmpmon = (c == 'm') ? getpos_nextmon() : getpos_prevmon();
+	    if (tmpmon) {
+		cx = tmpmon->mx;
+		cy = tmpmon->my;
+		goto nxtc;
+	    }
 	} else {
 	    if (!index(quitchars, c)) {
 		char matching[MAXPCHARS];
-		int pass, lo_x, lo_y, hi_x, hi_y, k = 0;
+		int pass, lo_x, lo_y, hi_x, hi_y, k = 0, l = 0;
 		(void)memset((genericptr_t)matching, 0, sizeof matching);
 		for (sidx = 1; sidx < MAXPCHARS; sidx++)
 		    if (c == defsyms[sidx].sym || c == (int)showsyms[sidx])
@@ -143,8 +241,12 @@ const char *goal;
 			    hi_x = (pass == 1 && ty == hi_y) ? cx : COLNO - 1;
 			    for (tx = lo_x; tx <= hi_x; tx++) {
 				k = levl[tx][ty].glyph;
-				if (glyph_is_cmap(k) &&
-					matching[glyph_to_cmap(k)]) {
+				l = back_to_glyph(tx, ty);
+				if ((glyph_is_cmap(k) &&
+					matching[glyph_to_cmap(k)]) ||
+				    ((levl[tx][ty].seenv & SVALL) &&
+				     glyph_is_cmap(l) &&
+				    	matching[glyph_to_cmap(l)])) {
 				    cx = tx,  cy = ty;
 				    if (msg_given) {
 					clear_nhwindow(WIN_MESSAGE);
@@ -187,6 +289,7 @@ const char *goal;
     if (msg_given) clear_nhwindow(WIN_MESSAGE);
     cc->x = cx;
     cc->y = cy;
+    getpos_freemons();
     return result;
 }
 
@@ -220,6 +323,17 @@ const char *name;
 	replmon(mtmp,mtmp2);
 	return(mtmp2);
 }
+
+#ifdef NEW_CALL_MENU
+int
+do_mname2()
+{
+	if (iflags.old_C_behaviour)
+		return do_mname();
+	else
+		return ddocall();
+}
+#endif
 
 int
 do_mname()
@@ -286,34 +400,8 @@ do_mname()
 	    if (mtmp->data == &mons[PM_HIGH_PRIEST] &&
 	        Is_astralevel(&u.uz))
 	    {
-	        int tries = 0;
-		pline_The("gods take notice of your attempted trickery!");
-		pline(
-		    "Your life force is ripped from your body in their anger.");
-		do {
-	            killer_format = KILLED_BY;
-		    killer = "the gods for attempting to name a High Priest";
-		    done(DIED);
-		    switch(++tries)
-		    {
-		        case 1:
-			    pline(
-	        "Unfortunately, after a moment, you crumble to dust yourself.");
-		            break;
-			case 2:
-			    pline(
-     "The gods sense immense power at work, but try once more to destroy you.");
-                            pline(
-     "Your soul is ripped in two and your body collapses to the ground, dead.");
-		            break;
-			default:
-			    pline(
-                "Apparently your power is even greater than that of the gods.");
-                            pline(
-	        "They wisely decide to let you live.");
-		            break;
-		    }
-		} while (tries < 3);
+	      pline("The high priest%s doesn't like people who try to cheat!",
+	        mtmp->female ? "ess" : "");
 	    }
 	    else pline("%s doesn't like being called names!", Monnam(mtmp));
 	}
@@ -484,19 +572,64 @@ int
 ddocall()
 {
 	register struct obj *obj;
-#ifdef REDO
 	char	ch;
-#endif
 	char allowall[2];
 
-	switch(
-#ifdef REDO
-		ch =
+#ifdef NEW_CALL_MENU
+	if (!iflags.old_C_behaviour) {
+		winid win;
+		anything any;
+		menu_item *pick_list;
+		int n;
+	
+		any.a_void = 0;
+		win = create_nhwindow(NHW_MENU);
+		start_menu(win);
+	
+		any.a_int = 'a';
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Name a monster", MENU_UNSELECTED);
+	
+		any.a_int = 'b';
+		add_menu(win, NO_GLYPH, &any, 'b', 'y', ATR_NONE, 
+			 "Name an individual item", MENU_UNSELECTED);
+	
+		any.a_int = 'c';
+		add_menu(win, NO_GLYPH, &any, 'c', 'n', ATR_NONE,
+				"Name all items of a certain type", MENU_UNSELECTED);
+		end_menu(win, "What do you wish to name?");
+		/*add_menu_cmd_alias('y', 'b');
+		 *add_menu_cmd_alias('n', 'c'); */
+		n = select_menu(win, PICK_ONE, &pick_list);
+		destroy_nhwindow(win);
+		if (n <= 0) return 0;
+	
+		ch = pick_list->item.a_int;
+	} else {
 #endif
-		ynq("Name an individual object?")) {
+		ch = ynq("Name an individual object?");
+#ifdef NEW_CALL_MENU
+	}
+#endif
+
+	switch(ch) {
 	case 'q':
+#ifdef NEW_CALL_MENU
+	default :
+#endif
 		break;
+#ifdef NEW_CALL_MENU
+	case 'a':
+#ifdef REDO
+		savech(ch);
+#endif
+		do_mname();
+		break;
+#endif
 	case 'y':
+#ifdef NEW_CALL_MENU
+	case 'b':
+#endif
 #ifdef REDO
 		savech(ch);
 #endif
@@ -504,7 +637,12 @@ ddocall()
 		obj = getobj(allowall, "name");
 		if(obj) do_oname(obj);
 		break;
+#ifdef NEW_CALL_MENU
+	case 'c':
+	case 'n':
+#else
 	default :
+#endif
 #ifdef REDO
 		savech(ch);
 #endif
@@ -629,7 +767,11 @@ boolean called;
 #else
 	static char buf[BUFSZ];
 #endif
-	struct permonst *mdat = mtmp->data;
+	boolean accurate = !(
+		(mtmp->m_ap_type == M_AP_MONSTER &&
+		 canseemon(mtmp) && !sensemon(mtmp)));
+	struct permonst *mdat =
+		 (!accurate) ? &mons[(int)mtmp->mappearance] : mtmp->data;
 	boolean do_hallu, do_invis, do_it, do_saddle;
 	boolean name_at_start, has_adjectives;
 	char *bp;
@@ -687,7 +829,7 @@ boolean called;
 	 * shopkeeper" or "Asidonhopo the blue dragon".  If hallucinating,
 	 * none of this applies.
 	 */
-	if (mtmp->isshk && !do_hallu) {
+	if (mtmp->isshk && (!do_hallu) && accurate) {
 	    if (adjective && article == ARTICLE_THE) {
 		/* pathological case: "the angry Asidonhopo the blue dragon"
 		   sounds silly */
@@ -697,7 +839,7 @@ boolean called;
 		return buf;
 	    }
 	    Strcat(buf, shkname(mtmp));
-	    if (mdat == &mons[PM_SHOPKEEPER] && !called) //do_invis)
+	    if (mdat == &mons[PM_SHOPKEEPER] && !called) /*do_invis)*/
 	    	return buf;
 	    Strcat(buf, " the ");
 	    if (do_invis)
@@ -718,7 +860,8 @@ boolean called;
 	    !Blind && !Hallucination)
 	    Strcat(buf, "saddled ");
 #endif
-        if (mtmp->mrace && !type_is_pname(mdat))
+        if (mtmp->mrace && is_racial(mdat) && !type_is_pname(mdat) &&
+	    (!mtmp->mnamelth || called))
 	    Strcat(buf, racial_prefix(mtmp)); 
 
 	if (buf[0] != 0)

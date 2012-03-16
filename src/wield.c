@@ -488,9 +488,9 @@ can_twoweapon()
 		pline("%s isn't one-handed.", Yname2(otmp));
 	} else if (uarms)
 		You_cant("use two weapons while wearing a shield.");
-	else if (uswapwep->oartifact)
+/*	else if (uswapwep->oartifact)
 		pline("%s %s being held second to another weapon!",
-			Yname2(uswapwep), otense(uswapwep, "resist"));
+			Yname2(uswapwep), otense(uswapwep, "resist"));*/
 	else if (!uarmg && !Stone_resistance && 
 	            ((uswapwep->otyp == CORPSE ||
 		     (uswapwep->otyp == ROCK && uswapwep->corpsenm != 0)) &&
@@ -649,17 +649,17 @@ boolean fade_scrolls;
 	} else if (erosion < MAX_ERODE) {
 	    if (victim == &youmonst)
 		Your("%s%s!", aobjnam(target, acid_dmg ? "corrode" : "rust"),
-		    //erosion+1 == MAX_ERODE ? " completely" :
+		    /*erosion+1 == MAX_ERODE ? " completely" :*/
 		    erosion ? " further" : "");
 	    else if (vismon)
 		pline("%s's %s%s!", Monnam(victim),
 		    aobjnam(target, acid_dmg ? "corrode" : "rust"),
-		    //erosion+1 == MAX_ERODE ? " completely" :
+		    /*erosion+1 == MAX_ERODE ? " completely" :*/
 		    erosion ? " further" : "");
 	    else if (visobj)
 		pline_The("%s%s!",
 		    aobjnam(target, acid_dmg ? "corrode" : "rust"),
-		    //erosion+1 == MAX_ERODE ? " completely" :
+		    /*erosion+1 == MAX_ERODE ? " completely" :*/
 		    erosion ? " further" : "");
 	    if (acid_dmg)
 		target->oeroded2++;
@@ -703,13 +703,34 @@ boolean fade_scrolls;
 		    else if (target == uquiver) uqwepgone();
 		    else if (target == uswapwep) uswapwepgone();
 		}
+		if (target == uball || target == uchain) {
+		    boolean ball = (target == uball);
+		    unpunish();
+		    if (ball) {
+		    	if (carried(target)) useupall(target);
+		    	else delobj(target);
+		    }
+		} else
+	    	    useupall(target);
 	    } else if (vismon) {
 	        pline("%s's %s away!", Monnam(victim),
 		                       aobjnam(target, acid_dmg ? "corrode"
 				                                : "rust"));
-                update_mon_intrinsics(victim, target, FALSE, TRUE);
+	    } else if (visobj) {
+	    	pline_The("%s away!", aobjnam(target, acid_dmg ? "corrode"
+							       : "rust"));
 	    }
-	    useupall(target);
+	    if (victim && victim != &youmonst) {
+		obj_extract_self(target);
+		if (target->owornmask) {
+		    victim->misc_worn_check &= ~target->owornmask;
+                    update_mon_intrinsics(victim, target, FALSE, TRUE);
+		}
+		possibly_unwield(victim, FALSE);
+		obfree(target, (struct obj*) 0);
+	    }
+	    else if (!victim)
+	    	delobj(target);
 	}
 }
 

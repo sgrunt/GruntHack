@@ -43,9 +43,9 @@
  * Some combinations make no sense.  See the installation document.
  */
 #define TTY_GRAPHICS	/* good old tty based graphics */
-/* #define X11_GRAPHICS */	/* X11 interface */
-/* #define QT_GRAPHICS */	/* Qt interface */
-/* #define GNOME_GRAPHICS */	/* Gnome interface */
+#define X11_GRAPHICS	/* X11 interface */
+/* #define QT_GRAPHICS */ 	/* Qt interface */
+/* #define GNOME_GRAPHICS */ 	/* Gnome interface */
 /* #define MSWIN_GRAPHICS */	/* Windows NT, CE, Graphics */
 
 /*
@@ -143,14 +143,15 @@
 
 #ifndef WIZARD		/* allow for compile-time or Makefile changes */
 # ifndef KR1ED
-#  define WIZARD  "root" /* the person allowed to use the -D option */
+#  define WIZARD  "wizard" /* the person allowed to use the -D option */
 # else
 #  define WIZARD
-#  define WIZARD_NAME "root"
+#  define WIZARD_NAME "wizard"
 # endif
 #endif
 
 #define LOGFILE "logfile"	/* larger file for debugging purposes */
+#define XLOGFILE "xlogfile" /* even larger logfile */
 #define NEWS "news"		/* the file containing the latest hack news */
 #define PANICLOG "paniclog"	/* log of panic and impossible events */
 
@@ -169,11 +170,8 @@
 
 #ifdef UNIX
 /* path and file name extension for compression program */
-#define COMPRESS "/usr/bin/compress"	/* Lempel-Ziv compression */
-#define COMPRESS_EXTENSION ".Z"		/* compress's extension */
-/* An example of one alternative you might want to use: */
-/* #define COMPRESS "/usr/local/bin/gzip" */	/* FSF gzip compression */
-/* #define COMPRESS_EXTENSION ".gz" */		/* normal gzip extension */
+#define COMPRESS "/usr/bin/xz"		/* the xz compression format */
+#define COMPRESS_EXTENSION ".xz"	/* and its normal extension */
 #endif
 
 #ifndef COMPRESS
@@ -307,6 +305,26 @@ typedef unsigned char	uchar;
 # endif
 #endif
 
+/* #define REALTIME_ON_BOTL */  /* Show elapsed time on bottom line.  Note:
+                                 * this breaks savefile compatibility. */
+
+/* The options in this section require the extended logfile support */
+#ifdef XLOGFILE
+#define RECORD_CONDUCT  /* Record conducts kept in logfile */
+#define RECORD_TURNS    /* Record turns elapsed in logfile */
+#define RECORD_ACHIEVE  /* Record certain notable achievements in the
+                         * logfile.  Note: this breaks savefile compatibility
+                         * due to the addition of the u_achieve struct. */
+#define RECORD_REALTIME /* Record the amount of actual playing time (in
+                         * seconds) in the record file.  Note: this breaks
+                         * savefile compatibility. */
+#define RECORD_START_END_TIME /* Record to-the-second starting and ending
+                               * times; stored as 32-bit values obtained
+                               * from time(2) (seconds since the Epoch.) */
+#define RECORD_GENDER0   /* Record initial gender in logfile */
+#define RECORD_ALIGN0   /* Record initial alignment in logfile */
+#endif
+
 /*
  * Section 4:  THE FUN STUFF!!!
  *
@@ -339,23 +357,36 @@ typedef unsigned char	uchar;
 
 #define EXP_ON_BOTL	/* Show experience on bottom line */
 #define ASTR_ESC /* Allow escape from Astral plane (with the Amulet) - CWC */
-/* #define SCORE_ON_BOTL */	/* added by Gary Erickson (erickson@ucivax) */
+#define SCORE_ON_BOTL	/* added by Gary Erickson (erickson@ucivax) */
 
 #define TAME_RANGED_ATTACKS /* tame monsters use ranged attacks */
 #define ATTACK_PETS         /* monsters attack pets directly */
-//#define TAME_SUMMONING      /* tame spellcasters can summon tame monsters
+/*#define TAME_SUMMONING      /* tame spellcasters can summon tame monsters
                               /* (including you) */
 #define YOUMONST_SPELL      /* you can cast monster spells in the form
                                of a monster */
 #define PET_SATIATION       /* pets can become satiated and choke;
                                they can also hoard food if intelligent */
 
-#define HPMON
-#define SORTLOOT
+#define COMBINED_SPELLS     /* monsters and the player use the same pool of
+                               spells */
 
-#define NEWRACES
+#define HPMON	            /* show HP in varying colours */
+#define SORTLOOT            /* allow items to be sorted by name */
 
-//#define DGAMELAUNCH // compiled for dgamelaunch
+#define NEWRACES            /* allow player to play as kobold, ogre, or giant */
+
+#define MSGTYPE             /* allow player to change how messages are displayed */
+#define SHOW_EXTINCT        /* show extinct monsters alongside genocided monsters in endgame */
+#define SHOW_BORN           /* show how many of each monster was created in endgame */
+#define PARANOID            /* allow extended prompts for certain crucial queries */
+#define QUIVER_FIRED        /* allow player to quiver something else if (f)iring on empty */
+
+#define NEW_CALL_MENU       /* use NAO-style call menu */
+
+#define INVISIBLE_OBJECTS   /* allow invisible objects */
+
+/*#define DGAMELAUNCH /* compiled for dgamelaunch */
 
 #ifdef DGAMELAUNCH
 #define SIMPLE_MAIL
@@ -381,12 +412,29 @@ typedef unsigned char	uchar;
  */
 #endif
 
+#define USER_DUNGEONCOLOR
+
+/* from SporkHack, via NAO */
+#define WHEREIS_FILE	/* write out player's current location to player.whereis */
+
+/* from NAO */
+#define LIVELOG		/* live logging of player actions */
+#define LIVELOGFILE "livelog"	/* file to output to */
+
+#ifdef TTY_GRAPHICS
+# define WIN_EDGE	/* windows aligned left&top */
+#endif
+
+#define SHOWSYM	/* Show object symbols in menus */
+
 /*#define GOLDOBJ */	/* Gold is kept on obj chains - Helge Hafting */
-/*#define AUTOPICKUP_EXCEPTIONS */ /* exceptions to autopickup */
+#define AUTOPICKUP_EXCEPTIONS /* exceptions to autopickup */
 #define DUMP_LOG        /* Dump game end information to a file */
 /* #define DUMP_FN "/tmp/%n.nh" */      /* Fixed dumpfile name, if you want
                                          * to prevent definition by users */
 #define DUMPMSGS 20     /* Number of latest messages in the dump file  */
+
+#define DYWYPISI	/* identify objects' identification state */
 
 /* End of Section 5 */
 

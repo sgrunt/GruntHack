@@ -74,6 +74,10 @@ E struct dgn_topology {		/* special dungeon levels for speed */
     xchar	d_mines_dnum, d_quest_dnum;
     d_level	d_qstart_level, d_qlocate_level, d_nemesis_level;
     d_level	d_knox_level;
+#ifdef RECORD_ACHIEVE
+    d_level     d_mineend_level;
+    d_level     d_sokoend_level;
+#endif
 } dungeon_topology;
 /* macros for accesing the dungeon levels by their old names */
 #define oracle_level		(dungeon_topology.d_oracle_level)
@@ -106,6 +110,10 @@ E struct dgn_topology {		/* special dungeon levels for speed */
 #define qlocate_level		(dungeon_topology.d_qlocate_level)
 #define nemesis_level		(dungeon_topology.d_nemesis_level)
 #define knox_level		(dungeon_topology.d_knox_level)
+#ifdef RECORD_ACHIEVE
+#define mineend_level           (dungeon_topology.d_mineend_level)
+#define sokoend_level           (dungeon_topology.d_sokoend_level)
+#endif
 
 E NEARDATA stairway dnstair, upstair;		/* stairs up and down */
 #define xdnstair	(dnstair.sx)
@@ -181,7 +189,6 @@ E NEARDATA char *save_cm;
 #define NO_KILLER_PREFIX 2
 E NEARDATA int killer_format;
 E const char *killer;
-E const char *delayed_killer;
 #ifdef GOLDOBJ
 E long done_money;
 #endif
@@ -200,8 +207,33 @@ E const char *nomovemsg;
 E const char nul[];
 E char lock[];
 
-E const char sdir[], ndir[];
+/* sdir is the regular direction keys (modifyable).
+ * ndir is the number_pad direction keys.
+ * xdir/ydir/zdir holds the directions of movement for each of the sdir and
+ *     ndir keys.
+ * misc_cmds holds all other special keyboard commands. */
+E char sdir[];
+E const char ndir[];
 E const schar xdir[], ydir[], zdir[];
+E char misc_cmds[];
+
+#define DORUSH			misc_cmds[0]
+#define DORUN			misc_cmds[1]
+#define DOFORCEFIGHT		misc_cmds[2]
+#define DONOPICKUP		misc_cmds[3]
+#define DORUN_NOPICKUP		misc_cmds[4]
+#define DOESCAPE		misc_cmds[5]
+#ifdef REDO			/* JDS: moved from config.h */
+# undef  DOAGAIN /* remove previous definition from config.h */
+# define DOAGAIN		misc_cmds[6]
+#endif
+
+/* the number of miscellaneous commands */
+#ifdef REDO
+# define MISC_CMD_COUNT		7
+#else
+# define MISC_CMD_COUNT		6
+#endif
 
 E NEARDATA schar tbx, tby;		/* set in mthrowu.c */
 
@@ -212,7 +244,7 @@ E NEARDATA struct dig_info {		/* apply.c, hack.c */
 	d_level level;
 	coord	pos;
 	long lastdigtime;
-	boolean down, chew, warned, quiet;
+	boolean down, up, chew, warned, quiet;
 } digging;
 
 E NEARDATA long moves, monstermoves;
@@ -395,6 +427,55 @@ struct autopickup_exception {
 #ifdef SIMPLE_MAIL
 E int mailckfreq;
 #endif
+
+#ifdef MSGTYPE
+struct _plinemsg {
+    xchar msgtype;
+    char *pattern;
+    struct _plinemsg *next;
+};
+
+E struct _plinemsg *pline_msg;
+
+#define MSGTYP_NORMAL	0
+#define MSGTYP_NOREP	1
+#define MSGTYP_NOSHOW	2
+#define MSGTYP_STOP	3
+#endif /* MSGTYPE */
+
+#ifdef RECORD_ACHIEVE
+struct u_achieve {
+        Bitfield(get_bell,1);        /* You have obtained the bell of 
+                                      * opening */
+        Bitfield(get_candelabrum,1); /* You have obtained the candelabrum */
+        Bitfield(get_book,1);        /* You have obtained the book of 
+                                      * the dead */
+        Bitfield(enter_gehennom,1);  /* Entered Gehennom (including the 
+                                      * Valley) by any means */
+        Bitfield(perform_invocation,1); /* You have performed the invocation
+                                         * ritual */
+        Bitfield(get_amulet,1);      /* You have obtained the amulet
+                                      * of Yendor */
+        Bitfield(ascended,1);        /* You ascended to demigod[dess]hood.
+                                      * Not quite the same as 
+                                      * u.uevent.ascended. */
+        Bitfield(get_luckstone,1);   /* You obtained the luckstone at the
+                                      * end of the mines. */
+        Bitfield(finish_sokoban,1);  /* You obtained the sokoban prize. */
+        Bitfield(killed_medusa,1);   /* You defeated Medusa. */
+};
+
+E struct u_achieve achieve;
+#endif
+
+#if defined(RECORD_REALTIME) || defined(REALTIME_ON_BOTL)
+E struct realtime_data {
+  time_t realtime;    /* Amount of actual playing time up until the last time
+                       * the game was restored. */
+  time_t restoretime; /* The time that the game was started or restored. */
+  time_t last_displayed_time; /* Last time displayed on the status line */
+} realtime_data;
+#endif /* RECORD_REALTIME || REALTIME_ON_BOTL */
 
 #undef E
 

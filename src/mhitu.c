@@ -19,7 +19,7 @@ STATIC_DCL void FDECL(mayberem, (struct obj *, const char *));
 # endif
 #endif /* OVLB */
 
-STATIC_DCL boolean FDECL(diseasemu, (struct permonst *));
+STATIC_DCL boolean FDECL(diseasemu, (struct monst *));
 STATIC_DCL int FDECL(hitmu, (struct monst *,struct attack *));
 STATIC_DCL int FDECL(gulpmu, (struct monst *,struct attack *));
 STATIC_DCL int FDECL(explmu, (struct monst *,struct attack *,BOOLEAN_P));
@@ -88,9 +88,11 @@ register struct monst *mtmp;
 register int nearmiss;
 register struct attack *mattk;
 {
+
+	char buf[BUFSZ];
+
 	if (!canspotmon(mtmp))
 	    map_invisible(mtmp->mx, mtmp->my);
-
 
 	if(could_seduce(mtmp, &youmonst, mattk) && !mtmp->mcan)
 	    pline("%s pretends to be friendly.", Monnam(mtmp));
@@ -106,8 +108,6 @@ register struct attack *mattk;
 		    tmp -= 2;
 	        if(mtmp->mtrapped) tmp -= 2;
 	        if(tmp <= 0) tmp = 1;
-
-		char buf[BUFSZ];
 	
 		while (tmp > nearmiss)
 		{
@@ -374,7 +374,7 @@ struct attack *alt_attk_buf;
 
 /*
  * mattacku: monster attacks you
- *	returns 1 if monster dies (e.g. "yellow light"), 0 otherwise
+ *	return values are the same as mattackm 
  *	Note: if you're displaced or invisible the monster might attack the
  *		wrong position...
  *	Assumption: it's attacking you or an empty square; if there's another
@@ -386,7 +386,7 @@ mattacku(mtmp)
 	register struct monst *mtmp;
 {
 	struct	attack	*mattk, alt_attk;
-	int	i, j, tmp, sum[NATTK];
+	int	i, j, res = 0, tmp, sum[NATTK];
 	struct	permonst *mdat = mtmp->data;
 	boolean ranged = (distu(mtmp->mx, mtmp->my) > 3);
 		/* Is it near you?  Affects your actions */
@@ -399,37 +399,35 @@ mattacku(mtmp)
 		 * invisible, or you might be blind....
 		 */
 	
+	char buf[BUFSZ];
+	
 	if(!ranged) nomul(0);
 	if(mtmp->mhp <= 0 || (Underwater && !is_swimmer(mtmp->data)))
-	    return(0);
+	    return(MM_MISS);
 
 	/* If swallowed, can only be affected by u.ustuck */
 	if(u.uswallow) {
 	    if(mtmp != u.ustuck)
-		return(0);
+		return(MM_MISS);
 	    u.ustuck->mux = u.ux;
 	    u.ustuck->muy = u.uy;
 	    range2 = 0;
 	    foundyou = 1;
-	    if(u.uinvulnerable) return (0); /* stomachs can't hurt you! */
+	    if(u.uinvulnerable) return (MM_MISS); /* stomachs can't hurt you! */
 	}
 
 #ifdef STEED
 	else if (u.usteed) {
 		if (mtmp == u.usteed)
 			/* Your steed won't attack you */
-			return (0);
+			return (MM_MISS);
 		/* Orcs like to steal and eat horses and the like */
 		if (!rn2(is_orc(mtmp) ? 2 : 4) &&
 				distu(mtmp->mx, mtmp->my) <= 2) {
 			/* Attack your steed instead */
 			i = mattackm(mtmp, u.usteed);
-			if ((i & MM_AGR_DIED))
-				return (1);
-			if (i & MM_DEF_DIED || u.umoved)
-				return (0);
-			/* Let your steed retaliate */
-			return (!!(mattackm(u.usteed, mtmp) & MM_DEF_DIED));
+			j = i & ~(MM_DEF_DIED);
+			return(j); 
 		}
 	}
 #endif
@@ -456,11 +454,11 @@ mattacku(mtmp)
 					Monnam(mtmp), youmonst.data->mname);
 			killed(mtmp);
 			newsym(u.ux,u.uy);
-			if (mtmp->mhp > 0) return 0;
-			else return 1;
+			if (mtmp->mhp > 0) return(MM_MOVED|MM_MISS);
+			else return(MM_MOVED|MM_AGR_DIED);
 		    }
 		    if (youmonst.data->mlet != S_PIERCER)
-			return(0);	/* trappers don't attack */
+			return(MM_MISS);	/* trappers don't attack */
 
 		    obj = which_armor(mtmp, WORN_HELMET);
 		    if (obj && is_metallic(obj)) {
@@ -508,7 +506,7 @@ mattacku(mtmp)
 		    }
 		    newsym(u.ux,u.uy);
 		}
-		return(0);
+		return(MM_MOVED|MM_MISS);
 	}
 	if (youmonst.data->mlet == S_MIMIC && youmonst.m_ap_type &&
 		    !range2 && foundyou && !u.uswallow) {
@@ -519,7 +517,7 @@ mattacku(mtmp)
 		youmonst.m_ap_type = M_AP_NOTHING;
 		youmonst.mappearance = 0;
 		newsym(u.ux,u.uy);
-		return(0);
+		return(MM_MOVED|MM_MISS);
 	}
 
 	/* player might be mimicking an object */
@@ -534,13 +532,12 @@ mattacku(mtmp)
 			an(mons[u.umonnum].mname),
 			plname);
 	    if (multi < 0) {	/* this should always be the case */
-		char buf[BUFSZ];
 		Sprintf(buf, "You appear to be %s again.",
 			Upolyd ? (const char *) an(youmonst.data->mname) :
 			    (const char *) "yourself");
 		unmul(buf);	/* immediately stop mimicking */
 	    }
-	    return 0;
+	    return(MM_MOVED|MM_MISS);
 	}
 
 /*	Work out the armor class differential	*/
@@ -575,7 +572,7 @@ mattacku(mtmp)
 
 	    if(!rn2(10) && !mtmp->mcan) {
 	    	int numseen, numhelp;
-		char buf[BUFSZ], genericwere[BUFSZ];
+		char genericwere[BUFSZ];
 
 		Strcpy(genericwere, "creature");
 		numhelp = were_summon(mdat, FALSE, &numseen, genericwere);
@@ -609,6 +606,10 @@ mattacku(mtmp)
 	    }
 	}
 
+	if(u.uburied) {
+	    return(MM_MISS);
+	}
+
 	if(u.uinvulnerable) {
 	    /* monsters won't attack you */
 	    if(mtmp == u.ustuck)
@@ -620,14 +621,16 @@ mattacku(mtmp)
 		else
 		    You_feel("%s move nearby.", something);
 	    }
-	    return (0);
+	    return (MM_MOVED|MM_MISS);
 	}
 
 	/* Unlike defensive stuff, don't let them use item _and_ attack. */
 	if(find_offensive(mtmp)) {
 		int foo = use_offensive(mtmp);
 
-		if (foo != 0) return(foo==1);
+		if (foo != 0) return (foo == 1 ?
+		                      MM_MOVED|MM_HIT|MM_AGR_DIED :
+				      MM_MOVED|MM_HIT);
 	}
 
 	for(i = 0; i < NATTK; i++) {
@@ -646,8 +649,9 @@ mattacku(mtmp)
 		case AT_TENT:
 			if(!range2 && (!MON_WEP(mtmp) || mtmp->mconf || Conflict ||
 					!touch_petrifies(youmonst.data))) {
+			    res |= MM_MOVED;
 			    if (foundyou) {
-				if(tmp > (j = rnd(20+i))) {
+				if(tmp > (j = dieroll = rnd(20+i))) {
 				    if (mattk->aatyp != AT_KICK ||
 					    !thick_skinned(youmonst.data))
 					sum[i] = hitmu(mtmp, mattk);
@@ -662,7 +666,10 @@ mattacku(mtmp)
 			/* Note: if displaced, prev attacks never succeeded */
 			if((!range2 && i>=2 && sum[i-1] && sum[i-2])
 							|| mtmp == u.ustuck)
+			{
+				res |= MM_MOVED;
 				sum[i]= hitmu(mtmp, mattk);
+			}
 			break;
 
 		case AT_GAZE:	/* can affect you either ranged or not */
@@ -674,11 +681,13 @@ mattacku(mtmp)
 			break;
 
 		case AT_EXPL:	/* automatic hit if next to, and aimed at you */
+			res |= MM_MOVED;
 			if(!range2) sum[i] = explmu(mtmp, mattk, foundyou);
 			break;
 
 		case AT_ENGL:
 			if (!range2) {
+			    res |= MM_MOVED;
 			    if(foundyou) {
 				if(u.uswallow || tmp > (j = rnd(20+i))) {
 				    /* Force swallowing monster to be
@@ -703,11 +712,17 @@ mattacku(mtmp)
 			}
 			break;
 		case AT_BREA:
-			if(range2) sum[i] = breamu(mtmp, mattk);
+			if(range2) {
+			    res |= MM_MOVED;
+			    sum[i] = breamu(mtmp, mattk);
+			}
 			/* Note: breamu takes care of displacement */
 			break;
 		case AT_SPIT:
-			if(range2) sum[i] = spitmu(mtmp, mattk);
+			if(range2) {
+			    res |= MM_MOVED;
+			    sum[i] = spitmu(mtmp, mattk);
+			}
 			/* Note: spitmu takes care of displacement */
 			break;
 		case AT_WEAP:
@@ -715,20 +730,25 @@ mattacku(mtmp)
 #ifdef REINCARNATION
 				if (!Is_rogue_level(&u.uz))
 #endif
-					thrwmu(mtmp);
+					if (thrwmu(mtmp))
+						res |= MM_MOVED;
 			} else {
 			    int hittmp = 0;
+			
+			    res |= MM_MOVED;
 
 			    /* Rare but not impossible.  Normally the monster
 			     * wields when 2 spaces away, but it can be
 			     * teleported or whatever....
 			     */
-			    if (mtmp->weapon_check == NEED_WEAPON ||
-							!MON_WEP(mtmp)) {
+			    if ((mtmp->weapon_check == NEED_WEAPON ||
+				!MON_WEP(mtmp) ||
+				(is_launcher(MON_WEP(mtmp))) &&
+				 !(MON_WEP(mtmp))->cursed)) {
 				mtmp->weapon_check = NEED_HTH_WEAPON;
 				/* mon_wield_item resets weapon_check as
 				 * appropriate */
-				if (mon_wield_item(mtmp) != 0) break;
+				if (mon_wield_item(mtmp, FALSE) != 0) break;
 			    }
 			    if (foundyou) {
 				otmp = MON_WEP(mtmp);
@@ -749,6 +769,7 @@ mattacku(mtmp)
 			}
 			break;
 		case AT_MAGC:
+			res |= MM_MOVED;
 			if (range2)
 			    sum[i] = buzzmu(mtmp, mattk);
 			else {
@@ -765,16 +786,19 @@ mattacku(mtmp)
 	    if(flags.botl) bot();
 	/* give player a chance of waking up before dying -kaa */
 	    if(sum[i] == 1) {	    /* successful attack */
+	        res |= MM_HIT;
 		if (u.usleep && u.usleep < monstermoves && !rn2(10)) {
 		    multi = -1;
 		    nomovemsg = "The combat suddenly awakens you.";
 		}
 	    }
-	    if(sum[i] == 2) return 1;		/* attacker dead */
+	    if(sum[i] == 2) {
+	    	return res |= MM_AGR_DIED;		/* attacker dead */
+	    }
 	    if(sum[i] == 3) break;  /* attacker teleported, no more attacks */
 	    /* sum[i] == 0: unsuccessful attack */
 	}
-	return(0);
+	return res;
 }
 
 #endif /* OVL0 */
@@ -847,15 +871,17 @@ int attk;
 #ifdef OVL1
 
 STATIC_OVL boolean
-diseasemu(mdat)
-struct permonst *mdat;
+diseasemu(mtmp)
+struct monst *mtmp;
 {
 	if (Sick_resistance) {
 		You_feel("a slight illness.");
 		return FALSE;
 	} else {
 		make_sick(Sick ? Sick/3L + 1L : (long)rn1(ACURR(A_CON), 20),
-			mdat->mname, TRUE, SICK_NONVOMITABLE);
+			done_in_name(mtmp), TRUE,
+			mtmp->data == &mons[PM_ZOMBIE]
+			? SICK_ZOMBIE : SICK_NONVOMITABLE);
 		return TRUE;
 	}
 }
@@ -963,6 +989,8 @@ hitmu(mtmp, mattk)
 	struct permonst *olduasmon = youmonst.data;
 	int res;
 
+	boolean showed_msg = FALSE;
+
 	if (!canspotmon(mtmp))
 	    map_invisible(mtmp->mx, mtmp->my);
 
@@ -1002,9 +1030,13 @@ hitmu(mtmp, mattk)
 	uncancelled = !mtmp->mcan && ((rn2(3) >= armpro) || !rn2(50));
 
 	permdmg = 0;
+	if (mattk->aatyp == AT_WEAP && MON_WEP(mtmp))
+	    goto physical;
 /*	Now, adjust damages via resistances or specific attacks */
+top:
 	switch(mattk->adtyp) {
 	    case AD_PHYS:
+physical:
 		if (mattk->aatyp == AT_HUGS && !sticks(youmonst.data)) {
 		    if(!u.ustuck && rn2(2)) {
 			if (u_slip_free(mtmp, mattk)) {
@@ -1025,18 +1057,30 @@ hitmu(mtmp, mattk)
 			    (otmp->otyp == ROCK && otmp->corpsenm != 0))
 				&& touch_petrifies(&mons[otmp->corpsenm])) {
 			    dmg = 1;
+			    showed_msg = TRUE;
 			    pline("%s hits you with the %s.",
 				Monnam(mtmp), xname(otmp));
 			    if (!Stoned)
 				goto do_stone;
 			}
 			dmg += dmgval(otmp, &youmonst);
+			if (objects[otmp->otyp].oc_material == SILVER &&
+			    hates_silver(youmonst.data)) {
+			    pline("The silver sears your flesh!");
+			}
 			if (dmg <= 0) dmg = 1;
 			if (!(((otmp->oclass == WEAPON_CLASS &&
 			        otmp->oprops) || otmp->oartifact) &&
 				artifact_hit(mtmp, &youmonst, otmp, &dmg,dieroll)))
 			     hitmsg(mtmp, mattk);
-			if (!dmg) break;
+			showed_msg = TRUE;
+			if (!dmg) {
+			    if (mattk->aatyp == AT_WEAP &&
+			        mattk->adtyp != AD_PHYS &&
+				MON_WEP(mtmp))
+			    	goto top;
+			    break;
+			}
 			if (u.mh > 1 && u.mh > ((u.uac>0) ? dmg : dmg+u.uac) &&
 				   objects[otmp->otyp].oc_skill != WHACK &&
 					(u.umonnum==PM_BLACK_PUDDING
@@ -1066,13 +1110,18 @@ hitmu(mtmp, mattk)
 				mtmp != u.ustuck)
 			hitmsg(mtmp, mattk);
 		}
+		if (mattk->aatyp == AT_WEAP && mattk->adtyp != AD_PHYS &&
+		    MON_WEP(mtmp))
+		    goto top;
 		break;
 	    case AD_DISE:
-		hitmsg(mtmp, mattk);
-		if (!diseasemu(mdat)) dmg = 0;
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
+		if (!diseasemu(mtmp)) dmg = 0;
 		break;
 	    case AD_FIRE:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (uncancelled) {
 		    pline("You're %s!", on_fire(youmonst.data, mattk));
 		    if (youmonst.data == &mons[PM_STRAW_GOLEM] ||
@@ -1097,7 +1146,8 @@ hitmu(mtmp, mattk)
 		} else dmg = 0;
 		break;
 	    case AD_COLD:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (uncancelled) {
 		    pline("You're covered in frost!");
 		    if (Cold_resistance) {
@@ -1109,7 +1159,8 @@ hitmu(mtmp, mattk)
 		} else dmg = 0;
 		break;
 	    case AD_ELEC:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (uncancelled) {
 		    You("get zapped!");
 		    if (Shock_resistance) {
@@ -1123,7 +1174,8 @@ hitmu(mtmp, mattk)
 		} else dmg = 0;
 		break;
 	    case AD_SLEE:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (uncancelled && multi >= 0 && !rn2(5)) {
 		    if (Sleep_resistance) break;
 		    fall_asleep(-rnd(10), TRUE);
@@ -1148,7 +1200,8 @@ hitmu(mtmp, mattk)
 	    case AD_DRCO:
 		ptmp = A_CON;
 dopois:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (uncancelled && !rn2(8)) {
 		    Sprintf(buf, "%s %s",
 			    s_suffix(Monnam(mtmp)), mpoisons_subj(mtmp, mattk));
@@ -1156,7 +1209,8 @@ dopois:
 		}
 		break;
 	    case AD_DRIN:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (defends(AD_DRIN, uwep) || !has_head(youmonst.data)) {
 		    You("don't seem harmed.");
 		    /* Not clear what to do for green slimes */
@@ -1166,8 +1220,8 @@ dopois:
 
 		if (mtmp->data == &mons[PM_ZOMBIE] && rn2(5))
 		{
-                    diseasemu(mtmp->data);
-		    return;
+                    diseasemu(mtmp);
+		    break;
 		}
 
 		if (uarmh && rn2(8)) {
@@ -1176,7 +1230,7 @@ dopois:
 		    break;
 		}
 		if (Half_physical_damage) dmg = (dmg+1) / 2;
-		mdamageu(mtmp, dmg);
+		mdamageu(mtmp, mattk, dmg);
 
 		if (!uarmh || uarmh->otyp != DUNCE_CAP) {
 		    Your("brain is eaten!");
@@ -1218,10 +1272,11 @@ dopois:
 		forget_objects(25);	/* lose memory of 25% of objects */
 		exercise(A_WIS, FALSE);
 		if (mtmp->data == &mons[PM_ZOMBIE])
-		    diseasemu(mtmp->data);
+		    diseasemu(mtmp);
 		break;
 	    case AD_PLYS:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (uncancelled && multi >= 0 && !rn2(3)) {
 		    if (Free_action) {
 			You("momentarily stiffen.");            
@@ -1235,9 +1290,12 @@ dopois:
 		}
 		break;
 	    case AD_DRLI:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (uncancelled && !rn2(3) && !Drain_resistance) {
-		    losexp("life drainage");
+		    Sprintf(killer_buf, "%s life drainage",
+		    	    s_suffix(done_in_name(mtmp)));
+		    losexp(killer_buf);
 		}
 		break;
 	    case AD_LEGS:
@@ -1285,7 +1343,8 @@ dopois:
 		  break;
 		}
 	    case AD_STON:	/* cockatrice */
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if(!rn2(3)) {
 		    if (mtmp->mcan) {
 			if (flags.soundok)
@@ -1300,17 +1359,18 @@ dopois:
 				    && !(poly_when_stoned(youmonst.data) &&
 					polymon(PM_STONE_GOLEM))) {
 				Stoned = 5;
-				delayed_killer = mtmp->data->mname;
+				Strcpy(u.ustone_cause,
+					mtmp->data->mname);
 				if (mtmp->data->geno & G_UNIQ) {
 				    if (!type_is_pname(mtmp->data)) {
-					static char kbuf[BUFSZ];
-
 					/* "the" buffer may be reallocated */
-					Strcpy(kbuf, the(delayed_killer));
-					delayed_killer = kbuf;
+					Strcpy(u.ustone_cause,
+						the(u.ustone_cause));
 				    }
-				    killer_format = KILLED_BY;
-				} else killer_format = KILLED_BY_AN;
+				    u.ustone_fmt =
+				    	KILLED_BY;
+				} else u.ustone_fmt =
+					KILLED_BY_AN;
 				return(1);
 				/* You("turn to stone..."); */
 				/* done_in_by(mtmp); */
@@ -1320,7 +1380,8 @@ dopois:
 		}
 		break;
 	    case AD_STCK:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (uncancelled && !u.ustuck && !sticks(youmonst.data))
 			u.ustuck = mtmp;
 		break;
@@ -1361,7 +1422,8 @@ dopois:
 		} else dmg = 0;
 		break;
 	    case AD_WERE:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (uncancelled && !rn2(4) && u.ulycn == NON_PM &&
 			!Protection_from_shape_changers &&
 			!defends(AD_WERE,uwep)) {
@@ -1371,7 +1433,8 @@ dopois:
 		}
 		break;
 	    case AD_SGLD:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (youmonst.data->mlet == mdat->mlet) break;
 		if(!mtmp->mcan) stealgold(mtmp);
 		break;
@@ -1379,7 +1442,8 @@ dopois:
 	    case AD_SITM:	/* for now these are the same */
 	    case AD_SEDU:
 		if (is_animal(mtmp->data)) {
-			hitmsg(mtmp, mattk);
+	    	        if (!showed_msg)
+			    hitmsg(mtmp, mattk);
 			if (mtmp->mcan) break;
 			/* Continue below */
 		} else if (dmgtype(youmonst.data, AD_SEDU)
@@ -1434,7 +1498,8 @@ dopois:
 		break;
 #endif
 	    case AD_SAMU:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		/* when the Wiz hits, 1/20 steals the amulet */
 		if (u.uhave.amulet ||
 		     u.uhave.bell || u.uhave.book || u.uhave.menorah
@@ -1443,7 +1508,8 @@ dopois:
 		break;
 
 	    case AD_TLPT:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (uncancelled) {
 		    if(flags.verbose)
 			Your("position suddenly seems very uncertain!");
@@ -1451,7 +1517,8 @@ dopois:
 		}
 		break;
 	    case AD_RUST:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (mtmp->mcan) break;
 		if (u.umonnum == PM_IRON_GOLEM) {
 			You("rust!");
@@ -1464,12 +1531,14 @@ dopois:
 		hurtarmor(AD_RUST);
 		break;
 	    case AD_CORR:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (mtmp->mcan) break;
 		hurtarmor(AD_CORR);
 		break;
 	    case AD_DCAY:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (mtmp->mcan) break;
 		if (u.umonnum == PM_WOOD_GOLEM ||
 		    u.umonnum == PM_LEATHER_GOLEM) {
@@ -1485,7 +1554,8 @@ dopois:
 	    case AD_HEAL:
 		/* a cancelled nurse is just an ordinary monster */
 		if (mtmp->mcan) {
-		    hitmsg(mtmp, mattk);
+	    	    if (!showed_msg)
+		        hitmsg(mtmp, mattk);
 		    break;
 		}
 		if(!uwep
@@ -1531,11 +1601,12 @@ dopois:
 			if (flags.soundok && !(moves % 5))
 		      verbalize("Doc, I can't help you unless you cooperate.");
 			dmg = 0;
-		    } else hitmsg(mtmp, mattk);
+		    } else if (!showed_msg) hitmsg(mtmp, mattk);
 		}
 		break;
 	    case AD_CURS:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if(!night() && mdat == &mons[PM_GREMLIN]) break;
 		if(!mtmp->mcan && !rn2(10)) {
 		    if (flags.soundok) {
@@ -1554,14 +1625,16 @@ dopois:
 		}
 		break;
 	    case AD_STUN:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if(!mtmp->mcan && !rn2(4)) {
 		    make_stunned(HStun + dmg, TRUE);
 		    dmg /= 2;
 		}
 		break;
 	    case AD_ACID:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (!mtmp->mcan && !rn2(3))
 		    if (Acid_resistance) {
 			pline("You're covered in acid, but it seems harmless.");
@@ -1573,19 +1646,22 @@ dopois:
 		else		dmg = 0;
 		break;
 	    case AD_SLOW:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (uncancelled && HFast &&
 					!defends(AD_SLOW, uwep) && !rn2(4))
 		    u_slow_down();
 		break;
 	    case AD_DREN:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (uncancelled && !rn2(4))
 		    drain_en(dmg);
 		dmg = 0;
 		break;
 	    case AD_CONF:
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if(!mtmp->mcan && !rn2(4) && !mtmp->mspec_used) {
 		    mtmp->mspec_used = mtmp->mspec_used + (dmg + rn2(6));
 		    if(Confusion)
@@ -1625,7 +1701,7 @@ dopois:
 	    case AD_PEST:
 		pline("%s reaches out, and you feel fever and chills.",
 			Monnam(mtmp));
-		(void) diseasemu(mdat); /* plus the normal damage */
+		(void) diseasemu(mtmp); /* plus the normal damage */
 		break;
 	    case AD_FAMN:
 		pline("%s reaches out, and your body shrivels.",
@@ -1635,7 +1711,8 @@ dopois:
 		/* plus the normal damage */
 		break;
 	    case AD_SLIM:    
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		if (!uncancelled) break;
 		if (flaming(youmonst.data)) {
 		    pline_The("slime burns away!");
@@ -1646,15 +1723,18 @@ dopois:
 		    dmg = 0;
 		} else if (!Slimed) {
 		    You("don't feel very well.");
+		    if (!Slimed) {
+		    	u.uslime_fmt = KILLED_BY;
+		    	Strcpy(u.uslime_cause, done_in_name(mtmp));
+		    }
 		    Slimed = 10L;
 		    flags.botl = 1;
-		    killer_format = KILLED_BY_AN;
-		    delayed_killer = mtmp->data->mname;
 		} else
 		    pline("Yuck!");
 		break;
 	    case AD_ENCH:	/* KMH -- remove enchantment (disenchanter) */
-		hitmsg(mtmp, mattk);
+	    	if (!showed_msg)
+		    hitmsg(mtmp, mattk);
 		/* uncancelled is sufficient enough; please
 		   don't make this attack less frequent */
 		if (uncancelled) {
@@ -1670,27 +1750,27 @@ dopois:
 		    youmonst.data->mlet == S_JABBERWOCK)
 		{
 		    if (!has_head(youmonst.data)) {
-			pline("Somehow, %s misses you wildly.", mtmp);
+			pline("Somehow, %s misses you wildly.", mon_nam(mtmp));
 			dmg = 0;
 			break;
 		    }
-		    if (noncorporeal(youmonst.data) ||
-		        amorphous(youmonst.data)) {
+		    if ((noncorporeal(youmonst.data)) ||
+		        (amorphous(youmonst.data))) {
 			pline("%s slices through your %s.",
 			      Monnam(mtmp), body_part(NECK));
 			break;
 		    }
 		    dmg = 2 * (Upolyd ? u.mh : u.uhp)
-				  + 200; //FATAL_DAMAGE_MODIFIER;
+				  + 200; /*FATAL_DAMAGE_MODIFIER;*/
 		    pline(behead_msg[rn2(2)],
 			  Monnam(mtmp), "you");
 		}
-		else hitmsg(mtmp, mattk);
+		else if (!showed_msg) hitmsg(mtmp, mattk);
 	        break;
 	    default:	dmg = 0;
 			break;
 	}
-	if(u.uhp < 1) done_in_by(mtmp);
+	if(u.uhp < 1) done_in_by(mtmp, mattk);
 
 /*	Negative armor class reduces damage done instead of fully protecting
  *	against hits.
@@ -1740,7 +1820,7 @@ dopois:
 		flags.botl = 1;
 	    }
 
-	    mdamageu(mtmp, dmg);
+	    mdamageu(mtmp, mattk, dmg);
 	}
 
 	if (dmg)
@@ -1880,9 +1960,10 @@ gulpmu(mtmp, mattk)	/* monster swallows you, or damage if u.uswallow */
 		    }
 		    else if (!Strangled)
 		    {
-		        //Message: "You can no longer breathe."
+		        /*Message: "You can no longer breathe."*/
 			pline("It's impossible to breathe in here!");
 		        Strangled = 3;
+			tmp = 0;
 		    }
 		    break;
 		case AD_ACID:
@@ -1940,7 +2021,7 @@ gulpmu(mtmp, mattk)	/* monster swallows you, or damage if u.uswallow */
 		    } else tmp = 0;
 		    break;
 		case AD_DISE:
-		    if (!diseasemu(mtmp->data)) tmp = 0;
+		    if (!diseasemu(mtmp)) tmp = 0;
 		    break;
 		default:
 		    tmp = 0;
@@ -1949,7 +2030,7 @@ gulpmu(mtmp, mattk)	/* monster swallows you, or damage if u.uswallow */
 
 	if (Half_physical_damage) tmp = (tmp+1) / 2;
 
-	mdamageu(mtmp, tmp);
+	mdamageu(mtmp, mattk, tmp);
 	if (tmp) stop_occupation();
 
 	if (touch_petrifies(youmonst.data) && !resists_ston(mtmp)) {
@@ -1980,7 +2061,8 @@ boolean ufound;
 	    levl[mtmp->mux][mtmp->muy].typ == WATER
 		? "empty water" : "thin air");
     else {
-	register int tmp = d((int)mattk->damn, (int)mattk->damd);
+	register int tmp = /* d((int)mattk->damn, (int)mattk->damd); */
+		d((int)(1+mtmp->m_lev/2), (int)mattk->damd);
 	register boolean not_affected = defends((int)mattk->adtyp, uwep);
 
 	hitmsg(mtmp, mattk);
@@ -2005,7 +2087,7 @@ common:
 		    }
 		    if (mattk->adtyp == AD_FIRE) burn_away_slime();
 		    if (Half_physical_damage) tmp = (tmp+1) / 2;
-		    mdamageu(mtmp, tmp);
+		    mdamageu(mtmp, mattk, tmp);
 		}
 		break;
 
@@ -2092,14 +2174,15 @@ gazemu(mtmp, mattk)	/* monster gazes at you */
 		    return 2;
 		}
 		if (canseemon(mtmp) && couldsee(mtmp->mx, mtmp->my) &&
-		    !Stone_resistance) {
+		    !Stone_resistance &&
+		    (mtmp->data == &mons[PM_MEDUSA] || !rn2(5))) {
 		    You("meet %s gaze.", s_suffix(mon_nam(mtmp)));
 		    stop_occupation();
 		    if(poly_when_stoned(youmonst.data) && polymon(PM_STONE_GOLEM))
 			break;
 		    You("turn to stone...");
 		    killer_format = KILLED_BY;
-		    killer = mtmp->data->mname;
+		    killer = done_in_name(mtmp); /* mtmp->data->mname; */
 		    done(STONING);
 		}
 		break;
@@ -2107,7 +2190,7 @@ gazemu(mtmp, mattk)	/* monster gazes at you */
 		if(!mtmp->mcan && canseemon(mtmp) &&
 		   couldsee(mtmp->mx, mtmp->my) &&
 		   mtmp->mcansee && !mtmp->mspec_used && rn2(5)) {
-		    int conf = d(3,4);
+		    int conf = d(mattk->damn,mattk->damd);
 
 		    mtmp->mspec_used = mtmp->mspec_used + (conf + rn2(6));
 		    if(!Confusion)
@@ -2123,7 +2206,7 @@ gazemu(mtmp, mattk)	/* monster gazes at you */
 		if(!mtmp->mcan && canseemon(mtmp) &&
 		   couldsee(mtmp->mx, mtmp->my) &&
 		   mtmp->mcansee && !mtmp->mspec_used && rn2(5)) {
-		    int stun = d(2,6);
+		    int stun = d(mattk->damn,mattk->damd);
 
 		    mtmp->mspec_used = mtmp->mspec_used + (stun + rn2(6));
 		    pline("%s stares piercingly at you!", Monnam(mtmp));
@@ -2151,7 +2234,7 @@ gazemu(mtmp, mattk)	/* monster gazes at you */
 		if (!mtmp->mcan && canseemon(mtmp) &&
 			couldsee(mtmp->mx, mtmp->my) &&
 			mtmp->mcansee && !mtmp->mspec_used && rn2(5)) {
-		    int dmg = d(2,6);
+		    int dmg = d(mattk->damn,mattk->damd);
 
 		    pline("%s attacks you with a fiery gaze!", Monnam(mtmp));
 		    stop_occupation();
@@ -2166,29 +2249,77 @@ gazemu(mtmp, mattk)	/* monster gazes at you */
 			destroy_item(POTION_CLASS, AD_FIRE);
 		    if ((int) mtmp->m_lev > rn2(25))
 			destroy_item(SPBOOK_CLASS, AD_FIRE);
-		    if (dmg) mdamageu(mtmp, dmg);
+		    if (dmg) mdamageu(mtmp, mattk, dmg);
 		}
 		break;
-#ifdef PM_BEHOLDER /* work in progress */
 	    case AD_SLEE:
 		if(!mtmp->mcan && canseemon(mtmp) &&
 		   couldsee(mtmp->mx, mtmp->my) && mtmp->mcansee &&
-		   multi >= 0 && !rn2(5) && !Sleep_resistance) {
-
-		    fall_asleep(-rnd(10), TRUE);
-		    pline("%s gaze makes you very sleepy...",
-			  s_suffix(Monnam(mtmp)));
+		   multi >= 0 && !rn2(5)) {
+		   if (Sleep_resistance) {
+		    	pline("%s gaze makes you yawn.",
+				s_suffix(Monnam(mtmp)));
+			stop_occupation();
+		   } else {
+		   	fall_asleep(-d(mattk->damn,mattk->damd), TRUE);
+		    	pline("%s gaze makes you very sleepy...",
+				s_suffix(Monnam(mtmp)));
+		   }
 		}
 		break;
 	    case AD_SLOW:
 		if(!mtmp->mcan && canseemon(mtmp) && mtmp->mcansee &&
 		   (HFast & (INTRINSIC|TIMEOUT)) &&
 		   !defends(AD_SLOW, uwep) && !rn2(4))
-
+		{
+		    pline("You meet %s gaze.", s_suffix(mon_nam(mtmp)));
 		    u_slow_down();
 		    stop_occupation();
+		}
 		break;
+	    case AD_DISN:
+		if(!mtmp->mcan && canseemon(mtmp) &&
+		   couldsee(mtmp->mx, mtmp->my) && mtmp->mcansee &&
+		   multi >= 0 && !rn2(5)) {
+		   if (Disint_resistance) {
+		    	pline("You bask in the %s aura of %s gaze.",
+				hcolor(NH_BLACK),
+				s_suffix(mon_nam(mtmp)));
+			stop_occupation();
+		   } else {
+			pline("%s attacks you with a destructive gaze!",
+				Monnam(mtmp));
+			if (uarms) {
+			    /* destroy shield; other possessions are safe */
+			    (void) destroy_arm(uarms);
+			    break;
+			} else if (uarm) {
+			    /* destroy suit; if present, cloak goes too */
+			    if (uarmc) (void) destroy_arm(uarmc);
+			    (void) destroy_arm(uarm);
+			    break;
+			}
+			/* no shield or suit, you're dead; wipe out cloak
+			   and/or shirt in case of life-saving or bones */
+			if (uarmc) (void) destroy_arm(uarmc);
+#ifdef TOURIST
+			if (uarmu) (void) destroy_arm(uarmu);
 #endif
+	    		u.ugrave_arise = -3; /* don't leave a corpse */
+
+	    		done_in_by(mtmp, mattk);
+		   }
+		}
+	    	break;
+	    case AD_CNCL:
+	    	if (!mtmp->mcan && canseemon(mtmp) && mtmp->mcansee &&
+			!rn2(5))
+		{
+		    	pline("You meet %s gaze.", s_suffix(mon_nam(mtmp)));
+			(void) cancel_monst(&youmonst, (struct obj *)0,
+					    FALSE, TRUE, FALSE);
+		}
+	    	break;
 	    default: impossible("Gaze attack %d?", mattk->adtyp);
 		break;
 	}
@@ -2199,8 +2330,9 @@ gazemu(mtmp, mattk)	/* monster gazes at you */
 #ifdef OVL1
 
 void
-mdamageu(mtmp, n)	/* mtmp hits you for n points damage */
+mdamageu(mtmp, mattk, n) /* mtmp hits you with mattk for n points damage */
 register struct monst *mtmp;
+register struct attack *mattk;
 register int n;
 {
 	flags.botl = 1;
@@ -2209,7 +2341,7 @@ register int n;
 		if (u.mh < 1) rehumanize(l_monnam(mtmp));
 	} else {
 		u.uhp -= n;
-		if(u.uhp < 1) done_in_by(mtmp);
+		if(u.uhp < 1) done_in_by(mtmp, mattk);
 	}
 }
 

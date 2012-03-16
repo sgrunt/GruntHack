@@ -19,12 +19,6 @@ STATIC_DCL boolean FDECL(taking_off, (const char *));
 STATIC_DCL boolean FDECL(putting_on, (const char *));
 STATIC_PTR int FDECL(ckunpaid,(struct obj *));
 STATIC_PTR int FDECL(ckvalidcat,(struct obj *));
-#ifdef DUMP_LOG
-static char FDECL(display_pickinv,
-		 (const char *,BOOLEAN_P, long *, BOOLEAN_P, BOOLEAN_P));
-#else
-static char FDECL(display_pickinv, (const char *,BOOLEAN_P, long *));
-#endif /* DUMP_LOG */
 #ifdef OVLB
 STATIC_DCL boolean FDECL(this_type_only, (struct obj *));
 STATIC_DCL void NDECL(dounpaid);
@@ -33,6 +27,7 @@ STATIC_DCL void FDECL(menu_identify, (int));
 STATIC_DCL boolean FDECL(tool_in_use, (struct obj *));
 #endif /* OVLB */
 STATIC_DCL char FDECL(obj_to_let,(struct obj *));
+STATIC_DCL int FDECL(itemactions,(struct obj *));
 
 #ifdef OVLB
 
@@ -258,15 +253,47 @@ struct obj *obj;
 	} else if (obj->otyp == AMULET_OF_YENDOR) {
 		if (u.uhave.amulet) impossible("already have amulet?");
 		u.uhave.amulet = 1;
+#ifdef RECORD_ACHIEVE
+#ifdef LIVELOG
+		if (!achieve.get_amulet) {
+		    livelog_write_string("picked up the Amulet of Yendor");
+		}
+#endif
+                achieve.get_amulet = 1;
+#endif
 	} else if (obj->otyp == CANDELABRUM_OF_INVOCATION) {
 		if (u.uhave.menorah) impossible("already have candelabrum?");
 		u.uhave.menorah = 1;
+#ifdef RECORD_ACHIEVE
+#ifdef LIVELOG
+		if (!achieve.get_candelabrum) {
+		    livelog_write_string("picked up the Candelabrum of Invocation");
+		}
+#endif
+                achieve.get_candelabrum = 1;
+#endif
 	} else if (obj->otyp == BELL_OF_OPENING) {
 		if (u.uhave.bell) impossible("already have silver bell?");
 		u.uhave.bell = 1;
+#ifdef RECORD_ACHIEVE
+#ifdef LIVELOG
+		if (!achieve.get_bell) {
+		    livelog_write_string("picked up the Bell of Opening");
+		}
+#endif
+                achieve.get_bell = 1;
+#endif
 	} else if (obj->otyp == SPE_BOOK_OF_THE_DEAD) {
 		if (u.uhave.book) impossible("already have the book?");
 		u.uhave.book = 1;
+#ifdef RECORD_ACHIEVE
+#ifdef LIVELOG
+		if (!achieve.get_book) {
+		    livelog_write_string("picked up the Book of the Dead");
+		}
+#endif
+                achieve.get_book = 1;
+#endif
 	} else if (obj->oartifact) {
 		if (is_quest_artifact(obj)) {
 		    if (u.uhave.questart)
@@ -276,6 +303,30 @@ struct obj *obj;
 		}
 		set_artifact_intrinsic(obj, 1, W_ART);
 	}
+
+#ifdef RECORD_ACHIEVE
+        if(obj->otyp == LUCKSTONE && obj->record_achieve_special) {
+#ifdef LIVELOG
+		if (!achieve.get_luckstone) {
+		    livelog_write_string("retrieved the Mine's End luckstone");
+		}
+#endif
+                achieve.get_luckstone = 1;
+                obj->record_achieve_special = 0;
+        } else if((obj->otyp == AMULET_OF_REFLECTION ||
+	           obj->otyp == CLOAK_OF_MAGIC_RESISTANCE ||
+                   obj->otyp == BAG_OF_HOLDING) &&
+                  obj->record_achieve_special) {
+#ifdef LIVELOG
+		if (!achieve.finish_sokoban) {
+		    livelog_write_string("completed Sokoban");
+		}
+#endif
+                achieve.finish_sokoban = 1;
+                obj->record_achieve_special = 0;
+        }
+#endif /* RECORD_ACHIEVE */
+
 }
 
 /*
@@ -311,6 +362,8 @@ struct obj *obj;
 	if (obj->where != OBJ_FREE)
 	    panic("addinv: obj not free");
 	obj->no_charge = 0;	/* not meaningful for invent */
+
+	obj->opresenceknown = TRUE;
 
 	addinv_core1(obj);
 #ifndef GOLDOBJ
@@ -382,7 +435,11 @@ const char *drop_fmt, *drop_arg, *hold_msg;
 {
 	char buf[BUFSZ];
 
-	if (!Blind) obj->dknown = 1;	/* maximize mergibility */
+	if (!Blind
+#ifdef INVISIBLE_OBJECTS
+	    && (!obj->oinvis || See_invisible)
+#endif
+	    ) obj->dknown = 1;	/* maximize mergibility */
 	if (obj->oartifact) {
 	    /* place_object may change these */
 	    boolean crysknife = (obj->otyp == CRYSKNIFE);
@@ -404,6 +461,9 @@ const char *drop_fmt, *drop_arg, *hold_msg;
 		return obj;
 	    }
 	    obj_extract_self(obj);
+#ifdef INVISIBLE_OBJECTS
+	    obj->opresenceknown = 1;
+#endif
 	    if (crysknife) {
 		obj->otyp = CRYSKNIFE;
 		obj->oerodeproof = oerode;
@@ -745,6 +805,22 @@ const char *action;
     return !strcmp(action, "wear") || !strcmp(action, "put on");
 }
 
+static struct obj *nextgetobj = 0;
+
+/** Returns the object to use in the inventory usage menu.
+ * nextgetobj is set to NULL before the pointer of the item is returned. */
+struct obj*
+getnextgetobj()
+{
+	if (nextgetobj) {
+		struct obj* ptr = nextgetobj;
+		nextgetobj = NULL;
+		return ptr;
+	}
+	return NULL;
+}
+
+
 /*
  * getobj returns:
  *	struct obj *xxx:	object to do something with.
@@ -777,6 +853,9 @@ register const char *let,*word;
 	long cnt;
 	boolean prezero = FALSE;
 	long dummymask;
+
+	if(nextgetobj) return getnextgetobj();
+
 
 	if(*let == ALLOW_COUNT) let++, allowcnt = 1;
 #ifndef GOLDOBJ
@@ -872,6 +951,7 @@ register const char *let,*word;
 		     otyp != AMULET_OF_YENDOR && otyp != FAKE_AMULET_OF_YENDOR))
 		|| (!strcmp(word, "write with") &&
 		    (otmp->oclass == TOOL_CLASS &&
+		     otyp != FELT_MARKER &&
 		     otyp != MAGIC_MARKER && otyp != TOWEL))
 		|| (!strcmp(word, "tin") &&
 		    (otyp != CORPSE || !tinnable(otmp)))
@@ -988,7 +1068,8 @@ register const char *let,*word;
 			return(allownone ? &zeroobj : (struct obj *) 0);
 		}
 		if(ilet == def_oc_syms[COIN_CLASS]) {
-			if (!usegold) {
+			if (!usegold &&
+			     strncmp(word, "use or apply", 12)) {
 			    if (!strncmp(word, "rub on ", 7)) {
 				/* the dangers of building sentences... */
 				You("cannot rub gold%s.", word + 3);
@@ -1012,6 +1093,10 @@ register const char *let,*word;
 			if(cnt < 0) {
 	pline_The("LRS would be very interested to know you have that much.");
 				return(struct obj *)0;
+			} else if (cnt == 0 && !strcmp(word, "drop") &&
+			           allowcnt == 2) {
+				pline("You decide not to part with your hard-earned cash.");
+				return(struct obj *)0;
 			}
 
 #ifndef GOLDOBJ
@@ -1031,6 +1116,7 @@ register const char *let,*word;
 #ifdef DUMP_LOG
 					   , FALSE, TRUE
 #endif
+					   , FALSE
 					   );
 		    if(!ilet) continue;
 		    if (allowcnt && ctmp >= 0) {
@@ -1208,7 +1294,8 @@ unsigned *resultflags;
 
 	if (resultflags) *resultflags = 0;
 #ifndef GOLDOBJ
-	allowgold = (u.ugold && !strcmp(word, "drop")) ? 1 : 0;
+	allowgold = (u.ugold && (
+		     !strcmp(word, "drop"))) ? 1 : 0;
 #endif
 	takeoff = ident = allflag = m_seen = FALSE;
 #ifndef GOLDOBJ
@@ -1484,7 +1571,11 @@ struct obj *otmp;
 {
     makeknown(otmp->otyp);
     if (otmp->oartifact) discover_artifact((xchar)otmp->oartifact);
-    otmp->known = otmp->dknown = otmp->bknown = otmp->rknown = 1;
+    otmp->known = otmp->dknown = otmp->bknown = otmp->rknown =
+#ifdef INVISIBLE_OBJECTS
+	otmp->iknown =
+#endif
+    	1;
 
     otmp->oprops_known = ITEM_PROP_MASK;
 
@@ -1664,9 +1755,330 @@ long quan;		/* if non-0, print this quantity, not obj->quan */
 int
 ddoinv()
 {
-	(void) display_inventory((char *)0, FALSE);
+	char c;
+	struct obj *otmp;
+	c = display_inventory((char *)0, TRUE);
+	if (!c) return 0;
+	for (otmp = invent; otmp; otmp = otmp->nobj)
+		if (otmp->invlet == c) break;
+	if (otmp) return itemactions(otmp);
 	return 0;
 }
+
+/** Puts up a menu asking what to do with an object;
+   sends the object to the appropriate command, if one is selected.
+   Each command that can affect the object is listed, but only one
+   out of a set of synonyms is given.
+   Returns 1 if it consumes time, 0 otherwise. */
+int
+itemactions(obj)
+struct obj *obj;
+{
+	winid win;
+	int n;
+	int NDECL((*feedback_fn)) = 0;
+	anything any;
+	menu_item *selected = 0;
+
+	struct monst *mtmp;
+	char prompt[BUFSIZ];
+
+	win = create_nhwindow(NHW_MENU);
+	start_menu(win);
+	/* (a)pply: tools, eucalyptus, cream pie, oil, hooks/whips
+	   Exceptions: applying stones is on V; breaking wands is on V;
+	   equipment-tools are on W; tin openers are on w. */
+	any.a_void = (genericptr_t)doapply;
+	/* Rather a mess for 'a', as it means so many different things
+	   with so many different objects */
+	if (obj->otyp == CREAM_PIE)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Hit yourself with this cream pie", MENU_UNSELECTED);
+	else if (obj->otyp == BULLWHIP)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Lash out with this whip", MENU_UNSELECTED);
+	else if (obj->otyp == GRAPPLING_HOOK)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Grapple something with this hook", MENU_UNSELECTED);
+	else if (obj->otyp == BAG_OF_TRICKS && obj->known)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Reach into this bag", MENU_UNSELECTED);
+	else if (Is_container(obj) || obj->otyp == BAG_OF_TRICKS)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Open this container", MENU_UNSELECTED);
+	else if (obj->otyp == CAN_OF_GREASE)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Use the can to grease an item", MENU_UNSELECTED);
+	else if (obj->otyp == LOCK_PICK ||
+#ifdef TOURIST
+			obj->otyp == CREDIT_CARD ||
+#endif
+			obj->otyp == SKELETON_KEY)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Use this tool to pick a lock", MENU_UNSELECTED);
+	else if (obj->otyp == TINNING_KIT)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Use this kit to tin a corpse", MENU_UNSELECTED);
+	else if (obj->otyp == LEASH)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Tie a pet to this leash", MENU_UNSELECTED);
+	else if (obj->otyp == SADDLE)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Place this saddle on a pet", MENU_UNSELECTED);
+	else if (obj->otyp == MAGIC_WHISTLE || obj->otyp == TIN_WHISTLE)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Blow this whistle", MENU_UNSELECTED);
+	else if (obj->otyp == EUCALYPTUS_LEAF)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Use this leaf as a whistle", MENU_UNSELECTED);
+	else if (obj->otyp == STETHOSCOPE)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Listen through the stethoscope", MENU_UNSELECTED);
+	else if (obj->otyp == MIRROR)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Show something its reflection", MENU_UNSELECTED);
+	else if (obj->otyp == BELL || obj->otyp == BELL_OF_OPENING)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Ring the bell", MENU_UNSELECTED);
+	else if (obj->otyp == CANDELABRUM_OF_INVOCATION)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Light or extinguish the candelabrum", MENU_UNSELECTED);
+	else if ((obj->otyp == WAX_CANDLE || obj->otyp == TALLOW_CANDLE) &&
+			carrying(CANDELABRUM_OF_INVOCATION))
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Attach this candle to the candelabrum", MENU_UNSELECTED);
+	else if (obj->otyp == WAX_CANDLE || obj->otyp == TALLOW_CANDLE)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Light or extinguish this candle", MENU_UNSELECTED);
+	else if (obj->otyp == OIL_LAMP || obj->otyp == MAGIC_LAMP ||
+			obj->otyp == BRASS_LANTERN)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Light or extinguish this light source", MENU_UNSELECTED);
+	else if (obj->otyp == POT_OIL && objects[obj->otyp].oc_name_known)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Light or extinguish this oil", MENU_UNSELECTED);
+	else if (obj->oclass == POTION_CLASS) {
+		any.a_void = (genericptr_t) dodip;
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Dip something into this potion", MENU_UNSELECTED);
+	}
+#ifdef TOURIST
+	else if (obj->otyp == EXPENSIVE_CAMERA)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Take a photograph", MENU_UNSELECTED);
+#endif
+	else if (obj->otyp == TOWEL)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Clean yourself off with this towel", MENU_UNSELECTED);
+	else if (obj->otyp == CRYSTAL_BALL)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Peer into this crystal ball", MENU_UNSELECTED);
+	else if (obj->otyp == MAGIC_MARKER)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Write on something with this marker", MENU_UNSELECTED);
+	else if (obj->otyp == FIGURINE)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Make this figurine transform", MENU_UNSELECTED);
+	else if (obj->otyp == UNICORN_HORN)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Squeeze the unicorn horn tightly", MENU_UNSELECTED);
+	else if ((obj->otyp >= WOODEN_FLUTE && obj->otyp <= DRUM_OF_EARTHQUAKE) ||
+			(obj->otyp == HORN_OF_PLENTY && !obj->known))
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Play this musical instrument", MENU_UNSELECTED);
+	else if (obj->otyp == HORN_OF_PLENTY)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Blow into the horn of plenty", MENU_UNSELECTED);
+	else if (obj->otyp == LAND_MINE || obj->otyp == BEARTRAP)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Arm this trap", MENU_UNSELECTED);
+	else if (obj->otyp == PICK_AXE || obj->otyp == DWARVISH_MATTOCK)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Dig with this digging tool", MENU_UNSELECTED);
+	else if (obj->oclass == WAND_CLASS)
+		add_menu(win, NO_GLYPH, &any, 'a', 0, ATR_NONE,
+				"Break this wand", MENU_UNSELECTED);
+	/* d: drop item, works on everything */
+	any.a_void = (genericptr_t)dodrop;
+	add_menu(win, NO_GLYPH, &any, 'd', 0, ATR_NONE,
+			"Drop this item", MENU_UNSELECTED);
+	/* e: eat item; eat.c provides is_edible to check */
+	any.a_void = (genericptr_t)doeat;
+	if (obj->otyp == TIN && uwep && uwep->otyp == TIN_OPENER)
+		add_menu(win, NO_GLYPH, &any, 'e', 0, ATR_NONE,
+				"Open and eat this tin with your tin opener", MENU_UNSELECTED);
+	else if (obj->otyp == TIN)
+		add_menu(win, NO_GLYPH, &any, 'e', 0, ATR_NONE,
+				"Open and eat this tin", MENU_UNSELECTED);
+	else if (is_edible(obj))
+		add_menu(win, NO_GLYPH, &any, 'e', 0, ATR_NONE,
+				"Eat this item", MENU_UNSELECTED);
+	/* E: engrave with item */
+	any.a_void = (genericptr_t)doengrave;
+	if (obj->otyp == TOWEL)
+		add_menu(win, NO_GLYPH, &any, 'E', 0, ATR_NONE,
+				"Wipe the floor with this towel", MENU_UNSELECTED);
+	else if (obj->otyp == MAGIC_MARKER)
+		add_menu(win, NO_GLYPH, &any, 'E', 0, ATR_NONE,
+				"Scribble graffiti on the floor", MENU_UNSELECTED);
+	else if (obj->oclass == WEAPON_CLASS || obj->oclass == WAND_CLASS ||
+			obj->oclass == GEM_CLASS || obj->oclass == RING_CLASS)
+		add_menu(win, NO_GLYPH, &any, 'E', 0, ATR_NONE,
+				"Write on the floor with this object", MENU_UNSELECTED);
+	/* I: describe item, works on everything */
+	any.a_void = (genericptr_t)dotypeinv;
+	add_menu(win, NO_GLYPH, &any, 'I', 0, ATR_NONE,
+			"Describe this item", MENU_UNSELECTED);
+	/* p: pay for unpaid items */
+	any.a_void = (genericptr_t)dopay;
+	if ((mtmp = shop_keeper(*in_rooms(u.ux, u.uy, SHOPBASE))) &&
+			inhishop(mtmp) && obj->unpaid)
+		add_menu(win, NO_GLYPH, &any, 'p', 0, ATR_NONE,
+				"Buy this unpaid item", MENU_UNSELECTED);
+	/* q: drink item; strangely, this one seems to have no exceptions */
+	any.a_void = (genericptr_t)dodrink;
+	if (obj->oclass == POTION_CLASS)
+		add_menu(win, NO_GLYPH, &any, 'q', 0, ATR_NONE,
+				"Quaff this potion", MENU_UNSELECTED);
+	/* Q: quiver throwable item
+	   (Why are weapons not designed for throwing included, I wonder?) */
+	any.a_void= (genericptr_t)dowieldquiver;
+	if (obj->oclass == GEM_CLASS || obj->oclass == WEAPON_CLASS)
+		add_menu(win, NO_GLYPH, &any, 'Q', 0, ATR_NONE,
+				"Quiver this item for easy throwing", MENU_UNSELECTED);
+	/* r: read item */
+	any.a_void = (genericptr_t)doread;
+	if (obj->otyp == FORTUNE_COOKIE)
+		add_menu(win, NO_GLYPH, &any, 'r', 0, ATR_NONE,
+				"Read the message inside this cookie", MENU_UNSELECTED);
+	else if (obj->otyp == T_SHIRT)
+		add_menu(win, NO_GLYPH, &any, 'r', 0, ATR_NONE,
+				"Read the slogan on the shirt", MENU_UNSELECTED);
+	else if (obj->oclass == SCROLL_CLASS)
+		add_menu(win, NO_GLYPH, &any, 'r', 0, ATR_NONE,
+				"Cast the spell on this scroll", MENU_UNSELECTED);
+	else if (obj->oclass == SPBOOK_CLASS)
+		add_menu(win, NO_GLYPH, &any, 'r', 0, ATR_NONE,
+				"Study this spellbook", MENU_UNSELECTED);
+	any.a_void = (genericptr_t)dorub;
+	if (obj->otyp == OIL_LAMP || obj->otyp == MAGIC_LAMP)
+		add_menu(win, NO_GLYPH, &any, 'R', 0, ATR_NONE,
+				"Rub this lamp", MENU_UNSELECTED);
+	else if (obj->otyp == BRASS_LANTERN)
+		add_menu(win, NO_GLYPH, &any, 'R', 0, ATR_NONE,
+				"Rub this lantern", MENU_UNSELECTED);
+	else if (obj->oclass == GEM_CLASS && is_graystone(obj))
+		add_menu(win, NO_GLYPH, &any, 'R', 0, ATR_NONE,
+				"Rub something on this stone", MENU_UNSELECTED);
+	/* t: throw item, works on everything */
+	any.a_void = (genericptr_t)dothrow;
+	add_menu(win, NO_GLYPH, &any, 't', 0, ATR_NONE,
+			"Throw this item", MENU_UNSELECTED);
+	/* T: unequip worn item */
+	any.a_void = (genericptr_t)dotakeoff; 
+	if ((obj->owornmask & (W_ARMOR | W_RING | W_AMUL | W_TOOL)))
+		add_menu(win, NO_GLYPH, &any, 'T', 0, ATR_NONE,
+				"Unequip this equipment", MENU_UNSELECTED);
+	/* V: invoke, rub, or break */
+	any.a_void = (genericptr_t)doinvoke;
+	if ((obj->otyp == FAKE_AMULET_OF_YENDOR && !obj->known) ||
+			obj->oartifact || objects[obj->otyp].oc_unique ||
+			obj->otyp == MIRROR) /* wtf NetHack devteam? */
+		add_menu(win, NO_GLYPH, &any, 'V', 0, ATR_NONE,
+				"Try to invoke a unique power of this object", MENU_UNSELECTED);
+	/* w: hold in hands, works on everything but with different
+	   advice text; not mentioned for things that are already
+	   wielded */
+	any.a_void = (genericptr_t)dowield;
+	if (obj == uwep) {}
+	else if (obj->oclass == WEAPON_CLASS || obj->otyp == PICK_AXE ||
+			obj->otyp == UNICORN_HORN)
+		add_menu(win, NO_GLYPH, &any, 'w', 0, ATR_NONE,
+				"Wield this as your weapon", MENU_UNSELECTED);
+	else if (obj->otyp == TIN_OPENER)
+		add_menu(win, NO_GLYPH, &any, 'w', 0, ATR_NONE,
+				"Hold the tin opener to open tins", MENU_UNSELECTED);
+	else
+		add_menu(win, NO_GLYPH, &any, 'w', 0, ATR_NONE,
+				"Hold this item in your hands", MENU_UNSELECTED);
+	/* W: Equip this item */
+	any.a_void = (genericptr_t)dowear;
+	if (obj->oclass == ARMOR_CLASS)
+		add_menu(win, NO_GLYPH, &any, 'W', 0, ATR_NONE,
+				"Wear this armor", MENU_UNSELECTED);
+	else if (obj->oclass == RING_CLASS || obj->otyp == MEAT_RING)
+		add_menu(win, NO_GLYPH, &any, 'W', 0, ATR_NONE,
+				"Put this ring on", MENU_UNSELECTED);
+	else if (obj->oclass == AMULET_CLASS)
+		add_menu(win, NO_GLYPH, &any, 'W', 0, ATR_NONE,
+				"Put this amulet on", MENU_UNSELECTED);
+	else if (obj->otyp == TOWEL || obj->otyp == BLINDFOLD)
+		add_menu(win, NO_GLYPH, &any, 'W', 0, ATR_NONE,
+				"Use this to blindfold yourself", MENU_UNSELECTED);
+	else if (obj->otyp == LENSES)
+		add_menu(win, NO_GLYPH, &any, 'W', 0, ATR_NONE,
+				"Put these lenses on", MENU_UNSELECTED);
+	/* x: Swap main and readied weapon */
+	any.a_void = (genericptr_t)doswapweapon;
+	if (obj == uwep && uswapwep)
+		add_menu(win, NO_GLYPH, &any, 'x', 0, ATR_NONE,
+				"Swap this with your alternate weapon", MENU_UNSELECTED);
+	else if (obj == uwep)
+		add_menu(win, NO_GLYPH, &any, 'x', 0, ATR_NONE,
+				"Ready this as an alternate weapon", MENU_UNSELECTED);
+	else if (obj == uswapwep)
+		add_menu(win, NO_GLYPH, &any, 'x', 0, ATR_NONE,
+				"Swap this with your main weapon", MENU_UNSELECTED);
+	/* z: Zap wand */
+	any.a_void = (genericptr_t)dozap;
+	if (obj->oclass == WAND_CLASS)
+		add_menu(win, NO_GLYPH, &any, 'z', 0, ATR_NONE,
+				"Zap this wand to release its magic", MENU_UNSELECTED);
+	/* S: Sacrifice object */
+	any.a_void = (genericptr_t)dosacrifice;
+	if (IS_ALTAR(levl[u.ux][u.uy].typ) && !u.uswallow) {
+		if (obj->otyp == CORPSE)
+			add_menu(win, NO_GLYPH, &any, 'S', 0, ATR_NONE,
+					"Sacrifice this corpse at this altar", MENU_UNSELECTED);
+		else if (obj->otyp == AMULET_OF_YENDOR ||
+				obj->otyp == FAKE_AMULET_OF_YENDOR)
+			add_menu(win, NO_GLYPH, &any, 'S', 0, ATR_NONE,
+					"Sacrifice this amulet at this altar", MENU_UNSELECTED);
+	}
+
+	Sprintf(prompt, "Do what with %s?", the(cxname(obj)));
+	end_menu(win, prompt);
+
+	n = select_menu(win, PICK_ONE, &selected);
+	destroy_nhwindow(win);
+	if (n == 1) feedback_fn = (int NDECL((*)))selected[0].item.a_void;
+	if (n == 1) free((genericptr_t) selected);
+
+	if (!feedback_fn) return 0;
+#if 0
+	/* dodip() is special, because it takes the item to dip first, and
+	   the item to dip /into/ second. */
+	if (feedback_fn == dodip) {
+		setnextdodipinto(obj);
+		return dodip();
+	}
+#endif
+	/* dotypeinv() means that we want the item described. Just do it
+	   directly rather than fighting with a multiselect menu. */
+	if (feedback_fn == dotypeinv) {
+		checkfile(xname(obj), 0, TRUE, TRUE);
+		return 0;
+	}
+	/* In most cases, we can just set getobj's result directly.
+	   (This works even for commands that take no arguments, because
+	   they don't call getobj at all. */
+	nextgetobj = obj;
+	n = (*feedback_fn)();
+
+	return n;
+}
+
+
 
 /*
  * find_unpaid()
@@ -1707,19 +2119,21 @@ find_unpaid(list, last_found)
  * any count returned from the menu selection is placed here.
  */
 #ifdef DUMP_LOG
-static char
-display_pickinv(lets, want_reply, out_cnt, want_dump, want_disp)
+char
+display_pickinv(lets, want_reply, out_cnt, want_dump, want_disp, dywypisi)
 register const char *lets;
 boolean want_reply;
 long* out_cnt;
 boolean want_dump;
 boolean want_disp;
+boolean dywypisi;
 #else
-static char
-display_pickinv(lets, want_reply, out_cnt)
+char
+display_pickinv(lets, want_reply, out_cnt, dywypisi)
 register const char *lets;
 boolean want_reply;
 long* out_cnt;
+boolean dywypisi;
 #endif
 {
 	struct obj *otmp;
@@ -1727,10 +2141,10 @@ long* out_cnt;
 	struct obj **oarray;
 	int i, j;
 #endif
-	char ilet, ret;
+	char ilet, ret = '\0';
 	char *invlet = flags.inv_order;
 	int n, classcount;
-	winid win;				/* windows being used */
+	winid win = 0;				/* windows being used */
 	static winid local_win = WIN_ERR;	/* window for partial menus */
 	anything any;
 	menu_item *selected;
@@ -1797,6 +2211,9 @@ long* out_cnt;
 	    ret = '\0';
 	    for (otmp = invent; otmp; otmp = otmp->nobj) {
 		if (otmp->invlet == lets[0]) {
+#ifdef DYWYPISI
+		if (dywypisi) dump_ID_on();
+#endif
 #ifdef DUMP_LOG
                 if (want_disp) {
 #endif
@@ -1816,6 +2233,9 @@ long* out_cnt;
 		    break;
 		}
 	    }
+#ifdef DYWYPISI
+		if (dywypisi) dump_ID_off();
+#endif
 	    return ret;
 	}
 
@@ -1855,6 +2275,7 @@ long* out_cnt;
 	  }
 #endif /* SORTLOOT */
 
+
 #ifdef DUMP_LOG
       if (want_disp)
 #endif
@@ -1873,14 +2294,26 @@ nextclass:
               if (want_disp)
 #endif
 	          add_menu(win, NO_GLYPH, &any, 0, 0, iflags.menu_headings,
+#ifndef SHOWSYM
 		           let_to_name(*invlet, FALSE), MENU_UNSELECTED);
+#else
+		           let_to_name(*invlet, FALSE, FALSE), MENU_UNSELECTED);
+#endif
+
 #ifdef DUMP_LOG
 	      if (want_dump)
+#ifndef SHOWSYM
 		dump("  ", let_to_name(*invlet, FALSE));
+#else
+		dump("  ", let_to_name(*invlet, FALSE, FALSE));
+#endif
 #endif
 	      classcount++;
 	    }
 	    any.a_char = ilet;
+#ifdef DYWYPISI
+	    if (dywypisi) dump_ID_on();
+#endif
 #ifdef DUMP_LOG
             if (want_disp)
 #endif
@@ -1891,8 +2324,14 @@ nextclass:
 	    if (want_dump) {
 	      char letbuf[7];
 	      sprintf(letbuf, "  %c - ", ilet);
+#ifdef DYWYPISI
+	      dump_ID_on();
+#endif
 	      dump(letbuf, doname(otmp));
 	    }
+#ifdef DYWYPISI
+	      dump_ID_off();
+#endif
 #endif
 	  }
 	}
@@ -1910,21 +2349,35 @@ nextclass:
 				if (want_disp)
 #endif
 				add_menu(win, NO_GLYPH, &any, 0, 0, iflags.menu_headings,
-				    let_to_name(*invlet, FALSE), MENU_UNSELECTED);
+#ifndef SHOWSYM
+				    let_to_name(*invlet, FALSE),
+#else
+				    let_to_name(*invlet, FALSE, FALSE),
+#endif
+					 MENU_UNSELECTED);
 				classcount++;
 			    }
 			    any.a_char = ilet;
+#ifdef DYWYPISI
+			    if (dywypisi) dump_ID_on();
+#endif
 #ifdef DUMP_LOG
-			    if (want_dump) {
-			      char letbuf[7];
-			      sprintf(letbuf, "  %c - ", ilet);
-			      dump(letbuf, doname(otmp));
-			    }
 			    if (want_disp)
 #endif
 			    add_menu(win, obj_to_glyph(otmp),
 					&any, ilet, 0, ATR_NONE, doname(otmp),
 					MENU_UNSELECTED);
+#ifdef DUMP_LOG
+			    if (want_dump) {
+			      char letbuf[7];
+			      dump_ID_on();
+			      sprintf(letbuf, "  %c - ", ilet);
+			      dump(letbuf, doname(otmp));
+			    }
+#endif
+#ifdef DYWYPISI
+			    dump_ID_off();
+#endif
 			}
 		}
 	}
@@ -1943,7 +2396,7 @@ nextclass:
 #endif
 #ifdef DUMP_LOG
         if (want_disp) {
-#endif //DUMPLOG
+#endif /*DUMPLOG*/
 	end_menu(win, (char *) 0);
 
 	n = select_menu(win, want_reply ? PICK_ONE : PICK_NONE, &selected);
@@ -1977,17 +2430,19 @@ boolean want_reply;
 #ifdef DUMP_LOG
 			       , FALSE , TRUE
 #endif
+				, FALSE
 	);
 }
 
 #ifdef DUMP_LOG
 /* See display_inventory. This is the same thing WITH dumpfile creation */
 char
-dump_inventory(lets, want_reply, want_disp)
+dump_inventory(lets, want_reply, want_disp, dywypisi)
 register const char *lets;
-boolean want_reply, want_disp;
+boolean want_reply, want_disp, dywypisi;
 {
-  return display_pickinv(lets, want_reply, (long *)0, TRUE, want_disp);
+  return display_pickinv(lets, want_reply, (long *)0, TRUE, want_disp,
+  			 dywypisi);
 }
 #endif
 
@@ -2089,7 +2544,13 @@ dounpaid()
 	    if (otmp->unpaid) {
 		if (!flags.sortpack || otmp->oclass == *invlet) {
 		    if (flags.sortpack && !classcount) {
-			putstr(win, 0, let_to_name(*invlet, TRUE));
+			putstr(win, 0,
+#ifndef SHOWSYM
+			       let_to_name(*invlet, TRUE)
+#else
+			       let_to_name(*invlet, TRUE, FALSE)
+#endif
+			       );
 			classcount++;
 		    }
 
@@ -2109,7 +2570,13 @@ dounpaid()
     if (count > num_so_far) {
 	/* something unpaid is contained */
 	if (flags.sortpack)
-	    putstr(win, 0, let_to_name(CONTAINED_SYM, TRUE));
+	    putstr(win, 0,
+#ifndef SHOWSYM
+		   let_to_name(CONTAINED_SYM, TRUE)
+#else
+		   let_to_name(CONTAINED_SYM, TRUE, FALSE)
+#endif
+		   );
 	/*
 	 * Search through the container objects in the inventory for
 	 * unpaid items.  The top level inventory items have already
@@ -2341,6 +2808,7 @@ boolean picked_some;
 	char fbuf[BUFSZ], fbuf2[BUFSZ];
 	winid tmpwin;
 	boolean skip_objects = (obj_cnt >= 5), felt_cockatrice = FALSE;
+	boolean felt_something = !!Blind;
 
 	if (u.uswallow && u.ustuck) {
 	    struct monst *mtmp = u.ustuck;
@@ -2363,7 +2831,8 @@ boolean picked_some;
 	    }
 	    return(!!Blind);
 	}
-	if (!skip_objects && (trap = t_at(u.ux,u.uy)) && trap->tseen)
+	if (!skip_objects && (trap = t_at(u.ux,u.uy)) && trap->tseen
+	    && (!Blind || can_reach_floor()))
 		There("is %s here.",
 			an(defsyms[trap_to_defsym(trap->ttyp)].explanation));
 
@@ -2372,8 +2841,20 @@ boolean picked_some;
 	if (dfeature && !strcmp(dfeature, "pool of water") && Underwater)
 		dfeature = 0;
 
-	if (Blind) {
+	if (Blind
+#ifdef INVISIBLE_OBJECTS
+		|| (otmp && !otmp->nexthere && otmp->oinvis && !See_invisible &&
+		    can_reach_floor())
+#endif
+	) {
 		boolean drift = Is_airlevel(&u.uz) || Is_waterlevel(&u.uz);
+		if (!can_reach_floor()) {
+			if (Blind) {
+				pline("You try to feel what is here below you.");
+				pline("But you can't reach anything!");
+				return(0);
+			}
+		}
 		if (dfeature && !strncmp(dfeature, "altar ", 6)) {
 		    /* don't say "altar" twice, dfeature has more info */
 		    You("try to feel what is here.");
@@ -2384,16 +2865,17 @@ boolean picked_some;
 		}
 		if (dfeature && !drift && !strcmp(dfeature, surface(u.ux,u.uy)))
 			dfeature = 0;		/* ice already identifed */
-		if (!can_reach_floor()) {
-			pline("But you can't reach it!");
-			return(0);
-		}
 	}
 
-	if (dfeature)
+	if (dfeature && (!Blind || can_reach_floor()))
 		Sprintf(fbuf, "There is %s here.", an(dfeature));
 
-	if (!otmp || is_lava(u.ux,u.uy) || (is_pool(u.ux,u.uy) && !Underwater)) {
+	if (!otmp || is_lava(u.ux,u.uy) || (is_pool(u.ux,u.uy) && !Underwater)
+#ifdef INVISIBLE_OBJECTS
+	    || (otmp && !otmp->nexthere && otmp->oinvis && !See_invisible &&
+	    	!can_reach_floor())
+#endif
+	    ) {
 		if (dfeature) pline(fbuf);
 		read_engr_at(u.ux, u.uy); /* Eric Backus */
 		if (!skip_objects && (Blind || !dfeature))
@@ -2413,7 +2895,11 @@ boolean picked_some;
 	    if (dfeature) pline(fbuf);
 	    read_engr_at(u.ux, u.uy); /* Eric Backus */
 #ifdef INVISIBLE_OBJECTS
-	    if (otmp->oinvis && !See_invisible) verb = "feel";
+	    if (otmp->oinvis && !See_invisible) {
+	    	verb = "feel";
+		otmp->opresenceknown = TRUE;
+		felt_something = TRUE;
+	    }
 #endif
 	    You("%s here %s.", verb, doname(otmp));
 	    if (otmp->otyp == CORPSE) feel_cockatrice(otmp, FALSE);
@@ -2431,20 +2917,35 @@ boolean picked_some;
 		    (otmp->otyp == ROCK && otmp->corpsenm != 0))
 		    && will_feel_cockatrice(otmp, FALSE)) {
 			char buf[BUFSZ];
+			if (otmp->oinvis)
+				otmp->opresenceknown = TRUE;
 			felt_cockatrice = TRUE;
 			Strcpy(buf, doname(otmp));
+			if (otmp->oinvis && !See_invisible)
+				Strcat(buf, " (felt)");
 			Strcat(buf, "...");
 			putstr(tmpwin, 0, buf);
 			break;
 		}
-		putstr(tmpwin, 0, doname(otmp));
+		if (!Blind && otmp->oinvis && !See_invisible) {
+			if (can_reach_floor()) {
+				char buf[BUFSZ];
+				otmp->opresenceknown = TRUE;
+				Strcpy(buf, doname(otmp));
+				Strcat(buf, " (felt)");
+				putstr(tmpwin, 0, buf);
+				felt_something = TRUE;
+			}
+		} else {
+			putstr(tmpwin, 0, doname(otmp));
+		}
 	    }
 	    display_nhwindow(tmpwin, TRUE);
 	    destroy_nhwindow(tmpwin);
 	    if (felt_cockatrice) feel_cockatrice(otmp, FALSE);
 	    read_engr_at(u.ux, u.uy); /* Eric Backus */
 	}
-	return(!!Blind);
+	return felt_something;
 }
 
 /* explicilty look at what is here, including all objects */
@@ -2459,7 +2960,10 @@ will_feel_cockatrice(otmp, force_touch)
 struct obj *otmp;
 boolean force_touch;
 {
-	if ((Blind || force_touch) && !uarmg && !Stone_resistance &&
+	if ((Blind ||
+	    (otmp->oinvis && !See_invisible && can_reach_floor()) ||
+	    force_touch) &&
+		!uarmg && !Stone_resistance &&
 		((otmp->otyp == CORPSE ||
 		 (otmp->otyp == ROCK && otmp->corpsenm != 0)) &&
 		 touch_petrifies(&mons[otmp->corpsenm])))
@@ -2481,8 +2985,7 @@ boolean force_touch;
 				makeplural(body_part(HAND)));
 	    else
 			pline("Touching %s is a fatal mistake...",
-				the(corpse_xname(otmp, TRUE)),
-				mons[otmp->corpsenm].mname);
+				the(corpse_xname(otmp, TRUE)));
 		Sprintf(kbuf, "%s corpse", an(mons[otmp->corpsenm].mname));
 		instapetrify(kbuf);
 	}
@@ -2776,11 +3279,20 @@ static NEARDATA const char *oth_names[] = {
 static NEARDATA char *invbuf = (char *)0;
 static NEARDATA unsigned invbufsiz = 0;
 
+#ifndef SHOWSYM
 char *
 let_to_name(let,unpaid)
 char let;
 boolean unpaid;
 {
+#else
+char *
+let_to_name(let,unpaid,showsym)
+char let;
+boolean unpaid,showsym;
+{
+	static const char *ocsymformat = "%s('%c')";
+#endif
 	const char *class_name;
 	const char *pos;
 	int oclass = (let >= 1 && let < MAXOCLASSES) ? let : 0;
@@ -2793,7 +3305,12 @@ boolean unpaid;
 	else
 	    class_name = names[0];
 
+#ifndef SHOWSYM
 	len = strlen(class_name) + (unpaid ? sizeof "unpaid_" : sizeof "");
+#else
+	len = strlen(class_name) + (unpaid ? sizeof "unpaid_" : sizeof "") +
+	    ((oclass && showsym) ? strlen(ocsymformat) : 0);
+#endif
 	if (len > invbufsiz) {
 	    if (invbuf) free((genericptr_t)invbuf);
 	    invbufsiz = len + 10; /* add slop to reduce incremental realloc */
@@ -2803,6 +3320,11 @@ boolean unpaid;
 	    Strcat(strcpy(invbuf, "Unpaid "), class_name);
 	else
 	    Strcpy(invbuf, class_name);
+#ifdef SHOWSYM
+	if (oclass && showsym)
+	    Sprintf(eos(invbuf), ocsymformat,
+		    iflags.menu_tab_sep ? "\t" : "  ", def_oc_syms[let]);
+#endif
 	return invbuf;
 }
 

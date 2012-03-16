@@ -631,7 +631,8 @@ register const char *s;
 
 	for(x = rn1(8,11); x; x--) {
 		mazexy(&mm);
-		(void) mkobj_at(rn2(2) ? GEM_CLASS : 0, mm.x, mm.y, TRUE);
+		(void) mkobj_at(rn2(2) ? GEM_CLASS : 0, mm.x, mm.y, 
+			MO_ALLOW_ARTIFACT);
 	}
 	for(x = rn1(10,2); x; x--) {
 		mazexy(&mm);

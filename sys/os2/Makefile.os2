@@ -58,18 +58,18 @@ LFLAGS = /noig /stack:40000
 .END
 
 .IF $(with_x11) == yes
-WINX11OBJ01 = $(OBJ)/Window.o
-WINX11OBJ02 = $(OBJ)/dialogs.o
-WINX11OBJ03 = $(OBJ)/winX.o
-WINX11OBJ04 = $(OBJ)/winmap.o
-WINX11OBJ05 = $(OBJ)/winmenu.o
-WINX11OBJ06 = $(OBJ)/winmesg.o
-WINX11OBJ07 = $(OBJ)/winmisc.o
-WINX11OBJ08 = $(OBJ)/winstat.o
-WINX11OBJ09 = $(OBJ)/wintext.o
-WINX11OBJ10 = $(OBJ)/winval.o
-WINX11OBJ11 = $(OBJ)/tile.o
-X11ROOT = e:/xfree86
+WINX11OBJ01 = $(OBJ)\Window.o
+WINX11OBJ02 = $(OBJ)\dialogs.o
+WINX11OBJ03 = $(OBJ)\winX.o
+WINX11OBJ04 = $(OBJ)\winmap.o
+WINX11OBJ05 = $(OBJ)\winmenu.o
+WINX11OBJ06 = $(OBJ)\winmesg.o
+WINX11OBJ07 = $(OBJ)\winmisc.o
+WINX11OBJ08 = $(OBJ)\winstat.o
+WINX11OBJ09 = $(OBJ)\wintext.o
+WINX11OBJ10 = $(OBJ)\winval.o
+WINX11OBJ11 = $(OBJ)\tile.o
+X11ROOT = U:/usr/X11R6
 WINX11CFLAGS = -DUSE_XPM -DX11_GRAPHICS \
             -I$(X11ROOT)/include -Zmtd
 WINX11LIB = -lXaw -lXmu -lXext -lXt -lX11 -lXpm -L$(X11ROOT)/lib -lc_app
@@ -176,7 +176,7 @@ WINSHARE= $(NHSRC)\win\share	# Shared system files
 
 OBJ	= \tmp\obj		# Object files
 TEMP	= \tmp\bin		# Temporary files during make process
-GAMEDIR = \games\nh343x11	# Game directory
+GAMEDIR = \games\gh020x11	# Game directory
 PLIBP	= c:\emx\lib		# Protected mode C libraries
 RLIBP	= c:\emx\lib		# Possible real mode C libraries
 
@@ -185,7 +185,7 @@ RLIBP	= c:\emx\lib		# Possible real mode C libraries
 #
 
 GAME	= grnthack
-GAMEDES = "GruntHack 0.0.1"
+GAMEDES = "GruntHack 0.2.0"
 
 #
 #	The uppermost two lines for MSC, the middle two for GCC, and
@@ -279,7 +279,7 @@ SYSOBJ	=			# MSC, GCC a.out, CSet/2
 .IF $(format) == omf
 PLIBS  = $(PLIBP)\st\c $(PLIBP)\st\c_app $(PLIBP)\c_alias $(PLIBP)\gcc $(PLIBP)\st\sys $(PLIBP)\os2    # GCC emx 0.9 OMF
 .ELSE
-PLIBS  = -lgcc -lc -lgcc -los2 $(X11LIBS)      # GCC a.out
+PLIBS  = -lgcc -lc -lgcc -los2       # GCC a.out
 .END
 
 #
@@ -313,7 +313,7 @@ DGNCLN = $(LINK) @$(TEMP)\dgn_comp.rsp
 RCVRLN = $(LINK) @$(TEMP)\recover.rsp
 DLBRLN = $(LINK) @$(TEMP)\dlb.rsp
 .ELSE
-GAMELN = $(CC) $(LDFLAGS) -o $(GAMEDIR)\$(GAME).exe @$(TEMP)\$(GAME).r $(PLIBS) $(WINX11CFLAGS) $(WINX11LIB)
+GAMELN = $(CC) $(LDFLAGS) -o $(GAMEDIR)\$(GAME).exe $(HHOBJ) $(PLIBS) $(WINX11LIB)
 MKDFLN	= $(CC) $(LDFLAGS) -o $(TEMP)\makedefs.exe $(TEMP)\$(MKDFDEF) $(SYSOBJ) $(MAKEOBJS) $(PLIBS)
 LEVCLN	= $(CC) $(LDFLAGS) -o $(TEMP)\lev_comp.exe $(TEMP)\$(LEVCDEF) $(SYSOBJ) $(SPLEVOBJS) $(PLIBS)
 DGNCLN	= $(CC) $(LDFLAGS) -o $(TEMP)\dgn_comp.exe $(TEMP)\$(DGNCDEF) $(SYSOBJ) $(DGNCOMPOBJS) $(PLIBS)
@@ -454,8 +454,8 @@ do_cmd : cmd_act	# generate grnthack.cmd
 #	that DLB is defined in config.h.
 #
 
-do_dlb : dlb_yup
-#do_dlb : dlb_nope
+#do_dlb : dlb_yup
+do_dlb : dlb_nope
 
 ######################################################################
 #
@@ -524,7 +524,8 @@ SPEC_LEVS = \
  tower1.lev   tower2.lev   tower3.lev valley.lev   wizard1.lev  wizard2.lev \
  wizard3.lev  astral.lev   air.lev earth.lev    fire.lev     water.lev \
  soko1-1.lev  soko1-2.lev  soko2-1.lev  soko2-2.lev  \
- soko3-1.lev  soko3-2.lev  soko4-1.lev  soko4-2.lev
+ soko3-1.lev  soko3-2.lev  soko4-1.lev  soko4-2.lev  \
+ demogor.lev  dis.lev      yeenoghu.lev	geryon.lev
 
 QUEST_LEVS = \
  Arc-goal.lev Arc-fila.lev Arc-filb.lev Arc-loca.lev Arc-strt.lev \
@@ -1095,11 +1096,11 @@ $(TEMP)\dlb.rsp : $(DLBOBJS) $(TEMP)\$(DLBDEF)
 $(OBJ)\dlb_main.o : $(UTIL)\$(CB) $(CONFIG_H) $(INCL)\dlb.h
 	$(UTILCC)
 
-$(GAMEDIR)\nhdat : $(WINX11VARDAT)
+$(GAMEDIR)\ghdat : $(WINX11VARDAT)
 	$(MAKEB) do_dlb
 
 dlb_yup : dlb
-	$(TEMP)\dlb cCf $(GAMEDIR) $(GAMEDIR)\nhdat $(DATDLB)
+	$(TEMP)\dlb cCf $(GAMEDIR) $(GAMEDIR)\ghdat $(DATDLB)
 	-$(RM) $(GAMEDIR)\help
 	-$(RM) $(GAMEDIR)\hh
 	-$(RM) $(GAMEDIR)\cmdhelp
@@ -1110,7 +1111,10 @@ dlb_yup : dlb
 	-$(RM) $(GAMEDIR)\baalz.lev
 	-$(RM) $(GAMEDIR)\bigrm-?.lev
 	-$(RM) $(GAMEDIR)\castle.lev
+	-$(RM) $(GAMEDIR)\demogor.lev
+	-$(RM) $(GAMEDIR)\dis.lev
 	-$(RM) $(GAMEDIR)\fakewiz?.lev
+	-$(RM) $(GAMEDIR)\yeenoghu.lev
 	-$(RM) $(GAMEDIR)\juiblex.lev
 	-$(RM) $(GAMEDIR)\knox.lev
 	-$(RM) $(GAMEDIR)\medusa-?.lev
@@ -1123,6 +1127,7 @@ dlb_yup : dlb
 	-$(RM) $(GAMEDIR)\tower?.lev
 	-$(RM) $(GAMEDIR)\valley.lev
 	-$(RM) $(GAMEDIR)\wizard?.lev
+	-$(RM) $(GAMEDIR)\yeenoghu.lev
 	-$(RM) $(GAMEDIR)\astral.lev
 	-$(RM) $(GAMEDIR)\air.lev
 	-$(RM) $(GAMEDIR)\earth.lev
@@ -1246,7 +1251,7 @@ $(OBJ)\wintty.o  : $(WIN)\$(CB) $(HACK_H) $(INCL)\tcap.h
 
 dat :	spec_lev help_fil $(GAMEDIR)\dungeon $(GAMEDIR)\data $(GAMEDIR)\rumors \
 	$(GAMEDIR)\oracles $(GAMEDIR)\quest.dat	$(GAMEDIR)\$(GAME).ico \
-	$(GAMEDIR)\$(GAME).cmd $(GAMEDIR)\grnthack.cnf $(GAMEDIR)\nhdat \
+	$(GAMEDIR)\$(GAME).cmd $(GAMEDIR)\grnthack.cnf $(GAMEDIR)\ghdat \
 	$(WINX11VARDAT)
 
 help_fil : $(GAMEDIR)\cmdhelp $(GAMEDIR)\help $(GAMEDIR)\hh $(GAMEDIR)\history \
@@ -1353,16 +1358,24 @@ $(GAMEDIR)\valley.lev : $(DAT)\gehennom.des $(TEMP)\lev_comp.exe
 	$(TEMP)\lev_comp $(DAT)\gehennom.des
 	$(CP) asmodeus.lev $(GAMEDIR)
 	$(CP) baalz.lev $(GAMEDIR)
+	$(CP) demogor.lev $(GAMEDIR)
+	$(CP) dis.lev $(GAMEDIR)
+	$(CP) geryon.lev $(GAMEDIR)
 	$(CP) juiblex.lev $(GAMEDIR)
 	$(CP) orcus.lev $(GAMEDIR)
 	$(CP) sanctum.lev $(GAMEDIR)
 	$(CP) valley.lev $(GAMEDIR)
+	$(CP) yeenoghu.lev $(GAMEDIR)
 	$(RM) asmodeus.lev
 	$(RM) baalz.lev
+	$(RM) demogor.lev
+	$(RM) dis.lev
+	$(RM) geryon.lev
 	$(RM) juiblex.lev
 	$(RM) orcus.lev
 	$(RM) sanctum.lev
 	$(RM) valley.lev
+	$(RM) yeenoghu.lev
 
 $(GAMEDIR)\wizard1.lev : $(DAT)\yendor.des $(TEMP)\lev_comp.exe
 	$(TEMP)\lev_comp $(DAT)\yendor.des
@@ -1714,33 +1727,33 @@ $(OBJ)\write.o    : $(SRC)\$(CB) $(HACK_H)
 $(OBJ)\zap.o      : $(SRC)\$(CB) $(HACK_H)
 	$(SRCCC)
 
-$(OBJ)/Window.o: $(WINX11)\Window.c $(INCL)\xwindowp.h $(INCL)\xwindow.h \
+$(OBJ)\Window.o: $(WINX11)\Window.c $(INCL)\xwindowp.h $(INCL)\xwindow.h \
 		$(CONFIG_H)
 	$(CC) -o$(OBJ)\Window.o $(CFLAGS) -c $(WINX11)\Window.c
-$(OBJ)/dialogs.o: $(WINX11)\dialogs.c $(CONFIG_H)
+$(OBJ)\dialogs.o: $(WINX11)\dialogs.c $(CONFIG_H)
 	$(CC) -o$(OBJ)\dialogs.o $(CFLAGS) -c $(WINX11)\dialogs.c
-$(OBJ)/winX.o: $(WINX11)\winX.c $(HACK_H) $(INCL)\winX.h $(INCL)\dlb.h \
-		$(INCL)\patchlevel.h $(WINX11)\nh72icon \
-		$(WINX11)\nh56icon $(WINX11)\nh32icon
+$(OBJ)\winX.o: $(WINX11)\winX.c $(HACK_H) $(INCL)\winX.h $(INCL)\dlb.h \
+		$(INCL)\patchlevel.h $(WINX11)\gh72icon \
+		$(WINX11)\gh56icon $(WINX11)\gh32icon
 	$(CC) $(CFLAGS) -c $(WINX11)\winX.c -o$(OBJ)\winX.o
-$(OBJ)/winmap.o: $(WINX11)\winmap.c $(INCL)\xwindow.h $(HACK_H) $(INCL)\dlb.h \
+$(OBJ)\winmap.o: $(WINX11)\winmap.c $(INCL)\xwindow.h $(HACK_H) $(INCL)\dlb.h \
 		$(INCL)\winX.h $(INCL)\tile2x11.h
 	$(CC) $(CFLAGS) -c $(WINX11)\winmap.c -o $(OBJ)\winmap.o
-$(OBJ)/winmenu.o: $(WINX11)\winmenu.c $(HACK_H) $(INCL)\winX.h
+$(OBJ)\winmenu.o: $(WINX11)\winmenu.c $(HACK_H) $(INCL)\winX.h
 	$(CC) $(CFLAGS) -c $(WINX11)\winmenu.c -o $(OBJ)\winmenu.o
-$(OBJ)/winmesg.o: $(WINX11)\winmesg.c $(INCL)\xwindow.h $(HACK_H) $(INCL)\winX.h
+$(OBJ)\winmesg.o: $(WINX11)\winmesg.c $(INCL)\xwindow.h $(HACK_H) $(INCL)\winX.h
 	$(CC) $(CFLAGS) -c $(WINX11)\winmesg.c -o$(OBJ)\winmesg.o
-$(OBJ)/winmisc.o: $(WINX11)\winmisc.c $(HACK_H) $(INCL)\func_tab.h \
+$(OBJ)\winmisc.o: $(WINX11)\winmisc.c $(HACK_H) $(INCL)\func_tab.h \
 		$(INCL)\winX.h
 	$(CC) $(CFLAGS) -c $(WINX11)\winmisc.c -o$(OBJ)\winmisc.o
-$(OBJ)/winstat.o: $(WINX11)\winstat.c $(HACK_H) $(INCL)\winX.h
+$(OBJ)\winstat.o: $(WINX11)\winstat.c $(HACK_H) $(INCL)\winX.h
 	$(CC) $(CFLAGS) -c $(WINX11)\winstat.c -o$(OBJ)\winstat.o
-$(OBJ)/wintext.o: $(WINX11)\wintext.c $(HACK_H) $(INCL)\winX.h $(INCL)\xwindow.h
+$(OBJ)\wintext.o: $(WINX11)\wintext.c $(HACK_H) $(INCL)\winX.h $(INCL)\xwindow.h
 	$(CC) $(CFLAGS) -c $(WINX11)\wintext.c -o$(OBJ)\wintext.o
-$(OBJ)/winval.o: $(WINX11)\winval.c $(HACK_H) $(INCL)\winX.h
+$(OBJ)\winval.o: $(WINX11)\winval.c $(HACK_H) $(INCL)\winX.h
 	$(CC) $(CFLAGS) -c $(WINX11)\winval.c -o$(OBJ)\winval.o
 
-$(OBJ)/tile.o: $(NHSRC)\src\tile.c $(HACK_H)
+$(OBJ)\tile.o: $(NHSRC)\src\tile.c $(HACK_H)
 	$(CC) $(CFLAGS) -c $(NHSRC)\src\tile.c -o$(OBJ)\tile.o
 
 $(TEMP)\tilemap.exe: ..\win\share\tilemap.c $(HACK_H)

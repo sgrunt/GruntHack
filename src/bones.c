@@ -78,10 +78,15 @@ boolean restore;
 			/* do not zero out o_ids for ghost levels anymore */
 
 			if(objects[otmp->otyp].oc_uses_known) otmp->known = 0;
-			otmp->dknown = otmp->bknown = 0;
+			otmp->dknown = otmp->bknown =
+#ifdef INVISIBLE_OBJECTS
+				otmp->iknown =
+#endif
+				0;
 			otmp->rknown = 0;
 			otmp->invlet = 0;
 			otmp->no_charge = 0;
+			otmp->was_thrown = 0;
 
 			if (otmp->otyp == SLIME_MOLD) goodfruit(otmp->spe);
 #ifdef MAIL
@@ -142,19 +147,28 @@ struct obj *cont;
 			(void) add_to_minv(mtmp, otmp);
 		else if (cont)
 			(void) add_to_container(cont, otmp);
-		else
+		else {
 			place_object(otmp, u.ux, u.uy);
+			if (u.uburied)
+				bury_an_obj(otmp);
+		}
 	}
 #ifndef GOLDOBJ
 	if(u.ugold) {
 		long ugold = u.ugold;
 		if (mtmp) mtmp->mgold = ugold;
 		else if (cont) (void) add_to_container(cont, mkgoldobj(ugold));
-		else (void)mkgold(ugold, u.ux, u.uy);
+		else {
+			otmp = mkgold(ugold, u.ux, u.uy);
+			if (u.uburied)
+				bury_an_obj(otmp);
+		}
 		u.ugold = ugold;	/* undo mkgoldobj()'s removal */
 	}
 #endif
 	if (cont) cont->owt = weight(cont);
+	if (cont && u.uburied)
+		bury_an_obj(cont);
 }
 
 /* check whether bones are feasible */
@@ -190,8 +204,9 @@ can_make_bones()
 
 /* save bones and possessions of a deceased adventurer */
 void
-savebones(corpse)
+savebones(corpse, actual)
 struct obj *corpse;
+boolean actual;
 {
 	int fd, x, y;
 	struct trap *ttmp;
@@ -204,19 +219,21 @@ struct obj *corpse;
 	/* caller has already checked `can_make_bones()' */
 
 	clear_bypasses();
-	fd = open_bonesfile(&u.uz, &bonesid);
-	if (fd >= 0) {
-		(void) close(fd);
-		compress_bonesfile();
+	if (actual) {
+		fd = open_bonesfile(&u.uz, &bonesid);
+		if (fd >= 0) {
+			(void) close(fd);
+			compress_bonesfile();
 #ifdef WIZARD
-		if (wizard) {
-		    if (yn("Bones file already exists.  Replace it?") == 'y') {
-			if (delete_bonesfile(&u.uz)) goto make_bones;
-			else pline("Cannot unlink old bones.");
-		    }
-		}
+			if (wizard) {
+			    if (yn("Bones file already exists.  Replace it?") == 'y') {
+				if (delete_bonesfile(&u.uz)) goto make_bones;
+				else pline("Cannot unlink old bones.");
+			    }
+			}
 #endif
-		return;
+			actual = FALSE;
+		}
 	}
 
 #ifdef WIZARD
@@ -231,6 +248,10 @@ struct obj *corpse;
 		    mptr->msound == MS_NEMESIS || mptr->msound == MS_LEADER ||
 		    mptr == &mons[PM_VLAD_THE_IMPALER])
 		mongone(mtmp);
+	    else if (mtmp->mtarget == &youmonst) {
+	    	mtmp->mtarget = (struct monst *)0;
+		mtmp->mtarget_id = 0;
+	    }
 	}
 #ifdef STEED
 	if (u.usteed) dismount_steed(DISMOUNT_BONES);
@@ -263,38 +284,69 @@ struct obj *corpse;
 		 * on your location
 		 */
 		in_mklev = TRUE;
-		mtmp = makemon(&mons[Race_switch], u.ux, u.uy, MM_NONAME);
+		mtmp = makemon(&mons[Race_switch], u.ux, u.uy,
+			MM_NONAME|NO_MINVENT);
+		if (!mtmp) {
+			mtmp = makemon(&mons[PM_GHOST], u.ux, u.uy,
+				MM_NONAME|NO_MINVENT);
+		} else {
+			set_mon_data(mtmp, &mons[PM_GHOST], 0);
+			mtmp->morigdata = PM_GHOST;
+		}
 		in_mklev = FALSE;
-		set_mon_data(mtmp, &mons[PM_GHOST], 0);
-		mtmp->mrace = urace.selfmask;
-		if (!mtmp) return;
-		mtmp = christen_monst(mtmp, plname);
-		if (corpse)
-			(void) obj_attach_mid(corpse, mtmp->m_id); 
+		if (mtmp) {
+			mtmp->mrace = urace.selfmask;
+			mtmp = christen_monst(mtmp, plname);
+			if (corpse) 
+				corpse = obj_attach_mid(corpse, mtmp->m_id); 
+		}
+		if (corpse && u.uburied)
+			bury_an_obj(corpse);
 	} else {
 		/* give your possessions to the monster you become */
 		in_mklev = TRUE;
-		mtmp = makemon(&mons[Race_switch], u.ux, u.uy, NO_MM_FLAGS);
+		mtmp = makemon(&mons[Race_switch], u.ux, u.uy,
+			NO_MM_FLAGS|NO_MINVENT);
 		in_mklev = FALSE;
-		mtmp->mrace = urace.selfmask;
-		set_mon_data(mtmp, &mons[u.ugrave_arise], 0);
+		if (mtmp) {
+			mtmp->mrace = urace.selfmask;
+			set_mon_data(mtmp, &mons[u.ugrave_arise], 0);
+		} else {
+			mtmp = makemon(&mons[u.ugrave_arise], u.ux, u.uy,
+				NO_MM_FLAGS|NO_MINVENT);
+		}
+		mtmp->morigdata = u.ugrave_arise;
 		if (!mtmp) {
 			drop_upon_death((struct monst *)0, (struct obj *)0);
-			return;
+		} else {
+			mtmp = christen_monst(mtmp, plname);
+			drop_upon_death(mtmp, (struct obj *)0);
+			youmonst.m_ap_type   = M_AP_MONSTER;
+			youmonst.mappearance = u.ugrave_arise;
+			youmonst.mrace = urace.selfmask;
+			u.umonnum = u.ugrave_arise;
+			set_uasmon();
+			/* This forces the display of only a colour change */
+			show_glyph(u.ux, u.uy, objnum_to_glyph(STRANGE_OBJECT));
+			show_glyph(u.ux, u.uy,
+				(iflags.showrace)
+					? monnum_to_glyph(
+						mons_to_corpse(&youmonst))
+					: monnum_to_glyph(u.ugrave_arise) );
+			flush_screen(0);
+			Your("body rises from the dead as %s...",
+				an(mons[u.ugrave_arise].mname));
+			display_nhwindow(WIN_MESSAGE, FALSE);
+			m_dowear(mtmp, TRUE);
 		}
-		mtmp = christen_monst(mtmp, plname);
-		newsym(u.ux, u.uy);
-		Your("body rises from the dead as %s...",
-			an(mons[u.ugrave_arise].mname));
-		display_nhwindow(WIN_MESSAGE, FALSE);
-		drop_upon_death(mtmp, (struct obj *)0);
-		m_dowear(mtmp, TRUE);
 	}
 	if (mtmp) {
 		mtmp->m_lev = (u.ulevel ? u.ulevel : 1);
 		mtmp->mhp = mtmp->mhpmax = u.uhpmax;
 		mtmp->female = flags.female;
 		mtmp->msleeping = 1;
+		if (u.uburied)
+			mtmp->mburied = TRUE;
 	}
 	for(mtmp = fmon; mtmp; mtmp = mtmp->nmon) {
 		resetobjs(mtmp->minvent,FALSE);
@@ -318,6 +370,8 @@ struct obj *corpse;
 	    levl[x][y].waslit = 0;
 	    levl[x][y].glyph = cmap_to_glyph(S_stone);
 	}
+
+	if (!actual) return;
 
 	fd = create_bonesfile(&u.uz, &bonesid, whynot);
 	if(fd < 0) {
@@ -391,6 +445,7 @@ getbones()
 		&& !wizard
 #endif
 		) return(0);
+	if (!iflags.bones) return(0);
 	if(no_bones_level(&u.uz)) return(0);
 	fd = open_bonesfile(&u.uz, &bonesid);
 	if (fd < 0) return(0);

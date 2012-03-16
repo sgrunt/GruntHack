@@ -208,7 +208,10 @@ const struct Role roles[] = {
 	PM_ARCH_PRIEST, PM_ACOLYTE, PM_NALZOK,
 	PM_ZOMBIE, PM_WRAITH, S_ZOMBIE, S_WRAITH,
 	ART_MITRE_OF_HOLINESS,
-	MH_HUMAN|MH_ELF|MH_GIANT |
+	MH_HUMAN|MH_ELF|
+#ifdef NEWRACES
+	MH_GIANT |
+#endif
 	ROLE_MALE|ROLE_FEMALE |
 	  ROLE_LAWFUL|ROLE_NEUTRAL|ROLE_CHAOTIC,
 	/* Str Int Wis Dex Con Cha */
@@ -533,7 +536,7 @@ const struct Race races[] = {
 	{  4, 4,  0, 4,  0, 3 },	/* Hit points */
 	{  1, 1,  0, 2,  0, 2 }		/* Energy */
 },
-#endif //NEWRACES
+#endif /*NEWRACES*/
 /* Array terminator */
 { 0, 0, 0, 0 }};
 

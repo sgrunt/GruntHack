@@ -55,9 +55,10 @@ STATIC_DCL boolean FDECL(mon_beside, (int, int));
 /* if you can figure this out, give yourself a hearty pat on the back... */
 #define GOLD_CAPACITY(w,n)	(((w) * -100L) - ((n) + 50L) - 1L)
 
-static const char moderateloadmsg[] = "You have a little trouble lifting";
-static const char nearloadmsg[] = "You have much trouble lifting";
-static const char overloadmsg[] = "You have extreme difficulty lifting";
+static const char moderateloadmsg[] = "You have a little trouble";
+static const char nearloadmsg[] = "You have much trouble";
+static const char overloadmsg[] = "You have extreme difficulty";
+
 
 /* BUG: this lets you look at cockatrice corpses while blind without
    touching them */
@@ -639,9 +640,11 @@ menu_item **pick_list;	/* list of objects and counts to pick up */
 
 
 #ifndef AUTOPICKUP_EXCEPTIONS
-	    if (!*otypes || index(otypes, curr->oclass))
+	    if (!*otypes || index(otypes, curr->oclass) ||
+		    (iflags.pickup_thrown && curr->was_thrown))
 #else
 	    if ((!*otypes || index(otypes, curr->oclass) ||
+		 (iflags.pickup_thrown && curr->was_thrown) ||
 		 is_autopickup_exception(curr, TRUE)) &&
 	    	 !is_autopickup_exception(curr, FALSE))
 #endif
@@ -651,9 +654,11 @@ menu_item **pick_list;	/* list of objects and counts to pick up */
 	    *pick_list = pi = (menu_item *) alloc(sizeof(menu_item) * n);
 	    for (n = 0, curr = olist; curr; curr = FOLLOW(curr, follow))
 #ifndef AUTOPICKUP_EXCEPTIONS
-		if (!*otypes || index(otypes, curr->oclass)) {
+	    	if (!*otypes || index(otypes, curr->oclass) ||
+		        (iflags.pickup_thrown && curr->was_thrown)) {
 #else
 	    if ((!*otypes || index(otypes, curr->oclass) ||
+		 (iflags.pickup_thrown && curr->was_thrown) ||
 		 is_autopickup_exception(curr, TRUE)) &&
 	    	 !is_autopickup_exception(curr, FALSE)) {
 #endif
@@ -782,7 +787,12 @@ boolean FDECL((*allow), (OBJ_P));/* allow function */
 		    if (qflags & INVORDER_SORT && !printed_type_name) {
 			any.a_obj = (struct obj *) 0;
 			add_menu(win, NO_GLYPH, &any, 0, 0, iflags.menu_headings,
-					let_to_name(*pack, FALSE), MENU_UNSELECTED);
+#ifndef SHOWSYM
+					let_to_name(*pack, FALSE),
+#else
+					let_to_name(*pack, FALSE, iflags.showsym),
+#endif
+				 MENU_UNSELECTED);
 			printed_type_name = TRUE;
 		    }
 
@@ -909,7 +919,12 @@ int how;			/* type of query */
 			any.a_int = curr->oclass;
 			add_menu(win, NO_GLYPH, &any, invlet++,
 				def_oc_syms[(int)objects[curr->otyp].oc_class],
-				ATR_NONE, let_to_name(*pack, FALSE),
+				ATR_NONE,
+#ifndef SHOWSYM
+				let_to_name(*pack, FALSE),
+#else
+				let_to_name(*pack, FALSE, iflags.showsym),
+#endif
 				MENU_UNSELECTED);
 			collected_type_name = TRUE;
 		   }
@@ -1227,7 +1242,8 @@ boolean telekinesis;
 			(next_encumbr > HVY_ENCUMBER) ? overloadmsg :
 			(next_encumbr > MOD_ENCUMBER) ? nearloadmsg :
 			moderateloadmsg);
-		Sprintf(eos(qbuf), " %s. Continue?",
+		Sprintf(eos(qbuf), " %s %s. Continue?",
+			container ? "removing" : "lifting",
 			safe_qbuf(qbuf, sizeof(" . Continue?"),
 				doname(obj), an(simple_typename(obj->otyp)), "something"));
 		obj->quan = savequan;
@@ -1284,6 +1300,7 @@ long count;
 boolean telekinesis;	/* not picking it up directly by hand */
 {
 	int res, nearload;
+	char buf[BUFSZ];
 #ifndef GOLDOBJ
 	const char *where = (obj->ox == u.ux && obj->oy == u.uy) ?
 			    "here" : "there";
@@ -1327,20 +1344,21 @@ boolean telekinesis;	/* not picking it up directly by hand */
 		    nearloadmsg, gold_capacity, 
 		    Hallucination ? xname(obj) : "gold piece",
 		    plur(gold_capacity));
+		costly_gold(obj->ox, obj->oy, gold_capacity);
 		u.ugold += gold_capacity;
 		obj->quan -= gold_capacity;
-		costly_gold(obj->ox, obj->oy, gold_capacity);
 	    } else {
-		u.ugold += count;
-		if ((nearload = near_capacity()) != 0)
-		    pline("%s %ld %s%s.",
+		if ((nearload = calc_capacity(GOLD_WT(count))) != 0)
+		    pline("%s lifting %ld %s%s.",
 			  nearload < MOD_ENCUMBER ?
-			  moderateloadmsg : nearloadmsg, count, 
+			  moderateloadmsg : nearloadmsg,
+			  count, 
 		          Hallucination ? xname(obj) : "gold piece",
 			  plur(count));
 		else
 		    prinv((char *) 0, obj, count);
 		costly_gold(obj->ox, obj->oy, count);
+		u.ugold += count;
 		if (count == obj->quan)
 		    delobj(obj);
 		else
@@ -1400,10 +1418,13 @@ boolean telekinesis;	/* not picking it up directly by hand */
 	    obj = splitobj(obj, count);
 
 	obj = pick_obj(obj);
+	obj->was_thrown = 0;
 
 	if (uwep && uwep == obj) mrg_to_wielded = TRUE;
 	nearload = near_capacity();
-	prinv(nearload == SLT_ENCUMBER ? moderateloadmsg : (char *) 0,
+	if (nearload == SLT_ENCUMBER)
+		Sprintf(buf, "%s lifting", moderateloadmsg);
+	prinv(nearload == SLT_ENCUMBER ? buf : (char *) 0,
 	      obj, count);
 	mrg_to_wielded = FALSE;
 	return 1;
@@ -1422,6 +1443,9 @@ pick_obj(otmp)
 struct obj *otmp;
 {
 	obj_extract_self(otmp);
+#ifdef INVISIBLE_OBJECTS
+	otmp->opresenceknown = TRUE;
+#endif
 	if (!u.uswallow && otmp != uball && costly_spot(otmp->ox, otmp->oy)) {
 	    char saveushops[5], fakeshop[2];
 
@@ -1935,7 +1959,7 @@ register struct obj *obj;
 		/* did not actually insert obj yet */
 		if (was_unpaid) addtobill(obj, FALSE, FALSE, TRUE);
 		obfree(obj, (struct obj *)0);
-		delete_contents(current_container);
+		scatter_contents(current_container);
 		if (!floor_container)
 			useup(current_container);
 		else if (obj_here(current_container, u.ux, u.uy))
@@ -1945,6 +1969,17 @@ register struct obj *obj;
 
 		losehp(d(6,6),"magical explosion", KILLED_BY_AN);
 		current_container = 0;	/* baggone = TRUE; */
+
+		pline("A magical portal forms and the contents are sucked in!");
+		You("are also sucked into the portal!");
+		if (In_endgame(&u.uz))
+		{
+			You("feel a wrenching sensation, and the portal dissipates.");
+		}
+		else
+		{
+			level_tele();
+		}
 	}
 
 	if (current_container) {
@@ -2023,8 +2058,9 @@ register struct obj *obj;
 
 	if (Icebox && !age_is_relative(obj)) {
 		obj->age = monstermoves - obj->age; /* actual age */
-		if (obj->otyp == CORPSE ||
-		    (obj->otyp == ROCK && obj->corpsenm))
+		if ((obj->otyp == CORPSE ||
+		    (obj->otyp == ROCK && obj->corpsenm)) &&
+		    !obj->oerodeproof)
 			start_corpse_timeout(obj);
 	}
 	/* simulated point of time */
@@ -2152,7 +2188,7 @@ register int held;
 	    return 0;
 	} else if (obj->otrapped) {
 	    if (held) You("open %s...", the(xname(obj)));
-	    (void) chest_trap(obj, HAND, FALSE);
+	    (void) chest_trap(&youmonst, obj, HAND, FALSE);
 	    /* even if the trap fails, you've used up this turn */
 	    if (multi >= 0) {	/* in case we didn't become paralyzed */
 		nomul2(-1, "dealing with a trapped container");
@@ -2230,7 +2266,7 @@ ask_again2:
 		if (cnt) Strcat(pbuf, "m");
 		switch (yn_function(qbuf, pbuf, 'n')) {
 		case ':':
-		    container_contents(current_container, FALSE, FALSE);
+		    container_contents(current_container, FALSE, FALSE, FALSE);
 		    goto ask_again2;
 		case 'y':
 		    if (query_classes(select, &one_by_one, &allflag,
@@ -2466,6 +2502,118 @@ boolean outokay, inokay;
 	free((genericptr_t) pick_list);
     }
     return n;
+}
+
+extern struct obj *propellor;
+
+/*
+ * Possibly put items away in a container, if we have one.
+ */
+int
+m_stash_stuff(mon, creation)
+register struct monst *mon;
+boolean creation;
+{
+	boolean putstuff = FALSE;
+	char buf[BUFSZ];
+	register struct obj *obj, *nobj, *bag = (struct obj *)0;
+	struct obj *wep = bag, *hwep = bag, *rwep = bag, *proj = bag;
+	for (obj = mon->minvent; obj; obj = obj->nobj) {
+		if (!Is_container(obj) ||
+		    obj->otyp == BAG_OF_TRICKS) continue;
+		if (obj->otyp == BAG_OF_HOLDING) {
+			bag = obj;
+			break;
+		} else if (!bag ||
+		            (obj->otyp == OILSKIN_SACK &&
+			    (bag->otyp != OILSKIN_SACK)) ||
+			    (obj->otyp == SACK &&
+			    ((bag->otyp != OILSKIN_SACK &&
+			      bag->otyp != SACK)))) {
+			bag = obj;
+		}
+	}
+	if (!bag && !creation) return 0;
+	
+	if (bag)
+		Strcpy(buf, the(xname(bag)));
+	
+	if (attacktype(mon->data, AT_WEAP)) {
+		wep  = MON_WEP(mon);
+	        hwep = attacktype(mon->data, AT_WEAP)
+			   ? select_hwep(mon) : (struct obj *)0,
+		proj = attacktype(mon->data, AT_WEAP)
+			   ? select_rwep(mon) : (struct obj *)0,
+		rwep = attacktype(mon->data, AT_WEAP)
+			   ? propellor : &zeroobj;
+	}
+
+	for (obj = mon->minvent; obj; obj = nobj) {
+		nobj = obj->nobj;
+		if (obj == bag ||
+		    obj->owornmask ||
+		    obj == wep || obj == hwep || obj == rwep || obj == proj ||
+		    (!mon->mtame && searches_for_item(mon, obj)) ||
+		    (mon->mtame && could_use_item(mon, obj, TRUE)) ||
+		    (bag && Is_mbag(bag) && mbag_explodes(obj, 0)) ||
+		    (obj->otyp == LOADSTONE && obj->cursed) ||
+		    (obj->otyp == AMULET_OF_YENDOR ||
+		     obj->otyp == FAKE_AMULET_OF_YENDOR ||
+		     obj->otyp == BELL_OF_OPENING ||
+		     obj->otyp == CANDELABRUM_OF_INVOCATION ||
+		     obj->otyp == SPE_BOOK_OF_THE_DEAD ||
+	             obj->otyp == ICE_BOX || Is_box(obj) ||
+		     obj->otyp == BOULDER ||
+		    (obj->otyp == STATUE && bigmonst(&mons[obj->corpsenm])))) 
+			continue;
+		
+		if (!bag && !creation) continue;
+
+
+		if (creation) {
+			/* at creation time, this is a junk item we don't need,
+			 * so presumably they got rid of it */
+			if (obj->oclass == WEAPON_CLASS ||
+			    obj->oclass == ARMOR_CLASS)
+			{
+				obj_extract_self(obj);
+				obfree(obj, (struct obj *)0);
+				continue;
+			}
+			else if (!bag) continue;
+		}
+		
+		obj_extract_self(obj);
+	
+		if (obj->otyp == LOADSTONE) {
+			curse(obj);
+		} else if (obj->otyp == FIGURINE && obj->timed) {
+			(void) stop_timer(FIG_TRANSFORM, (genericptr_t) obj);
+		}
+	
+		if (obj_is_burning(obj))
+			(void) snuff_lit(obj);
+	
+		if (bag->otyp == ICE_BOX && !age_is_relative(obj)) {
+			obj->age = monstermoves - obj->age; 
+			if (obj->otyp == CORPSE && obj->timed) {
+				long rot_alarm =
+					stop_timer(ROT_CORPSE, (genericptr_t)obj);
+				(void) stop_timer(REVIVE_MON, (genericptr_t)obj);
+				if (rot_alarm) obj->norevive = 1;
+			}
+		}
+
+		putstuff = TRUE;
+	   
+	   	if (!creation && canseemon(mon))
+			pline("%s puts %s into %s.",
+				Monnam(mon), distant_name(obj,doname), buf);
+
+	    	(void) add_to_container(bag, obj);
+	    	bag->owt = weight(bag);
+	}
+	return (putstuff && !creation);
 }
 
 /*pickup.c*/

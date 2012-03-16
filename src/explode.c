@@ -65,6 +65,8 @@ int expltype;
 			break;
 		case 1: str =   olet == BURNING_OIL ?	"burning oil" :
 				olet == SCROLL_CLASS ?	"tower of flame" :
+				olet == TRAPPED_TIN ?   "explosion" :
+				olet == TRAPPED_DOOR ?  "explosion" :
 							"fireball";
 			adtyp = AD_FIRE;
 			break;
@@ -339,15 +341,35 @@ int expltype;
 		    char buf[BUFSZ];
 		    buf[0] = '\0';
 
-			if (olet == MON_EXPLODE) {
+			if (adtyp == AD_FIRE &&
+				(olet == TRAPPED_TIN || olet == TRAPPED_DOOR))
+			{
+			    killer_format = KILLED_BY_AN;
+			    Sprintf(buf, "booby-trapped %s",
+			            olet == TRAPPED_TIN ? "tin" : "door");
+			} else if (adtyp == AD_FIRE && olet == WEAPON_CLASS) {
+			    killer_format = KILLED_BY;
+			    if (flags.mon_moving)
+			    	Sprintf(buf, "%s exploding projectile",
+					s_suffix(a_monnam(curmonst)));
+			    else
+			    	Sprintf(buf, "%s own exploding projectile",
+			    		uhis());
+			} else if (olet == MON_EXPLODE) {
 			    /* killer handled by caller */
 			    if (!generic)
 				Strcpy(buf, str);
 			    killer_format = KILLED_BY_AN;
 			} else if (type >= 0 && olet != SCROLL_CLASS) {
-			    killer_format = NO_KILLER_PREFIX;
-			    Sprintf(buf, "caught %sself in %s own %s",
+			    if (flags.mon_moving) {
+			        killer_format = KILLED_BY;
+				Sprintf(buf, "%s %s",
+					s_suffix(done_in_name(curmonst)), str);
+			    } else {
+			    	killer_format = NO_KILLER_PREFIX;
+			    	Sprintf(buf, "caught %sself in %s own %s",
 				    uhim(), uhis(), str);
+			    }
 			} else if (!strncmpi(str,"tower of flame", 8) ||
 				   !strncmpi(str,"fireball", 8)) {
 			    killer_format = KILLED_BY_AN;
@@ -421,10 +443,13 @@ struct obj *obj;			/* only scatter this obj        */
 	long qtmp;
 	boolean used_up;
 	boolean individual_object = obj ? TRUE : FALSE;
-	struct monst *mtmp;
+	struct monst *mtmp, *curbak;
 	struct scatter_chain *stmp, *stmp2 = 0;
 	struct scatter_chain *schain = (struct scatter_chain *)0;
 	long total = 0L;
+
+	curbak = curmonst;
+	curmonst = 0;
 
 	while ((otmp = individual_object ? obj : level.objects[sx][sy]) != 0) {
 	    if (otmp->quan > 1L) {
@@ -562,6 +587,10 @@ struct obj *obj;			/* only scatter this obj        */
 		free((genericptr_t)stmp);
 		newsym(x,y);
 	}
+
+	newsym(sx,sy);
+
+	curmonst = curbak;
 
 	return total;
 }

@@ -2,9 +2,9 @@
 /* Copyright (c) Gregg Wonderly, Naperville, Illinois,  1991,1992,1993,1996. */
 /* NetHack may be freely redistributed.  See license for details. */
 
-#include "NH:sys/amiga/windefs.h"
-#include "NH:sys/amiga/winext.h"
-#include "NH:sys/amiga/winproto.h"
+#include "GH:sys/amiga/windefs.h"
+#include "GH:sys/amiga/winext.h"
+#include "GH:sys/amiga/winproto.h"
 #include "patchlevel.h"
 
 extern struct TagItem scrntags[];
@@ -130,7 +130,7 @@ struct Hook fillhook;
 struct TagItem wintags[] =
 {
 	{ WA_BackFill, (ULONG)&fillhook },
-	{ WA_PubScreenName, (ULONG)"NetHack" },
+	{ WA_PubScreenName, (ULONG)"GruntHack" },
 	{ TAG_END, 0 },
 };
 # endif
@@ -1106,7 +1106,7 @@ amii_init_nhwindows(argcp,argv)
     NewHackScreen.Height = max( SCREENHEIGHT, amiIDisplay->ypix );
     {
 	static char fname[18];
-	sprintf(fname,"NetHack %d.%d.%d", VERSION_MAJOR, VERSION_MINOR, PATCHLEVEL);
+	sprintf(fname,"GruntHack %d.%d.%d", VERSION_MAJOR, VERSION_MINOR, PATCHLEVEL);
 	NewHackScreen.DefaultTitle=fname;
     }
 #if 0

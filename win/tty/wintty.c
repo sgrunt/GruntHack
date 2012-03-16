@@ -129,6 +129,9 @@ static char obuf[BUFSIZ];	/* BUFSIZ is defined in stdio.h */
 static char winpanicstr[] = "Bad window id %d";
 char defmorestr[] = "--More--";
 
+/* Track if the player is still selecting his character. */
+boolean in_character_selection = FALSE;
+
 #ifdef MENU_COLOR
 extern struct menucoloring *menu_colorings;
 #endif
@@ -331,6 +334,8 @@ tty_player_selection()
 	winid win;
 	anything any;
 	menu_item *selected = 0;
+
+	in_character_selection = TRUE;
 
 	/* prevent an unnecessary prompt */
 	rigid_role_checks();
@@ -658,6 +663,7 @@ give_up:	/* Quit */
 	    }
 	}
 	/* Success! */
+	in_character_selection = FALSE;
 	tty_display_nhwindow(BASE_WINDOW, FALSE);
 }
 
@@ -686,7 +692,7 @@ tty_askname()
 	tty_curs(BASE_WINDOW, (int)(sizeof who_are_you),
 		 wins[BASE_WINDOW]->cury - 1);
 	ct = 0;
-	while((c = tty_nhgetch()) != '\n') {
+	while((c = nhgetch()) != '\n') {
 		if(c == EOF) error("End of input\n");
 		if (c == '\033') { ct = 0; break; }  /* continue outer loop */
 #if defined(WIN32CON)
@@ -717,6 +723,7 @@ tty_askname()
 		}
 #if defined(UNIX) || defined(VMS)
 		if(c != '-' && c != '@')
+		if(!(c >= '0' && c <= '9'))
 		if(c < 'A' || (c > 'Z' && c < 'a') || c > 'z') c = '_';
 #endif
 		if (ct < (int)(sizeof plname) - 1) {
@@ -1496,7 +1503,7 @@ struct WinDesc *cw;
 	    tty_curs(window, 1, n);
 	    cl_end();
 	    dmore(cw, quitchars);
-	    if (morc == '\033') {
+	    if (morc == DOESCAPE) {
 		cw->flags |= WIN_CANCELLED;
 		break;
 	    }
@@ -1532,7 +1539,7 @@ struct WinDesc *cw;
 		 (cw->type == NHW_TEXT) ? (int) ttyDisplay->rows - 1 : n);
 	cl_end();
 	dmore(cw, quitchars);
-	if (morc == '\033')
+	if (morc == DOESCAPE)
 	    cw->flags |= WIN_CANCELLED;
     }
 }
@@ -1582,11 +1589,19 @@ tty_display_nhwindow(window, blocking)
 	/* avoid converting to uchar before calculations are finished */
 	cw->offx = (uchar) (int)
 	    max((int) 10, (int) (ttyDisplay->cols - cw->maxcol - 1));
-	if(cw->type == NHW_MENU)
+	if(cw->type == NHW_MENU
+#ifdef WIN_EDGE
+	    || iflags.win_edge
+#endif
+	)
 	    cw->offy = 0;
 	if(ttyDisplay->toplin == 1)
 	    tty_display_nhwindow(WIN_MESSAGE, TRUE);
-	if(cw->offx == 10 || cw->maxrow >= (int) ttyDisplay->rows) {
+	if(cw->offx == 10 || cw->maxrow >= (int) ttyDisplay->rows
+#ifdef WIN_EDGE
+	    || iflags.win_edge
+#endif
+	) {
 	    cw->offx = 0;
 	    if(cw->offy) {
 		tty_curs(window, 1, 0);
@@ -2276,7 +2291,7 @@ const char *mesg;
     wins[WIN_MESSAGE]->flags &= ~WIN_CANCELLED;
     ttyDisplay->dismiss_more = 0;
 
-    return ((how == PICK_ONE && morc == let) || morc == '\033') ? morc : '\0';
+    return ((how == PICK_ONE && morc == let) || morc == DOESCAPE) ? morc : '\0';
 }
 
 void
@@ -2349,7 +2364,8 @@ docorner(xmin, ymax)
     }
 
     end_glyphout();
-    if (ymax >= (int) wins[WIN_STATUS]->offy) {
+    if (!in_character_selection &&
+        ymax >= (int) wins[WIN_STATUS]->offy) {
 					/* we have wrecked the bottom line */
 	flags.botlx = 1;
 	bot();
@@ -2622,7 +2638,7 @@ tty_nh_poskey(x, y, mod)
 		ttyDisplay->toplin = 2;
     return i;
 # else
-    return tty_nhgetch();
+    return nhgetch();
 # endif
 }
 

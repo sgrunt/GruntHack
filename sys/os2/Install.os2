@@ -7,7 +7,7 @@
 0.  Read this entire file before starting, and come back to the Notes below if
     you have any problems.
 
-1.  Make sure all the NetHack files are in the appropriate directory
+1.  Make sure all the GruntHack files are in the appropriate directory
     structure.  You should have a top directory (e.g. nh33, or whatever you
     like) with subdirectories dat, doc, include, src, util, sys\share,
     sys\os2, and win\tty.  You may have other subdirectories under sys and
@@ -51,7 +51,7 @@
 
     Note that code compiled for OS/2 versions 1.0-1.3 runs unmodified in OS/2
     versions 2.0 and up.  In principle it should be possible to cross compile
-    NetHack 3.4 for OS/2 in DOS using NDMAKE and MSC, but this is not
+    GruntHack 0.2 for OS/2 in DOS using NDMAKE and MSC, but this is not
     recommended (see note 3).
 
     If you're using some other compiler than one listed above, you will have
@@ -160,18 +160,22 @@
     Wiz-fila.lev   Wiz-filb.lev   Wiz-goal.lev   Wiz-loca.lev   Wiz-strt.lev
     air.lev        asmodeus.lev   astral.lev     baalz.lev      bigrm-1.lev
     bigrm-2.lev	   bigrm-3.lev    bigrm-4.lev    bigrm-5.lev    castle.lev
-    cmdhelp        data           dungeon        earth.lev      fakewiz1.lev
-    fakewiz2.lev   fire.lev       help           hh             history
-    juiblex.lev    knox.lev       license        medusa-1.lev   medusa-2.lev
-    minefill.lev   minend-1.lev   minend-2.lev   minetn-1.lev   minetn-2.lev
-    nethack.cmd    nethack.cnf    nethack.exe    nethack.ico    opthelp
-    options        oracle.lev     oracles        orcus.lev      quest.dat
-    recover.exe    rumors         sanctum.lev    soko1-1.lev    soko1-2.lev
-    soko2-1.lev    soko2-2.lev    soko3-1.lev    soko3-2.lev    soko4-1.lev
-    soko4-2.lev    tower1.lev     tower2.lev     tower3.lev     valley.lev
-    water.lev      wizard1.lev    wizard2.lev    wizard3.lev    wizhelp
+    cmdhelp        data           dis.lev        demogor.lev    dungeon
+    earth.lev      fakewiz1.lev   fakewiz2.lev   fire.lev       geryon.lev
+    grnthack.cmd   grnthack.cnf   grnthack.exe   grnthack.ico   help
+    hh             history        juiblex.lev    knox.lev       license
+    medusa-1.lev   medusa-2.lev   minefill.lev   minend-1.lev   minend-2.lev   
+    minend-3.lev   minetn-1.lev   minetn-2.lev   minetn-3.lev   minetn-4.lev
+    minetn-5.lev   minetn-6.lev   minetn-7.lev   opthelp        options
+    oracle.lev     oracles        orcus.lev      quest.dat      recover.exe    
+    rumors         sanctum.lev    soko1-1.lev    soko1-2.lev    soko1-3.lev
+    soko1-4.lev    soko2-1.lev    soko2-2.lev    soko2-3.lev    soko2-4.lev
+    soko3-1.lev    soko3-2.lev    soko3-3.lev    soko3-4.lev    soko4-1.lev
+    soko4-2.lev    soko4-3.lev    soko4-4.lev    tower1.lev     tower2.lev
+    tower3.lev     valley.lev     water.lev      wizard1.lev    wizard2.lev
+    wizard3.lev    wizhelp        yeenoghu.lev
 
-    Yes.  It's 112 files for a full featured NetHack 3.4.  If any of the files
+    Yes.  It's 143 files for a full featured GruntHack 0.2.  If any of the files
     are missing, try to rerun make.  If that doesn't help, you'll have to try
     to decipher the makefile to find out how to manually create the missing
     files.  These kinds of troubles shouldn't happen except for two reasons:
@@ -180,8 +184,8 @@
     should get some warnings from the make, though.
 
     If you have old record, logfile, or news files in the game directory, they
-    are not overwritten.  Of course, old records from NetHack 3.1 and 3.2 are
-    not worth keeping with 3.4, since these games are really quite different.
+    are not overwritten.  Of course, old records from GruntHack 0.1 are not
+    worth keeping with 0.2, since these games are really quite different.
 
     Edit file nethack.cnf in the game directory to reflect your particular
     setup and personal preferences, following the comments there.  More info
@@ -190,19 +194,19 @@
     If you compiled in the TERMLIB feature, also move the sys\share\termcap
     file to your game directory.
 
-8.  If you'll be running NetHack from a different subdirectory, you will want
-    to "set HACKDIR=c:\games\nh33" (or whatever directory you want to use).
+8.  If you'll be running GruntHack from a different subdirectory, you will want
+    to "set HACKDIR=c:\games\gh02" (or whatever directory you want to use).
     Add it to your config.sys, if you'll be playing often.
 
-    You can also create a special NetHack entry in your Presentation Manager /
-    Workplace Shell desktop.  This will use the included NetHack icon.
+    You can also create a special GruntHack entry in your Presentation Manager /
+    Workplace Shell desktop.  This will use the included GruntHack icon.
     The following is a sample program description for OS/2 1.3 desktop, but
     it's similar for OS/2 2.0:
 
-    Program title:          NetHack 3.4
-    Path and file name:     c:\games\nh33\nethack.cmd
+    Program title:          GruntHack 3.4
+    Path and file name:     c:\games\gh02\grnthack.cmd
     Parameters:
-    Working directory:      c:\games\nh33
+    Working directory:      c:\games\gh02
     Program type:           OS/2 Full screen
 
     Naturally you must fill in your own game directory and parameters if you
@@ -211,7 +215,7 @@
     file generated by the makefile.  This file generates an extra pause after
     the program exit, because otherwise you wouldn't get to see the high score
     list upon quitting due to PM/WPS automatically closing the program window.
-    When starting NetHack normally from OS/2 command prompt, the command
+    When starting GruntHack normally from OS/2 command prompt, the command
     processor starts nethack.exe instead, so no extra pause is generated.
 
 9.  If you want to clear up the temporary files and objects created by the
@@ -219,16 +223,16 @@
     source tree to near-distribution condition.  Naturally, it will not affect
     your newly built game files in any way.
 
-10. Play NetHack.  If it works, you're done!
+10. Play GruntHack.  If it works, you're done!
 
 
 Notes
 -----
 
 1)  Save-files and bones-files from previous versions will not work with
-    NetHack 3.4.  Don't bother trying to keep them.
+    GruntHack 0.2.  Don't bother trying to keep them.
 
-2)  To install an update of NetHack after changing something, enter "make"
+2)  To install an update of GruntHack after changing something, enter "make"
     from the src directory.  If you add, delete, or reorder monsters or
     objects, or you change the format of saved level files, delete any save
     and bones files.  (Trying to use such files sometimes produces amusing
@@ -251,7 +255,7 @@ Notes
 4)  The file sys\share\termcap.uu is the fixed version of the Fred Fish
     termcap library.  You will need to run a uudecode utility on it to
     generate the file termcap.zip.  termcap.zip contains several files of
-    termcap routines.  Using them with NetHack involves very little knowledge
+    termcap routines.  Using them with GruntHack involves very little knowledge
     of the UNIX concept of a termcap database; mostly you need to know enough
     to set a TERM environment variable.  You can unzip termcap.zip in the
     sys\share directory, but if you are going to use it, it is probably best
@@ -263,14 +267,14 @@ Notes
 
 5)  When compiling with MSC 6.0, the maintenance version 6.0A should be used
     instead of the original 6.0, which was all too buggy to successfully build
-    NetHack.
+    GruntHack.
 
 6)  Note that emx 0.8f is the first version of GCC for OS/2 that can properly
-    compile NetHack.  Earlier versions do not work, because they don't support
+    compile GruntHack.  Earlier versions do not work, because they don't support
     the 16 bit API calls of OS/2.
 
     GCC emx 0.8f does not currently work properly when fseek() function is
     used with text files.  This is well documented in the compiler's
-    documentation.  Unfortunately NetHack uses fseek() in several places in
+    documentation.  Unfortunately GruntHack uses fseek() in several places in
     connection with text data.  This means that some help texts may not come
     out right, but no serious problems should emerge.

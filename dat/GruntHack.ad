@@ -1,0 +1,190 @@
+! The display_file, tombstone, and menu windows are all formatted assuming
+! a fixed width font.  Text windows may or may not be formatted as above.
+! The rip window applies if the GRAPHIC_TOMBSTONE option is turned on, and
+! requires a 12 pixel font for correct appearance.
+!
+GruntHack*font:				variable
+GruntHack*display_file*font:		fixed
+GruntHack*tombstone*font:			fixed
+GruntHack*text*rip*font:			-*-times-medium-r-*-*-12-*-*-*-*-*-*-*
+GruntHack*menu*font:			fixed
+GruntHack*text*font:			fixed
+GruntHack*map*font:			gh10
+
+! To use full-color tiles for the map, uncomment the tile file name.
+! If you use a 100dpi (or greater) monitor you may wish to double the
+! tile size so you can see the figures.  If GruntHack was compiled to
+! use XPM (USE_XPM in config.h), the tile_file is a standard XPM file.
+! Otherwise, it is a custom format.  double_tile_size only applies to
+! the custom format - to enlarge an XPM file, use processing tools
+! such as XV or preferably PBMplus.
+!
+GruntHack.tile_file: x11tiles
+!GruntHack.double_tile_size: True
+!
+! The annotation of pets.
+!GruntHack.pet_mark_bitmap: pet_mark.xbm
+!GruntHack.pet_mark_color: Red
+
+! Tombstone
+! The image file
+!GruntHack.tombstone: rip.xpm
+! Text starts at (tombtext_x, tombtext_y) and subsequent lines
+! are displaced by (tombtext_dx, tombtext_dy) pixels.  If you
+!GruntHack.tombtext_x: 155
+!GruntHack.tombtext_y: 78
+!GruntHack.tombtext_dx: 0
+!GruntHack.tombtext_dy: 13
+! The color to use for the text on the hero's tombstone
+GruntHack*rip*foreground: black
+
+! Translation tables.  There are currently several actions in nethack, but
+! the only one you should be using is "input()", which, with no parameters,
+! uses XLookupString to translate your keypress into a command.  You
+! can optionally give it parameters to change the behavior, see the example
+! below.  Note that you have to specify the translations in every appropriate
+! window.
+GruntHack*message*translations:	<KeyPress>: input()
+!
+! Example extra translations for the map window.
+!
+!GruntHack*map*translations:	#override \
+!				!<Key>Left: input(h) \n\
+!				!<Key>Right: input(l) \n\
+!				!<Key>Up: input(k) \n\
+!				!<Key>Down: input(j)
+!
+! The icon to use; supported values are nh72, nh56, and nh32; nh72 is the
+! default.  Some window managers may not support the larger icon sizes.
+! It is not guaranteed that the window manager will honor the icon selection.
+!GruntHack*icon: nh56
+!
+! If True, the default, a popup for single character prompts such as y/n
+! questions is _not_ used.
+GruntHack*slow: True
+
+! The number of lines the message window will show without scrolling.
+!GruntHack*message_lines: 12
+!
+! If True, the message window has a line that seperates old and new messages.
+!GruntHack*message_line: True
+!
+! If True, force keyboard to attach to popup windows.  Some window managers
+! enforce a click-to-focus-keyboard policy (e.g. the DECwindows wm).  GruntHack
+! has a lot of popups and is almost unplayable without some kind of autofocus.
+!GruntHack*autofocus: True
+!
+! Specify the number of rows and columns of the map window.  The default
+! is the standard 80x21 window.  Note: this _does_not_ change nethack's
+! level size, only what you see of it.
+!GruntHack*map*rows:	21
+!GruntHack*map*columns:	80
+
+! Parts of the fancy status display.
+!
+GruntHack*status_condition.borderWidth:	0
+GruntHack*status_info*borderWidth:	0
+
+! Sample color screen entries.
+!
+GruntHack*nethack.background: 	wheat
+GruntHack*map*yellow:		gold
+GruntHack*map*brown:		tan
+GruntHack*map*gray:		grey85
+GruntHack*map*foreground:		wheat
+GruntHack*map*background:		grey40
+
+GruntHack*fancy_status.skipAdjust:        True
+GruntHack*fancy_status.background:	wheat
+GruntHack*status_info*foreground:		Sienna
+GruntHack*status_info*background:		wheat
+GruntHack*status_info.background:		wheat
+GruntHack*status_attributes*foreground:	black
+GruntHack*status_attributes*background:	white
+GruntHack*status_condition*foreground:	red
+GruntHack*status_condition*background:	wheat
+GruntHack*Scrollbar*foreground:		Sienna
+GruntHack*Scrollbar*background:		wheat
+GruntHack*status_info*showGrip:		False
+GruntHack*status_attributes*showGrip:	False
+
+GruntHack*player_selection*random.borderColor:	blue
+GruntHack*player_selection*random.borderWidth:    2
+GruntHack*player_selection*random.foreground:	blue
+GruntHack*player_selection*random.accelerators: #override\n\
+				<Key>Return:	set() notify() unset()
+GruntHack*player_selection*quit.borderColor:	blue
+GruntHack*player_selection*quit.foreground:	blue
+GruntHack*player_selection*Command.borderColor:	red
+GruntHack*player_selection*Command.foreground:	red
+GruntHack*player_selection*quit.accelerators: #override\n\
+				<Key>Escape:	set() notify() unset()
+
+GruntHack*race_selection*random.borderColor:	blue
+GruntHack*race_selection*random.borderWidth:	2
+GruntHack*race_selection*random.foreground:	blue
+GruntHack*race_selection*random.accelerators: #override\n\
+				<Key>Return:	set() notify() unset()
+GruntHack*race_selection*quit.borderColor:	blue
+GruntHack*race_selection*quit.foreground:		blue
+GruntHack*race_selection*Command.borderColor:	red
+GruntHack*race_selection*Command.foreground:	red
+GruntHack*race_selection*quit.accelerators: #override\n\
+				<Key>Escape:	set() notify() unset()
+
+GruntHack*gender_selection*random.borderColor:	blue
+GruntHack*gender_selection*random.borderWidth:	2
+GruntHack*gender_selection*random.foreground:	blue
+GruntHack*gender_selection*random.accelerators: #override\n\
+				<Key>Return:	set() notify() unset()
+GruntHack*gender_selection*quit.borderColor:	blue
+GruntHack*gender_selection*quit.foreground:	blue
+GruntHack*gender_selection*Command.borderColor:	red
+GruntHack*gender_selection*Command.foreground:	red
+GruntHack*gender_selection*quit.accelerators: #override\n\
+				<Key>Escape:	set() notify() unset()
+
+GruntHack*alignment_selection*random.borderColor:	blue
+GruntHack*alignment_selection*random.borderWidth:	2
+GruntHack*alignment_selection*random.foreground:	blue
+GruntHack*alignment_selection*random.accelerators: #override\n\
+				<Key>Return:	set() notify() unset()
+GruntHack*alignment_selection*quit.borderColor:	blue
+GruntHack*alignment_selection*quit.foreground:	blue
+GruntHack*alignment_selection*Command.borderColor: red
+GruntHack*alignment_selection*Command.foreground:	red
+GruntHack*alignment_selection*quit.accelerators: #override\n\
+				<Key>Escape:	set() notify() unset()
+
+GruntHack*extended_commands*dismiss.borderColor:	blue
+GruntHack*extended_commands*dismiss.foreground:	blue
+GruntHack*extended_commands*help.borderColor:	blue
+GruntHack*extended_commands*help.foreground:	blue
+GruntHack*extended_commands*Command.borderColor:	red
+GruntHack*extended_commands*Command.foreground:	red
+GruntHack*extended_commands*help.accelerators: #override\n\
+				:<Key>?:	set() notify() unset()
+GruntHack*extended_commands*dismiss.accelerators: #override\n\
+				<Key>Escape:	set() notify() unset()
+!
+!
+! The following are the default 15 colors that the nethack map uses.
+! If they don't look good on your screen, change them.
+!
+! The foreground color is used as "no color".
+!
+!GruntHack*map*black:		black
+!GruntHack*map*red:		red
+!GruntHack*map*green:		pale green
+!GruntHack*map*brown:		brown
+!GruntHack*map*blue:		blue
+!GruntHack*map*magenta:		magenta
+!GruntHack*map*cyan:		light cyan
+!GruntHack*map*gray:		gray
+!GruntHack*map*orange:		orange
+!GruntHack*map*bright_green:	green
+!GruntHack*map*yellow:		yellow
+!GruntHack*map*bright_blue:	royal blue
+!GruntHack*map*bright_magenta:	violet
+!GruntHack*map*bright_cyan:	cyan
+!GruntHack*map*white:		white

@@ -11,8 +11,6 @@
 STATIC_DCL boolean FDECL(is_swallow_sym, (int));
 STATIC_DCL int FDECL(append_str, (char *, const char *));
 STATIC_DCL struct permonst * FDECL(lookat, (int, int, char *, char *));
-STATIC_DCL void FDECL(checkfile,
-		      (char *,struct permonst *,BOOLEAN_P,BOOLEAN_P));
 STATIC_DCL int FDECL(do_look, (BOOLEAN_P));
 STATIC_DCL boolean FDECL(help_menu, (int *));
 #ifdef PORT_HELP
@@ -276,6 +274,9 @@ lookat(x, y, buf, monbuf)
     } else if (glyph_is_trap(glyph)) {
 	int tnum = what_trap(glyph_to_trap(glyph));
 	Strcpy(buf, defsyms[trap_to_defsym(tnum)].explanation);
+    } else if (glyph_is_warning(glyph)) {
+        int warnnum = glyph_to_warning(glyph);
+        Strcpy(buf, def_warnsyms[warnnum].explanation);
     } else if(!glyph_is_cmap(glyph)) {
 	Strcpy(buf,"unexplored area");
     } else switch(glyph_to_cmap(glyph)) {
@@ -314,7 +315,7 @@ lookat(x, y, buf, monbuf)
  *	 lcase() for data.base lookup so that we can have a clean key.
  *	 Therefore, we create a copy of inp _just_ for data.base lookup.
  */
-STATIC_OVL void
+void
 checkfile(inp, pm, user_typed_name, without_asking)
     char *inp;
     struct permonst *pm;
@@ -487,6 +488,8 @@ do_look(quick)
     boolean hit_trap;		/* true if found trap explanation */
     int skipped_venom;		/* non-zero if we ignored "splash of venom" */
     static const char *mon_interior = "the interior of a monster";
+    int glyph = 0;		/* glyph at selected position */
+
 
     if (quick) {
 	from_screen = TRUE;	/* yes, we want to use the cursor */
@@ -527,8 +530,6 @@ do_look(quick)
 	out_str[0] = '\0';
 
 	if (from_screen) {
-	    int glyph;	/* glyph at selected position */
-
 	    if (flags.verbose)
 		pline("Please move the cursor to %s.",
 		       what_is_an_unknown_object);
@@ -677,7 +678,7 @@ do_look(quick)
 	}
 
 	/* Now check for warning symbols */
-	for (i = 1; i < WARNCOUNT; i++) {
+	for (i = flags.warnlevel; i < WARNCOUNT; i++) {
 	    x_str = def_warnsyms[i].explanation;
 	    if (sym == (from_screen ? warnsyms[i] : def_warnsyms[i].sym)) {
 		if (!found) {
@@ -690,7 +691,8 @@ do_look(quick)
 		}
 		/* Kludge: warning trumps boulders on the display.
 		   Reveal the boulder too or player can get confused */
-		if (from_screen && sobj_at(BOULDER, cc.x, cc.y))
+		if (from_screen && glyph_is_warning(glyph) &&
+		    sobj_at(BOULDER, cc.x, cc.y))
 			Strcat(out_str, " co-located with a boulder");
 		break;	/* out of for loop*/
 	    }
@@ -882,8 +884,9 @@ static const char *help_menu_items[] = {
 /* 4*/	"Info on what a given key does.",
 /* 5*/	"List of game options.",
 /* 6*/	"Longer explanation of game options.",
-/* 7*/	"List of extended commands.",
-/* 8*/	"The NetHack license.",
+/* 7*/  "Full list of keyboard commands.",
+/* 8*/	"List of extended commands.",
+/* 9*/	"The NetHack license.",
 #ifdef PORT_HELP
 	"%s-specific help and commands.",
 #define PORT_HELP_ID 100
@@ -956,8 +959,9 @@ dohelp()
 			case  4:  (void) dowhatdoes();  break;
 			case  5:  option_help();  break;
 			case  6:  display_file(OPTIONFILE, TRUE);  break;
-			case  7:  (void) doextlist();  break;
-			case  8:  display_file(LICENSE, TRUE);  break;
+			case  7:  dokeylist(); break;
+			case  8:  (void) doextlist();  break;
+			case  9:  display_file(LICENSE, TRUE);  break;
 #ifdef WIZARD
 			/* handle slot 9 or 10 */
 			default: display_file(DEBUGHELP, TRUE);  break;

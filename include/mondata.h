@@ -34,7 +34,8 @@
 #define sees_invis(mon)         (((mon)->mintrinsics & MR2_SEE_INVIS) != 0 || \
                                  perceives(mon->data))
 #define levitating(mon)         (((mon)->mintrinsics & MR2_LEVITATE) != 0 || \
-                                 is_floater(mon->data))
+                                 is_floater(mon->data) || \
+				 (mon)->mlevitating > 0)
 #define waterwalking(mon)       (((mon)->mintrinsics & MR2_WATERWALK) != 0)
 #define mbreathing(mon)         (((mon)->mintrinsics & MR2_MAGBREATH) != 0) || \
                                  breathless(mon->data)
@@ -84,6 +85,9 @@
 #define is_animal(ptr)		(((ptr)->mflags1 & M1_ANIMAL) != 0L)
 #define slithy(ptr)		(((ptr)->mflags1 & M1_SLITHY) != 0L)
 #define is_wooden(ptr)		((ptr) == &mons[PM_WOOD_GOLEM])
+#define is_stone(ptr)		((ptr) == &mons[PM_STONE_GOLEM] || \
+				 (ptr) == &mons[PM_GARGOYLE] || \
+				 (ptr) == &mons[PM_WINGED_GARGOYLE])
 #define thick_skinned(ptr)	(((ptr)->mflags1 & M1_THICK_HIDE) != 0L)
 #define lays_eggs(ptr)		(((ptr)->mflags1 & M1_OVIPAROUS) != 0L)
 #define regenerates(ptr)	(((ptr)->mflags1 & M1_REGEN) != 0L)
@@ -223,7 +227,7 @@
 #define befriend_with_obj(ptr, obj) ((obj)->oclass == FOOD_CLASS && \
 				     is_domestic(ptr))
 
-#define mons_to_corpse(mtmp)  (mtmp->mrace ? (is_elf(mtmp)    ? PM_ELF    \
+#define mons_to_corpse(mtmp) ((mtmp)->mrace ? (is_elf(mtmp)    ? PM_ELF    \
                                             : is_orc(mtmp)    ? PM_ORC    \
                                             : is_dwarf(mtmp)  ? PM_DWARF  \
                                             : is_gnome(mtmp)  ? PM_GNOME  \
@@ -232,7 +236,7 @@
 					    : is_ettin(mtmp)  ? PM_ETTIN  \
 					    : is_ogre(mtmp)   ? PM_OGRE   \
 					    :                   PM_HUMAN) \
-                                            : monsndx(mtmp->data))
+                                            : monsndx((mtmp)->data))
 
 #define racial_prefix(mtmp) \
  (Hallucination) ? "" : \
@@ -260,5 +264,15 @@
   !mtmp->iswiz && \
   !(mtmp->data->geno & G_UNIQ))         ? "human "    : \
 			                   "" 
+#define race_flag_to_pm(j)	((j) == M2_HUMAN  ? PM_HUMAN  : \
+				 (j) == M2_ELF    ? PM_ELF    : \
+				 (j) == M2_DWARF  ? PM_DWARF  : \
+				 (j) == M2_GNOME  ? PM_GNOME  : \
+				 (j) == M2_GIANT  ? PM_GIANT  : \
+				 (j) == M2_ORC    ? PM_ORC    : \
+				 (j) == M2_KOBOLD ? PM_KOBOLD : \
+				 (j) == M2_ETTIN  ? PM_ETTIN  : \
+				 (j) == M2_OGRE   ? PM_OGRE   : \
+				 		    PM_HUMAN)
 
 #endif /* MONDATA_H */

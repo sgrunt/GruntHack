@@ -49,7 +49,6 @@ NEARDATA int doorindex = 0;
 NEARDATA char *save_cm = 0;
 NEARDATA int killer_format = 0;
 const char *killer = 0;
-const char *delayed_killer = 0;
 #ifdef GOLDOBJ
 NEARDATA long done_money = 0;
 #endif
@@ -75,7 +74,7 @@ const char ynaqchars[] = "ynaq";
 const char ynNaqchars[] = "yn#aq";
 NEARDATA long yn_number = 0L;
 
-const char disclosure_options[] = "iavgc";
+const char disclosure_options[] = "isavgc";
 
 #if defined(MICRO) || defined(WIN32)
 char hackdir[PATHLEN];		/* where rumors, help, record are */
@@ -98,11 +97,16 @@ struct linfo level_info[MAXLINFO];
 NEARDATA struct sinfo program_state;
 
 /* 'rogue'-like direction commands (cmd.c) */
-const char sdir[] = "hykulnjb><";
+char sdir[] = "hykulnjb><";
 const char ndir[] = "47896321><";	/* number pad mode */
 const schar xdir[10] = { -1,-1, 0, 1, 1, 1, 0,-1, 0, 0 };
 const schar ydir[10] = {  0,-1,-1,-1, 0, 1, 1, 1, 0, 0 };
 const schar zdir[10] = {  0, 0, 0, 0, 0, 0, 0, 0, 1,-1 };
+char misc_cmds[] = {'g', 'G', 'F', 'm', 'M', '\033'
+#ifdef REDO
+		    , '\001'
+#endif
+};
 
 NEARDATA schar tbx = 0, tby = 0;	/* mthrowu: target */
 
@@ -290,6 +294,18 @@ char *fqn_prefix[PREFIX_COUNT] = { (char *)0, (char *)0, (char *)0, (char *)0,
 char *fqn_prefix_names[PREFIX_COUNT] = { "hackdir", "leveldir", "savedir",
 					"bonesdir", "datadir", "scoredir",
 					"lockdir", "configdir", "troubledir" };
+#endif
+
+#ifdef MSGTYPE
+struct _plinemsg *pline_msg = NULL;
+#endif
+
+#ifdef RECORD_ACHIEVE
+struct u_achieve achieve = DUMMY;
+#endif
+
+#if defined(RECORD_REALTIME) || defined(REALTIME_ON_BOTL)
+struct realtime_data realtime_data = { 0, 0, 0 };
 #endif
 
 /* dummy routine used to force linkage */

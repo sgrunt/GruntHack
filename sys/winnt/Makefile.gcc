@@ -233,7 +233,7 @@ endif
 GAMEFILE = $(GAMEDIR)/$(GAME).exe # whole thing
 
 ifeq  "$(USE_DLB)" "Y"
-DLB = nhdat
+DLB = ghdat
 else
 DLB =
 endif
@@ -496,7 +496,7 @@ install: graphicschk $(GAME) $(O)install.tag
 $(O)install.tag:  $(DAT)/data    $(DAT)/rumors    $(DAT)/dungeon \
 	       $(DAT)/oracles $(DAT)/quest.dat $(O)sp_lev.tag $(DLB)
 ifeq  "$(USE_DLB)" "Y"
-	$(subst /,\,copy nhdat                $(GAMEDIR))
+	$(subst /,\,copy ghdat                $(GAMEDIR))
 	$(subst /,\,copy $(DAT)/license       $(GAMEDIR))
 	$(subst /,\,copy $(DAT)/opthelp       $(GAMEDIR))
 else
@@ -853,7 +853,7 @@ $(INCL)/win32api.h: $(NTSYS)/win32api.h
 
 
 #==========================================
-# DLB utility and nhdat file creation
+# DLB utility and ghdat file creation
 #==========================================
 
 $(U)dlb_main.exe: $(DLBOBJ) $(O)dlb.o
@@ -869,7 +869,7 @@ $(O)dlb_main.o: $(UTIL)/dlb_main.c $(INCL)/config.h $(INCL)/dlb.h
 $(DAT)/porthelp: $(NTSYS)/porthelp
 	$(subst /,\,@copy $(NTSYS)/porthelp $@ >nul)
 
-nhdat:  $(U)dlb_main.exe $(DAT)/data $(DAT)/oracles $(OPTIONS_FILE) \
+ghdat:  $(U)dlb_main.exe $(DAT)/data $(DAT)/oracles $(OPTIONS_FILE) \
 	 $(DAT)/quest.dat $(DAT)/rumors $(DAT)/help $(DAT)/hh $(DAT)/cmdhelp \
 	 $(DAT)/history $(DAT)/opthelp $(DAT)/wizhelp $(DAT)/dungeon \
 	 $(DAT)/porthelp $(DAT)/license $(O)sp_lev.tag
@@ -890,7 +890,7 @@ nhdat:  $(U)dlb_main.exe $(DAT)/data $(DAT)/oracles $(OPTIONS_FILE) \
 	$(subst /,\,echo dungeon >>$(DAT)/dlb.lst)
 	$(subst /,\,echo license >>$(DAT)/dlb.lst)
 	dir /l /b /-p $(subst /,\,$(DAT)/*.lev >>$(DAT)/dlb.lst)
-	$(subst /,\,$(U)dlb_main CcIf $(DAT) dlb.lst $(SRC)/nhdat)
+	$(subst /,\,$(U)dlb_main CcIf $(DAT) dlb.lst $(SRC)/ghdat)
 
 #==========================================
 #  Recover Utility
@@ -1008,11 +1008,14 @@ spotless: clean
 	$(subst /,\,if exist $(DAT)/bigrm-*.lev  del $(DAT)/bigrm-*.lev)
 	$(subst /,\,if exist $(DAT)/castle.lev   del $(DAT)/castle.lev)
 	$(subst /,\,if exist $(DAT)/data    del $(DAT)/data)
+	$(subst /,\,if exist $(DAT)/demogor.lev  del $(DAT)/demogor.lev)
+	$(subst /,\,if exist $(DAT)/dis.lev  del $(DAT)/dis.lev)
 	$(subst /,\,if exist $(DAT)/dungeon      del $(DAT)/dungeon)
 	$(subst /,\,if exist $(DAT)/dungeon.pdf  del $(DAT)/dungeon.pdf)
 	$(subst /,\,if exist $(DAT)/earth.lev    del $(DAT)/earth.lev)
 	$(subst /,\,if exist $(DAT)/fakewiz?.lev      del $(DAT)/fakewiz?.lev)
 	$(subst /,\,if exist $(DAT)/fire.lev     del $(DAT)/fire.lev)
+	$(subst /,\,if exist $(DAT)/geryon.lev  del $(DAT)/geryon.lev)
 	$(subst /,\,if exist $(DAT)/juiblex.lev  del $(DAT)/juiblex.lev)
 	$(subst /,\,if exist $(DAT)/knox.lev     del $(DAT)/knox.lev)
 	$(subst /,\,if exist $(DAT)/medusa-?.lev      del $(DAT)/medusa-?.lev)
@@ -1031,12 +1034,13 @@ spotless: clean
 	$(subst /,\,if exist $(DAT)/valley.lev   del $(DAT)/valley.lev)
 	$(subst /,\,if exist $(DAT)/water.lev    del $(DAT)/water.lev)
 	$(subst /,\,if exist $(DAT)/wizard?.lev  del $(DAT)/wizard?.lev)
+	$(subst /,\,if exist $(DAT)/yeenoghu.lev  del $(DAT)/yeenoghu.lev)
 	$(subst /,\,if exist $(O)sp_lev.tag     del $(O)sp_lev.tag)
 	$(subst /,\,if exist $(SRC)/monstr.c    del $(SRC)/monstr.c)
 	$(subst /,\,if exist $(SRC)/vis_tab.c   del $(SRC)/vis_tab.c)
 	$(subst /,\,if exist $(U)recover.exe    del $(U)recover.exe)
 	$(subst /,\,if exist $(DAT)/dlb.lst      del $(DAT)/dlb.lst)
-	$(subst /,\,if exist nhdat.         del nhdat.)
+	$(subst /,\,if exist ghdat.         del ghdat.)
 	$(subst /,\,if exist $(O)install.tag    del $(O)install.tag)
 	$(subst /,\,if exist $(O)obj.tag    del $(O)obj.tag)
 	$(subst /,\,if exist $(O)gamedir.tag    del $(O)gamedir.tag)
@@ -1151,8 +1155,8 @@ $(O)Window.o: ../win/X11/Window.c $(INCL)/xwindowp.h $(INCL)/xwindow.h \
 $(O)dialogs.o: ../win/X11/dialogs.c $(CONFIG_H)
 	$(cc) $(CFLAGS) -o$@ ../win/X11/dialogs.c
 $(O)winX.o: ../win/X11/winX.c $(HACK_H) $(INCL)/winX.h $(INCL)/dlb.h \
-		$(INCL)/patchlevel.h ../win/X11/nh72icon \
-		../win/X11/nh56icon ../win/X11/nh32icon
+		$(INCL)/patchlevel.h ../win/X11/gh72icon \
+		../win/X11/gh56icon ../win/X11/gh32icon
 	$(cc) $(CFLAGS) -o$@ ../win/X11/winX.c
 $(O)winmap.o: ../win/X11/winmap.c $(INCL)/xwindow.h $(HACK_H) $(INCL)/dlb.h \
 		$(INCL)/winX.h $(INCL)/tile2x11.h

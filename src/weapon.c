@@ -163,7 +163,7 @@ struct monst *mon;
 
 #ifdef INVISIBLE_OBJECTS
 	/* Invisible weapons against monsters who can't see invisible */
-	if (otmp->oinvis && !perceives(ptr)) tmp += 3;
+	if (otmp->oinvis && !sees_invis(mon)) tmp += 3;
 #endif
 
 	/* Check specially named weapon "to hit" bonuses */
@@ -298,6 +298,8 @@ struct monst *mon;
 		bonus += rnd(4);
 	    if (is_axe(otmp) && is_wooden(ptr))
 		bonus += rnd(4);
+	    if (is_pick(otmp) && is_stone(ptr))
+		bonus += rnd(4);
 	    if (otmp->omaterial == SILVER && hates_silver(ptr))
 		bonus += rnd(20);
 
@@ -405,8 +407,8 @@ struct obj *otmp;
         }
     }
 
-    if (is_pole(otmp)) return FALSE; // If we get this far,
-                                     // we failed the polearm strength check
+    if (is_pole(otmp)) return FALSE; /* If we get this far, */
+                                     /* we failed the polearm strength check */
 
     for (i = 0; i < SIZE(rwep); i++)
     {
@@ -421,7 +423,7 @@ struct obj *otmp;
     return FALSE;
 }
 
-//static
+/*static*/
 struct obj *propellor;
 
 struct obj *
@@ -452,9 +454,9 @@ register struct monst *mtmp;
 	 * one direction and 1 in another; one space beyond that would be 3 in
 	 * one direction and 2 in another; 3^2+2^2=13.
 	 */
-	// This check is disabled, as it's targeted towards attacking you
-	// and not any arbitrary target.
-	//if (dist2(mtmp->mx, mtmp->my, mtmp->mux, mtmp->muy) <= 13 && couldsee(mtmp->mx, mtmp->my))
+	/* This check is disabled, as it's targeted towards attacking you */
+	/* and not any arbitrary target. */
+	/*if (dist2(mtmp->mx, mtmp->my, mtmp->mux, mtmp->muy) <= 13 && couldsee(mtmp->mx, mtmp->my))*/
 	{
 	    for (i = 0; i < SIZE(pwep); i++) {
 		/* Only strong monsters can wield big (esp. long) weapons.
@@ -692,13 +694,21 @@ boolean polyspot;
  * Returns 1 if the monster took time to do it, 0 if it did not.
  */
 int
-mon_wield_item(mon)
+mon_wield_item(mon, creation)
 register struct monst *mon;
+boolean creation;
 {
 	struct obj *obj;
+	int oldcheck = mon->weapon_check;
 
 	/* This case actually should never happen */
-	if (mon->weapon_check == NO_WEAPON_WANTED) return 0;
+	if (mon->weapon_check == NO_WEAPON_WANTED) {
+		if (creation)
+			mon->weapon_check = NEED_RANGED_WEAPON;
+		else
+			return 0;
+	}
+tryagain:
 	switch(mon->weapon_check) {
 		case NEED_HTH_WEAPON:
 			obj = select_hwep(mon);
@@ -745,7 +755,7 @@ register struct monst *mon;
 		 * Still....
 		 */
 		if (mw_tmp && mw_tmp->cursed && mw_tmp->otyp != CORPSE) {
-		    if (canseemon(mon)) {
+		    if (canseemon(mon) && !creation) {
 			char welded_buf[BUFSZ];
 			const char *mon_hand = mbodypart(mon, HAND);
 
@@ -770,12 +780,12 @@ register struct monst *mon;
 			mw_tmp->bknown = 1;
 		    }
 		    mon->weapon_check = NO_WEAPON_WANTED;
-		    return 1;
+		    return creation ? 0 : 1;
 		}
 		mon->mw = obj;		/* wield obj */
 		setmnotwielded(mon, mw_tmp);
 		mon->weapon_check = NEED_WEAPON;
-		if (canseemon(mon)) {
+		if (canseemon(mon) && !creation) {
 		    pline("%s wields %s%s", Monnam(mon), doname(obj),
 		          mon->mtame ? "." : "!");
 		    if (obj->cursed && obj->otyp != CORPSE) {
@@ -788,13 +798,20 @@ register struct monst *mon;
 		}
 		if (artifact_light(obj) && !obj->lamplit) {
 		    begin_burn(obj, FALSE);
-		    if (canseemon(mon))
+		    if (canseemon(mon) && !creation)
 			pline("%s brilliantly in %s %s!",
 			    Tobjnam(obj, "glow"), 
 			    s_suffix(mon_nam(mon)), mbodypart(mon,HAND));
 		}
 		obj->owornmask = W_WEP;
-		return 1;
+		if (creation) {
+			mon->weapon_check = oldcheck;
+		}
+		return creation ? 0 : 1;
+	}
+	if (creation && mon->weapon_check == NEED_RANGED_WEAPON) {
+		mon->weapon_check = NEED_HTH_WEAPON;
+		goto tryagain;
 	}
 	mon->weapon_check = NEED_WEAPON;
 	return 0;
@@ -990,11 +1007,11 @@ int enhance_skill(boolean want_dump)
     const char *prefix;
     menu_item *selected;
     anything any;
-    winid win;
+    winid win = 0;
     boolean speedy = FALSE;
 #ifdef DUMP_LOG
     char buf2[BUFSZ];
-    boolean logged;
+    boolean logged = FALSE;
 #endif
 
 #ifdef WIZARD
@@ -1062,7 +1079,7 @@ int enhance_skill(boolean want_dump)
 		 i <= skill_ranges[pass].last; i++) {
 		/* Print headings for skill types */
 		any.a_void = 0;
-		if (i == skill_ranges[pass].first)
+		if (i == skill_ranges[pass].first) {
 #ifdef DUMP_LOG
 		if (want_dump) {
 		    dump("  ",(char *)skill_ranges[pass].name);
@@ -1071,6 +1088,7 @@ int enhance_skill(boolean want_dump)
 #endif
 		    add_menu(win, NO_GLYPH, &any, 0, 0, iflags.menu_headings,
 			     skill_ranges[pass].name, MENU_UNSELECTED);
+		}
 #ifdef DUMP_LOG
 		if (want_dump) {
 		    if (P_SKILL(i) > P_UNSKILLED) {
