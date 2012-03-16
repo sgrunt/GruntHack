@@ -189,7 +189,7 @@ static char *eatmbuf = 0;	/* set by cpostfx() */
 
 STATIC_PTR
 int
-eatmdone()		/* called after mimicing is over */
+eatmdone(VOID_ARGS)		/* called after mimicing is over */
 {
 	/* release `eatmbuf' */
 	if (eatmbuf) {
@@ -267,7 +267,7 @@ choke(food)	/* To a full belly all food is bad. (It.) */
 		if(food) {
 			You("choke over your %s.", foodword(food));
 			if (food->oclass == COIN_CLASS) {
-				killer = "a very rich meal";
+				killer = "very rich meal";
 			} else {
 				killer = food_xname(food, FALSE);
 				if (food->otyp == CORPSE &&
@@ -406,7 +406,7 @@ do_reset_eat()
 
 STATIC_PTR
 int
-eatfood()		/* called each move during eating process */
+eatfood(VOID_ARGS)		/* called each move during eating process */
 {
 	if(!victual.piece ||
 	 (!carried(victual.piece) && !obj_here(victual.piece, u.ux, u.uy))) {
@@ -440,7 +440,6 @@ boolean message;
 
 	if(victual.piece->otyp == CORPSE)
 		cpostfx(victual.piece->corpsenm);
-	//else
 	fpostfx(victual.piece);
 
 	if (carried(victual.piece)) useup(victual.piece);
@@ -516,12 +515,18 @@ register int pm;
 		    /* be what we want, which is not generally true. */
 		    if (revive_corpse(victual.piece))
 			victual.piece = (struct obj *)0;
+		    if (victual.piece)
+		        victual.eating = FALSE;
 		    return;
 		}
 	    case PM_GREEN_SLIME:
 		if (!Slimed && !Unchanging && !flaming(youmonst.data) &&
 			youmonst.data != &mons[PM_GREEN_SLIME]) {
 		    You("don't feel very well.");
+		    if (!Slimed) {
+		    	u.uslime_fmt = KILLED_BY;
+		        Sprintf(u.uslime_cause, "tasting %s", mons[pm].mname);
+		    }
 		    Slimed = 10L;
 		    flags.botl = 1;
 		}
@@ -537,7 +542,7 @@ void
 fix_petrification()
 {
 	Stoned = 0;
-	delayed_killer = 0;
+	Strcpy(u.ustone_cause, "");
 	if (Hallucination)
 	    pline("What a pity - you just ruined a future piece of %sart!",
 		  ACURR(A_CHA) > 15 ? "fine " : "");
@@ -1024,7 +1029,7 @@ costly_tin(verb)
 
 STATIC_PTR
 int
-opentin()		/* called during each move whilst opening a tin */
+opentin(VOID_ARGS)		/* called during each move whilst opening a tin */
 {
 	register int r;
 	const char *what;
@@ -1201,7 +1206,7 @@ no_opener:
 }
 
 int
-Hear_again()		/* called when waking up after fainting */
+Hear_again(VOID_ARGS)		/* called when waking up after fainting */
 {
 	flags.soundok = 1;
 	return 0;
@@ -1252,14 +1257,16 @@ eatcorpse(otmp)		/* called when a corpse is selected as food */
 	long rotted = 0L;
 	boolean uniq = !!(mons[mnum].geno & G_UNIQ);
 	int retcode = 0;
-	boolean stoneable = (touch_petrifies(&mons[mnum]) && !Stone_resistance &&
+	boolean stoneable = (touch_petrifies(&mons[mnum]) ||
+			     (mnum == PM_MEDUSA) && !Stone_resistance &&
 				!poly_when_stoned(youmonst.data));
 
 	/* KMH, conduct */
 	if (!vegan(&mons[mnum])) u.uconduct.unvegan++;
 	if (!vegetarian(&mons[mnum])) violated_vegetarian();
 
-	if (mnum != PM_LIZARD && mnum != PM_LICHEN) {
+	if (mnum != PM_LIZARD && mnum != PM_LICHEN &&
+	    !otmp->oerodeproof) {
 		long age = peek_at_iced_corpse_age(otmp);
 
 		rotted = (monstermoves - age)/(10L + rn2(20));
@@ -1283,9 +1290,10 @@ eatcorpse(otmp)		/* called when a corpse is selected as food */
 			if (Sick && (sick_time > Sick))
 			    sick_time = (Sick > 1L) ? Sick - 1L : 1L;
 			if (otmp->otyp == ROCK)
-			    Sprintf(buf, "%s", singular(otmp, xname));
+			    Strcpy(buf, an(singular(otmp, xname)));
 			else if (!uniq)
-			    Sprintf(buf, "rotted %s", corpse_xname(otmp,TRUE));
+			    Sprintf(buf, "a rotted %s",
+			    	corpse_xname(otmp,TRUE));
 			else
 			    Sprintf(buf, "%s%s rotted corpse",
 				    !type_is_pname(&mons[mnum]) ? "the " : "",
@@ -1365,6 +1373,10 @@ start_eating(otmp)		/* called as you start to eat */
 
 	if (otmp->otyp == CORPSE) {
 	    cprefx(victual.piece->corpsenm);
+	    if (!victual.piece || !victual.eating) {
+		/* rider revived, or died and lifesaved */
+		return;
+	    }
 	    fprefx(victual.piece);
 	    if (!victual.piece || !victual.eating) {
 		/* rider revived, or died and lifesaved */
@@ -1477,22 +1489,24 @@ struct obj *otmp;
 	    case ROCK:
 	        if (otmp->corpsenm && otmp->spe == -2 && !Sick_resistance)
 		{
-		    // zombie meat
+		    char buf[BUFSZ];
+		    /* zombie meat */
 		    long sick_time = (long) rn1(10, 10);
 		    /* make sure new ill doesn't result in improvement */
 		    if (Sick && (sick_time > Sick))
 		        sick_time = (Sick > 1L) ? Sick - 1L : 1L;
-		    make_sick(sick_time, "zombie meat", TRUE,
-		                                        SICK_NONVOMITABLE);
+		    Sprintf(buf, "tasting %s zombie meat",
+		    	    mons[otmp->corpsenm].mname);
+		    make_sick(sick_time, buf, TRUE, SICK_ZOMBIE);
 		}
 		else if (otmp->corpsenm &&
 		         otmp->spe < -2 && otmp->spe >= -5 &&
 		         u.ulycn <= LOW_PM)
 		{
-		    // lycanthrope meat
-		    u.ulycn = (otmp->spe == -2) ? PM_WERERAT :
-		              (otmp->spe == -3) ? PM_WEREJACKAL :
-			      (otmp->spe == -4) ? PM_WEREWOLF :
+		    /* lycanthrope meat */
+		    u.ulycn = (otmp->spe == -3) ? PM_WERERAT :
+		              (otmp->spe == -4) ? PM_WEREJACKAL :
+			      (otmp->spe == -5) ? PM_WEREWOLF :
 			      LOW_PM;
 	            You_feel("feverish.");
 	            if (u.ulycn >= LOW_PM && defends(AD_WERE, uwep)) {
@@ -1529,6 +1543,7 @@ struct obj *otmp;
 	}
 	otmp->known = otmp->dknown = 1; /* by taste */
 	if (!rn2(otmp->oclass == RING_CLASS ? 3 : 5)) {
+	  boolean oldblind = Blind;
 	  switch (otmp->otyp) {
 	    default:
 	        if (!objects[typ].oc_oprop) break; /* should never happen */
@@ -1542,6 +1557,16 @@ struct obj *otmp;
 		  case RIN_SEE_INVISIBLE:
 		    set_mimic_blocking();
 		    see_monsters();
+#ifdef INVISIBLE_OBJECTS
+		    see_objects();
+		    if (oldblind ^ Blind) {
+		    	if (Blind)
+		    		Your("vision is suddenly blocked.");
+			else
+				You("can see again.");
+		        vision_full_recalc = 1;
+		    }
+#endif
 		    if (Invis && !oldprop && !ESee_invisible &&
 				!perceives(youmonst.data) && !Blind) {
 			newsym(u.ux,u.uy);
@@ -1745,9 +1770,19 @@ register struct obj *otmp;
 		make_blinded((long)u.ucreamed,TRUE);
 		break;
 	    case FORTUNE_COOKIE:
+	    {
+#ifdef INVISIBLE_OBJECTS
+	        long save_Blinded = Blinded;
+		if (otmp->oinvis && !See_invisible)
+			Blinded = 1L;
+#endif
 		outrumor(bcsign(otmp), BY_COOKIE);
 		if (!Blind) u.uconduct.literate++;
+#ifdef INVISIBLE_OBJECTS
+		Blinded = save_Blinded;
+#endif
 		break;
+	    }
 	    case LUMP_OF_ROYAL_JELLY:
 		/* This stuff seems to be VERY healthy! */
 		gainstr(otmp, 1);
@@ -1777,10 +1812,13 @@ register struct obj *otmp;
 		if (touch_petrifies(&mons[otmp->corpsenm])) {
 		    if (!Stone_resistance &&
 			!(poly_when_stoned(youmonst.data) && polymon(PM_STONE_GOLEM))) {
-			if (!Stoned) Stoned = 5;
-			killer_format = KILLED_BY_AN;
-			Sprintf(killer_buf, "%s egg", mons[otmp->corpsenm].mname);
-			delayed_killer = killer_buf;
+			if (!Stoned) {
+				Stoned = 5;
+				u.ustone_fmt =
+					KILLED_BY_AN;
+				Sprintf(u.ustone_cause,
+					"%s egg", mons[otmp->corpsenm].mname);
+			}
 		    }
 		}
 		break;
@@ -1822,7 +1860,8 @@ struct obj *otmp;
 
 	if (cadaver || otmp->otyp == EGG || otmp->otyp == TIN) {
 		/* These checks must match those in eatcorpse() */
-		stoneorslime = (touch_petrifies(&mons[mnum]) &&
+		stoneorslime = ((touch_petrifies(&mons[mnum]) ||
+		                mnum == PM_MEDUSA) &&
 				!Stone_resistance &&
 				!poly_when_stoned(youmonst.data));
 
@@ -1846,7 +1885,7 @@ struct obj *otmp;
 	 */
 
 	if ((((cadaver && mnum != PM_ACID_BLOB && rotted > 5L) || 
-	      cadaver && otmp->spe == -2)
+	      (cadaver && (otmp->spe == -2)))
 	       && !Sick_resistance) || (otmp->spe < -2 && otmp->spe >= -5))
 	    {
 		/* Tainted meat */
@@ -1920,7 +1959,7 @@ struct obj *otmp;
 	}
 
 	if (((cadaver && mnum != PM_ACID_BLOB && rotted > 5L) || 
-	      cadaver && otmp->spe == -2)
+	      (cadaver && otmp->spe == -2))
 	       && Sick_resistance)
 	{
 		/* Tainted meat with Sick_resistance */
@@ -2310,7 +2349,7 @@ register int num;
 
 STATIC_PTR
 int
-unfaint()
+unfaint(VOID_ARGS)
 {
 	(void) Hear_again();
 	if(u.uhs > FAINTING)
@@ -2493,6 +2532,7 @@ floorfood(verb,corpsecheck)	/* get food from floor or pack */
 	register struct obj *otmp;
 	char qbuf[QBUFSZ];
 	char c;
+	struct trap *ttmp = t_at(u.ux, u.uy);
 	boolean feeding = (!strcmp(verb, "eat"));
 	boolean sacrificing = (!strcmp(verb, "sacrifice"));
 
@@ -2503,12 +2543,14 @@ floorfood(verb,corpsecheck)	/* get food from floor or pack */
 #endif
 		((is_pool(u.ux, u.uy) || is_lava(u.ux, u.uy)) &&
 		    (Wwalking || is_clinger(youmonst.data) ||
-			(Flying && !Breathless))))
+			(Flying && !Breathless))) ||
+			(ttmp && ttmp->tseen && 
+			 (ttmp->ttyp == PIT || ttmp->ttyp == SPIKED_PIT) &&
+			 (!u.utrap || (u.utrap && u.utraptype != TT_PIT))))
 	    goto skipfloor;
 
 	if (feeding && metallivorous(youmonst.data)) {
 	    struct obj *gold;
-	    struct trap *ttmp = t_at(u.ux, u.uy);
 
 	    if (ttmp && ttmp->tseen && ttmp->ttyp == BEAR_TRAP) {
 		/* If not already stuck in the trap, perhaps there should

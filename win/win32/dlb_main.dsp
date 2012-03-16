@@ -76,7 +76,7 @@ chdir	\
  echo dungeon >>dlb.lst	\
  echo license >>dlb.lst	\
  for %%N in (*.lev) do echo %%N >>dlb.lst	\
- ..\util\dlb_main.exe cIf dlb.lst nhdat	\
+ ..\util\dlb_main.exe cIf dlb.lst ghdat	\
  echo chdir ..\build	\
 chdir ..\build	\
 echo if NOT exist ..\binary\*.* mkdir ..\binary	\
@@ -130,7 +130,7 @@ chdir	\
  echo dungeon >>dlb.lst	\
  echo license >>dlb.lst	\
  for %%N in (*.lev) do echo %%N >>dlb.lst	\
- ..\util\dlb_main.exe cIf dlb.lst nhdat	\
+ ..\util\dlb_main.exe cIf dlb.lst ghdat	\
 echo chdir ..\build	\
 chdir ..\build	\
 echo if NOT exist ..\binary\*.* mkdir ..\binary	\

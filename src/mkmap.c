@@ -482,7 +482,7 @@ mkmap(init_lev)
 
 	    if (!rn2(In_hell(&u.uz) ? 5 : 15) || Invocation_lev(&u.uz))
 	    {
-	        // Let's put a river across the map...
+	        /* Let's put a river across the map... */
 		int y = (ROWNO / 2) + rn1(3, -1), x = 0;
 		while (!rn2(2) && y > 0 && y < ROWNO)
 		    y += rn1(3, -1);
@@ -506,7 +506,7 @@ mkmap(init_lev)
 		count -= 50;
 	    }
 
-	    // Scatter some random pools of lava around.
+	    /* Scatter some random pools of lava around. */
 	    while(count-- > 0)
 	    {
 	        int x = rnd(COLNO), y = rnd(ROWNO);

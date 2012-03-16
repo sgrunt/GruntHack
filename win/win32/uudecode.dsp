@@ -56,8 +56,8 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Cmds=echo chdir ..\win\win32	chdir ..\win\win32	\
-echo decoding icon (nhico.uu to NetHack.ico)	\
-..\..\util\uudecode.exe ../../sys/winnt/nhico.uu	\
+echo decoding icon (ghico.uu to GruntHack.ico)	\
+..\..\util\uudecode.exe ../../sys/winnt/ghico.uu	\
 echo decoding mnsel (mnsel.uu to mnsel.bmp)	\
 ..\..\util\uudecode.exe mnsel.uu	\
 echo decoding mnselcnt (mnselcnt.uu to mnselcnt.bmp)	\
@@ -102,8 +102,8 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Cmds=echo chdir ..\win\win32	chdir ..\win\win32	\
-echo decoding icon (nhico.uu to NetHack.ico)	\
-..\..\util\uudecode.exe ../../sys/winnt/nhico.uu	\
+echo decoding icon (ghico.uu to GruntHack.ico)	\
+..\..\util\uudecode.exe ../../sys/winnt/ghico.uu	\
 echo decoding mnsel (mnsel.uu to mnsel.bmp)	\
 ..\..\util\uudecode.exe mnsel.uu	\
 echo decoding mnselcnt (mnselcnt.uu to mnselcnt.bmp)	\

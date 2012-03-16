@@ -3,9 +3,9 @@
 /*    Copyright (c) Kenneth Lorber, Bethesda, Maryland 1993,1996  */
 /* NetHack may be freely redistributed.  See license for details. */
 
-#include "NH:sys/amiga/windefs.h"
-#include "NH:sys/amiga/winext.h"
-#include "NH:sys/amiga/winproto.h"
+#include "GH:sys/amiga/windefs.h"
+#include "GH:sys/amiga/winext.h"
+#include "GH:sys/amiga/winproto.h"
 
 /* Have to undef CLOSE as display.h and intuition.h both use it */
 #undef CLOSE
@@ -23,7 +23,7 @@ static void ProcessMessage( register struct IntuiMessage *message );
 
 struct Library *ConsoleDevice;
 
-#include "NH:sys/amiga/amimenu.c"
+#include "GH:sys/amiga/amimenu.c"
 
 /* Now our own variables */
 
@@ -52,8 +52,8 @@ struct TextFont *TextsFont = NULL;
 struct TextFont *HackFont = NULL;
 struct TextFont *RogueFont = NULL;
 
-UBYTE FontName[] = "NetHack:hack.font";
-    /* # chars in "NetHack:": */
+UBYTE FontName[] = "GruntHack:hack.font";
+    /* # chars in "GruntHack": */
 #define         SIZEOF_DISKNAME 8
 
 #endif
@@ -764,8 +764,8 @@ long rc;
     	{
     		sizeof( struct EasyStruct ),
     		0,
-    		"NetHack Panic Request",
-    		"NetHack is Aborting with code == 0x%08lx",
+    		"GruntHack Panic Request",
+    		"GruntHack is Aborting with code == 0x%08lx",
 		"Continue Abort|Return to Program|Clean up and exit",
     	};
     	fault = EasyRequest( NULL, &es, NULL, (long)rc );

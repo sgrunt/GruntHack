@@ -2,9 +2,9 @@
 /* Copyright (c) Gregg Wonderly, Naperville, Illinois,  1991,1992,1993. */
 /* NetHack may be freely redistributed.  See license for details. */
 
-#include "NH:sys/amiga/windefs.h"
-#include "NH:sys/amiga/winext.h"
-#include "NH:sys/amiga/winproto.h"
+#include "GH:sys/amiga/windefs.h"
+#include "GH:sys/amiga/winext.h"
+#include "GH:sys/amiga/winproto.h"
 
 #define GADBLUEPEN      2
 #define GADREDPEN       3
@@ -41,7 +41,7 @@ struct NewWindow StrWindow = {
     &String, NULL, NULL, NULL, NULL, 5,5, 0xffff,0xffff, CUSTOMSCREEN
 };
 
-#include "NH:sys/amiga/colorwin.c"
+#include "GH:sys/amiga/colorwin.c"
 
 #define	XSIZE	2
 #define YSIZE	3
@@ -50,7 +50,7 @@ struct NewWindow StrWindow = {
 #define GADOKAY	6
 #define GADCANCEL	7
 
-#include "NH:sys/amiga/clipwin.c"
+#include "GH:sys/amiga/clipwin.c"
 
 void ClearCol( struct Window *w );
 
@@ -215,27 +215,27 @@ EditColor( )
 		    fp = fopen( configfile, "r" );
 		    if( !fp )
 		    {
-			pline( "can't find GrntHack.cnf" );
+			pline( "can't find GruntHack.cnf" );
 			break;
 		    }
 
 		    strcpy( oname, dirname( (char *)configfile ) );
 		    if( oname[ strlen(oname)-1 ] != ':' )
 		    {
-			sprintf( nname, "%s/New_GrntHack.cnf", oname );
+			sprintf( nname, "%s/New_GruntHack.cnf", oname );
 			strcat( oname, "/" );
-			strcat( oname, "Old_GrntHack.cnf" );
+			strcat( oname, "Old_GruntHack.cnf" );
 		    }
 		    else
 		    {
-			sprintf( nname, "%sNew_GrntHack.cnf", oname );
-			strcat( oname, "Old_GrntHack.cnf" );
+			sprintf( nname, "%sNew_GruntHack.cnf", oname );
+			strcat( oname, "Old_GruntHack.cnf" );
 		    }
 
 		    nfp = fopen( nname, "w" );
 		    if( !nfp )
 		    {
-			pline( "can't write to New_GrntHack.cnf" );
+			pline( "can't write to New_GruntHack.cnf" );
 			fclose( fp );
 			break;
 		    }
@@ -882,14 +882,14 @@ amii_setpens( int count )
     struct EasyStruct ea = {
 	sizeof( struct EasyStruct ),
 	0l,
-	"NetHack Request",
+	"GruntHack Request",
 	"Number of pens requested(%ld) not correct",
 	"Use default pens|Use requested pens"
     };
     struct EasyStruct ea2 = {
 	sizeof( struct EasyStruct ),
 	0l,
-	"NetHack Request",
+	"GruntHack Request",
 	"Number of pens requested(%ld) not\ncompatible with game configuration(%ld)",
 	"Use default pens|Use requested pens"
     };
@@ -932,7 +932,7 @@ amii_setpens( int count )
 		amii_numcolors*sizeof(amii_initmap[0]));
     }
 
-    /* If the pens are set in GrntHack.cnf, we can get called before
+    /* If the pens are set in GruntHack.cnf, we can get called before
      * HackScreen has been opened.
      */
     if( HackScreen != NULL )

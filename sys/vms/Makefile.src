@@ -334,7 +334,7 @@ wintty.obj :	$(TTY)wintty.c $(HACK_H) $(INC)dlb.h \
 Window.obj :	$(X11)Window.c $(INC)xwindowp.h $(INC)xwindow.h $(CONFIG_H)
 dialogs.obj :	$(X11)dialogs.c $(CONFIG_H)
 winX.obj :	$(X11)winX.c $(HACK_H) $(INC)winX.h $(INC)dlb.h \
-		$(INC)patchlevel.h $(X11)nh72icon $(X11)nh56icon $(X11)nh32icon
+		$(INC)patchlevel.h $(X11)gh72icon $(X11)gh56icon $(X11)gh32icon
 winmap.obj :	$(X11)winmap.c $(INC)xwindow.h $(HACK_H) $(INC)dlb.h \
 		$(INC)winX.h $(INC)tile2x11.h
 winmenu.obj :	$(X11)winmenu.c $(HACK_H) $(INC)winX.h

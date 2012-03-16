@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 
-/* #define BETA	*/	/* if a beta-test copy	[MRS] */
+#define BETA		/* if a beta-test copy	[MRS] */
 
 /*
  * Files expected to exist in the playground directory.
@@ -133,8 +133,9 @@ typedef xchar	boolean;		/* 0 or 1 */
 
 #ifdef REDO
 #define Getchar pgetchar
+#else
+#define Getchar nhgetch
 #endif
-
 
 #include "coord.h"
 /*
@@ -278,6 +279,17 @@ typedef xchar	boolean;		/* 0 or 1 */
 #define Vsprintf (void) vsprintf
 #endif
 
+#ifdef WIN32
+#define snprintf sprintf_s
+#else
+#if defined(MSDOS)
+#define snprintf(out,n,fmt,args...) sprintf(out,fmt,args)
+#else
+#if defined(AMIGA) && defined(__SASC_60)
+extern int snprintf(char *, unsigned int, const char *, va_list);
+#endif
+#endif
+#endif
 
 /* primitive memory leak debugging; see alloc.c */
 #ifdef MONITOR_HEAP

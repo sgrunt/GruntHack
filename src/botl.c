@@ -156,6 +156,9 @@ static short oldrank = 0, olddata = 0, oldalign = 0, olduz = 1,
 	     oldwis = 1, oldcon = 1, oldcha = 1,
 	     oldac = 10;
 static long  oldscore = 0, oldgold = 0, oldxp = 0, oldmoves = 0;
+#ifdef REALTIME_ON_BOTL
+static time_t oldtime = 0;
+#endif
 
 #ifdef SCORE_ON_BOTL
 long
@@ -178,8 +181,13 @@ botl_score()
 }
 #endif
 
+#if defined(WIN32) && !defined(WIN32CON)
+#define _term_start_color(x)
+#define _term_end_color()
+#else
 #define _term_start_color(x) if (iflags.use_color) term_start_color(x)
 #define _term_end_color()    if (iflags.use_color) term_end_color()
+#endif
 
 #ifdef DUMP_LOG
 void bot1str(char *newbot1)
@@ -229,7 +237,7 @@ bot1()
 	        _term_start_color(CLR_GREEN);
 	    else if (changed = (oldrank > newrank))
 	        _term_start_color(CLR_RED);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	    Strcpy(mbot, rank());
 	    if (oldmoves != moves)
 	        oldrank = newrank,
@@ -250,16 +258,16 @@ bot1()
         if (changed) {
 	    _term_end_color();
 	}
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 
 #ifdef TEXTCOLOR
 	curs(WIN_STATUS, 1, 0);
-	//putstr(WIN_STATUS, 0, newbot1);
+	/*putstr(WIN_STATUS, 0, newbot1);*/
         if ((changed = (oldstr < ACURR(A_STR))))
 	    _term_start_color(CLR_GREEN);
         else if ((changed = (oldstr > ACURR(A_STR))))
 	    _term_start_color(CLR_RED);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	if (ACURR(A_STR) > 18) {
 		if (ACURR(A_STR) > STR18(100))
 		    Sprintf(nb = eos(nb),"St:%2d ",ACURR(A_STR)-100);
@@ -274,18 +282,18 @@ bot1()
         if (changed) {
             _term_end_color();
 	}
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	if (oldmoves != moves)
 	    oldstr = ACURR(A_STR);
 
 #ifdef TEXTCOLOR
 	curs(WIN_STATUS, 1, 0);
-	//putstr(WIN_STATUS, 0, newbot1);
+	/*putstr(WIN_STATUS, 0, newbot1);*/
         if ((changed = (olddex < ACURR(A_DEX))))
 	    _term_start_color(CLR_GREEN);
         else if ((changed = (olddex > ACURR(A_DEX))))
 	    _term_start_color(CLR_RED);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	Sprintf(nb = eos(nb),
 		"Dx:%-1d ", 
 		ACURR(A_DEX));
@@ -294,18 +302,18 @@ bot1()
         if (changed) {
 	       _term_end_color();
         }
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	if (oldmoves != moves)
 	    olddex = ACURR(A_DEX);
         
 #ifdef TEXTCOLOR
 	curs(WIN_STATUS, 1, 0);
-	//putstr(WIN_STATUS, 0, newbot1);
+	/*putstr(WIN_STATUS, 0, newbot1);*/
 	if ((changed = (oldcon < ACURR(A_CON))))
 	    _term_start_color(CLR_GREEN);
         else if ((changed = (oldcon > ACURR(A_CON))))
 	    _term_start_color(CLR_RED);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	Sprintf(nb = eos(nb),
 		"Co:%-1d ", 
 		ACURR(A_CON));
@@ -314,18 +322,18 @@ bot1()
         if (changed) {
 	       _term_end_color();
         }
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	if (oldmoves != moves)
 	    oldcon = ACURR(A_CON);
         
 #ifdef TEXTCOLOR
 	curs(WIN_STATUS, 1, 0);
-	//putstr(WIN_STATUS, 0, newbot1);
+	/*putstr(WIN_STATUS, 0, newbot1);*/
 	if ((changed = (oldint < ACURR(A_INT))))
 	    _term_start_color(CLR_GREEN);
         else if ((changed = (oldint > ACURR(A_INT))))
 	    _term_start_color(CLR_RED);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	Sprintf(nb = eos(nb),
 		"In:%-1d ", 
 		ACURR(A_INT));
@@ -334,18 +342,18 @@ bot1()
         if (changed) {
 	       _term_end_color();
         }
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	if (oldmoves != moves)
 	    oldint = ACURR(A_INT);
         
 #ifdef TEXTCOLOR
 	curs(WIN_STATUS, 1, 0);
-	//putstr(WIN_STATUS, 0, newbot1);
+	/*putstr(WIN_STATUS, 0, newbot1);*/
 	if ((changed = (oldwis < ACURR(A_WIS))))
 	    _term_start_color(CLR_GREEN);
         else if ((changed = (oldwis > ACURR(A_WIS))))
 	    _term_start_color(CLR_RED);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	Sprintf(nb = eos(nb),
 		"Wi:%-1d ", 
 		ACURR(A_WIS));
@@ -354,13 +362,13 @@ bot1()
         if (changed) {
 	       _term_end_color();
         }
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	if (oldmoves != moves)
 	   oldwis = ACURR(A_WIS);
         
 #ifdef TEXTCOLOR
 	curs(WIN_STATUS, 1, 0);
-	//putstr(WIN_STATUS, 0, newbot1);
+	/*putstr(WIN_STATUS, 0, newbot1);*/
 	if ((changed = (oldcha < ACURR(A_CHA))))
 	    _term_start_color(CLR_GREEN);
         else if ((changed = (oldcha > ACURR(A_CHA))))
@@ -374,7 +382,7 @@ bot1()
         if (changed) {
 	       _term_end_color();
         }
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	if (oldmoves != moves)
 	    oldcha = ACURR(A_CHA);
 
@@ -383,10 +391,10 @@ bot1()
 #ifdef SCORE_ON_BOTL
 #ifdef TEXTCOLOR
 	curs(WIN_STATUS, 1, 0);
-	//putstr(WIN_STATUS, 0, newbot1);
+	/*putstr(WIN_STATUS, 0, newbot1);*/
         if ((changed = (oldscore != botl_score())))
 	    _term_start_color(CLR_GREEN);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	if (flags.showscore)
 	    Sprintf(nb = eos(nb), " S:%ld", botl_score());
 #ifdef TEXTCOLOR
@@ -394,7 +402,7 @@ bot1()
         if (changed) {
 	       _term_end_color();
         }
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	if (oldmoves != moves)
             oldscore = botl_score();
 #endif
@@ -456,21 +464,21 @@ bot2()
 	boolean changed = FALSE;
 
 #ifdef TEXTCOLOR
-	//curs(WIN_STATUS, 1, 1);
-	//putstr(WIN_STATUS, 0, newbot2);
+	/*curs(WIN_STATUS, 1, 1);*/
+	/*putstr(WIN_STATUS, 0, newbot2);*/
 #endif
 
 	hp = Upolyd ? u.mh : u.uhp;
 	hpmax = Upolyd ? u.mhmax : u.uhpmax;
 
-        // Egregious deaths FTW.
-	//if(hp < 0) hp = 0;
+        /* Egregious deaths FTW.*/
+	/*if(hp < 0) hp = 0;*/
 #ifdef TEXTCOLOR
-	//curs(WIN_STATUS, 1, 1);
-	//putstr(WIN_STATUS, 0, newbot2);
+	/*curs(WIN_STATUS, 1, 1);*/
+	/*putstr(WIN_STATUS, 0, newbot2);*/
         if ((changed = (olduz != depth(&u.uz))))
 	    _term_start_color(CLR_BRIGHT_BLUE);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	(void) describe_level(newbot2);
 #ifdef TEXTCOLOR
 	putstr(WIN_STATUS, 0, newbot2);
@@ -479,7 +487,7 @@ bot2()
         }
 	if (oldmoves != moves)
 	    olduz = depth(&u.uz);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	curs(WIN_STATUS, 1, 1);
 #ifdef TEXTCOLOR
         if ((changed = (oldgold < 
@@ -498,7 +506,7 @@ bot2()
 #endif
 	)))
 	    _term_start_color(CLR_RED);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	Sprintf(nb = eos(newbot2), "%c:%-2ld ", oc_syms[COIN_CLASS],
 #ifndef GOLDOBJ
                 u.ugold
@@ -530,7 +538,7 @@ bot2()
 	putstr(WIN_STATUS, 0, newbot2);
 
 	Sprintf(nb = eos(newbot2), "%d(%d)", hp, hpmax);
-#ifdef TEXTCOLOR
+#if defined(TEXTCOLOR) && (!defined(WIN32) || defined(WIN32CON))
 	if (iflags.use_color) {
 	  curs(WIN_STATUS, 1, 1);
 	  hpattr = ATR_NONE;
@@ -589,12 +597,12 @@ bot2()
 	    _term_start_color(CLR_GREEN);
         else if ((changed = (oldac < u.uac)))
 	    _term_start_color(CLR_RED);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	Sprintf(nb = eos(nb), " AC:%-2d", u.uac);
 #ifdef TEXTCOLOR
 	putstr(WIN_STATUS, 0, newbot2);
 	if (changed) _term_end_color();
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
         if (oldmoves != moves) oldac = u.uac;
 
 	curs(WIN_STATUS, 1, 1);
@@ -609,7 +617,7 @@ bot2()
 	        _term_start_color(CLR_GREEN);
             else if ((changed = (oldxp > u.uexp)))
 	        _term_start_color(CLR_RED);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	    Sprintf(nb = eos(nb), " Xp:%u/%-1ld", u.ulevel,u.uexp);
 	    if (oldmoves != moves) oldxp = u.uexp;
 	}
@@ -621,7 +629,7 @@ bot2()
 	        _term_start_color(CLR_GREEN);
             else if ((changed = (oldxp > u.ulevel)))
 	        _term_start_color(CLR_RED);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	    Sprintf(nb = eos(nb), " Exp:%u", u.ulevel);
 	    if (oldmoves != moves) oldxp = u.ulevel;
 	}
@@ -635,126 +643,145 @@ bot2()
 #ifdef TEXTCOLOR
             if ((changed = (oldmoves != moves)))
 	        _term_start_color(CLR_BLUE);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	    Sprintf(nb = eos(nb), " T:%ld", moves);
 	    putstr(WIN_STATUS, 0, newbot2);
 #ifdef TEXTCOLOR
 	    if (changed) _term_end_color();
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	}
+
+#ifdef REALTIME_ON_BOTL
+  if(iflags.showrealtime) {
+    time_t currenttime = get_realtime();
+#ifdef TEXTCOLOR
+    if ((changed = (oldtime != time)))
+	term_start_color(CLR_BLUE);
+#endif /*TEXTCOLOR*/
+    Sprintf(nb = eos(nb), " %d:%2.2d", currenttime / 3600, 
+                                       (currenttime % 3600) / 60);
+#ifdef TEXTCOLOR
+    if (changed) {
+    	oldtime = time;
+    	_term_end_color();
+    }
+#endif
+  }
+#endif
+
 	if(strcmp(hu_stat[u.uhs], "        ")) {
 	        curs(WIN_STATUS, 1, 1);
 #ifdef TEXTCOLOR
-                // 3 == WEAK, 4 == FAINTING
+                /* 3 == WEAK, 4 == FAINTING*/
                 if (iflags.use_color)
 	            _term_start_color(u.uhs >= 4  ?  CLR_ORANGE        :
 				     u.uhs == 3  ?  CLR_RED           :
 				                    CLR_YELLOW);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 		Sprintf(nb = eos(nb), " ");
 		Strcat(newbot2, hu_stat[u.uhs]);
 	        putstr(WIN_STATUS, 0, newbot2);
 #ifdef TEXTCOLOR
                 if (iflags.use_color) _term_end_color();
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	}
 	if(Confusion) {
 	    curs(WIN_STATUS, 1, 1);
 #ifdef TEXTCOLOR
 	    _term_start_color(CLR_BRIGHT_BLUE);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	    Sprintf(nb = eos(nb), " Conf");
 
 	    putstr(WIN_STATUS, 0, newbot2);
 #ifdef TEXTCOLOR
 	    _term_end_color();
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	}
 
 	if(Sick && (u.usick_type & SICK_VOMITABLE)) {
 	    curs(WIN_STATUS, 1, 1);
 #ifdef TEXTCOLOR
 	    _term_start_color(CLR_ORANGE);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	    Sprintf(nb = eos(nb), " FoodPois");
 
 	    putstr(WIN_STATUS, 0, newbot2);
 #ifdef TEXTCOLOR
 	    _term_end_color();
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	}
-	if(Sick && (u.usick_type & SICK_NONVOMITABLE)) {
+	if(Sick && (u.usick_type & (SICK_NONVOMITABLE|SICK_ZOMBIE))) {
 	    curs(WIN_STATUS, 1, 1);
 #ifdef TEXTCOLOR
 	    _term_start_color(CLR_ORANGE);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	    Sprintf(nb = eos(nb), " Ill");
 
 	    putstr(WIN_STATUS, 0, newbot2);
 #ifdef TEXTCOLOR
 	    _term_end_color();
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	}
 	if(Blind) {
 	    curs(WIN_STATUS, 1, 1);
 #ifdef TEXTCOLOR
 	    _term_start_color(CLR_BRIGHT_BLUE);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	    Sprintf(nb = eos(nb), " Blind");
 
 	    putstr(WIN_STATUS, 0, newbot2);
 #ifdef TEXTCOLOR
 	    _term_end_color();
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	}
 	if(Stunned) {
 	    curs(WIN_STATUS, 1, 1);
 #ifdef TEXTCOLOR
 	    _term_start_color(CLR_RED);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	    Sprintf(nb = eos(nb), " Stun");
 
 	    putstr(WIN_STATUS, 0, newbot2);
 #ifdef TEXTCOLOR
 	    _term_end_color();
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	}
 	if(HHallucination &&
 	  !Halluc_resistance) {
 	    curs(WIN_STATUS, 1, 1);
 #ifdef TEXTCOLOR
 	    _term_start_color(CLR_BRIGHT_MAGENTA);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	    Sprintf(nb = eos(nb), " Hallu");
 
 	    putstr(WIN_STATUS, 0, newbot2);
 #ifdef TEXTCOLOR
 	    _term_end_color();
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	}
 	if(Slimed) {
 	    curs(WIN_STATUS, 1, 1);
 #ifdef TEXTCOLOR
 	    _term_start_color(CLR_GREEN);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	    Sprintf(nb = eos(nb), " Slime");
 
 	    putstr(WIN_STATUS, 0, newbot2);
 #ifdef TEXTCOLOR
 	    _term_end_color();
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	}
 	if(Stoned) {
 	    curs(WIN_STATUS, 1, 1);
 #ifdef TEXTCOLOR
 	    _term_start_color(CLR_ORANGE);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	    Sprintf(nb = eos(nb), " Stone");
 
 	    putstr(WIN_STATUS, 0, newbot2);
 #ifdef TEXTCOLOR
 	    _term_end_color();
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	}
 	if(cap > UNENCUMBERED)
 	{
@@ -765,12 +792,12 @@ bot2()
 		                     cap == MOD_ENCUMBER ? CLR_YELLOW :
 				     cap == HVY_ENCUMBER ? CLR_RED :
 				                           CLR_ORANGE);
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 		Sprintf(nb = eos(nb), " %s", enc_stat[cap]);
 	        putstr(WIN_STATUS, 0, newbot2);
 #ifdef TEXTCOLOR
                 if (iflags.use_color) _term_end_color();
-#endif //TEXTCOLOR
+#endif /*TEXTCOLOR*/
 	}
 
 	oldmoves = moves;

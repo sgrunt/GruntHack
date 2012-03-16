@@ -506,7 +506,7 @@ void gnome_display_nhwindow(winid wid, BOOLEAN_P block)
 		       ghack_signals[GHSIG_DISPLAY],
 		       block);
       if (block && (gnome_windowlist[wid].type == NHW_MAP))
-	(void) gnome_nhgetch();
+	(void) nhgetch();
     }
 }
 
@@ -1051,8 +1051,8 @@ char gnome_yn_function(const char *question, const char *choices,
 
     /* Only here if main window is not present */
     while (result<0) {
-	ch=gnome_nhgetch();
-	if (ch=='\033') {
+	ch=nhgetch();
+	if (ch==DOESCAPE) {
 	    result=yn_esc_map;
 	} else if (choices && !index(choices,ch)) {
 	    /* FYI: ch==-115 is for KP_ENTER */

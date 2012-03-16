@@ -72,11 +72,11 @@ static	const char	SCCS_Id[] = "@(#)makedefs.c\t3.4\t2002/02/03";
 	/* locations for those files */
 #ifdef AMIGA
 # define FILE_PREFIX
-# define INCLUDE_TEMPLATE	"NH:include/t.%s"
-# define SOURCE_TEMPLATE	"NH:src/%s"
-# define DGN_TEMPLATE		"NH:dat/%s"  /* where dungeon.pdf file goes */
-# define DATA_TEMPLATE		"NH:slib/%s"
-# define DATA_IN_TEMPLATE	"NH:dat/%s"
+# define INCLUDE_TEMPLATE	"GH:include/t.%s"
+# define SOURCE_TEMPLATE	"GH:src/%s"
+# define DGN_TEMPLATE		"GH:dat/%s"  /* where dungeon.pdf file goes */
+# define DATA_TEMPLATE		"GH:slib/%s"
+# define DATA_IN_TEMPLATE	"GH:dat/%s"
 #else /* not AMIGA */
 # if defined(MAC) && !defined(__MACH__)
     /* MacOS 9 or earlier */
@@ -543,7 +543,11 @@ const char *build_date;
 void
 do_date()
 {
+#ifdef KR1ED
 	long clocktim = 0;
+#else
+	time_t clocktim = 0;
+#endif
 	char *c, cbuf[60], buf[BUFSZ];
 	const char *ul_sfx;
 
@@ -559,17 +563,13 @@ do_date()
 	Fprintf(ofp,"/*\tSCCS Id: @(#)date.h\t3.4\t2002/02/03 */\n\n");
 	Fprintf(ofp,Dont_Edit_Code);
 
-#ifdef KR1ED
 	(void) time(&clocktim);
 	Strcpy(cbuf, ctime(&clocktim));
-#else
-	(void) time((time_t *)&clocktim);
-	Strcpy(cbuf, ctime((time_t *)&clocktim));
-#endif
+
 	for (c = cbuf; *c; c++) if (*c == '\n') break;
 	*c = '\0';	/* strip off the '\n' */
 	Fprintf(ofp,"#define BUILD_DATE \"%s\"\n", cbuf);
-	Fprintf(ofp,"#define BUILD_TIME (%ldL)\n", clocktim);
+	Fprintf(ofp,"#define BUILD_TIME (%ldL)\n", (long)clocktim);
 	Fprintf(ofp,"\n");
 #ifdef NHSTDC
 	ul_sfx = "UL";
@@ -597,7 +597,7 @@ do_date()
 	{
 	struct tm *tm = localtime((time_t *) &clocktim);
 	Fprintf(ofp,"#define AMIGA_VERSION_STRING ");
-	Fprintf(ofp,"\"\\0$VER: NetHack %d.%d.%d (%d.%d.%d)\"\n",
+	Fprintf(ofp,"\"\\0$VER: GruntHack %d.%d.%d (%d.%d.%d)\"\n",
 		VERSION_MAJOR, VERSION_MINOR, PATCHLEVEL,
 		tm->tm_mday, tm->tm_mon+1, tm->tm_year+1900);
 	}
@@ -649,11 +649,17 @@ static const char *build_opts[] = {
 #ifdef COMPRESS
 		"data file compression",
 #endif
+#ifdef COMBINED_SPELLCASTING
+		"combined player and monster spellcasting"
+#endif
 #ifdef DLB
 		"data librarian",
 #endif
 #ifdef WIZARD
 		"debug mode",
+#endif
+#ifdef REALTIME_ON_BOTL
+                "elapsed time on status line",
 #endif
 #ifdef ELBERETH
 		"Elbereth",
@@ -679,8 +685,14 @@ static const char *build_opts[] = {
 #ifdef LOGFILE
 		"log file",
 #endif
+#ifdef XLOGFILE
+                "extended log file",
+#endif
 #ifdef MAIL
 		"mail daemon",
+#endif
+#ifdef MSGTYPE
+		"messagetype option",
 #endif
 #ifdef MENU_COLOR
 # ifdef MENU_COLOR_REGEX
@@ -705,6 +717,9 @@ static const char *build_opts[] = {
 		"overlays",
 #  endif
 # endif
+#endif
+#ifdef PARANOID
+		"paranoid confirm options",
 #endif
 #ifdef REDO
 		"redo command",
@@ -746,6 +761,12 @@ static const char *build_opts[] = {
 #ifdef SHELL
 		"shell command",
 #endif
+#ifdef SHOW_BORN
+		"show monsters created",
+#endif
+#ifdef SHOW_EXTINCT
+		"show monsters extincted",
+#endif
 #ifdef SINKS
 		"sinks",
 #endif
@@ -781,8 +802,32 @@ static const char *build_opts[] = {
 #ifdef WALLIFIED_MAZE
 		"walled mazes",
 #endif
+#ifdef WIN_EDGE
+		"win_edge",
+#endif
 #ifdef ZEROCOMP
 		"zero-compressed save files",
+#endif
+#ifdef RECORD_TURNS
+                "record turns in xlogfile",
+#endif
+#ifdef RECORD_CONDUCT
+                "record conduct in xlogfile",
+#endif
+#ifdef RECORD_ACHIEVE
+                "record major achievements in xlogfile",
+#endif
+#ifdef RECORD_REALTIME
+                "record real time in xlogfile",
+#endif
+#ifdef RECORD_START_END_TIME
+                "record starting and ending time in xlogfile",
+#endif
+#ifdef RECORD_GENDER0
+                "record initial gender in xlogfile",
+#endif
+#ifdef RECORD_ALIGN0
+                "record initial alignment in xlogfile",
 #endif
 		save_bones_compat_buf,
 		"basic NetHack features"
@@ -838,9 +883,9 @@ do_options()
 	build_savebones_compat_string();
 	Fprintf(ofp,
 #ifdef BETA
-		"\n    NetHack version %d.%d.%d [beta]\n",
+		"\n    GruntHack version %d.%d.%d [beta]\n",
 #else
-		"\n    NetHack version %d.%d.%d\n",
+		"\n    GruntHack version %d.%d.%d\n",
 #endif
 		VERSION_MAJOR, VERSION_MINOR, PATCHLEVEL);
 
@@ -1292,7 +1337,7 @@ static int
 mstrength(ptr)
 struct permonst *ptr;
 {
-	int	i, tmp2, n, tmp = ptr->mlevel;
+	int	i, tmp2, n, sp, tmp = ptr->mlevel;
 
 	if(tmp > 49)		/* special fixed hp monster */
 	    tmp = 2*(tmp - 6) / 4;
@@ -1308,9 +1353,6 @@ struct permonst *ptr;
 	n += (ptr->ac < 4);
 	n += (ptr->ac < 0);
 
-/*	For very fast monsters */
-	n += (ptr->mmove >= 18);
-
 /*	For each attack and "special" attack */
 	for(i = 0; i < NATTK; i++) {
 
@@ -1320,12 +1362,18 @@ struct permonst *ptr;
 	    n += (tmp2 == AT_WEAP && (ptr->mflags2 & M2_STRONG));
 	}
 
+	sp = ptr->mmove;
+	if (sp < NORMAL_SPEED/2) sp = NORMAL_SPEED/2;
+	n *= sp*sp;
+	n /= NORMAL_SPEED*NORMAL_SPEED;
+
 /*	For each "special" damage type */
 	for(i = 0; i < NATTK; i++) {
 
 	    tmp2 = ptr->mattk[i].adtyp;
 	    if ((tmp2 == AD_DRLI) || (tmp2 == AD_STON) || (tmp2 == AD_DRST)
 		|| (tmp2 == AD_DRDX) || (tmp2 == AD_DRCO) || (tmp2 == AD_WERE)
+		|| (tmp2 == AD_CNCL) || (tmp2 == AD_DISN) || (tmp2 == AD_BHED)
 		|| (tmp2 == AD_WRAP && 
 		    (ptr->mlet == S_EEL ||
 		     ptr->mattk[i].aatyp == AT_ENGL)))
@@ -1343,7 +1391,7 @@ struct permonst *ptr;
 	else if(n >= 6) tmp += ( n / 2 );
 	else tmp += ( n / 3 + 1);
 
-	return((tmp >= 0) ? tmp : 0);
+	return((tmp >= 1) ? tmp : 1);
 }
 
 void
@@ -1372,7 +1420,8 @@ do_monstr()
 	SpinCursor(3);
 
 	i = mstrength(ptr);
-	Fprintf(ofp,"%2d,%c", i, (++j & 15) ? ' ' : '\n');
+	/*Fprintf(ofp,"%2d,%c", i, (++j & 15) ? ' ' : '\n');*/
+	Fprintf(ofp,"%2d, /* %s */\n", i, ptr->mname);
     }
     /* might want to insert a final 0 entry here instead of just newline */
     Fprintf(ofp,"%s};\n", (j & 15) ? "\n" : "");
@@ -2210,3 +2259,4 @@ struct attribs attrmax, attrmin;
 #endif /* STRICT_REF_DEF */
 
 /*makedefs.c*/
+

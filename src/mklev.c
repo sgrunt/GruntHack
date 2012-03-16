@@ -502,7 +502,7 @@ int trap_type;
 		    if (!level.flags.noteleport)
 			(void) mksobj_at(SCR_TELEPORTATION,
 					 xx, yy+dy, TRUE, FALSE);
-		    if (!rn2(3)) (void) mkobj_at(0, xx, yy+dy, TRUE);
+		    if (!rn2(3)) (void) mkobj_at(0, xx, yy+dy, MO_ALLOW_ARTIFACT);
 		}
 	    }
 	    return;
@@ -825,14 +825,16 @@ skip0:
 	skip_nonrogue:
 #endif
 		if(!rn2(3)) {
-		    (void) mkobj_at(0, somex(croom), somey(croom), TRUE);
+		    (void) mkobj_at(0, somex(croom), somey(croom), 
+		    	MO_ALLOW_ARTIFACT);
 		    tryct = 0;
 		    while(!rn2(5)) {
 			if(++tryct > 100) {
 			    impossible("tryct overflow4");
 			    break;
 			}
-			(void) mkobj_at(0, somex(croom), somey(croom), TRUE);
+			(void) mkobj_at(0, somex(croom), somey(croom), 
+				MO_ALLOW_ARTIFACT);
 		    }
 		}
 	}
@@ -910,7 +912,7 @@ mineralize()
 		}
 		if (rn2(1000) < gemprob) {
 		    for (cnt = rnd(2 + dunlev(&u.uz) / 3); cnt > 0; cnt--)
-			if ((otmp = mkobj(GEM_CLASS, FALSE)) != 0) {
+			if ((otmp = mkobj(GEM_CLASS, NO_MO_FLAGS)) != 0) {
 			    if (otmp->otyp == ROCK) {
 				dealloc_obj(otmp);	/* discard it */
 			    } else {
@@ -1403,7 +1405,7 @@ struct mkroom *croom;
 	/* Possibly fill it with objects */
 	if (!rn2(3)) (void) mkgold(0L, m.x, m.y);
 	for (tryct = rn2(5); tryct; tryct--) {
-	    otmp = mkobj(RANDOM_CLASS, TRUE);
+	    otmp = mkobj(RANDOM_CLASS, MO_ALLOW_ARTIFACT);
 	    if (!otmp) return;
 	    curse(otmp);
 	    otmp->ox = m.x;
@@ -1468,6 +1470,14 @@ mkinvokearea()
     mkstairs(u.ux, u.uy, 0, (struct mkroom *)0); /* down */
     newsym(u.ux, u.uy);
     vision_full_recalc = 1;	/* everything changed */
+
+#ifdef LIVELOG
+    livelog_write_string("performed the Invocation");
+#endif
+
+#ifdef RECORD_ACHIEVE
+    achieve.perform_invocation = 1;
+#endif
 }
 
 /* Change level topology.  Boulders in the vicinity are eliminated.
@@ -1533,7 +1543,7 @@ int dist;
 	break;
     case 4: /* pools (aka a wide moat) */
     case 5:
-	lev->typ = LAVAPOOL; //MOAT;
+	lev->typ = LAVAPOOL; /* MOAT; */
 	/* No kelp! */
 	break;
     default:

@@ -538,11 +538,15 @@ drinksink()
 			}
 			break;
 		case 4: do {
-				otmp = mkobj(POTION_CLASS,FALSE);
+				otmp = mkobj(POTION_CLASS, NO_MO_FLAGS);
 				if (otmp->otyp == POT_WATER) {
 					obfree(otmp, (struct obj *)0);
 					otmp = (struct obj *) 0;
 				}
+#ifdef INVISIBLE_OBJECTS
+				if (otmp->oinvis)
+					otmp->oinvis = FALSE;
+#endif
 			} while(!otmp);
 			otmp->cursed = otmp->blessed = 0;
 			pline("Some %s liquid flows from the faucet.",
@@ -556,7 +560,8 @@ drinksink()
 			break;
 		case 5: if (!(levl[u.ux][u.uy].looted & S_LRING)) {
 			    You("find a ring in the sink!");
-			    (void) mkobj_at(RING_CLASS, u.ux, u.uy, TRUE);
+			    (void) mkobj_at(RING_CLASS, u.ux, u.uy,
+			    	MO_ALLOW_ARTIFACT);
 			    levl[u.ux][u.uy].looted |= S_LRING;
 			    exercise(A_WIS, TRUE);
 			    newsym(u.ux,u.uy);

@@ -1,5 +1,5 @@
 @REM  SCCS Id: @(#)nhsetup.bat  3.4     $Date: 2002/07/24 08:25:21 $
-@REM  Copyright (c) NetHack PC Development Team 1993, 1996, 2002
+@REM  Copyright (c) NetHack PC Development Team 1993-2007
 @REM  NetHack may be freely redistributed.  See license for details. 
 @REM  Win32 setup batch file, see Install.nt for details
 @REM
@@ -53,44 +53,86 @@ copy Makefile.gcc ..\..\src\Makefile.gcc >nul
 echo MinGW Makefile copied ok.
 
 :do_win
-if not exist ..\..\win\win32\nethack.dsw goto :err_win
+if not exist ..\..\win\win32\grunthack.dsw goto :err_win
 echo.
-echo Copying Visual C project files to ..\..\build directory
-echo Copying ..\..\win\win32\nethack.dsw  ..\..\nethack.dsw
-copy ..\..\win\win32\nethack.dsw  ..\.. >nul
+if exist ..\..\build\*.* goto projectcopy
+ 
+echo Creating ..\..\build directory
+mkdir ..\..\build
+
+:projectcopy
+echo Copying Visual C solution files to top level directory
+@REM Visual Studio 6 workspace
+echo Copying ..\..\win\win32\grunthack.dsw  ..\..\grunthack.dsw
+copy ..\..\win\win32\grunthack.dsw  ..\.. >nul
+ 
+@REM Visual Studio 2008 Express solution file
+if NOT exist ..\..\win\win32\GruntHack.sln goto skipsoln
+echo Copying ..\..\win\win32\GruntHack.sln  ..\..\GruntHack.sln
+copy ..\..\win\win32\GruntHack.sln  ..\.. >nul
+:skipsoln
+ 
 if NOT exist ..\..\binary\*.* echo Creating ..\..\binary directory
 if NOT exist ..\..\binary\*.* mkdir ..\..\binary
 if NOT exist ..\..\binary\license copy ..\..\dat\license ..\..\binary\license >nul
-if NOT exist ..\..\build\*.* echo Creating ..\..\build directory
-if NOT exist ..\..\build\*.* mkdir ..\..\build
+
+echo Copying Visual C project files to ..\..\build directory
+
+copy ..\..\win\win32\dgnstuff.mak  ..\..\build >nul
+copy ..\..\win\win32\levstuff.mak  ..\..\build >nul
+copy ..\..\win\win32\tiles.mak     ..\..\build >nul
+
+@REM Visual C++ 6 project files
 copy ..\..\win\win32\dgncomp.dsp   ..\..\build >nul
 copy ..\..\win\win32\dgnstuff.dsp  ..\..\build >nul
-copy ..\..\win\win32\dgnstuff.mak  ..\..\build >nul
 copy ..\..\win\win32\dlb_main.dsp  ..\..\build >nul
 copy ..\..\win\win32\levcomp.dsp   ..\..\build >nul
 copy ..\..\win\win32\levstuff.dsp  ..\..\build >nul
-copy ..\..\win\win32\levstuff.mak  ..\..\build >nul
 copy ..\..\win\win32\makedefs.dsp  ..\..\build >nul
 copy ..\..\win\win32\recover.dsp   ..\..\build >nul
 copy ..\..\win\win32\tile2bmp.dsp  ..\..\build >nul
 copy ..\..\win\win32\tiles.dsp     ..\..\build >nul
-copy ..\..\win\win32\tiles.mak     ..\..\build >nul
 copy ..\..\win\win32\tilemap.dsp   ..\..\build >nul
 copy ..\..\win\win32\uudecode.dsp   ..\..\build >nul
-copy ..\..\win\win32\nethackw.dsp   ..\..\build >nul
+copy ..\..\win\win32\grunthack.dsp   ..\..\build >nul
+copy ..\..\win\win32\grunthackw.dsp   ..\..\build >nul
+ 
+@REM Visual C++ 2008 Express project files
+if NOT exist ..\..\win\win32\makedefs.vcproj goto skipVC2008
+if NOT exist ..\..\win\win32\uudecode.vcproj goto skipVC2008
+if NOT exist ..\..\win\win32\dgncomp.vcproj goto skipVC2008
+if NOT exist ..\..\win\win32\dlb_main.vcproj goto skipVC2008
+if NOT exist ..\..\win\win32\grunthackw.vcproj goto skipVC2008
+copy ..\..\win\win32\dgncomp.vcproj   ..\..\build >nul
+copy ..\..\win\win32\dgnstuff.vcproj  ..\..\build >nul
+copy ..\..\win\win32\dlb_main.vcproj  ..\..\build >nul
+copy ..\..\win\win32\levcomp.vcproj   ..\..\build >nul
+copy ..\..\win\win32\levstuff.vcproj  ..\..\build >nul
+copy ..\..\win\win32\makedefs.vcproj  ..\..\build >nul
+copy ..\..\win\win32\recover.vcproj   ..\..\build >nul
+copy ..\..\win\win32\tile2bmp.vcproj  ..\..\build >nul
+copy ..\..\win\win32\tiles.vcproj     ..\..\build >nul
+copy ..\..\win\win32\tilemap.vcproj   ..\..\build >nul
+copy ..\..\win\win32\uudecode.vcproj  ..\..\build >nul
+copy ..\..\win\win32\nh340key.vcproj  ..\..\build >nul
+copy ..\..\win\win32\nhdefkey.vcproj  ..\..\build >nul
+copy ..\..\win\win32\nhraykey.vcproj  ..\..\build >nul
+copy ..\..\win\win32\grunthack.vcproj  ..\..\build >nul
+copy ..\..\win\win32\grunthackw.vcproj  ..\..\build >nul
+:skipVC2008
 
 goto :done
 
 :err_win
-echo Some of the files needed to build graphical NetHack
+echo Some of the files needed to build graphical GruntHack
 echo for Windows are not in the expected places.
 echo Check "Install.nt" for a list of the steps required 
-echo to build NetHack.
+echo to build GruntHack.
 goto :fini
 
 :err_data
 echo A required file ..\..\dat\data.bas seems to be missing.
-echo Check "Files." in the root directory for your NetHack distribution
+echo Check "Files." in the root directory for your GruntHack distribution
 echo and make sure that all required files exist.
 goto :fini
 
@@ -108,7 +150,7 @@ echo.
 :fini
 :end
 set _pause=Y
-if "%0"=="nhsetup" set _pause=N
-if "%0"=="NHSETUP" set _pause=N
+if "%0"=="ghsetup" set _pause=N
+if "%0"=="GHSETUP" set _pause=N
 if "%_pause%"=="Y" pause
 set _pause=

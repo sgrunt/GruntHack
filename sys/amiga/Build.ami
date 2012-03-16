@@ -24,7 +24,7 @@ I. Introduction
     version for mc68k or ppc.
 
     If you want to find out about distributing NetHack, read the license
-    (in NetHack:license or type ?i during the game).
+    (in GruntHacklicense or type ?i during the game).
 
 II. Compiling Amiga NetHack 3.4
 
@@ -65,7 +65,7 @@ II.B.1. Introduction to Compiling NetHack
 
     Read VERY CAREFULLY through the Makefile to familiarize yourself
     with which assignments are assumed.  Otherwise, you're going to get
-    something like "Insert NH: in any drive."  You will need uudecode,
+    something like "Insert GH: in any drive."  You will need uudecode,
     and, if you need to modify dgn_comp or lev_comp, flex, and bison.
     The first thing Makefile.ami does is build makedefs, which handles
     a variety of data file generation, and then lev_comp and dgn_comp
@@ -77,9 +77,9 @@ II.B.1. Introduction to Compiling NetHack
     will build the auxiliary files including help files, special levels,
     icons, and the font files and will put these files into their final
     positions - most will be in dlb archives (if DLB was defined in config.h).
-    The first make run should be done in NH:obj and the make install should be
-    done in NetHack:; for both runs, the makefile is NH:sys/amiga/Makefile.ami
-    (or NH:sys/amiga/DMakefile for DMake and NH:sys/amiga/Makefile.agc for
+    The first make run should be done in GH:obj and the make install should be
+    done in GruntHack; for both runs, the makefile is GH:sys/amiga/Makefile.ami
+    (or GH:sys/amiga/DMakefile for DMake and GH:sys/amiga/Makefile.agc for
     gcc).
 
     Note that not all the source is simple C code.  If you are modifying
@@ -116,14 +116,14 @@ II.B.3.	Compiling NetHack with the commercial version of DICE
     IMPORTANT NOTE: If you are using DMake, you need to create DMakefile
     from Makefile.ami.  Do the following:
 
-	cd NH:sys/amiga
+	cd GH:sys/amiga
 	edit from Makefile.ami to DMakefile with mkdmake opt w255
 
     Some versions of DMake have been known to crash horribly on the
     makefile - if this happens, you'll need to download another make
     utility, such as AMake (ftp://ftp.dragonfire.net/amiga/utils/amake),
     which will run in DMake-compatibility mode if invoked with the -C switch
-    (e.g. "amake -C -f NH:sys/amiga/DMakefile", or just
+    (e.g. "amake -C -f GH:sys/amiga/DMakefile", or just
     "alias dmake amake -C").
 
     SECOND IMPORTANT NOTE: The score list is currently disabled when

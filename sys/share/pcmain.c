@@ -137,7 +137,7 @@ char *argv[];
 		run_from_desktop = FALSE;
 	} else
 #endif
-		hname = "NetHack";      /* used for syntax messages */
+		hname = "GruntHack";      /* used for syntax messages */
 
 	choose_windows(DEFAULT_WINDOW_SYS);
 
@@ -146,13 +146,15 @@ char *argv[];
 	 * the game is exited.
 	 */
 	if (getcwd(orgdir, sizeof orgdir) == (char *)0)
-		error("NetHack: current directory path too long");
+		error("GruntHack: current directory path too long");
 # ifndef NO_SIGNAL
 	signal(SIGINT, (SIG_RET_TYPE) nethack_exit);	/* restore original directory */
 # endif
 #endif /* !AMIGA && !GNUDOS */
 
-	dir = nh_getenv("NETHACKDIR");
+	dir = nh_getenv("GRUNTHACKDIR");
+	if (dir == (char *)0)
+		dir = nh_getenv("NETHACKDIR");
 	if (dir == (char *)0)
 		dir = nh_getenv("HACKDIR");
 #ifdef EXEPATH

@@ -73,7 +73,7 @@ lock_action()
 
 STATIC_PTR
 int
-picklock()	/* try to open/close a lock */
+picklock(VOID_ARGS)	/* try to open/close a lock */
 {
 
 	if (xlock.box) {
@@ -120,7 +120,7 @@ picklock()	/* try to open/close a lock */
 	} else {
 	    xlock.box->olocked = !xlock.box->olocked;
 	    if(xlock.box->otrapped)	
-		(void) chest_trap(xlock.box, FINGER, FALSE);
+		(void) chest_trap(&youmonst, xlock.box, FINGER, FALSE);
 	}
 	exercise(A_DEX, TRUE);
 	return((xlock.usedtime = 0));
@@ -128,7 +128,7 @@ picklock()	/* try to open/close a lock */
 
 STATIC_PTR
 int
-forcelock()	/* try to force a locked chest */
+forcelock(VOID_ARGS)	/* try to force a locked chest */
 {
 
 	register struct obj *otmp;
@@ -564,8 +564,8 @@ doopen()		/* try to open a door */
 	if (rnl(20) < (ACURRSTR+ACURR(A_DEX)+ACURR(A_CON))/3) {
 	    pline_The("door opens.");
 	    if(door->doormask & D_TRAPPED) {
-		b_trapped("door", FINGER);
 		door->doormask = D_NODOOR;
+		b_trapped("door", FINGER);
 		if (*in_rooms(cc.x, cc.y, SHOPBASE)) add_damage(cc.x, cc.y, 0L);
 	    } else
 		door->doormask = D_ISOPEN;
@@ -833,18 +833,23 @@ int x, y;
 	case SPE_FORCE_BOLT:
 	    if (door->doormask & (D_LOCKED | D_CLOSED)) {
 		if (door->doormask & D_TRAPPED) {
-		    if (MON_AT(x, y))
-			(void) mb_trapped(m_at(x,y));
-		    else if (flags.verbose) {
-			if (cansee(x,y))
-			    pline("KABOOM!!  You see a door explode.");
-			else if (flags.soundok)
-			    You_hear("a distant explosion.");
+		    if (In_sokoban(&u.uz)) {
+		       if (cansee(x,y))
+		           pline("The door absorbs the force!");
+		    } else {
+		        if (MON_AT(x, y))
+			    (void) mb_trapped(m_at(x,y));
+		        else if (flags.verbose) {
+			    if (cansee(x,y))
+			        pline("KABOOM!!  You see a door explode.");
+			    else if (flags.soundok)
+			        You_hear("a distant explosion.");
+		        }
+		        door->doormask = D_NODOOR;
+		        unblock_point(x,y);
+		        newsym(x,y);
+		        loudness = 40;
 		    }
-		    door->doormask = D_NODOOR;
-		    unblock_point(x,y);
-		    newsym(x,y);
-		    loudness = 40;
 		    break;
 		}
 		door->doormask = D_BROKEN;

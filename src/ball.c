@@ -105,16 +105,20 @@ placebc()
 
     (void) flooreffects(uchain, u.ux, u.uy, "");	/* chain might rust */
 
-    if (carried(uball))		/* the ball is carried */
-	u.bc_order = BCPOS_DIFFER;
-    else {
-	/* ball might rust -- already checked when carried */
-	(void) flooreffects(uball, u.ux, u.uy, "");
-	place_object(uball, u.ux, u.uy);
-	u.bc_order = BCPOS_CHAIN;
+    if (uball) {
+	if (carried(uball))		/* the ball is carried */
+	    u.bc_order = BCPOS_DIFFER;
+        else {
+	    /* ball might rust -- already checked when carried */
+	    (void) flooreffects(uball, u.ux, u.uy, "");
+	    if (uball)
+	        place_object(uball, u.ux, u.uy);
+	    u.bc_order = BCPOS_CHAIN;
+        }
+	
+	if (uball)
+	    place_object(uchain, u.ux, u.uy);
     }
-
-    place_object(uchain, u.ux, u.uy);
 
     u.bglyph = u.cglyph = levl[u.ux][u.uy].glyph;   /* pick up glyph */
 

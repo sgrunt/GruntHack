@@ -1,0 +1,121 @@
+GruntHack 0.2.0 - changes from GruntHack 0.1.1
+
+Additional third-party patches:
+* Bones option, from nethack.alt.org
+* Dungeoncolors, by Pasi Kallinen
+* DYWYPISI?, by Jafet (modified into a compile-time option and a disclosure
+  flag)
+* Extended Logfile, by Aardvark Joe
+* Extinct & showborn, by Wingnut and Jukka Lahtinen
+* fcntl, by Drew Streib and Edoardo Spadolini
+* Generic item use menu, from AceHack via UnHetHack and nethack.alt.org
+  (slightly modified and expanded)
+* Message types, by Pasi Kallinen
+* Key Rebinding, by Jason Dorje Short (slightly modified)
+* Monster Targeting, by Pasi Kallinen
+* New C menu, from nethack.alt.org (own implementation)
+* Paranoid, by David Damerell, Jonathan Nieder, Jukka Lahtinen, Stanislav
+  Traykov, and Kristian Glass
+* Pickup Thrown, by Roderick Schertler
+* Quiver Fired, by Pasi Kallinen (slightly modified)
+* Show BUC, by Pasi Kallinen
+* Show Sym, by Pasi Kallinen
+* Window Edge, by Pasi Kallinen
+* Various fixes from nethack.alt.org and the tty window system:
+  always assume clearscreen escape code is available,
+  100% CPU usage fix when terminal is closed at --more--,
+  cursor keys don't escape from a text entry prompt,
+  no longer crashes in a 20- or 21-line window.
+* VS2008 compilation fix, from the NetHack dev team
+
+Bug fixes:
+* Wishes related to dragon scale mail and some magical items originating
+  in vanilla now parse correctly.
+* Some behaviour related to re-enabled deferred features (such as merging
+  with shimmering dragon scale mail upon being polymorph) is now active.
+* The vorpal jabberwock's beheading attack now works properly.
+* Monsters attacking other monsters with sickness attacks now has the
+  expected effect.
+* Sting now generates hit messages, and grants warning against orcs only
+  (as opposed to any monster capable of being generated as an orc).
+* Off-hand magical weapons now generate the correct message if attacking
+  a target immune to their special ability.
+* Killing a monster polymorphed into an engulfing form from within is now
+  handled slightly better (messages are more logically ordered and no
+  impossible() message is generated).
+* A racial monster's displaced image now displays with the correct colour
+  if showrace is enabled.
+* A missing piece of code preventing dgamelaunch simplemail from working
+  was added back in.
+* Non-artifact weapons with extra damage properties used against the
+  player now correctly check for the appropriate resistance on the
+  player's part.
+* Erroneous display of "Your <x> rusts!" and other forms of erosion
+  when items carried by monsters erode, and related crashes, no longer
+  occur.
+* Ball and chain now behave properly when eroding away.
+* Long worms once again display correctly, and a related crash was fixed.
+* Monsters switching between ranged and melee weapons is handled slightly
+  better (previously, they would frequently try to bash you with their
+  ranged weapon).
+* Monster reading a non-blessed scroll of remove curse now behaves properly.
+
+Dungeon-related:
+* Some additional Sokoban levels are present.
+* You now can obtain one of three rewards from Sokoban. (Whether this is
+  random or not depends on how clever you are.)
+* Yeenoghu, Geryon, Dispater, and Demogorgon now have their own fortresses
+  in Gehennom. Gehennom has been extended by five levels to allow room
+  for this.
+
+Player-related:
+* Attempting to call a high priest on the Astral Plane no longer results
+  in unrealistic penalties, merely less information than is presented
+  in vanilla.
+* Several new spells, such as the monster-inspired "touch of death" and
+  "psi bolt" and the deferred "flame sphere" and "freeze sphere".
+* Casting a spell successfully adds 50-149 turns until the spell is
+  forgotten; without casting a spell at all, it is now forgotten in
+  10000 turns instead of 20000.
+* When prompted for a direction, entering an invalid direction will now
+  prompt the player again for a direction; cancelling requires the player
+  to press Esc.
+* The travel command now finds dungeon features (most notably stairs) even
+  if an item is on top of them.
+
+Monster-related:
+* The beholder's remaining gaze attacks have been implemented; thus the
+  beholder has been enabled.
+* There are now queens and ladies in addition to kings and lords. (Suggested
+  by ishanyx in #nethack.)
+* Player monsters now have a chance of being randomly generated in the
+  dungeon, and will carry level-appropriate equipment.
+* Monster spellcasting has been overhauled - monsters will now cast spells
+  from the pool of player spells, instead of their own unique spells.
+  (This behaviour is optional and controlled by #define COMBINED_SPELLS
+   in config.h.)
+* Monsters can now use some additional items (wands and containers
+  particularly).
+* If you throw an intelligent pet an item that they are capable of using,
+  they will catch the item and (if applicable) use it immediately.
+* Grudge-bearing monsters are now more likely to attack their targets.
+* Conversely, covetous monsters are less likely to target other monsters
+  if they do not have an objective in sight.
+* Bumping into a peaceful monster while invisible no longer angers it.
+* Monsters (and you!) can now be buried in the same manner as objects.
+
+Object-related:
+* Objects can now be invisible, with many associated side effects.
+  (Some cues for this were taken from the Extended Invisible Objects patch
+   by Nephi, but the implementation is entirely original.)
+* Exploding a bag of holding no longer destroys the contents of the bag;
+  instead they are scattered throughout the dungeon, as is the player.
+* Polymorphing magical items now more reliably yields magical items.
+* The Banes now warn of their respective monster classes, if they did not
+  do so previously.
+* Dragging a ball and chain around while underwater now causes them to
+  rust away (as would happen if the ball was being carried).
+* Two additional item properties have been added: hunger and aggravation.
+
+There are some subtle changes that are not listed here.  You are encouraged
+to explore the game to find some of them.

@@ -37,6 +37,7 @@ stoned_dialogue()
 	if (i == 3L)
 		nomul2(-3, "turning to stone");
 	exercise(A_DEX, FALSE);
+	stop_occupation();
 }
 
 /* He is getting sicker and sicker prior to vomiting */
@@ -164,6 +165,7 @@ nh_timeout()
 	int sleeptime;
 	int m_idx;
 	int baseluck = (flags.moonphase == FULL_MOON) ? 1 : 0;
+	boolean oldblind = Blind;
 
 	if (flags.friday13) baseluck -= 1;
 
@@ -218,9 +220,12 @@ nh_timeout()
 	    if((upp->intrinsic & TIMEOUT) && !(--upp->intrinsic & TIMEOUT)) {
 		switch(upp - u.uprops){
 		case STONED:
-			if (delayed_killer && !killer) {
-				killer = delayed_killer;
-				delayed_killer = 0;
+			if (strcmp(u.ustone_cause, "") &&
+			    !killer) {
+				killer = u.ustone_cause;
+				killer_format =
+					u.ustone_fmt;
+				/*delayed_killer = 0;*/
 			}
 			if (!killer) {
 				/* leaving killer_format would make it
@@ -231,9 +236,12 @@ nh_timeout()
 			done(STONING);
 			break;
 		case SLIMED:
-			if (delayed_killer && !killer) {
-				killer = delayed_killer;
-				delayed_killer = 0;
+			if (strcmp(u.uslime_cause, "") &&
+			    !killer) {
+				killer = u.uslime_cause;
+				killer_format =
+					u.uslime_fmt;
+				/*delayed_killer = 0;*/
 			}
 			if (!killer) {
 				killer_format = NO_KILLER_PREFIX;
@@ -246,30 +254,14 @@ nh_timeout()
 			break;
 		case SICK:
 			You("die from your illness.");
-			killer_format = KILLED_BY_AN;
+			killer_format = KILLED_BY;
 			killer = u.usick_cause;
-			if ((m_idx = name_to_mon(killer)) >= LOW_PM) {
-			    if (type_is_pname(&mons[m_idx])) {
-				killer_format = KILLED_BY;
-			    } else if (mons[m_idx].geno & G_UNIQ) {
-				killer = the(killer);
-				Strcpy(u.usick_cause, killer);
-				killer_format = KILLED_BY;
-			    }
-	                    if (m_idx == PM_ZOMBIE)
-			    {
-	                        u.ugrave_arise = PM_ZOMBIE;
-				killer_format = NO_KILLER_PREFIX;
-				if (!strcmp(killer, "zombie meat"))
-				    killer = "zombified by eating zombie meat";
-				else
-				{
-				    char tmpbuf[BUFSZ];
-				    Sprintf(tmpbuf, "zombified by %s",
-				                    an(killer));
-				    killer = tmpbuf;
-				}
-			    }
+	                if (!!(u.usick_type & SICK_ZOMBIE))
+			{
+	                    u.ugrave_arise = PM_ZOMBIE;
+			    killer_format = NO_KILLER_PREFIX;
+			    Sprintf(killer_buf, "zombified by %s", killer);
+			    killer = killer_buf;
 			}
 			u.usick_type = 0;
 			done(POISONING);
@@ -306,6 +298,16 @@ nh_timeout()
 		case SEE_INVIS:
 			set_mimic_blocking(); /* do special mimic handling */
 			see_monsters();		/* make invis mons appear */
+#ifdef INVISIBLE_OBJECTS
+			see_objects();
+#endif
+			if (oldblind ^ Blind) {
+				if (Blind)
+					Your("vision is suddenly blocked.");
+				else
+					You("can see again.");
+				vision_full_recalc = 1;
+			}
 			newsym(u.ux,u.uy);	/* make self appear */
 			stop_occupation();
 			break;
@@ -339,15 +341,35 @@ nh_timeout()
 			                  an(l_monnam(u.ustuck)));
 			    killer_format = NO_KILLER_PREFIX;
 			    killer = kbuf;
-	                    if (multi) Strcat(kbuf, ", while helpless");
+	                    if (multi) {
+	    			Strcat(kbuf, ", while ");
+				if (multi_reason) Strcat(kbuf, multi_reason);
+				else Strcat(kbuf, "helpless");
+			    }
 			    done(DIED);
 			}
 			else
 			{
-			    killer_format = KILLED_BY;
-			    killer = (u.uburied || u.uswallow)
+			    if (!strcmp(u.usuff_cause,
+			    		"")) {
+			    	killer_format = KILLED_BY;
+			    	killer = (u.uburied || u.uswallow)
 			              ? "suffocation" : "strangulation";
+			    } else {
+			    	killer = u.usuff_cause;
+				if (strstri(killer, " by "))
+					killer_format = NO_KILLER_PREFIX;
+				else
+					killer_format = KILLED_BY;
+			    }
 			    done(DIED);
+			    /* whoops - lifesaved */
+			    if (safe_teleds(FALSE)) {
+			        You("find yourself back on the surface.");
+			    } else {
+			    	You("still can't breathe down here.");
+				Strangled = 6;
+			    }
 		        }
 			break;
 		case FUMBLING:
@@ -373,9 +395,9 @@ nh_timeout()
 			/* from outside means slippery ice; don't reset
 			   counter if that's the only fumble reason */
 			HFumbling &= ~FROMOUTSIDE;
-			//if (FUMBLED)
-			HFumbling += rnd(10); //adj from 20, as dex 6 fumbles
-			                      //half the time here
+			/*if (FUMBLED)*/
+			HFumbling += rnd(10); /*adj from 20, as dex 6 fumbles*/
+			                      /*half the time here*/
 			break;
 		case DETECT_MONSTERS:
 			see_monsters();
@@ -680,6 +702,13 @@ slip_or_trip()
 			body_part(FOOT));
 	    } else {
 		You("trip over %s.", what);
+	    }
+	    if (otmp->otyp == CORPSE && touch_petrifies(&mons[otmp->corpsenm])
+	        && !uarmf) {
+		char kbuf[BUFSZ];
+		Sprintf(kbuf, "tripping over %s corpse",
+			an(mons[otmp->corpsenm].mname));
+		instapetrify(kbuf);
 	    }
 	} else if (rn2(3) && is_ice(u.ux, u.uy)) {
 	    pline("%s %s%s on the ice.",
@@ -1226,9 +1255,12 @@ do_storms()
     register int x, y;
     int dirx, diry;
     int count;
+    int done = 0, vis = 0;
+    boolean player_in = FALSE;
 
     /* no lightning if not the air level or too often, even then */
-    if(!Is_airlevel(&u.uz) || rn2(8))
+    if(!(Is_airlevel(&u.uz) && !rn2(8)) &&
+       !((In_hell(&u.uz) || Is_firelevel(&u.uz)) && !rn2(3)))
 	return;
 
     /* the number of strikes is 8-log2(nstrike) */
@@ -1237,15 +1269,42 @@ do_storms()
 	do {
 	    x = rnd(COLNO-1);
 	    y = rn2(ROWNO);
-	} while (++count < 100 && levl[x][y].typ != CLOUD);
+	} while (++count < 100 && levl[x][y].typ !=
+		 (Is_airlevel(&u.uz) ? CLOUD : LAVAPOOL));
+	
+	if (count == 100) break;
 
 	if(count < 100) {
-	    dirx = rn2(3) - 1;
-	    diry = rn2(3) - 1;
-	    if(dirx != 0 || diry != 0)
-		buzz(-15, /* "monster" LIGHTNING spell */
-		     8, x, y, dirx, diry);
+	    done++;
+	    if (Is_airlevel(&u.uz)) {
+	    	dirx = rn2(3) - 1;
+		diry = rn2(3) - 1;
+	    	if(dirx != 0 || diry != 0)
+		    buzz(-15, /* "monster" LIGHTNING spell */
+		        8, x, y, dirx, diry);
+	    } else {
+		int buc = rn1(3,(-1)); 
+
+	    	if (cansee(x, y)) vis++;
+		(void) create_gas_cloud(x, y, 3+buc,
+						8+4*buc);
+		if (distu(x, y) <= (2+buc)*(2+buc))
+		    player_in = TRUE;
+	    }
 	}
+    }
+
+    if (!Is_airlevel(&u.uz)) {
+    	if (player_in) {
+	    You("are engulfed in toxic gas from the lava!");
+	    if (!Blind)
+	        make_blinded(1L, FALSE);
+	}
+    	else if (vis && !rn2(15))
+	    You("see toxic gas arising from the lava!");
+	else if (done && flags.soundok && !rn2(15))
+	    You_hear("bubbling and hissing.");
+        return;
     }
 
     if(levl[u.ux][u.uy].typ == CLOUD) {

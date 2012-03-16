@@ -559,8 +559,8 @@ dismount_steed(reason)
 			if (!Underwater)
 			    pline("%s falls into the %s!", Monnam(mtmp),
 							surface(u.ux, u.uy));
-			if (!is_swimmer(mdat) && !amphibious(mdat) &&
-			                         !mbreathing(mtmp)) {
+			if ((!is_swimmer(mdat)) && (!amphibious(mdat)) &&
+			                           (!mbreathing(mtmp))) {
 			    killed(mtmp);
 			    adjalign(-1);
 			}
@@ -669,7 +669,7 @@ void
 displace_mon(mon)
 struct monst *mon;
 {
-    if (!mon->mx || !mon->my) return; // not on map yet
+    if (!mon->mx || !mon->my) return; /* not on map yet */
 
     if (m_img_at(mon->mix, mon->miy) == mon)
         remove_monster_img(mon->mix, mon->miy);

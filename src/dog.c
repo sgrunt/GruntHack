@@ -95,6 +95,9 @@ boolean quietly;
 		return (struct monst *)0;
 
 	initedog(mtmp);
+#ifdef INVISIBLE_OBJECTS
+        if (otmp->oinvis) mon_set_minvis(mtmp);
+#endif
 	mtmp->msleeping = 0;
 	if (otmp) { /* figurine; resulting monster might not become a pet */
 	    chance = rn2(10);	/* 0==tame, 1==peaceful, 2==hostile */
@@ -119,7 +122,7 @@ boolean quietly;
 	/* must wield weapon immediately since pets will otherwise drop it */
 	if (mtmp->mtame && attacktype(mtmp->data, AT_WEAP)) {
 		mtmp->weapon_check = NEED_HTH_WEAPON;
-		(void) mon_wield_item(mtmp);
+		(void) mon_wield_item(mtmp, FALSE);
 	}
 	return mtmp;
 }
@@ -164,7 +167,11 @@ makedog()
 	    if (mpickobj(mtmp, otmp))
 		panic("merged saddle?");
 	    mtmp->misc_worn_check |= W_SADDLE;
-	    otmp->dknown = otmp->bknown = otmp->rknown = 1;
+	    otmp->dknown = otmp->bknown = otmp->rknown =
+#ifdef INVISIBLE_OBJECTS
+		otmp->iknown =
+#endif
+	    	1;
 	    otmp->owornmask = W_SADDLE;
 	    otmp->leashmon = mtmp->m_id;
 	    update_mon_intrinsics(mtmp, otmp, TRUE, TRUE);
@@ -589,6 +596,7 @@ migrate_to_level(mtmp, tolev, xyloc, cc)
 	coord *cc;	/* optional destination coordinates */
 {
 	register struct obj *obj;
+	register struct monst *mtmp2;
 	d_level new_lev;
 	xchar xyflags;
 	int num_segs = 0;	/* count of worm segments */
@@ -603,6 +611,11 @@ migrate_to_level(mtmp, tolev, xyloc, cc)
 	    num_segs = min(cnt, MAX_NUM_WORMS - 1);
 	    wormgone(mtmp);
 	}
+
+	if (mtmp->mtarget)
+	    mtmp->mtarget = (mtmp->mpeaceful || mtmp->mtame) ?
+	    	(struct monst *)0 : &youmonst;
+	mtmp->mtarget_id = (mtmp->mtarget) ? mtmp->mtarget->m_id : 0;
 
 	/* set minvent's obj->no_charge to 0 */
 	for(obj = mtmp->minvent; obj; obj = obj->nobj) {
@@ -635,6 +648,11 @@ migrate_to_level(mtmp, tolev, xyloc, cc)
 	mtmp->mux = new_lev.dnum;
 	mtmp->muy = new_lev.dlevel;
 	mtmp->mx = mtmp->my = 0;	/* this implies migration */
+
+	for (mtmp2 = fmon; mtmp2; mtmp2 = mtmp2->nmon)
+		if (mtmp2->mtarget == mtmp)
+			mtmp2->mtarget = (mtmp->mtame || mtmp->mpeaceful)
+				? (struct monst *)0 : &youmonst;
 }
 
 #endif /* OVLB */
@@ -808,7 +826,7 @@ register struct obj *obj;
 		} else if (cansee(mtmp->mx,mtmp->my))
 		    pline("%s.", Tobjnam(obj, "stop"));
 
-		// Don't stuff ourselves if we know better
+		/* Don't stuff ourselves if we know better */
 		if (is_animal(mtmp->data) || mindless(mtmp->data))
 		{
 		/* dog_eat expects a floor object */
@@ -816,7 +834,7 @@ register struct obj *obj;
 		    if (dog_eat(mtmp, obj, mtmp->mx, mtmp->my, FALSE) == 2
 		        && rn2(4))
 		    {
-		        // You choked your pet, you cruel, cruel person!
+		        /* You choked your pet, you cruel, cruel person! */
 		        You_feel("guilty about losing your pet like this.");
 			u.ugangr++;
 			adjalign(-15);
@@ -861,7 +879,7 @@ register struct obj *obj;
 	newsym(mtmp2->mx, mtmp2->my);
 	if (attacktype(mtmp2->data, AT_WEAP)) {
 		mtmp2->weapon_check = NEED_HTH_WEAPON;
-		(void) mon_wield_item(mtmp2);
+		(void) mon_wield_item(mtmp2, FALSE);
 	}
 	return(mtmp2);
 }

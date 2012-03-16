@@ -105,7 +105,7 @@ extern NEARDATA struct window_procs windowprocs;
 #define print_glyph (*windowprocs.win_print_glyph)
 #define raw_print (*windowprocs.win_raw_print)
 #define raw_print_bold (*windowprocs.win_raw_print_bold)
-#define nhgetch (*windowprocs.win_nhgetch)
+#define nhwingetch (*windowprocs.win_nhgetch)
 #define nh_poskey (*windowprocs.win_nh_poskey)
 #define nhbell (*windowprocs.win_nhbell)
 #define nh_doprev_message (*windowprocs.win_doprev_message)

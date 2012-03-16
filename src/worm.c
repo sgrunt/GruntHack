@@ -19,6 +19,7 @@ STATIC_DCL void FDECL(toss_wsegs, (struct wseg *,BOOLEAN_P));
 STATIC_DCL void FDECL(shrink_worm, (int));
 STATIC_DCL void FDECL(random_dir, (XCHAR_P,XCHAR_P,xchar *,xchar *));
 STATIC_DCL struct wseg *FDECL(create_worm_tail, (int));
+STATIC_DCL void FDECL(cutwormtail,(struct monst *, struct wseg *));
 
 /*  Description of long worm implementation.
  *
@@ -127,6 +128,8 @@ initworm(worm, wseg_count)
 	seg->nseg    = (struct wseg *) 0;
 	seg->wx      = worm->mx;
 	seg->wy      = worm->my;
+	seg->wix     = seg->wx;
+	seg->wiy     = seg->wy;
     }
     wgrowtime[wnum] = 0L;
 }
@@ -219,6 +222,8 @@ worm_move(worm)
     new_seg       = newseg();
     new_seg->wx   = worm->mx;
     new_seg->wy   = worm->my;
+    new_seg->wix  = worm->mix;
+    new_seg->wiy  = worm->miy;
     new_seg->nseg = (struct wseg *) 0;
     seg->nseg     = new_seg;		/* attach it to the end of the list */
     wheads[wnum]  = new_seg;		/* move the end pointer */
@@ -307,6 +312,24 @@ wormhitu(worm)
 	    (void) mattacku(worm);
 }
 
+/*  cutworm_tail()
+ *
+ *  Do the actual work of removing the tail and adjusting the HP.
+ */
+STATIC_OVL
+void
+cutwormtail(worm, tail)
+struct monst *worm;
+struct wseg *tail;
+{
+    if (flags.mon_moving)
+	pline("Part of the tail of %s is cut off.", mon_nam(worm));
+    else
+        You("cut part of the tail off of %s.", mon_nam(worm));
+    toss_wsegs(tail, TRUE);
+    if (worm->mhp > 1) worm->mhp /= 2;
+}
+
 /*  cutworm()
  *
  *  Check for mon->wormno before calling this function!
@@ -372,18 +395,16 @@ cutworm(worm, x, y, weap)
 
     /* Sometimes the tail end dies. */
     if (rn2(3) || !(new_wnum = get_wormno())) {
-	if (flags.mon_moving)
-	    pline("Part of the tail of %s is cut off.", mon_nam(worm));
-	else
-	    You("cut part of the tail off of %s.", mon_nam(worm));
-	toss_wsegs(new_tail, TRUE);
-	if (worm->mhp > 1) worm->mhp /= 2;
+    	cutwormtail(worm, new_tail);
 	return;
     }
 
     remove_monster(x, y);		/* clone_mon puts new head here */
     remove_monster_img(curr->wix, curr->wiy);
-    new_worm = clone_mon(worm, x, y);
+    if (!(new_worm = clone_mon(worm, x, y))) {
+    	cutwormtail(worm, new_tail);
+	return;
+    }
     new_worm->wormno = new_wnum;	/* affix new worm number */
 
     /* Devalue the monster level of both halves of the worm. */
@@ -485,6 +506,8 @@ save_worm(fd, mode)
 		for (curr = wtails[i]; curr; curr = curr->nseg) {
 		    bwrite(fd, (genericptr_t) &(curr->wx), sizeof(xchar));
 		    bwrite(fd, (genericptr_t) &(curr->wy), sizeof(xchar));
+		    bwrite(fd, (genericptr_t) &(curr->wix), sizeof(xchar));
+		    bwrite(fd, (genericptr_t) &(curr->wiy), sizeof(xchar));
 		}
 	    }
 	}
@@ -530,6 +553,8 @@ rest_worm(fd)
 	    temp->nseg = (struct wseg *) 0;
 	    mread(fd, (genericptr_t) &(temp->wx), sizeof(xchar));
 	    mread(fd, (genericptr_t) &(temp->wy), sizeof(xchar));
+	    mread(fd, (genericptr_t) &(temp->wix), sizeof(xchar));
+	    mread(fd, (genericptr_t) &(temp->wiy), sizeof(xchar));
 	    if (curr)
 		curr->nseg = temp;
 	    else
@@ -556,7 +581,7 @@ place_wsegs(worm)
 
     while (curr != wheads[worm->wormno]) {
 	place_worm_seg(worm,curr->wx,curr->wy);
-	place_monster_img(worm,curr->wix,curr->wiy);
+	place_worm_seg(worm,curr->wix,curr->wiy);
 	curr = curr->nseg;
     }
 }

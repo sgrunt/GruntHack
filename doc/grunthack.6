@@ -1,11 +1,11 @@
-.TH GRUNTHACK 6 "21 August 2006"
+.TH GRUNTHACK 6 "15 August 2012"
 .UC 4
 .SH NAME
 grunthack \- Exploring The Mazes of Menace
 .SH SYNOPSIS
 .na
 .hy 0
-.B nethack
+.B grunthack
 [
 .B \-d
 .I directory
@@ -35,7 +35,7 @@ grunthack \- Exploring The Mazes of Menace
 .B \-ibm
 ]
 .PP
-.B nethack
+.B grunthack
 [
 .B \-d
 .I directory
@@ -107,7 +107,7 @@ Because the option list can be very long (particularly when specifying
 graphics characters), options may also be included in a configuration
 file.
 The default is located in your home directory and
-named .nethackrc on Unix systems.  On other systems, the default may be
+named .grunthackrc on Unix systems.  On other systems, the default may be
 different, usually GruntHack.cnf.  On DOS or Windows, the name is
 defaults.gh, while on the Macintosh or BeOS, it is GruntHack Defaults.
 The configuration file's location may be specified by setting NETHACKOPTIONS
@@ -196,7 +196,7 @@ option, which must be the first argument if it appears,
 supplies a directory which is to serve as the playground.
 It overrides the value from NETHACKDIR, HACKDIR,
 or the directory specified by the game administrator during compilation
-(usually /usr/games/lib/nethackdir).
+(usually /usr/games/lib/grunthackdir).
 This option is usually only useful to the game administrator.
 The playground must contain several auxiliary files such as help files,
 the list of top scorers, and a subdirectory
@@ -228,7 +228,7 @@ files.
 .br
 .DT
 .ta \w'cmdhelp, opthelp, wizhelp\ \ \ 'u
-nethack		The program itself.
+grunthack		The program itself.
 .br
 data, oracles, rumors	Data files used by NetHack.
 .br

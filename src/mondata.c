@@ -10,6 +10,8 @@
 
 #ifdef OVLB
 
+extern const int monstr[];
+
 void
 set_mon_data(mon, ptr, flag)
 struct monst *mon;
@@ -20,13 +22,16 @@ int flag;
 
     if (flag == -1) return;		/* "don't care" */
 
+    if (is_female(ptr)) mon->female = 1;
+    else if (is_male(ptr)) mon->female = 0;
+
     if (is_racial(ptr) && (mon == &youmonst))
-        mon->mrace = urace.selfmask;  // just in case?
+        mon->mrace = urace.selfmask;  /* just in case? */
     else if (is_racial(ptr) && mon->isshk &&
              !strcmp(shkname(mon), "Izchak"))
     {
-        mon->mrace = M2_HUMAN;      // special case :-)
-	mon->morigdata = PM_ARCHON; // and don't you dare kill him
+        mon->mrace = M2_HUMAN;      /* special case :-) */
+	mon->morigdata = PM_ARCHON; /* and don't you dare kill him */
     }
     else if ((is_racial(ptr) && !(ptr->mflags2 & mon->mrace)) ||
              (is_were(ptr) && !mon->mrace))
@@ -44,21 +49,31 @@ int flag;
             int cnt = 0, races[10], j;
             for(j = MINMRACE; j <= MAXMRACE; j <<= 1)
             {
-    	        if ((ptr->mflags2 & j) ||
-		    is_were(ptr)) // cheat - werefoo can take any form
+    	        if (((ptr->mflags2 & j) ||
+		    is_were(ptr)) && /* cheat - werefoo can take any form */
+		    (!(mvitals[race_flag_to_pm(j)].mvflags &
+		    	(G_GENOD|G_EXTINCT))))
     	        {
     	            races[cnt] = j;
     	            cnt++;
     	        }
     	    
-    	        if (cnt == 10) break; // avoid unpleasantness if races change
+    	        if (cnt == 10) break; /* avoid unpleasantness if races change */
     	    }
     
-            if (cnt == 0) impossible("can't assign monster race?");
-            else
+            if (cnt > 0) 
     	    {
-                j = rn2(cnt);
-                mon->mrace = races[j];
+	        int k = 0;
+		while (k++ < 10) {
+		    int difficulty;
+                    j = rn2(cnt);
+                    mon->mrace = races[j];
+		    difficulty = monstr[monsndx(mon->data)] +
+		    		 race_lev_mod(races[j]);
+		    if (difficulty >= (level_difficulty() / 6) &&
+		        difficulty <= (level_difficulty() + u.ulevel) / 2)
+		        break;
+		}
             }
 	}
     }
@@ -129,7 +144,7 @@ struct monst *mon;
 			 (wep && wep->oartifact && defends(AD_DRLI, wep)));
 }
 
-boolean FDECL(obj_has_prop, (struct obj *, int));
+extern boolean FDECL(obj_has_prop, (struct obj *, int));
 
 boolean
 resists_magm(mon)	/* TRUE if monster is magic-missile resistant */
@@ -141,6 +156,13 @@ struct monst *mon;
 	/* as of 3.2.0:  gray dragons, Angels, Oracle, Yeenoghu */
 	if (dmgtype(ptr, AD_MAGM) || ptr == &mons[PM_BABY_GRAY_DRAGON] ||
 		dmgtype(ptr, AD_RBRE))	/* Chromatic Dragon */
+	    return TRUE;
+	/* Assumption: suicidal exploding monsters are magical in nature 
+	 * (particularly the spheres); thus, magic doesn't affect
+	 * them very well.
+	 * This is mainly to stop someone from abusing the spells to create
+	 * lots of pets courtesy of a polytrap. */
+	if (attacktype(ptr, AT_EXPL))
 	    return TRUE;
 	/* check for magic resistance granted by wielded weapon */
 	o = (mon == &youmonst) ? uwep : MON_WEP(mon);
@@ -626,7 +648,7 @@ static const short grownups[][2] = {
 	{PM_KOBOLD, PM_LORD}, {PM_GNOME, PM_LORD}, 
 	{PM_DWARF, PM_LORD}, {PM_LORD, PM_KING},
 	{PM_MIND_FLAYER, PM_MASTER_MIND_FLAYER},
-	// yields orcish sergeant, which eventually goes to orcish captain
+	/* yields orcish sergeant, which eventually goes to orcish captain */
 	{PM_ORC, PM_SERGEANT}, {PM_HILL_ORC, PM_SERGEANT},
 	{PM_MORDOR_ORC, PM_SERGEANT}, {PM_URUK_HAI, PM_SERGEANT},
 	{PM_SEWER_RAT, PM_GIANT_RAT},
@@ -639,9 +661,7 @@ static const short grownups[][2] = {
 	{PM_VAMPIRE, PM_VAMPIRE_LORD}, {PM_BAT, PM_GIANT_BAT},
 	{PM_BABY_GRAY_DRAGON, PM_GRAY_DRAGON},
 	{PM_BABY_SILVER_DRAGON, PM_SILVER_DRAGON},
-#if 0	/* DEFERRED */
 	{PM_BABY_SHIMMERING_DRAGON, PM_SHIMMERING_DRAGON},
-#endif
 	{PM_BABY_RED_DRAGON, PM_RED_DRAGON},
 	{PM_BABY_WHITE_DRAGON, PM_WHITE_DRAGON},
 	{PM_BABY_ORANGE_DRAGON, PM_ORANGE_DRAGON},

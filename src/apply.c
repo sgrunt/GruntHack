@@ -8,7 +8,8 @@
 #ifdef OVLB
 
 static const char tools[] = { TOOL_CLASS, WEAPON_CLASS, WAND_CLASS, 0 };
-static const char tools_too[] = { ALL_CLASSES, TOOL_CLASS, POTION_CLASS,
+static const char tools_too[] = { COIN_CLASS,
+				  ALL_CLASSES, TOOL_CLASS, POTION_CLASS,
 				  WEAPON_CLASS, WAND_CLASS, GEM_CLASS, 0 };
 
 #ifdef TOURIST
@@ -560,7 +561,7 @@ register xchar x, y;
 		    dist2(x,y,mtmp->mx,mtmp->my)) {
 		if (!um_dist(mtmp->mx, mtmp->my, 3)) {
 		    ;	/* still close enough */
-		} else if (otmp->cursed && !mbreathing(mtmp)) {
+		} else if (otmp->cursed && (!mbreathing(mtmp))) {
 		    if (um_dist(mtmp->mx, mtmp->my, 5) ||
 			    (mtmp->mhp -= rnd(2)) <= 0) {
 			long save_pacifism = u.uconduct.killer;
@@ -613,12 +614,20 @@ struct obj *obj;
 
 	if(!getdir((char *)0)) return 0;
 	if(obj->cursed && !rn2(2)) {
-		if (!Blind)
+		if (!Blind
+#ifdef INVISIBLE_OBJECTS
+			&& (!obj->oinvis || See_invisible)
+#endif
+		)
 			pline_The("mirror fogs up and doesn't reflect!");
 		return 1;
 	}
 	if(!u.dx && !u.dy && !u.dz) {
-		if(!Blind && !Invisible) {
+		if(!Blind && !Invisible
+#ifdef INVISIBLE_OBJECTS
+			&& (!obj->oinvis || See_invisible)
+#endif
+		) {
 		    if (u.umonnum == PM_FLOATING_EYE) {
 			if (!Free_action) {
 			pline(Hallucination ?
@@ -651,7 +660,11 @@ struct obj *obj;
 		return 1;
 	}
 	if(u.uswallow) {
-		if (!Blind) You("reflect %s %s.", s_suffix(mon_nam(u.ustuck)),
+		if (!Blind
+#ifdef INVISIBLE_OBJECTS
+		    && (!obj->oinvis || See_invisible)
+#endif
+		) You("reflect %s %s.", s_suffix(mon_nam(u.ustuck)),
 		    mbodypart(u.ustuck, STOMACH));
 		return 1;
 	}
@@ -662,7 +675,11 @@ struct obj *obj;
 		return 1;
 	}
 	if(u.dz) {
-		if (!Blind)
+		if (!Blind
+#ifdef INVISIBLE_OBJECTS
+		    && (!obj->oinvis || See_invisible)
+#endif
+		)
 		    You("reflect the %s.",
 			(u.dz > 0) ? surface(u.ux,u.uy) : ceiling(u.ux,u.uy));
 		return 1;
@@ -683,6 +700,12 @@ struct obj *obj;
 	} else if (!mtmp->mcansee) {
 	    if (vis)
 		pline("%s can't see anything right now.", Monnam(mtmp));
+#ifdef INVISIBLE_OBJECTS
+	} else if (obj->oinvis && !sees_invis(mtmp)) {
+		if (vis && !Blind && (!obj->oinvis || See_invisible))
+			pline("%s doesn't seem to notice the mirror.",
+				Monnam(mtmp));
+#endif
 	/* some monsters do special things */
 	} else if (mlet == S_VAMPIRE || mlet == S_GHOST) {
 	    if (vis)
@@ -726,7 +749,11 @@ struct obj *obj;
 		if (vis)
 		    pline("%s is frightened by its reflection.", Monnam(mtmp));
 		monflee(mtmp, d(2,4), FALSE, FALSE);
-	} else if (!Blind) {
+	} else if (!Blind
+#ifdef INVISIBLE_OBJECTS
+		&& (!obj->oinvis || See_invisible)
+#endif
+	) {
 		if (mtmp->minvis && !See_invisible)
 		    ;
 		else if ((mtmp->minvis && !sees_invis(mtmp))
@@ -1086,7 +1113,9 @@ struct obj *obj;
 		else pline("This %s has no oil.", xname(obj));
 		return;
 	}
-	if (obj->cursed && !rn2(2)) {
+	if (obj->cursed && !rn2(2) &&
+		(obj->otyp == OIL_LAMP || obj->otyp == MAGIC_LAMP ||
+		 obj->otyp == BRASS_LANTERN || !obj->oerodeproof)) {
 		pline("%s for a moment, then %s.",
 		      Tobjnam(obj, "flicker"), otense(obj, "die"));
 	} else {
@@ -1094,7 +1123,7 @@ struct obj *obj;
 				obj->otyp == BRASS_LANTERN) {
 		    check_unpaid(obj);
 		    pline("%s lamp is now on.", Shk_Your(buf, obj));
-		} else {	/* candle(s) */
+		} else if (!obj->oerodeproof) {	/* candle(s) */
 		    pline("%s flame%s %s%s",
 			s_suffix(Yname2(obj)),
 			plur(obj->quan), otense(obj, "burn"),
@@ -1105,6 +1134,11 @@ struct obj *obj;
 			verbalize("You burn %s, you bought %s!", ithem, ithem);
 			bill_dummy_object(obj);
 		    }
+		} else {
+		    pline("%s to light%s.",
+		    	Tobjnam(obj, "fail"),
+				obj->rknown ? "" : " for some reason");
+		    return;
 		}
 		begin_burn(obj, FALSE);
 	}
@@ -1426,6 +1460,9 @@ register struct obj *obj;
 	    can->cursed = obj->cursed;
 	    can->blessed = obj->blessed;
 	    can->owt = weight(can);
+#ifdef INVISIBLE_OBJECTS
+            can->oinvis = obj->oinvis;
+#endif
 	    can->known = 1;
 	    can->spe = -1;  /* Mark tinned tins. No spinach allowed... */
 	    if (corpse->spe < -1)
@@ -1459,7 +1496,7 @@ struct obj *obj;
 
 	    switch (rn2(6)) {
 	    case 0: make_sick(Sick ? Sick/3L + 1L : (long)rn1(ACURR(A_CON),20),
-			xname(obj), TRUE, SICK_NONVOMITABLE);
+			killer_xname(obj, "", TRUE), TRUE, SICK_NONVOMITABLE);
 		    break;
 	    case 1: make_blinded(Blinded + lcount, TRUE);
 		    break;
@@ -1631,7 +1668,11 @@ long timeout;
 	    Sprintf(monnambuf, "%s",an(m_monnam(mtmp)));
 	    switch (figurine->where) {
 		case OBJ_INVENT:
-		    if (Blind)
+		    if (Blind
+#ifdef INVISIBLE_OBJECTS
+			|| !canseemon(mtmp)
+#endif
+		    )
 			You_feel("%s %s from your pack!", something,
 			    locomotion(mtmp->data,"drop"));
 		    else
@@ -1641,7 +1682,11 @@ long timeout;
 		    break;
 
 		case OBJ_FLOOR:
-		    if (cansee_spot && !silent) {
+		    if (cansee_spot &&
+#ifdef INVISIBLE_OBJECTS
+			(!figurine->oinvis || See_invisible) &&
+#endif
+		    	!silent) {
 			You("suddenly see a figurine transform into %s!",
 				monnambuf);
 			redraw = TRUE;	/* update figurine's map location */
@@ -1649,7 +1694,11 @@ long timeout;
 		    break;
 
 		case OBJ_MINVENT:
-		    if (cansee_spot && !silent) {
+		    if (cansee_spot &&
+#ifdef INVISIBLE_OBJECTS
+			(!figurine->oinvis || See_invisible) &&
+#endif
+		    !silent) {
 			struct monst *mon;
 			mon = figurine->ocarry;
 			/* figurine carring monster might be invisible */
@@ -1801,7 +1850,7 @@ struct obj *obj;
 			You("cover %s with a thick layer of grease.",
 			    yname(otmp));
 			otmp->greased = 1;
-			if (otmp == uarmg) Glib |= FROMOUTSIDE; //bad idea!
+			if (otmp == uarmg) Glib |= FROMOUTSIDE; /* bad idea! */
 			if (obj->cursed && !nohands(youmonst.data)) {
 			    incr_itimeout(&Glib, rnd(15));
 			    pline("Some of the grease gets all over your %s.",
@@ -1852,7 +1901,11 @@ struct obj *tstone;
 #endif
 
     /* in case it was acquired while blinded */
-    if (!Blind) tstone->dknown = 1;
+    if (!Blind
+#ifdef INVISIBLE_OBJECTS
+	&& (!tstone->oinvis || See_invisible)
+#endif
+        ) tstone->dknown = 1;
     /* when the touchstone is fully known, don't bother listing extra
        junk as likely candidates for rubbing */
     choices = (tstone->otyp == TOUCHSTONE && tstone->dknown &&
@@ -1877,7 +1930,11 @@ struct obj *tstone;
     if (tstone->otyp == TOUCHSTONE && tstone->cursed &&
 	    obj->oclass == GEM_CLASS && !is_graystone(obj) &&
 	    !obj_resists(obj, 80, 100)) {
-	if (Blind)
+	if (Blind
+#ifdef INVISIBLE_OBJECTS
+		|| (!See_invisible && obj->oinvis)
+#endif
+	)
 	    pline("You feel something shatter.");
 	else if (Hallucination)
 	    pline("Oh, wow, look at the pretty shards.");
@@ -1891,7 +1948,11 @@ struct obj *tstone;
 	return;
     }
 
-    if (Blind) {
+    if (Blind
+#ifdef INVISIBLE_OBJECTS
+	|| (!See_invisible && (tstone->oinvis || obj->oinvis))
+#endif
+    ) {
 	pline(scritch);
 	return;
     } else if (Hallucination) {
@@ -2241,7 +2302,7 @@ struct obj *obj;
 	    } else {
 		pline(msg_slipsfree);
 	    }
-	    if (mtmp) wakeup(mtmp);
+	    if (mtmp) wakeup(mtmp, TRUE);
 	} else pline(msg_snap);
 
     } else if (mtmp) {
@@ -2337,7 +2398,7 @@ struct obj *obj;
 	    } else {
 		pline(msg_slipsfree);
 	    }
-	    wakeup(mtmp);
+	    wakeup(mtmp, TRUE);
 	} else {
 	    if (mtmp->m_ap_type &&
 		!Protection_from_shape_changers && !sensemon(mtmp))
@@ -2790,7 +2851,14 @@ doapply()
 
 	if(check_capacity((char *)0)) return (0);
 
-	if (carrying(POT_OIL) || uhave_graystone())
+	if (
+#ifdef GOLDOBJ
+	findgold(invent) ||
+#else
+	u.ugold > 0 ||
+#endif
+	
+	carrying(POT_OIL) || uhave_graystone())
 		Strcpy(class_list, tools_too);
 	else
 		Strcpy(class_list, tools);
@@ -2800,6 +2868,13 @@ doapply()
 	obj = getobj(class_list, "use or apply");
 	if(!obj) return 0;
 
+	if (u.uburied && obj->otyp != PICK_AXE &&
+		obj->otyp != DWARVISH_MATTOCK &&
+		!(Is_container(obj) && obj->otyp != BAG_OF_TRICKS)) {
+		You("don't have enough room to use that down here.");
+		return 0;
+	}
+
 	if (obj->oartifact && !touch_artifact(obj, &youmonst))
 	    return 1;	/* evading your grasp costs a turn; just be
 			   grateful that you don't drop it as well */
@@ -2808,6 +2883,12 @@ doapply()
 	    return do_break_wand(obj);
 
 	switch(obj->otyp){
+	case GOLD_PIECE:
+		You("flip a coin: %s.", rn2(2) ? "heads" : "tails");
+		(void)hold_another_object(obj, (const char *)0,
+					 (const char *)0,
+					 (const char *)0);
+		return 1;
 	case BLINDFOLD:
 	case LENSES:
 		if (obj == ublindf) {
@@ -2927,6 +3008,7 @@ doapply()
 	case CRYSTAL_BALL:
 		use_crystal_ball(obj);
 		break;
+	case FELT_MARKER:
 	case MAGIC_MARKER:
 		res = dowrite(obj);
 		break;
@@ -2967,13 +3049,13 @@ doapply()
 
 		    consume_obj_charge(obj, TRUE);
 		    if (!rn2(13)) {
-			otmp = mkobj(POTION_CLASS, FALSE);
+			otmp = mkobj(POTION_CLASS, NO_MO_FLAGS);
 			if (objects[otmp->otyp].oc_magic) do {
 			    otmp->otyp = rnd_class(POT_BOOZE, POT_WATER);
 			} while (otmp->otyp == POT_SICKNESS);
 			what = "A potion";
 		    } else {
-			otmp = mkobj(FOOD_CLASS, FALSE);
+			otmp = mkobj(FOOD_CLASS, NO_MO_FLAGS);
 			if (otmp->otyp == FOOD_RATION && !rn2(7))
 			    otmp->otyp = LUMP_OF_ROYAL_JELLY;
 			what = "Some food";

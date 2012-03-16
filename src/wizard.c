@@ -223,9 +223,9 @@ target_on(mask, mtmp)
 	register struct obj *otmp;
 	register struct monst *mtmp2;
 
-	// player monsters take whatever they can get
+	/* player monsters take whatever they can get */
 	if(!M_Wants(mask) && !is_mplayer(mtmp->data))
-	    return(STRAT_NONE);
+	    return(STRAT(STRAT_NONE, u.ux, u.uy, mask));
 
 	otyp = which_arti(mask);
 	if(!mon_has_arti(mtmp, otyp)) {
@@ -235,21 +235,21 @@ target_on(mask, mtmp)
 		return(STRAT(STRAT_GROUND, otmp->ox, otmp->oy, mask));
 	    else if((mtmp2 = other_mon_has_arti(mtmp, otyp)))
 		return(STRAT(STRAT_MONSTR, mtmp2->mx, mtmp2->my, mask));
-	    else // can't find something, so harass the player instead
+	    else /* can't find something, so harass the player instead */
 	        return(STRAT(STRAT_NONE, u.ux, u.uy, mask));
 	}
 
 #define a_align(x,y)    ((aligntyp)Amask2align(levl[x][y].altarmask & AM_MASK))
 
-	// we have the thing; let's attempt to escape
+	/* we have the thing; let's attempt to escape */
 	if (Is_astralevel(&u.uz))
 	{
-	    // Take the amulet to our altar!
+	    /* Take the amulet to our altar! */
 	    int targetx = u.ux, targety = u.uy;
 	    aligntyp malign = sgn(mtmp->data->maligntyp);
 
-	    //HACK: these are hardcoded and really should be stored
-	    //when Astral is generated...
+	    /*HACK: these are hardcoded and really should be stored*/
+	    /*when Astral is generated...*/
 	    if      (IS_ALTAR(levl[10][10].typ) &&
 	             a_align(10,10) == malign)
 		     targetx = 10, targety = 10;
@@ -264,9 +264,9 @@ target_on(mask, mtmp)
 	}
 
 	if (In_W_tower(mtmp->mx, mtmp->my, &u.uz) ||
-	    In_quest(&u.uz) || // won't leave its fortress...
+	    In_quest(&u.uz) || /* won't leave its fortress... */
 	    !xupstair)
-	    // no stairs, so make the player miserable!
+	    /* no stairs, so make the player miserable! */
 	    return(STRAT(STRAT_NONE, u.ux, u.uy, mask));
 
 	return(STRAT(STRAT_NONE, xupstair, yupstair, mask));
@@ -363,6 +363,7 @@ tactics(mtmp)
 		        return(1);
 		    }
 		}
+#ifndef COMBINED_SPELLS
 		/* if you're not around, cast healing spells */
 		if (distu(mtmp->mx,mtmp->my) > (BOLT_LIM * BOLT_LIM))
 		    if(mtmp->mhp <= mtmp->mhpmax - 8) {
@@ -374,6 +375,7 @@ tactics(mtmp)
 			mtmp->mhp += rnd(8);
 			return(1);
 		    }
+#endif
 		/* fall through :-) */
 
 	    case STRAT_NONE:	/* harrass */

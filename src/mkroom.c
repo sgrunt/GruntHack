@@ -233,9 +233,7 @@ struct mkroom *sroom;
 	int rmno = (sroom - rooms) + ROOMOFFSET;
 	coord mm;
 
-#ifdef GCC_WARN
 	tx = ty = goldlim = 0;
-#endif
 
 	sh = sroom->fdoor;
 	switch(type) {
@@ -252,8 +250,9 @@ struct mkroom *sroom;
 			tx = mm.x; ty = mm.y;
 		} while (occupied((xchar)tx, (xchar)ty) && --i > 0);
 	    throne_placed:
-	        if (Is_knox(&u.uz)) break;  // Croesus' throne
-		mon = makemon(&mons[PM_KING], tx, ty, NO_MM_FLAGS);
+	        if (Is_knox(&u.uz)) break;  /* Croesus' throne */
+		mon = makemon(&mons[
+			rn2(2) ? PM_KING : PM_QUEEN], tx, ty, NO_MM_FLAGS);
 		if(mon) {
 			mon->msleeping = 1;
 			if (type==COURT && mon->mpeaceful) {
@@ -357,14 +356,15 @@ struct mkroom *sroom;
 			    if (sobj) {
 				for (i = rn2(5); i; i--)
 				    (void) add_to_container(sobj,
-						mkobj(RANDOM_CLASS, FALSE));
+						mkobj(RANDOM_CLASS, 
+							NO_MO_FLAGS));
 				sobj->owt = weight(sobj);
 			    }
 			}
 			break;
 		    case ANTHOLE:
 			if(!rn2(3))
-			    (void) mkobj_at(FOOD_CLASS, sx, sy, FALSE);
+			    (void) mkobj_at(FOOD_CLASS, sx, sy, NO_MO_FLAGS);
 			break;
 		}
 	    }

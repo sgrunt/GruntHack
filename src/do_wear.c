@@ -174,11 +174,17 @@ long mask;
     
     if (props & ITEM_CLAIRVOYANCE)
         EClairvoyant |= mask;	
+
+    if (props & ITEM_HUNGER)
+    	EHunger |= mask;
+
+    if (props & ITEM_AGGRAVATE)
+    	EAggravate_monster |= mask;
 }
 
 STATIC_PTR
 int
-Boots_on()
+Boots_on(VOID_ARGS)
 {
     long oldprop =
 	u.uprops[objects[uarmf->otyp].oc_oprop].extrinsic & ~WORN_BOOTS;
@@ -211,7 +217,7 @@ Boots_on()
 		}
 		break;
 	case FUMBLE_BOOTS:
-		//if (!oldprop && !(HFumbling & ~TIMEOUT))
+		/*if (!oldprop && !(HFumbling & ~TIMEOUT))*/
 		if (!(HFumbling & ~TIMEOUT))
 			incr_itimeout(&HFumbling, rnd(20));
 		makeknown(uarmf->otyp);
@@ -307,10 +313,16 @@ long mask;
     
     if (props & ITEM_CLAIRVOYANCE)
         EClairvoyant &= ~mask;	
+
+    if (props & ITEM_HUNGER)
+    	EHunger &= ~mask;
+
+    if (props & ITEM_AGGRAVATE)
+    	EAggravate_monster &= ~mask;
 }
 
 int
-Boots_off()
+Boots_off(VOID_ARGS)
 {
     int otyp = uarmf->otyp;
     long oldprop = u.uprops[objects[otyp].oc_oprop].extrinsic & ~WORN_BOOTS;
@@ -345,8 +357,8 @@ Boots_off()
 		}
 		break;
 	case FUMBLE_BOOTS:
-		//if (!oldprop && !(HFumbling & ~TIMEOUT))
-		//	HFumbling = EFumbling = 0;
+		/*if (!oldprop && !(HFumbling & ~TIMEOUT))
+		 *	HFumbling = EFumbling = 0;*/
 		makeknown(otyp);
 		flags.botl = 1;
 		break;
@@ -368,8 +380,8 @@ Boots_off()
     return 0;
 }
 
-STATIC_OVL int
-Cloak_on()
+STATIC_PTR int
+Cloak_on(VOID_ARGS)
 {
     long oldprop =
 	u.uprops[objects[uarmc->otyp].oc_oprop].extrinsic & ~WORN_CLOAK;
@@ -420,7 +432,7 @@ Cloak_on()
 }
 
 int
-Cloak_off()
+Cloak_off(VOID_ARGS)
 {
     int otyp = uarmc->otyp;
     long oldprop = u.uprops[objects[otyp].oc_oprop].extrinsic & ~WORN_CLOAK;
@@ -469,7 +481,7 @@ Cloak_off()
 
 STATIC_PTR
 int
-Helmet_on()
+Helmet_on(VOID_ARGS)
 {
     Oprops_on(uarmh, WORN_HELMET);
 
@@ -528,7 +540,7 @@ Helmet_on()
 }
 
 int
-Helmet_off()
+Helmet_off(VOID_ARGS)
 {
     Oprops_off(uarmh, WORN_HELMET);
 
@@ -573,10 +585,10 @@ Helmet_off()
 
 STATIC_PTR
 int
-Gloves_on()
+Gloves_on(VOID_ARGS)
 {
-    long oldprop =
-	u.uprops[objects[uarmg->otyp].oc_oprop].extrinsic & ~WORN_GLOVES;
+    /*long oldprop =
+	u.uprops[objects[uarmg->otyp].oc_oprop].extrinsic & ~WORN_GLOVES;*/
 
     Oprops_on(uarmg, WORN_GLOVES);
 
@@ -584,7 +596,7 @@ Gloves_on()
 	case GLOVES:
 		break;
 	case GAUNTLETS_OF_FUMBLING:
-		//if (!oldprop && !(HFumbling & ~TIMEOUT))
+		/*if (!oldprop && !(HFumbling & ~TIMEOUT))*/
 		if (!(HFumbling & ~TIMEOUT))
 			incr_itimeout(&HFumbling, rnd(20));
 		makeknown(uarmg->otyp);
@@ -604,10 +616,10 @@ Gloves_on()
 }
 
 int
-Gloves_off()
+Gloves_off(VOID_ARGS)
 {
-    long oldprop =
-	u.uprops[objects[uarmg->otyp].oc_oprop].extrinsic & ~WORN_GLOVES;
+    /*long oldprop =
+	u.uprops[objects[uarmg->otyp].oc_oprop].extrinsic & ~WORN_GLOVES;*/
 
     Oprops_off(uarmg, WORN_GLOVES);
 
@@ -619,8 +631,8 @@ Gloves_off()
 	case GLOVES:
 	    break;
 	case GAUNTLETS_OF_FUMBLING:
-	    //if (!oldprop && !(HFumbling & ~TIMEOUT))
-	    //	HFumbling = EFumbling = 0;
+	    /*if (!oldprop && !(HFumbling & ~TIMEOUT))
+	     *	HFumbling = EFumbling = 0;*/
 	    makeknown(uarmg->otyp);
 	    flags.botl = 1;		/* reveal new DEX */
 	    break;
@@ -668,8 +680,8 @@ Gloves_off()
     return 0;
 }
 
-STATIC_OVL int
-Shield_on()
+STATIC_PTR int
+Shield_on(VOID_ARGS)
 {
     Oprops_on(uarms, WORN_SHIELD);
 /*
@@ -689,7 +701,7 @@ Shield_on()
 }
 
 int
-Shield_off()
+Shield_off(VOID_ARGS)
 {
     Oprops_off(uarms, WORN_SHIELD);
     takeoff_mask &= ~W_ARMS;
@@ -711,8 +723,8 @@ Shield_off()
 }
 
 #ifdef TOURIST
-STATIC_OVL int
-Shirt_on()
+STATIC_PTR int
+Shirt_on(VOID_ARGS)
 {
     Oprops_on(uarmu, WORN_SHIRT);
 /*
@@ -727,7 +739,7 @@ Shirt_on()
 }
 
 int
-Shirt_off()
+Shirt_off(VOID_ARGS)
 {
     Oprops_off(uarmu, WORN_SHIRT);
     takeoff_mask &= ~W_ARMU;
@@ -750,14 +762,14 @@ Shirt_off()
  */
 STATIC_PTR
 int
-Armor_on()
+Armor_on(VOID_ARGS)
 {
     Oprops_on(uarm, W_ARM);
     return 0;
 }
 
 int
-Armor_off()
+Armor_off(VOID_ARGS)
 {
     Oprops_off(uarm, W_ARM);
     takeoff_mask &= ~W_ARM;
@@ -787,8 +799,13 @@ Amulet_on()
 	case AMULET_OF_LIFE_SAVING:
 	case AMULET_VERSUS_POISON:
 	case AMULET_OF_REFLECTION:
-	case AMULET_OF_MAGICAL_BREATHING:
 	case FAKE_AMULET_OF_YENDOR:
+	case AMULET_OF_MAGICAL_BREATHING:
+		if (Strangled) {
+		    You("suddenly feel much less pressured.");
+		    makeknown(AMULET_OF_MAGICAL_BREATHING);
+		    Strangled = 0;
+		}
 		break;
 	case AMULET_OF_UNCHANGING:
 		if (Slimed) {
@@ -823,6 +840,11 @@ Amulet_on()
 	case AMULET_OF_STRANGULATION:
 		makeknown(AMULET_OF_STRANGULATION);
 		pline("It constricts your throat!");
+		if (!Strangled) {
+			u.usuff_fmt = KILLED_BY;
+			Strcpy(u.usuff_cause,
+				killer_xname(uamul, "", TRUE));
+		}
 		Strangled = 6;
 		break;
 	case AMULET_OF_RESTFUL_SLEEP:
@@ -863,6 +885,10 @@ Amulet_off()
 		    	(void) drown();
 		    }
 		    return;
+		}
+		if (u.uburied && !breathless(youmonst.data)) {
+		    You("can't breathe down here!");
+		    Strangled = 6;
 		}
 		break;
 	case AMULET_OF_STRANGULATION:
@@ -1141,7 +1167,12 @@ register struct obj *otmp;
 	}
 	if (changed) {
 	    /* blindness has just been toggled */
-	    if (Blind_telepat || Infravision) see_monsters();
+	    if (Blind_telepat || Infravision) {
+	    	see_monsters();
+#ifdef INVISIBLE_OBJECTS
+		see_objects();
+#endif
+	    }
 	    vision_full_recalc = 1;	/* recalc vision limits */
 	    flags.botl = 1;
 	}
@@ -1176,7 +1207,12 @@ register struct obj *otmp;
 	}
 	if (changed) {
 	    /* blindness has just been toggled */
-	    if (Blind_telepat || Infravision) see_monsters();
+	    if (Blind_telepat || Infravision) {
+	    	see_monsters();
+#ifdef INVISIBLE_OBJECTS
+		see_objects();
+#endif
+	    }
 	    vision_full_recalc = 1;	/* recalc vision limits */
 	    flags.botl = 1;
 	}
@@ -1288,7 +1324,11 @@ dotakeoff()
 			  "  Use 'R' command to remove accessories." : "");
 		return 0;
 	}
-	if (armorpieces > 1)
+	if (armorpieces > 1
+#ifdef PARANOID
+	    || iflags.paranoid_remove
+#endif
+	    )
 		otmp = getobj(clothes, "take off");
 	if (otmp == 0) return(0);
 	if (!(otmp->owornmask & W_ARMOR)) {
@@ -1338,7 +1378,11 @@ doremring()
 		      "  Use 'T' command to take off armor." : "");
 		return(0);
 	}
-	if (Accessories != 1) otmp = getobj(accessories, "remove");
+	if (Accessories != 1
+#ifdef PARANOID
+	    || iflags.paranoid_remove
+#endif
+	    ) otmp = getobj(accessories, "remove");
 	if(!otmp) return(0);
 	if(!(otmp->owornmask & (W_RING | W_AMUL | W_TOOL))) {
 		You("are not wearing that.");
@@ -1434,7 +1478,7 @@ register struct obj *otmp;
 #ifdef TOURIST
 		else if(is_shirt(otmp))
 			(void) Shirt_off();
-#endif //TOURIST
+#endif /*TOURIST*/
 
 		else setworn((struct obj *)0, otmp->owornmask & W_ARMOR);
 		off_msg(otmp);
@@ -2150,7 +2194,7 @@ static const char *disrobing = "";
 
 STATIC_PTR
 int
-take_off()
+take_off(VOID_ARGS)
 {
 	register int i;
 	register struct obj *otmp;
@@ -2388,7 +2432,7 @@ register schar delta;
 	                    otmp->otyp == GAUNTLETS_OF_DEXTERITY);
 	if (isnormal || (otmp->oprops & ITEM_DEXTERITY)) {
 		if (delta) {
-			if (isnormal) makeknown(uarmg->otyp);
+			if (isnormal) makeknown(otmp->otyp);
 			else
 			    otmp->oprops_known |= ITEM_DEXTERITY;
 			ABON(A_DEX) += (delta);
@@ -2399,7 +2443,7 @@ register schar delta;
 	            otmp->otyp == HELM_OF_BRILLIANCE); 
 	if (isnormal || (otmp->oprops & ITEM_BRILLIANCE)) {
 		if (delta) {
-			if (isnormal) makeknown(uarmg->otyp);
+			if (isnormal) makeknown(otmp->otyp);
 			else
 			    otmp->oprops_known |= ITEM_BRILLIANCE;
 			ABON(A_INT) += (delta);

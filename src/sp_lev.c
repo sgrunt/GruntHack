@@ -743,6 +743,9 @@ aligntyp alignment;
 	return(k ? -alignment : 0);
 }
 
+extern void FDECL(m_initweap,(struct monst *));
+extern void FDECL(m_initinv,(struct monst *));
+
 STATIC_OVL void
 create_monster(m,croom)
 monster	*m;
@@ -789,7 +792,7 @@ struct mkroom	*croom;
 	    pm = mkclass(class,G_NOGEN);
 	    /* if we can't get a specific monster type (pm == 0) then the
 	       class has been genocided, so settle for a random monster */
-	    if (is_racial(pm))
+	    if (pm && is_racial(pm))
 	    {
     	        if (class == S_HUMAN)
     	            racemask = rn2(2) ? M2_HUMAN : M2_ELF;
@@ -805,7 +808,7 @@ struct mkroom	*croom;
 	}
 	if (In_mines(&u.uz) && pm &&
 	                is_racial(pm) && your_race_mdat(pm) &&
-			(pm->mflags2 & (~M2_DWARF & ~M2_GNOME & M2_RACEMASK)
+			((pm->mflags2 & ((~M2_DWARF) & (~M2_GNOME) & (M2_RACEMASK)))
 			    == 0L) &&
 			(Race_if(PM_DWARF) || Race_if(PM_GNOME)) && rn2(3))
 	    pm = (struct permonst *) 0;
@@ -842,6 +845,7 @@ struct mkroom	*croom;
 	    {
 	        mtmp->mrace = racemask;
 		set_mon_data(mtmp, pm, 0);
+		mtmp->morigdata = monsndx(pm);
 	        mtmp->m_lev = adj_lev(pm);
 	        if (-race_lev_mod(mtmp->mrace) > mtmp->m_lev)
 		    mtmp->m_lev = 0;
@@ -850,6 +854,18 @@ struct mkroom	*croom;
 	            mtmp->m_lev += race_lev_mod(mtmp->mrace);
 	            if (mtmp->m_lev > 49) mtmp->m_lev = 49;
 	        }
+		if (is_mplayer(pm)) {
+		    if (mtmp->m_lev < 1) mtmp->m_lev = 1;
+		    if (mtmp->m_lev > 30) mtmp->m_lev = 30;
+		}
+	    	mtmp->mhpmax = mtmp->mhp = d((int)mtmp->m_lev, 8);
+		if (mtmp->mhpmax < 1)
+		   mtmp->mhpmax = mtmp->mhp = 1;
+
+		m_initweap(mtmp);
+		m_initinv(mtmp);
+	    	m_dowear(mtmp, TRUE);
+
 		newsym(x, y);
 	    }
 
@@ -968,7 +984,8 @@ struct mkroom	*croom;
 	    c = 0;
 
 	if (!c)
-	    otmp = mkobj_at(RANDOM_CLASS, x, y, !named);
+	    otmp = mkobj_at(RANDOM_CLASS, x, y, named ? NO_MM_FLAGS
+	    					      : MO_ALLOW_ARTIFACT);
 	else if (o->id != -1)
 	    otmp = mksobj_at(o->id, x, y, TRUE, !named);
 	else {
@@ -985,7 +1002,8 @@ struct mkroom	*croom;
 	    if (oclass == COIN_CLASS)
 		otmp = mkgold(0L, x, y);
 	    else
-		otmp = mkobj_at(oclass, x, y, !named);
+		otmp = mkobj_at(oclass, x, y, named ? NO_MM_FLAGS
+						    : MO_ALLOW_ARTIFACT);
 	}
 
 	if (o->spe != -127)	/* That means NOT RANDOM! */
@@ -1068,6 +1086,21 @@ struct mkroom	*croom;
 	    otmp->owt = weight(otmp);
 	    mongone(was);
 	}
+
+#ifdef RECORD_ACHIEVE
+        /* Nasty hack here: try to determine if this is the Mines or Sokoban
+         * "prize" and then set record_achieve_special (maps to corpsenm)
+         * for the object.  That field will later be checked to find out if
+         * the player obtained the prize. */
+        if(otmp->otyp == LUCKSTONE && Is_mineend_level(&u.uz)) {
+                otmp->record_achieve_special = 1;
+        } else if((otmp->otyp == AMULET_OF_REFLECTION ||
+	           otmp->otyp == CLOAK_OF_MAGIC_RESISTANCE ||
+                   otmp->otyp == BAG_OF_HOLDING) && 
+                  Is_sokoend_level(&u.uz)) {
+                otmp->record_achieve_special = 1;
+        }
+#endif
 
 	stackobj(otmp);
 
@@ -2390,6 +2423,12 @@ dlb *fd;
 			if(typ < D_CLOSED)
 			    typ = D_CLOSED; /* force it to be closed */
 		}
+		/* special Sokoban doors */
+		/* this relies on the normal doors being locked, */
+		/* but the special doors being trapped */
+		if (In_sokoban(&u.uz) && typ == D_CLOSED) {
+			typ |= D_TRAPPED;
+		}
 		levl[x][y].doormask = typ;
 
 		/* Now the complicated part, list it with each subroom */
@@ -2642,7 +2681,8 @@ dlb *fd;
 	    for(x = rnd((int) (20 * mapfact) / 100); x; x--) {
 		    maze1xy(&mm, DRY);
 		    (void) mkobj_at(rn2(2) ? GEM_CLASS : RANDOM_CLASS,
-							mm.x, mm.y, TRUE);
+							mm.x, mm.y, 
+							MO_ALLOW_ARTIFACT);
 	    }
 	    for(x = rnd((int) (12 * mapfact) / 100); x; x--) {
 		    maze1xy(&mm, DRY);

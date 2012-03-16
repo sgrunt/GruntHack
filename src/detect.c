@@ -67,6 +67,10 @@ struct obj *obj;
     struct obj *otmp;
 
     obj->dknown = 1;
+#ifdef INVISIBLE_OBJECTS
+    obj->iknown = 1;
+    obj->opresenceknown = 1;
+#endif
     if (Has_contents(obj)) {
 	for(otmp = obj->cobj; otmp; otmp = otmp->nobj)
 	    do_dknown_of(otmp);
@@ -1172,7 +1176,7 @@ register int aflag;
 	register struct trap *trap;
 	register struct monst *mtmp;
 
-	if(u.uswallow) {
+	if(u.uswallow || u.uburied) {
 		if (!aflag)
 			pline("What are you looking for?  The exit?");
 	} else {
@@ -1186,7 +1190,7 @@ register int aflag;
 	      for(y = u.uy-1; y < u.uy+2; y++) {
 		if(!isok(x,y)) continue;
 		if(x != u.ux || y != u.uy) {
-		    if (Blind && !aflag) feel_location(x,y);
+		    if (Blind/* && !aflag*/) feel_location(x,y);
 		    if(levl[x][y].typ == SDOOR) {
 			if(rnl(7-fund)) continue;
 			cvt_sdoor_to_door(&levl[x][y]);	/* .typ = DOOR */
@@ -1243,11 +1247,11 @@ register int aflag;
 			/* see if an invisible monster has moved--if Blind,
 			 * feel_location() already did it
 			 */
-			if (!aflag && !mtmp && !Blind &&
+			/*if (!aflag && !mtmp && !Blind &&
 				    glyph_is_invisible(levl[x][y].glyph)) {
 			    unmap_object(x,y);
 			    newsym(x,y);
-			}
+			}*/
 
 			if ((trap = t_at(x,y)) && !trap->tseen && !rnl(8)) {
 			    nomul(0);

@@ -95,12 +95,13 @@ struct flag {
 				/* 3: FH, 4: ff+, 5: ff-, 6: FF+, 7: FF- */
 				/* 8: travel */
 	unsigned long warntype; /* warn_of_mon monster type M2 */
+	int warnsym;   /* warn_of_mon monster sym */
 	int	 warnlevel;
 	int	 djinni_count, ghost_count;	/* potion effect tuning */
 	int	 pickup_burden;		/* maximum burden before prompt */
 	char	 inv_order[MAXOCLASSES];
 	char	 pickup_types[MAXOCLASSES];
-#define NUM_DISCLOSURE_OPTIONS		5
+#define NUM_DISCLOSURE_OPTIONS		6	
 #define DISCLOSE_PROMPT_DEFAULT_YES	'y'
 #define DISCLOSE_PROMPT_DEFAULT_NO	'n'
 #define DISCLOSE_YES_WITHOUT_PROMPT	'+'
@@ -168,6 +169,9 @@ struct instance_flags {
 	boolean  menu_requested; /* Flag for overloaded use of 'm' prefix
 				  * on some non-move commands */
 	uchar num_pad_mode;
+
+	boolean bones;
+
 	int	menu_headings;	/* ATR for menu headings */
 	int      purge_monsters;	/* # of dead monsters still on fmon list */
 	int *opt_booldup;	/* for duplication of boolean opts in config file */
@@ -188,6 +192,9 @@ struct instance_flags {
 #endif
 #ifdef MENU_COLOR
 	boolean use_menu_color;	/* use color in menus; only if wc_color */
+#endif
+#ifdef WIN_EDGE
+	boolean  win_edge;	/* are the menus aligned left&top */
 #endif
 #ifdef MFLOPPY
 	boolean  checkspace;	/* check disk space before writing files */
@@ -222,8 +229,23 @@ struct instance_flags {
 	boolean lan_mail;	/* mail is initialized */
 	boolean lan_mail_fetched; /* mail is awaiting display */
 #endif
+	boolean  pickup_thrown;	/* auto-pickup items you threw */
 #ifdef SORTLOOT
 	char sortloot;          /* sort items to loot alphabetically */
+#endif
+#ifdef SHOW_BORN
+	boolean show_born;	/* show numbers of created monsters */
+#endif
+#ifdef PARANOID
+	boolean  paranoid_hit;  /* Ask for 'yes' when hitting peacefuls */
+	boolean  paranoid_quit; /* Ask for 'yes' when quitting */
+	boolean  paranoid_remove; /* Always show menu for 'T' and 'R' */
+#endif
+#ifdef NEW_CALL_MENU
+	boolean  old_C_behaviour; /* Don't use the new menu for C and #name */
+#endif
+#ifdef QUIVER_FIRED
+	boolean quiver_fired;	/* quiver with f command */
 #endif
 /*
  * Window capability support.
@@ -275,12 +297,14 @@ struct instance_flags {
 	boolean wc2_darkgray;		/* try to use PC dark-gray color
 					 * to represent black object */
 
+	boolean show_buc;	/* always show BUC status */
 	boolean  cmdassist;	/* provide detailed assistance for some commands */
 	boolean	 obsolete;	/* obsolete options can point at this, it isn't used */
 	/* Items which belong in flags, but are here to allow save compatibility */
 	boolean  lootabc;	/* use "a/b/c" rather than "o/i/b" when looting */
 	boolean  showrace;	/* show hero glyph by race rather than by role */
 	boolean  travelcmd;	/* allow travel command */
+	boolean  showsym;	/* show object symbols in menus */
 	int	 runmode;	/* update screen display during run moves */
 #ifdef AUTOPICKUP_EXCEPTIONS
 	struct autopickup_exception *autopickup_exceptions[2];
@@ -290,6 +314,9 @@ struct instance_flags {
 #ifdef WIN32CON
 #define MAX_ALTKEYHANDLER 25
 	char	 altkeyhandler[MAX_ALTKEYHANDLER];
+#endif
+#ifdef REALTIME_ON_BOTL
+  boolean  showrealtime; /* show actual elapsed time */
 #endif
 };
 

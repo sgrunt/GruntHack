@@ -284,6 +284,6 @@ register char *s;
 #endif /* OVLB */
 
 
-#ifdef __EMX__
+/*#if defined(__EMX__)
 void seteuid(int i){;}
-#endif
+#endif*/

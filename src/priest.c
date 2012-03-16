@@ -219,7 +219,7 @@ boolean sanctum;   /* is it the seat of the high priest? */
 		}
 		/* 2 to 4 spellbooks */
 		for (cnt = rn1(3,2); cnt > 0; --cnt) {
-		    (void) mpickobj(priest, mkobj(SPBOOK_CLASS, FALSE));
+		    (void) mpickobj(priest, mkobj(SPBOOK_CLASS, MO_ALLOW_ARTIFACT));
 		}
 		/* robe [via makemon()] */
 		if (rn2(2) && (otmp = which_armor(priest, W_ARMC)) != 0) {
@@ -392,10 +392,7 @@ register int roomno;
 		    else You("sense a presence close by!");
 		    mtmp->mpeaceful = 0;
 		    set_malign(mtmp);
-		    if(flags.verbose)
-			You("are frightened to death, and unable to move.");
-		    nomul2(-3, "scared");
-		    nomovemsg = "You regain your composure.";
+		    frighten_player(3);
 	       }
 	   }
        }
@@ -669,7 +666,7 @@ angry_priest()
 	struct rm *lev;
 
 	if ((priest = findpriest(temple_occupied(u.urooms))) != 0) {
-	    wakeup(priest);
+	    wakeup(priest, TRUE);
 	    /*
 	     * If the altar has been destroyed or converted, let the
 	     * priest run loose.

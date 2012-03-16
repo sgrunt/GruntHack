@@ -9,9 +9,13 @@
 #include "wintty.h" /* more() */
 #endif
 
+#if defined(WHEREIS_FILE) && defined(UNIX)
+#include <sys/types.h> /* whereis-file chmod() */
+#endif
+
 #include <ctype.h>
 
-#if !defined(MAC) && !defined(O_WRONLY) && !defined(AZTEC_C)
+#if (!defined(MAC) && !defined(O_WRONLY) && !defined(AZTEC_C)) || defined(USE_FCNTL)
 #include <fcntl.h>
 #endif
 
@@ -150,7 +154,9 @@ STATIC_DCL char *NDECL(set_bonestemp_name);
 STATIC_DCL void FDECL(redirect, (const char *,const char *,FILE *,BOOLEAN_P));
 STATIC_DCL void FDECL(docompress_file, (const char *,BOOLEAN_P));
 #endif
+#ifndef USE_FCNTL
 STATIC_DCL char *FDECL(make_lockname, (const char *,char *));
+#endif
 STATIC_DCL FILE *FDECL(fopen_config_file, (const char *));
 STATIC_DCL int FDECL(get_uchars, (FILE *,char *,char *,uchar *,BOOLEAN_P,int,const char *));
 int FDECL(parse_config_line, (FILE *,char *,char *,char *));
@@ -162,6 +168,17 @@ STATIC_DCL boolean FDECL(copy_bytes, (int, int));
 #endif
 #ifdef HOLD_LOCKFILE_OPEN
 STATIC_DCL int FDECL(open_levelfile_exclusively, (const char *, int, int));
+#endif
+
+#if defined(AMIGA) && defined(__SASC_60)
+int snprintf(dest, n, fmt, args)
+char *dest;
+unsigned int n;
+const char *fmt;
+va_list args;
+{
+    return sprintf(dest, fmt, args);
+}
 #endif
 
 /*
@@ -534,6 +551,9 @@ clearlocks()
 	/* can't access maxledgerno() before dungeons are created -dlc */
 	for (x = (n_dgns ? maxledgerno() : 0); x >= 0; x--)
 		delete_levelfile(x);	/* not all levels need be present */
+#ifdef WHEREIS_FILE
+	delete_whereis();
+#endif
 #endif
 }
 
@@ -599,6 +619,85 @@ int fd;
 #endif
 	
 /* ----------  END LEVEL FILE HANDLING ----------- */
+
+#ifdef WHEREIS_FILE
+void
+touch_whereis()
+{
+  /* Write out our current level and branch to name.whereis
+   *
+   *      Could eventually bolt on all kinds of info, but this way
+   *      at least something which wants to can scan for the games.
+   *
+   * For now this only works on Win32 and UNIX.  I'm too lazy
+   * to sort out all the proper other-OS stuff.
+   */
+
+  FILE* fp;
+  char whereis_file[255];
+  char whereis_work[255];
+
+#ifdef WIN32
+  Sprintf(whereis_file,"%s-%s.whereis",get_username(0),plname);
+#else
+  Sprintf(whereis_file,"whereis/%s.whereis",plname);
+#endif
+  Sprintf(whereis_work,
+         "depth=%d:dnum=%d:hp=%d:maxhp=%d:turns=%d:score=%ld:role=%s:race=%s:gender=%s:align=%s:conduct=0x%lx:amulet=%d\n",
+         depth(&u.uz),
+         u.uz.dnum,
+         u.uhp,
+         u.uhpmax,
+         moves,
+         botl_score(),
+         urole.filecode,
+         urace.filecode,
+         genders[flags.female].filecode,
+         aligns[1-u.ualign.type].filecode,
+         encodeconduct(),
+         u.uhave.amulet ? 1 : 0
+         );
+  /*
+  Sprintf(whereis_work,"%d,%d,%d,%d,%d,0,0,%s,%s,%s,%d,%d\n",
+         depth(&u.uz), u.uz.dnum, u.uhp, u.uhpmax, moves,
+         urole.name.m,urace.adj,u.mfemale ? "F" : "M",u.ualign.type + 2,
+         u.uhave.amulet ? 1 : 0);*/
+  fp = fopen_datafile(whereis_file,"w",LEVELPREFIX);
+  if (fp) {
+#ifdef UNIX
+    mode_t whereismode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+    chmod(fqname(whereis_file, LEVELPREFIX, 2), whereismode);
+#endif
+    fwrite(whereis_work,strlen(whereis_work),1,fp);
+    fclose(fp);
+  }
+
+}
+
+
+/* Changed over to write out where the player last was when they
+ * left the game; including possibly 'dead' :) */
+void
+delete_whereis()
+{
+    /*FILE* fp;*/
+  char whereis_file[255];
+  /*char whereis_work[255];*/
+#if defined (WIN32)
+  Sprintf(whereis_file,"%s-%s.whereis",get_username(0),plname);
+#else
+  Sprintf(whereis_file,"whereis/%s.whereis",plname);
+#endif
+  (void) unlink(fqname(whereis_file, LEVELPREFIX, 2));
+  /*
+  fp = fopen_datafile(whereis_file,"w",LEVELPREFIX);
+  if (fp) {
+    fwrite(whereis_work,strlen(whereis_work),1,fp);
+    fclose(fp);
+  }
+  */
+}
+#endif /* WHEREIS_FILE */
 
 
 /* ----------  BEGIN BONES FILE HANDLING ----------- */
@@ -1243,12 +1342,16 @@ const char *filename;
 
 static int nesting = 0;
 
-#ifdef NO_FILE_LINKS	/* implies UNIX */
+#if defined(NO_FILE_LINKS) || defined(USE_FCNTL) 	/* implies UNIX */
 static int lockfd;	/* for lock_file() to pass to unlock_file() */
+#endif
+#ifdef USE_FCNTL
+struct flock sflock; /* for unlocking, same as above */
 #endif
 
 #define HUP	if (!program_state.done_hup)
 
+#ifndef USE_FCNTL
 STATIC_OVL char *
 make_lockname(filename, lockname)
 const char *filename;
@@ -1282,6 +1385,7 @@ char *lockname;
 # endif  /* UNIX || VMS || AMIGA || WIN32 || MSDOS */
 #endif
 }
+#endif /* !USE_FCNTL */
 
 
 /* lock a file */
@@ -1294,8 +1398,10 @@ int retryct;
 #if (defined(macintosh) && (defined(__SC__) || defined(__MRC__))) || defined(__MWERKS__)
 # pragma unused(filename, retryct)
 #endif
+#ifndef USE_FCNTL
 	char locknambuf[BUFSZ];
 	const char *lockname;
+#endif
 
 	nesting++;
 	if (nesting > 1) {
@@ -1303,18 +1409,51 @@ int retryct;
 	    return TRUE;
 	}
 
+#ifndef USE_FCNTL
 	lockname = make_lockname(filename, locknambuf);
-	filename = fqname(filename, whichprefix, 0);
 #ifndef NO_FILE_LINKS	/* LOCKDIR should be subsumed by LOCKPREFIX */
 	lockname = fqname(lockname, LOCKPREFIX, 2);
 #endif
+#endif
+	filename = fqname(filename, whichprefix, 0);
+
+#ifdef USE_FCNTL
+	lockfd = open(filename,O_RDWR);
+	if (lockfd == -1) {
+		HUP raw_printf("Cannot open file %s. This is a program bug.",
+			filename);
+	}
+	sflock.l_type = F_WRLCK;
+	sflock.l_whence = SEEK_SET;
+	sflock.l_start = 0;
+	sflock.l_len = 0;
+#endif
 
 #if defined(UNIX) || defined(VMS)
+# ifdef USE_FCNTL
+	while (fcntl(lockfd,F_SETLK,&sflock) == -1) {
+# else 
 # ifdef NO_FILE_LINKS
 	while ((lockfd = open(lockname, O_RDWR|O_CREAT|O_EXCL, 0666)) == -1) {
 # else
 	while (link(filename, lockname) == -1) {
 # endif
+# endif 
+
+#ifdef USE_FCNTL
+		if (retryct--) {
+			HUP raw_printf(
+				"Waiting for release of fcntl lock on %s. (%d retries left).",
+				filename, retryct);
+			sleep(1);
+		} else {
+		    HUP (void) raw_print("I give up.  Sorry.");
+		    HUP raw_printf("Some other process has an unnatural grip on %s.",
+					filename);
+		    nesting--;
+		    return FALSE;
+		}
+#else
 	    register int errnosv = errno;
 
 	    switch (errnosv) {	/* George Barbanis */
@@ -1360,11 +1499,12 @@ int retryct;
 		nesting--;
 		return FALSE;
 	    }
+#endif /* USE_FCNTL */
 
 	}
 #endif  /* UNIX || VMS */
 
-#if defined(AMIGA) || defined(WIN32) || defined(MSDOS)
+#if (defined(AMIGA) || defined(WIN32) || defined(MSDOS)) && !defined(USE_FCNTL)
 # ifdef AMIGA
 #define OPENFAILURE(fd) (!fd)
     lockptr = 0;
@@ -1414,10 +1554,19 @@ const char *filename;
 # pragma unused(filename)
 #endif
 {
+#ifndef USE_FCNTL
 	char locknambuf[BUFSZ];
 	const char *lockname;
+#endif
 
 	if (nesting == 1) {
+#ifdef USE_FCNTL
+		sflock.l_type = F_UNLCK;
+		if (fcntl(lockfd,F_SETLK,&sflock) == -1) {
+			HUP raw_printf("Can't remove fcntl lock on %s.", filename);
+			(void) close(lockfd);
+		}
+# else
 		lockname = make_lockname(filename, locknambuf);
 #ifndef NO_FILE_LINKS	/* LOCKDIR should be subsumed by LOCKPREFIX */
 		lockname = fqname(lockname, LOCKPREFIX, 2);
@@ -1437,6 +1586,7 @@ const char *filename;
 		DeleteFile(lockname);
 		lockptr = 0;
 #endif /* AMIGA || WIN32 || MSDOS */
+#endif /* USE_FCNTL */
 	}
 
 	nesting--;
@@ -1457,7 +1607,11 @@ const char *configfile =
 #  if defined(MSDOS) || defined(WIN32)
 			"defaults.gh";
 #  else
-			"GruntHack.cnf";
+#   ifdef AMIGA
+                        "GruntHack.cnf";
+#   else
+			"grnthack.cnf";
+#   endif
 #  endif
 # endif
 #endif
@@ -1587,6 +1741,55 @@ const char *filename;
 
 }
 
+/* 
+ * Retrieve a list of one-byte integers from a buffer into a uchar array.
+ *
+ * It can accept 3-digit decimal integers, characters (ascii), or
+ * certain character symbols (see txt2key)
+ *
+ * return value of +x indicates x uchars read, -x indicates x-1 uchars read
+ * 
+ * Note: there is no way to read value 0
+ */
+int
+get_uchar_list(buf, list, size)
+    char *buf;		/* read buffer */
+   uchar *list;	/* return list */
+    int size;		/* return list size */
+{
+    int cnt = 0;
+    char* next;
+    uchar orig;
+    uchar mkey;
+    
+    while (1) { /* one loop for each uchar */
+	if (cnt == size) return cnt;
+	
+	/* take off leading whiltespace */
+	while (isspace(*buf)) buf++;
+	if (!*buf) return cnt;
+	
+	/* strip trailing whitespace / other uchars */
+	next = buf;
+	while(*next && !isspace(*next)) next++;
+	orig = *next;
+	*next = 0;
+	
+	/* interpret the character */
+	mkey = (uchar)txt2key(buf);
+	if (!mkey) {
+		raw_printf("Invalid uchar %s on %i.", buf, cnt+1);
+		return -(cnt+1);
+	}
+	list[cnt] = mkey;
+	cnt++;
+	
+	/* prepare for the next uchar */
+	*next = orig;
+	buf = next;
+    }
+    /* NOT REACHED */
+}
 
 /*
  * Retrieve a list of integers from a file into a uchar array.
@@ -1604,48 +1807,36 @@ get_uchars(fp, buf, bufp, list, modlist, size, name)
     int  size;		/* return list size */
     const char *name;		/* name of option for error message */
 {
-    unsigned int num = 0;
     int count = 0;
-    boolean havenum = FALSE;
+    int num_read;
+    char* buf_end;
+    boolean another;	/* expect another line? */
 
-    while (1) {
-	switch(*bufp) {
-	    case ' ':  case '\0':
-	    case '\t': case '\n':
-		if (havenum) {
-		    /* if modifying in place, don't insert zeros */
-		    if (num || !modlist) list[count] = num;
-		    count++;
-		    num = 0;
-		    havenum = FALSE;
-		}
-		if (count == size || !*bufp) return count;
-		bufp++;
-		break;
+    while (1) { /* JDS: one loop for each line of input */
+	if ((buf_end = index(bufp, '\\')) != 0) {
+		*buf_end = 0;
+		another = TRUE;
+	} else another = FALSE;
 
-	    case '0': case '1': case '2': case '3':
-	    case '4': case '5': case '6': case '7':
-	    case '8': case '9':
-		havenum = TRUE;
-		num = num*10 + (*bufp-'0');
-		bufp++;
-		break;
-
-	    case '\\':
-		if (fp == (FILE *)0)
-		    goto gi_error;
-		do  {
-		    if (!fgets(buf, BUFSZ, fp)) goto gi_error;
-		} while (buf[0] == '#');
-		bufp = buf;
-		break;
-
-	    default:
+	num_read = get_uchar_list(bufp, list, size-count);
+	if (num_read < 0) {
+		count -= num_read + 1;
 gi_error:
 		raw_printf("Syntax error in %s", name);
 		wait_synch();
 		return count;
 	}
+	count += num_read;
+	list += num_read;
+
+	if (count == size || !another) return count;
+
+	if (fp == (FILE*)0)
+		goto gi_error;
+	do {
+		if (!fgets(buf, BUFSZ, fp)) goto gi_error;
+	} while (buf[0] == '#');
+	bufp = buf;
     }
     /*NOTREACHED*/
 }
@@ -1720,6 +1911,13 @@ char		*tmp_levels;
 	} else if (match_varname(buf, "AUTOPICKUP_EXCEPTION", 5)) {
 		add_autopickup_exception(bufp);
 #endif
+	} else if (match_varname(buf, "BINDINGS", 4)) {
+		/* JDS: hmmm, should these be in NOCWD_ASSUMPTIONS? */
+		parsebindings(bufp);
+	} else if (match_varname(buf, "AUTOCOMPLETE", 5)) {
+		parseautocomplete(bufp, TRUE);
+	} else if (match_varname(buf, "MAPPINGS", 3)) {
+		parsemappings(bufp);
 #ifdef NOCWD_ASSUMPTIONS
 	} else if (match_varname(buf, "HACKDIR", 4)) {
 		adjust_prefix(bufp, HACKPREFIX);
@@ -1782,6 +1980,22 @@ char		*tmp_levels;
 	} else if (match_varname(buf, "NAME", 4)) {
 	    (void) strncpy(plname, bufp, PL_NSIZ-1);
 	    plnamesuffix();
+#ifdef MSGTYPE
+	} else if (match_varname(buf, "MSGTYPE", 7)) {
+	    char pattern[256];
+	    char msgtype[11];
+	    if (sscanf(bufp, "%10s \"%255[^\"]\"", msgtype, pattern) == 2) {
+		int typ = MSGTYP_NORMAL;
+		if (!strncmpi(msgtype, "norep", 5)) typ = MSGTYP_NOREP;
+		else if (!strncmpi(msgtype, "hide", 4)) typ = MSGTYP_NOSHOW;
+		else if (!strncmpi(msgtype, "noshow", 6)) typ = MSGTYP_NOSHOW;
+		else if (!strncmpi(msgtype, "more", 4)) typ = MSGTYP_STOP;
+		else if (!strncmpi(msgtype, "stop", 4)) typ = MSGTYP_STOP;
+		if (typ != MSGTYP_NORMAL) {
+		    msgpline_add(typ, pattern);
+		}
+	    }
+#endif /* MSGTYPE */
 	} else if (match_varname(buf, "ROLE", 4) ||
 		   match_varname(buf, "CHARACTER", 4)) {
 	    if ((len = str2role(bufp)) >= 0)
@@ -1814,6 +2028,16 @@ char		*tmp_levels;
 	    len = get_uchars(fp, buf, bufp, translate, FALSE,
 			     MAXECHARS, "EFFECTS");
 	    assign_graphics(translate, len, MAXECHARS, MAXDCHARS+MAXTCHARS);
+#ifdef USER_DUNGEONCOLOR
+	} else if (match_varname(buf, "DUNGEONCOLOR", 10)) {
+	    len = get_uchars(fp, buf, bufp, translate, FALSE,
+			     MAXDCHARS, "DUNGEONCOLOR");
+	    assign_colors(translate, len, MAXDCHARS, 0);
+	} else if (match_varname(buf, "TRAPCOLORS", 7)) {
+	    len = get_uchars(fp, buf, bufp, translate, FALSE,
+			     MAXTCHARS, "TRAPCOLORS");
+	    assign_colors(translate, len, MAXTCHARS, MAXDCHARS);
+#endif
 
 	} else if (match_varname(buf, "OBJECTS", 3)) {
 	    /* oc_syms[0] is the RANDOM object, unused */
@@ -2424,5 +2648,41 @@ int ifd, ofd;
 
 /* ----------  END INTERNAL RECOVER ----------- */
 #endif /*SELF_RECOVER*/
+
+#ifdef LIVELOG
+/* Locks the live log file and writes 'buffer' */
+void
+livelog_write_string(buffer)
+     char *buffer;
+{
+    FILE* livelogfile;
+    if(lock_file(LIVELOGFILE, SCOREPREFIX, 10)) {
+       if(!(livelogfile = fopen_datafile(LIVELOGFILE, "a", SCOREPREFIX))) {
+           pline("Cannot open live log file!");
+       } else {
+           char tmpbuf[1024+1];
+           char msgbuf[512+1];
+           char *c1 = msgbuf;
+           strncpy(msgbuf, buffer, 512);
+           msgbuf[512] = '\0';
+           while (*c1 != '\0') {
+             if (*c1 == ':') *c1 = '_';
+             c1++;
+           }
+           snprintf(tmpbuf, 1024, "player=%s:role=%s:race=%s:gender=%s:align=%s:turns=%ld:starttime=%ld:curtime=%ld:message=%s\n",
+                    plname,
+                    urole.filecode,
+                    urace.filecode,
+                    genders[flags.female].filecode,
+                    aligns[1-u.ualign.type].filecode,
+                    moves, (long)u.ubirthday, (long)time(NULL), msgbuf);
+
+           fprintf(livelogfile, tmpbuf);
+           (void) fclose(livelogfile);
+       }
+       unlock_file(LIVELOGFILE);
+    }
+}
+#endif
 
 /*files.c*/

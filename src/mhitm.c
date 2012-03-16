@@ -91,6 +91,8 @@ missmm(magr, mdef, mattk)
 	} else  noises(magr, mattk);
 }
 
+extern long FDECL(mm_aggression, (struct monst *,struct monst *));
+
 /*
  *  fightm()  -- fight some other monster
  *
@@ -108,11 +110,15 @@ fightm(mtmp)		/* have monsters fight each other */
 {
 	register struct monst *mon, *nmon;
 	int result, has_u_swallowed;
+	boolean conflict = Conflict && !resist(mtmp, RING_CLASS, 0, 0);
 #ifdef LINT
 	nmon = 0;
 #endif
 	/* perhaps the monster will resist Conflict */
-	if(resist(mtmp, RING_CLASS, 0, 0))
+	/* if(resist(mtmp, RING_CLASS, 0, 0))
+	    return(0); */
+
+	if ((mtmp->mtame || is_covetous(mtmp->data)) && !conflict)
 	    return(0);
 
 	if(u.ustuck == mtmp) {
@@ -132,6 +138,9 @@ fightm(mtmp)		/* have monsters fight each other */
 	     */
 	    if(mon != mtmp && !DEADMONSTER(mon)) {
 		if(monnear(mtmp,mon->mx,mon->my)) {
+		    if (!conflict && !mm_aggression(mtmp, mon))
+		    	continue;
+
 		    if(!u.uswallow && (mtmp == u.ustuck)) {
 			if(!rn2(4)) {
 			    pline("%s releases you!", Monnam(mtmp));
@@ -175,12 +184,14 @@ fightm(mtmp)		/* have monsters fight each other */
  *
  * This function returns a result bitfield:
  *
- *	    --------- aggressor died
- *	   /  ------- defender died
- *	  /  /  ----- defender was hit
- *	 /  /  /
- *	x  x  x
+ *           ----------- aggressor performed a time-consuming action
+ *	    /  --------- aggressor died
+ *	   /  /  ------- defender died
+ *	  /  /  /  ----- defender was hit
+ *	 /  /  /  /
+ *	x  x  x  x
  *
+ *      0x8	MM_MOVED
  *	0x4	MM_AGR_DIED
  *	0x2	MM_DEF_DIED
  *	0x1	MM_HIT
@@ -200,7 +211,8 @@ mattackm(magr, mdef)
 		    strike,	/* hit this attack */
 		    attk,	/* attack attempted this time */
 		    struck = 0,	/* hit at least once */
-		    res[NATTK];	/* results of all attacks */
+		    res[NATTK],	/* results of all attacks */
+		    finalres = 0;
     struct attack   *mattk, alt_attk;
     struct permonst *pa, *pd;
     boolean wildmiss = (mdef &&
@@ -209,7 +221,8 @@ mattackm(magr, mdef)
 			       mdef->mx, mdef->my) > 2) || !rn2(3)));
 
     if (!magr || !mdef) return(MM_MISS);		/* mike@genat */
-    if (!magr->mcanmove || magr->msleeping) return(MM_MISS);
+    if (!magr->mcanmove || magr->msleeping || magr->mburied) return(MM_MISS);
+    if (mdef->mburied) return (MM_MISS);
     pa = magr->data;  pd = mdef->data;
 
     /* Grid bugs cannot attack at an angle. */
@@ -231,7 +244,7 @@ mattackm(magr, mdef)
 	newsym(mdef->mx, mdef->my);
 	if(canseemon(mdef) && !sensemon(mdef)) {
 	    if (u.usleep) You("dream of %s.",
-				(mdef->data->geno & G_UNIQ) ?
+				(pd->geno & G_UNIQ) ?
 				a_monnam(mdef) : makeplural(m_monnam(mdef)));
 	    else pline("Suddenly, you notice %s.", a_monnam(mdef));
 	}
@@ -263,18 +276,19 @@ mattackm(magr, mdef)
 #ifdef TAME_RANGED_ATTACKS
 		if (dist2(magr->mx,magr->my,mdef->mx,mdef->my) > 2)
 		{
-		    thrwmm(magr, mdef);
-		    if (tmphp > mdef->mhp) res[i] = MM_HIT;
-		    else res[i] = MM_MISS;
-		    if (mdef->mhp < 1) res[i] = MM_DEF_DIED;
-		    if (magr->mhp < 1) res[i] = MM_AGR_DIED;
+		    if (thrwmm(magr, mdef))
+		    	res[i] |= MM_MOVED;
+		    if (tmphp > mdef->mhp) res[i] |= MM_HIT;
+		    /* else res[i] = MM_MISS|MM_MOVED;*/
+		    if (mdef->mhp < 1) res[i] |= MM_DEF_DIED;
+		    if (magr->mhp < 1) res[i] |= MM_AGR_DIED;
 		    break;
 		}
-#endif //TAME_RANGED_ATTACKS
+#endif /*TAME_RANGED_ATTACKS*/
 
 		if (magr->weapon_check == NEED_WEAPON || !MON_WEP(magr)) {
 		    magr->weapon_check = NEED_HTH_WEAPON;
-		    if (mon_wield_item(magr) != 0) return 0;
+		    if (mon_wield_item(magr, FALSE) != 0) return(MM_MOVED);
 		}
 		possibly_unwield(magr, FALSE);
 		otmp = MON_WEP(magr);
@@ -295,17 +309,17 @@ mattackm(magr, mdef)
 		if (dist2(magr->mx,magr->my,mdef->mx,mdef->my) > 2)
 		{
 #ifdef TAME_RANGED_ATTACKS
-                    break; // might have more ranged attacks
+                    break; /* might have more ranged attacks */
 #else
 		    return MM_MISS;
-#endif //TAME_RANGED_ATTACKS
+#endif /*TAME_RANGED_ATTACKS*/
 		}
 		/* Monsters won't attack cockatrices physically if they
 		 * have a weapon instead.  This instinct doesn't work for
 		 * players, or under conflict or confusion. 
 		 */
 		if (!magr->mconf && !Conflict && otmp &&
-		    mattk->aatyp != AT_WEAP && touch_petrifies(mdef->data)) {
+		    mattk->aatyp != AT_WEAP && touch_petrifies(pd)) {
 		    strike = 0;
 		    break;
 		}
@@ -320,7 +334,7 @@ mattackm(magr, mdef)
 			      Monnam(magr), buf);
 			break;
 		    }
-		    res[i] = MM_MISS;
+		    res[i] = MM_MISS|MM_MOVED;
 		    break;
 		}
 
@@ -330,13 +344,14 @@ mattackm(magr, mdef)
 		if (otmp)
 		    tmp -= hitval(otmp, mdef);
 		if (strike) {
-		    res[i] = hitmm(magr, mdef, mattk);
-		    if((mdef->data == &mons[PM_BLACK_PUDDING] || mdef->data == &mons[PM_BROWN_PUDDING])
+		    res[i] = hitmm(magr, mdef, mattk) | MM_MOVED;
+		    if(((pd == &mons[PM_BLACK_PUDDING]) ||
+		        (pd == &mons[PM_BROWN_PUDDING]))
 		       && otmp && objects[otmp->otyp].oc_skill != WHACK 
 		       && mdef->mhp > 1 && !mdef->mcan)
 		    {
 		        struct monst *mtmp2;
-			if (mtmp2 = clone_mon(mdef, 0, 0)) {
+			if ((mtmp2 = clone_mon(mdef, 0, 0))) {
 			    if (vis) {
 				char buf[BUFSZ];
 
@@ -356,29 +371,31 @@ mattackm(magr, mdef)
 		break;
 
 	    case AT_HUGS:	/* automatic if prev two attacks succeed */
-		strike = (i >= 2 && res[i-1] == MM_HIT && res[i-2] == MM_HIT);
+		strike = (i >= 2 &&
+		          (res[i-1] & MM_HIT) && 
+			  (res[i-2] & MM_HIT));
 		if (strike)
-		    res[i] = hitmm(magr, mdef, mattk);
+		    res[i] = hitmm(magr, mdef, mattk) | MM_MOVED;
 
 		break;
 
 #ifdef TAME_RANGED_ATTACKS
 	    case AT_BREA:
-	        breamm(magr, mdef, mattk);
-		if (tmphp > mdef->mhp) res[i] = MM_HIT;
-		else res[i] = MM_MISS;
-		if (mdef->mhp < 1) res[i] = MM_DEF_DIED;
-		if (magr->mhp < 1) res[i] = MM_AGR_DIED;
+	        if (breamm(magr, mdef, mattk)) res[i] |= MM_MOVED;
+		if (tmphp > mdef->mhp) res[i] |= MM_HIT;
+		/*else res[i] = MM_MISS | MM_MOVED;*/
+		if (mdef->mhp < 1) res[i] |= MM_DEF_DIED;
+		if (magr->mhp < 1) res[i] |= MM_AGR_DIED;
 		break;
 
 	    case AT_SPIT:
-	        spitmm(magr, mdef, mattk);
-		if (tmphp > mdef->mhp) res[i] = MM_HIT;
-		else res[i] = MM_MISS;
+	        if (spitmm(magr, mdef, mattk)) res[i] |= MM_MOVED;
+		if (tmphp > mdef->mhp) res[i] |= MM_HIT;
+		/*else res[i] = MM_MISS | MM_MOVED;*/
 		if (mdef->mhp < 1) res[i] = MM_DEF_DIED;
 		if (magr->mhp < 1) res[i] = MM_AGR_DIED;
 		break;
-#endif //TAME_RANGED_ATTACKS
+#endif /*TAME_RANGED_ATTACKS*/
 
 	    case AT_GAZE:
 		strike = 0;	/* will not wake up a sleeper */
@@ -388,17 +405,19 @@ mattackm(magr, mdef)
 	    case AT_EXPL:
 		if (distmin(magr->mx,magr->my,mdef->mx,mdef->my) > 1) break;
 		res[i] = explmm(magr, mdef, mattk);
-		if (res[i] == MM_MISS) { /* cancelled--no attack */
+		if (res[i] & MM_MISS) { /* cancelled--no attack */
 		    strike = 0;
 		    attk = 0;
-		} else
+		} else {
 		    strike = 1;	/* automatic hit */
+		    res[i] |= MM_MOVED;
+		}
 		break;
 
 	    case AT_ENGL:
 		if (distmin(magr->mx,magr->my,mdef->mx,mdef->my) > 1) break;
 #ifdef STEED
-		if (u.usteed && (mdef == u.usteed)) {
+		if (u.usteed && (/*magr == u.usteed || */mdef == u.usteed)) {
 		    strike = 0;
 		    break;
 		} 
@@ -409,23 +428,25 @@ mattackm(magr, mdef)
 		if (u.uswallow && magr == u.ustuck)
 		    strike = 0;
 		else {
+		    res[i] |= MM_MOVED;
 		    if ((strike = (tmp > rnd(20+i))))
-			res[i] = gulpmm(magr, mdef, mattk);
-		    else
+			res[i] |= gulpmm(magr, mdef, mattk);
+		    else {
 			missmm(magr, mdef, mattk);
+		    }
 		}
 		break;
 
 #ifdef TAME_RANGED_ATTACKS
             case AT_MAGC:
-		if (dist2(magr->mx,magr->my,mdef->mx,mdef->my) > 2) break;
+		/*if (dist2(magr->mx,magr->my,mdef->mx,mdef->my) > 2) break;*/
 
-	        res[i] = castmm(magr, mdef, mattk);
+	        res[i] = castmm(magr, mdef, mattk) | MM_MOVED;
 		if (res[i] & MM_DEF_DIED)
 			return (MM_DEF_DIED |
 				(grow_up(magr,mdef) ? 0 : MM_AGR_DIED));
 		break;
-#endif //TAME_RANGED_ATTACKS
+#endif /*TAME_RANGED_ATTACKS*/
 
 	    default:		/* no attack */
 		strike = 0;
@@ -435,9 +456,11 @@ mattackm(magr, mdef)
 
 	if (attk && !(res[i] & MM_AGR_DIED) &&
 	    dist2(magr->mx, magr->my, mdef->mx, mdef->my) < 3)
-	    res[i] = passivemm(magr, mdef, strike, res[i] & MM_DEF_DIED);
+	    res[i] |= passivemm(magr, mdef, strike, res[i] & MM_DEF_DIED);
 
-	if (res[i] & MM_DEF_DIED) return res[i];
+	finalres |= res[i];
+
+	if (res[i] & MM_DEF_DIED) return finalres;
 
 	/*
 	 *  Wake up the defender.  NOTE:  this must follow the check
@@ -446,13 +469,13 @@ mattackm(magr, mdef)
 	 */
 	if (strike) mdef->msleeping = 0;
 
-	if (res[i] & MM_AGR_DIED)  return res[i];
+	if (res[i] & MM_AGR_DIED)  return finalres;
 	/* return if aggressor can no longer attack */
-	if (!magr->mcanmove || magr->msleeping) return res[i];
+	if (!magr->mcanmove || magr->msleeping) return finalres;
 	if (res[i] & MM_HIT) struck = 1;	/* at least one hit */
     }
 
-    return(struck ? MM_HIT : MM_MISS);
+    return(finalres);
 }
 
 extern const char * const behead_msg[];
@@ -606,11 +629,20 @@ gulpmm(magr, mdef, mattk)
 	 *  ender's position.
 	 */
 	remove_monster(ax, ay);
+#ifdef STEED
+	if (u.usteed && magr == u.usteed) {
+	    remove_monster(dx, dy);
+	    teleds(dx, dy, FALSE);
+	} else {
+#endif
 	remove_monster(magr->mix, magr->miy);
 	newsym(magr->mix,magr->miy);	/* erase old position */
 	place_monster(magr, dx, dy);
 	newsym(ax,ay);			/* erase old position */
 	newsym(magr->mix,magr->miy);	/* erase old position */
+#ifdef STEED
+	}
+#endif
 	newsym(dx,dy);			/* update new position */
 
 	status = mdamagem(magr, mdef, mattk);
@@ -624,8 +656,16 @@ gulpmm(magr, mdef, mattk)
 	     *  magr from level.monsters[mdef->mx][mdef->my].  We need to
 	     *  put it back and display it.	-kd
 	     */
+#ifdef STEED
+	    if (u.usteed && magr == u.usteed) {
+		    teleds(dx, dy, FALSE);
+	    } else {
+#endif
 	    place_monster(magr, dx, dy);
 	    newsym(dx, dy);
+#ifdef STEED
+	    }
+#endif
 	}
 	else if (status & MM_AGR_DIED) {	/* agressor died */
 	    place_monster(mdef, dx, dy);
@@ -635,9 +675,17 @@ gulpmm(magr, mdef, mattk)
 	    if (cansee(dx, dy))
 		pline("%s is regurgitated!", Monnam(mdef));
 
+#ifdef STEED
+	    if (u.usteed && magr == u.usteed) {
+	        teleds(ax, ay, FALSE);
+	    } else {
+#endif
 	    place_monster(magr, ax, ay);
-	    place_monster(mdef, dx, dy);
 	    newsym(ax, ay);
+#ifdef STEED
+	    }
+#endif
+	    place_monster(mdef, dx, dy);
 	    newsym(dx, dy);
 	}
 
@@ -671,7 +719,9 @@ explmm(magr, mdef, mattk)
 	    if (magr->mhp > 0) return result;	/* life saved */
 	    result |= MM_AGR_DIED;
 	}
-	if (magr->mtame)	/* give this one even if it was visible */
+	/* Used to be visible even if tame.
+	 * It gets over-spammed with spheres, so only use it if not visible. */
+	if (magr->mtame && !canseemon(magr))
 	    You(brief_feeling, "melancholy");
 
 	return result;
@@ -688,7 +738,10 @@ mdamagem(magr, mdef, mattk)
 	struct obj *obj;
 	char buf[BUFSZ];
 	struct permonst *pa = magr->data, *pd = mdef->data;
-	int armpro, num, tmp = d((int)mattk->damn, (int)mattk->damd);
+	int armpro, num, tmp =
+		(mattk->aatyp == AT_EXPL)
+			? d((int)(1+magr->m_lev/2), (int)mattk->damd)
+			: d((int)mattk->damn, (int)mattk->damd);
 	boolean cancelled;
 
 	if (touch_petrifies(pd) && !resists_ston(magr)) {
@@ -916,7 +969,7 @@ mdamagem(magr, mdef, mattk)
 		    pd == &mons[PM_LEATHER_GOLEM]) {
 			if (vis) pline("%s falls to pieces!", Monnam(mdef));
 			mondied(mdef);
-			if (mdef->mhp > 0) return 0;
+			if (mdef->mhp > 0) return MM_MISS;
 			else if (mdef->mtame && !vis)
 			    pline("May %s rot in peace.", mon_nam(mdef));
 			return (MM_DEF_DIED | (grow_up(magr,mdef) ?
@@ -939,7 +992,7 @@ mdamagem(magr, mdef, mattk)
 		if (!resists_ston(mdef)) {
 			if (vis) pline("%s turns to stone!", Monnam(mdef));
 			monstone(mdef);
- post_stone:		if (mdef->mhp > 0) return 0;
+ post_stone:		if (mdef->mhp > 0) return MM_MISS;
 			else if (mdef->mtame && !vis)
 			    You(brief_feeling, "peculiarly sad");
 			return (MM_DEF_DIED | (grow_up(magr,mdef) ?
@@ -973,6 +1026,8 @@ mdamagem(magr, mdef, mattk)
 		    mdef->mstrategy &= ~STRAT_WAITFORU;
 		    slept_monst(mdef);
 		}
+		if (mattk->aatyp == AT_GAZE)
+		   tmp = 0;
 		break;
 	    case AD_PLYS:
 		if(!cancelled && mdef->mcanmove) {
@@ -994,6 +1049,8 @@ mdamagem(magr, mdef, mattk)
 		    if (mdef->mspeed != oldspeed && vis)
 			pline("%s slows down.", Monnam(mdef));
 		}
+		if (mattk->aatyp == AT_GAZE)
+		   tmp = 0;
 		break;
 	    case AD_CONF:
 		/* Since confusing another monster doesn't have a real time
@@ -1043,11 +1100,11 @@ mdamagem(magr, mdef, mattk)
 				pline("%s is destroyed!", Monnam(mdef));
 			    }
 			    mondied(mdef);
-			    if (mdef->mhp > 0) return 0;
+			    if (mdef->mhp > 0) return MM_MISS;
 			    else if (mdef->mtame && !vis)
 				You(brief_feeling, "strangely sad");
 			    return (MM_DEF_DIED | (grow_up(magr,mdef) ?
-							0 : MM_AGR_DIED));
+							0 : MM_AGR_DIED)); 
 		    }
 		    if (flags.soundok) {
 			    if (!vis) You_hear("laughter.");
@@ -1176,6 +1233,12 @@ mdamagem(magr, mdef, mattk)
 		    }
 		}
 		break;
+            case AD_DISE:
+	    	if (vis && !resists_sick(mdef))
+		    pline("%s looks %s.", Monnam(mdef),
+			mdef->msick ? "much worse" : "rather ill");
+		goto msickness;
+		break;
 	    case AD_DRIN:
 		if (notonhead || !has_head(pd)) {
 		    if (vis) pline("%s doesn't seem harmed.", Monnam(mdef));
@@ -1185,7 +1248,8 @@ mdamagem(magr, mdef, mattk)
 		}
 		if (pa == &mons[PM_ZOMBIE]  && rn2(5)) {
 		    if (vis && !resists_sick(mdef))
-			pline("%s looks rather ill.", Monnam(mdef));
+		        pline("%s looks %s.", Monnam(mdef),
+			    mdef->msick ? "much worse" : "rather ill");
 		    goto msickness;
 		}
 		if ((mdef->misc_worn_check & W_ARMH) && rn2(8)) {
@@ -1213,7 +1277,8 @@ mdamagem(magr, mdef, mattk)
 		if (tmp < mdef->mhp && pa == &mons[PM_ZOMBIE])
 		{
 		    if (vis && !resists_sick(mdef))
-		        pline("%s looks rather ill.", Monnam(mdef));
+		        pline("%s looks %s.", Monnam(mdef),
+			    mdef->msick ? "much worse" : "rather ill");
 		    goto msickness;
 		}
 		break;
@@ -1229,7 +1294,8 @@ mdamagem(magr, mdef, mattk)
 		}
 		switch (rn2(20)) {
 		case 19: case 18: case 17:
-		    if (!resist(mdef, 0, 0, 0)) {
+		    if (!resists_magm(mdef) && !resist(mdef, 0, 0, 0)) {
+			mdef->mhp = 0;
 		        monkilled(mdef, "", AD_DETH);
 			tmp = 0;
 			break;
@@ -1237,12 +1303,12 @@ mdamagem(magr, mdef, mattk)
 		default: /* case 16: ... case 5: */
 		    if (vis)
 		        pline("%s looks weaker!", Monnam(mdef));
-		    mdef->mhpmax -= rn2(tmp / 2 + 1); // mhp will then 
-		                                      // still be less than 
-						      // this value
+		    mdef->mhpmax -= rn2(tmp / 2 + 1); /* mhp will then  */
+		                                      /* still be less than  */
+						      /* this value */
 		    break;
 		case 4: case 3: case 2: case 1: case 0:
-		    if (Antimagic) shieldeff(mdef->mx, mdef->my);
+		    if (resists_magm(mdef)) shieldeff(mdef->mx, mdef->my);
 	            if (vis)
 		        pline("That didn't work...");
 		    tmp = 0;
@@ -1289,7 +1355,7 @@ msickness:
 		if (cancelled) break;	/* physical damage only */
 		if (!rn2(4) && !flaming(mdef->data) &&
 				mdef->data != &mons[PM_GREEN_SLIME]) {
-                    mdef->morigdata = PM_GREEN_SLIME; //it's permanent
+                    mdef->morigdata = PM_GREEN_SLIME; /*it's permanent*/
 		    (void) newcham(mdef, &mons[PM_GREEN_SLIME], FALSE, vis);
 		    mdef->mstrategy &= ~STRAT_WAITFORU;
 		    tmp = 0;
@@ -1301,7 +1367,7 @@ msickness:
 	    case AD_WRAP: /* monsters cannot grab one another, it's too hard */
 	        if (mattk->aatyp == AT_ENGL)
 		{
-			// Engulfing attacks are fair game, however.
+			/* Engulfing attacks are fair game, however. */
 			if (mbreathing(mdef) ||
 			    (amphibious(mdef->data) &&
 			    magr->data == &mons[PM_WATER_ELEMENTAL]))
@@ -1334,18 +1400,85 @@ msickness:
 			      buf, mbodypart(mdef, NECK));
 			break;
 		    }
-		    tmp = 2 * mdef->mhp + 200; //FATAL_DAMAGE_MODIFIER;
+		    tmp = 2 * mdef->mhp + 200; /*FATAL_DAMAGE_MODIFIER;*/
 		    if (mdef->data == &mons[PM_ZOMBIE])
-		        mdef->mcan = 1; //beheaded zombies don't revive
+		        mdef->mcan = 1; /*beheaded zombies don't revive*/
 		    Strcpy(buf, mon_nam(mdef));
 		    pline(behead_msg[rn2(2)],
 			  Monnam(magr), buf);
 		}
 		break;
+	    case AD_DISN:
+	    	if (!rn2(5))
+		{
+		    boolean die = FALSE;
+		    struct obj *otmp = (struct obj *)0, *otmp2;
+
+		    if (resists_disint(mdef)) {
+		    	shieldeff(mdef->mx, mdef->my);
+		    } else if (mdef->misc_worn_check & W_ARMS) {
+			otmp = which_armor(mdef, W_ARMS);
+		    } else if (mdef->misc_worn_check & W_ARM) {
+			otmp = which_armor(mdef, W_ARM);
+			if ((otmp2 = which_armor(mdef, W_ARMC)) != 0)
+			    m_useup(mdef, otmp2);
+		    } else {
+			struct obj *m_amulet = mlifesaver(mdef);
+			if ((otmp2 = which_armor(mdef, W_ARMC)) != 0)
+			    m_useup(mdef, otmp2);
+#ifdef TOURIST
+			if ((otmp2 = which_armor(mdef, W_ARMU)) != 0)
+			    m_useup(mdef, otmp2);
+#endif
+			die = TRUE;
+
+			if (canseemon(mdef)) {
+			    if (!m_amulet)
+				pline("%s is disintegrated!", Monnam(mdef));
+			    else
+				pline("%s crumbles under the gaze!",
+					Monnam(mdef));
+			}
+#ifndef GOLDOBJ
+			mdef->mgold = 0L;
+#endif
+
+/* note: worn amulet of life saving must be preserved in order to operate */
+#define oresist_disintegration(obj) \
+		(objects[obj->otyp].oc_oprop == DISINT_RES || \
+		 obj_resists(obj, 5, 50) || is_quest_artifact(obj) || \
+		 obj == m_amulet)
+
+			for (otmp = mdef->minvent; otmp; otmp = otmp2) {
+			    otmp2 = otmp->nobj;
+			    if (!oresist_disintegration(otmp)) {
+			    	m_useup(mdef, otmp);
+			    }
+			}
+
+			mdef->mhp = 0;
+			monkilled(mdef, (char *)0, -AD_RBRE);
+			tmp = 0;
+			break;
+		    }
+		    if (!die && otmp) {
+			if (canseemon(mdef))
+			    pline("%s %s is disintegrated!",
+				  s_suffix(Monnam(mdef)),
+				  distant_name(otmp, xname));
+		    	m_useup(mdef, otmp);
+		    }
+		}
+	    case AD_CNCL:
+	    	if (!rn2(5))
+			(void) cancel_monst(mdef, (struct obj *)0, FALSE,
+					    TRUE, FALSE);
+		tmp = 0;
+	    	break;
 	    default:	tmp = 0;
 			break;
 	}
-	if(!tmp) return(MM_MISS);
+	if(!tmp) return ((mdef->mhp < 1) ? MM_DEF_DIED : MM_MISS);
 
 	if((mdef->mhp -= tmp) < 1) {
 	    if (m_at(mdef->mx, mdef->my) == magr) {  /* see gulpmm() */
@@ -1358,23 +1491,23 @@ msickness:
 	    if (pa == &mons[PM_ZOMBIE] && !nonliving(pd) && is_racial(pd))
 	    {
 		mdef->mtame = mdef->mpeaceful = 0;
-                mdef->morigdata = PM_ZOMBIE; //it's permanent
-		mdef->mhp = 1; //so they don't try to remove it
+                mdef->morigdata = PM_ZOMBIE; /*it's permanent*/
+		mdef->mhp = 1; /*so they don't try to remove it*/
 		if (mdef->isshk) shkgone(mdef);
-	        (void) newcham(mdef, &mons[PM_ZOMBIE], FALSE, TRUE);
+	        (void) newcham(mdef, &mons[PM_ZOMBIE], FALSE, vis);
 		return MM_HIT;
 	    }
 	    monkilled(mdef, "", (int)mattk->adtyp);
-	    if (mdef->mhp > 0) return 0; /* mdef lifesaved */
+	    if (mdef->mhp > 0) return MM_MISS; /* mdef lifesaved */
 
 	    if (mattk->adtyp == AD_DGST) {
 		/* various checks similar to dog_eat and meatobj.
 		 * after monkilled() to provide better message ordering */
 		if (mdef->cham != CHAM_ORDINARY) {
-		    (void) newcham(magr, (struct permonst *)0, FALSE, TRUE);
+		    (void) newcham(magr, (struct permonst *)0, FALSE, vis);
 		} else if (mdef->data == &mons[PM_GREEN_SLIME]) {
-                    mdef->morigdata = PM_GREEN_SLIME; //it's permanent
-		    (void) newcham(magr, &mons[PM_GREEN_SLIME], FALSE, TRUE);
+                    mdef->morigdata = PM_GREEN_SLIME; /* it's permanent */
+		    (void) newcham(magr, &mons[PM_GREEN_SLIME], FALSE, vis);
 		} else if (mdef->data == &mons[PM_WRAITH]) {
 		    (void) grow_up(magr, (struct monst *)0);
 		    /* don't grow up twice */

@@ -50,9 +50,7 @@ moveloop()
     monstr_init();	/* monster strengths */
     objects_init();
 
-#ifdef WIZARD
-    if (wizard) add_debug_extended_commands();
-#endif
+    commands_init();
 
     (void) encumber_msg(); /* in case they auto-picked up something */
 
@@ -76,7 +74,7 @@ moveloop()
 		flags.mon_moving = TRUE;
 		do {
 		    monscanmove = movemon();
-		    if (youmonst.movement > NORMAL_SPEED)
+		    if (youmonst.movement >= NORMAL_SPEED)
 		    {
 		        curmonst = &youmonst;
 			break;	/* it's now your turn */
@@ -258,11 +256,32 @@ moveloop()
 				change = 0;
 			    }
 			}
+	
+			if(u.utrap && u.utraptype == TT_LAVA) {
+			    if(!is_lava(u.ux,u.uy))
+				u.utrap = 0;
+			    else if (!u.uinvulnerable) {
+				u.utrap -= 1<<8;
+				if(u.utrap < 1<<8) {
+				    killer_format = KILLED_BY;
+				    killer = "molten lava";
+				    You("sink below the surface and die.");
+				    done(DISSOLVED);
+				} else if(didmove && !u.umoved) {
+				    Norep("You sink deeper into the lava.");
+				    u.utrap += rnd(4);
+				}
+			    }
+			}
 		    }
 
 		    if(Searching && multi >= 0) (void) dosearch0(1);
 		    dosounds();
+		    /* hack - make sure damage from storms is not blamed
+		       on the player */
+		    flags.mon_moving = TRUE;
 		    do_storms();
+		    flags.mon_moving = FALSE;
 		    gethungry();
 		    age_spells();
 		    exerchk();
@@ -331,7 +350,7 @@ moveloop()
 
                     vision_recalc(2);
 
-                    //clear_nhwindow(WIN_MAP);
+                    /*clear_nhwindow(WIN_MAP);*/
                     clear_glyph_buffer();
                 
                     for (x = 1; x < COLNO; x++) {
@@ -352,6 +371,16 @@ moveloop()
 
 	    if (vision_full_recalc) vision_recalc(0);	/* vision! */
 	}
+
+#ifdef REALTIME_ON_BOTL
+        if(iflags.showrealtime) {
+            /* Update the bottom line if the number of minutes has
+             * changed */
+            if(get_realtime() / 60 != realtime_data.last_displayed_time / 60)
+                flags.botl = 1;
+        }
+#endif
+  
 	if(flags.botl || flags.botlx) bot();
 
 	flags.move = 1;
@@ -392,22 +421,6 @@ moveloop()
 	    !(moves % 15) && !rn2(2))
 		do_vicinity_map();
 
-	if(u.utrap && u.utraptype == TT_LAVA) {
-	    if(!is_lava(u.ux,u.uy))
-		u.utrap = 0;
-	    else if (!u.uinvulnerable) {
-		u.utrap -= 1<<8;
-		if(u.utrap < 1<<8) {
-		    killer_format = KILLED_BY;
-		    killer = "molten lava";
-		    You("sink below the surface and die.");
-		    done(DISSOLVED);
-		} else if(didmove && !u.umoved) {
-		    Norep("You sink deeper into the lava.");
-		    u.utrap += rnd(4);
-		}
-	    }
-	}
 
 #ifdef WIZARD
 	if (iflags.sanity_check)
@@ -573,6 +586,19 @@ newgame()
 #endif
 	program_state.something_worth_saving++;	/* useful data now exists */
 
+#if defined(RECORD_REALTIME) || defined(REALTIME_ON_BOTL)
+
+        /* Start the timer here */
+        realtime_data.realtime = (time_t)0L;
+
+#if defined(BSD) && !defined(POSIX_TYPES)
+        (void) time((long *)&realtime_data.restoretime);
+#else
+        (void) time(&realtime_data.restoretime);
+#endif
+
+#endif /* RECORD_REALTIME || REALTIME_ON_BOTL */
+
 	/* Success! */
 	welcome(TRUE);
 	return;
@@ -663,6 +689,33 @@ do_positionbar()
 	update_positionbar(pbar);
 }
 #endif
+
+#if defined(REALTIME_ON_BOTL) || defined (RECORD_REALTIME)
+time_t
+get_realtime(void)
+{
+    time_t curtime;
+
+    /* Get current time */
+#if defined(BSD) && !defined(POSIX_TYPES)
+    (void) time((long *)&curtime);
+#else
+    (void) time(&curtime);
+#endif
+
+    /* Since the timer isn't set until the game starts, this prevents us
+     * from displaying nonsense on the bottom line before it does. */
+    if(realtime_data.restoretime == 0) {
+        curtime = realtime_data.realtime;
+    } else {
+        curtime -= realtime_data.restoretime;
+        curtime += realtime_data.realtime;
+    }
+ 
+    return curtime;
+}
+#endif /* REALTIME_ON_BOTL || RECORD_REALTIME */
+
 
 #endif /* OVLB */
 

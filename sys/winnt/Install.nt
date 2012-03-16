@@ -2,9 +2,9 @@
          NetHack may be freely redistributed.  See license for details.
          ==============================================================
                  Instructions for compiling and installing
-             NetHack 3.4 on a Windows 9x, NT, 2000, or XP system
+             GruntHack 0.2 on a Windows 9x, NT, 2000, or XP system
          ==============================================================
-                 Last revision: $Date: 2003/10/14 01:31:25 $
+                       Last revision: March 14, 2012
 
 Credit for the porting of NetHack to the Win32 Console Subsystem goes to 
 the NT Porting Team started by Michael Allison.
@@ -17,7 +17,7 @@ The PC Windows porting team consisting of Michael Allison, David Cohrs,
 Alex Kompel, Dion Nicolaas, Yitzhak Sapir, and Janet Walz maintained the 
 tty and graphical win32 versions of NetHack 3.4.3.
 
-You can build either the TTY version of NetHack or the Windows Graphical 
+You can build either the TTY version of GruntHack or the Windows Graphical 
 version.  In either case you can use one of the following build
 environments:
 
@@ -42,7 +42,7 @@ environments:
     Earlier versions of MinGW will not allow you to build the Windows
     Graphical version.
     
-In addition to the makefiles that allow you to build NetHack from the
+In addition to the makefiles that allow you to build GruntHack from the
 command line, there is also a set of project files and a workspace file
 that allow you to build the Windows Graphical version from Microsoft
 Visual C's IDE (Integrated Development Environment.)
@@ -50,20 +50,20 @@ Visual C's IDE (Integrated Development Environment.)
 
 FIRST STEP
 
-The first step in building either version of NetHack is to execute
-sys\winnt\nhsetup.bat.  
+The first step in building either version of GruntHack is to execute
+sys\winnt\ghsetup.bat.  
 
 From the command prompt:
 	cd sys\winnt
-	nhsetup
+	ghsetup
 
 From a Windows explorer window:
-	double-click on nhsetup.bat
+	double-click on ghsetup.bat
 
-A "binary" directory will be created off the top of the NetHack source
+A "binary" directory will be created off the top of the GruntHack source
 tree to house the completed build.
 
-A build subdirectory will also be created off the top of the NetHack 
+A build subdirectory will also be created off the top of the GruntHack 
 source tree, and many files appropriate for a graphical build will be 
 moved there.
 
@@ -75,21 +75,21 @@ USING VISUAL C'S IDE."
 
 BUILDING FROM THE COMMAND LINE
 
-You can built two different versions of NetHack for Win32 from the
+You can built two different versions of GruntHack for Win32 from the
 command line:
     A tty port utilizing the Win32 Console I/O subsystem, Console
-        NetHack;
-    A Win32 native port built on the Windows API, Graphical NetHack or
-        NetHackW.
+        GruntHack;
+    A Win32 native port built on the Windows API, Graphical GruntHack or
+        GruntHackW.
 
-The executable for Console NetHack will be named NetHack.exe. The
-executable for Graphical NetHack will be named NetHackW.exe. You can opt
+The executable for Console GruntHack will be named GruntHack.exe. The
+executable for Graphical GruntHack will be named GruntHackW.exe. You can opt
 to build both; they will be able to use the same datafiles, save files
 and bones files.
 
 I. Dispelling the Myths:
 
-    Compiling NetHack for Win32 is not as easy as it sounds, nor as hard
+    Compiling GruntHack for Win32 is not as easy as it sounds, nor as hard
     as it looks, however it will behoove you to read this entire section 
     through before beginning the task.
 
@@ -111,11 +111,11 @@ I. Dispelling the Myths:
     which comes with the MinGW package.
 
     You may find it useful to obtain copies of lex (flex) and yacc
-    (bison, or byacc).  While not strictly necessary to compile nethack,
+    (bison, or byacc).  While not strictly necessary to compile grunthack,
     they are required should you desire to make any changes to the level
     and dungeon compilers.
 
-II. To compile your copy of NetHack on a Windows NT/2000/XP machine:
+II. To compile your copy of GruntHack on a Windows NT/2000/XP machine:
 
 Setting Up
 
@@ -131,20 +131,20 @@ Setting Up
     GCC Makefile, add <mingw>\bin to your path, where <mingw> is your
     MinGW root directory.)
 
-2.  Make sure all the NetHack files are in the appropriate directory
+2.  Make sure all the GruntHack files are in the appropriate directory
     structure.  You should have a main directory with subdirectories
     dat, doc, include, src, sys\share, sys\winnt, util, and binary (The
     "binary" directory was created by nhsetup.bat earlier if you
     followed the steps appropriately).
 
-    For Console NetHack you need win\tty in addition to these; for
-    Graphical NetHack you need win\win32 in addition to these.
+    For Console GruntHack you need win\tty in addition to these; for
+    Graphical GruntHack you need win\win32 in addition to these.
 
     Other subdirectories may also be included in your distribution, but
     they are not necessary for building the TTY version for the Win32 
     console subsystem.  You can delete them to save space.
 
-    Required Directories for a Win32 Console NetHack:
+    Required Directories for a Win32 Console GruntHack:
 
                             top
                              |
@@ -157,7 +157,7 @@ Setting Up
                                        share  winnt  tty  
  
 
-    Required Directories for a Win32 Graphical NetHack:
+    Required Directories for a Win32 Graphical GruntHack:
 
                             top
                              |
@@ -194,8 +194,8 @@ Setting Up
 
 4.  Edit your Makefile. 
 
-    For building Console NetHack, ensure that GRAPHICAL is set to "N",
-    or commented out. For building Graphical NetHack, set GRAPHICAL to
+    For building Console GruntHack, ensure that GRAPHICAL is set to "N",
+    or commented out. For building Graphical GruntHack, set GRAPHICAL to
     "Y".
 
     Optional step:
@@ -230,11 +230,11 @@ Compiling
     
     In any case, it is likely that the command prompt window where you
     are doing the compiling will be occupied for a while.  If all goes
-    well, you will get an NetHack executable.
+    well, you will get an GruntHack executable.
 
 Notes:
 
-1.  To install an update of NetHack after changing something, change
+1.  To install an update of GruntHack after changing something, change
     your current directory to src and issue the appropriate command for
     your compiler:
 
@@ -264,17 +264,17 @@ Notes:
     flat-address space, non-overlayed .exe file, which should run on any
     true Win32 graphical environment.
 
-    To run NetHack, proceed to RUNNING NETHACK.
+    To run GruntHack, proceed to RUNNING GRUNTHACK.
 
 
 BUILDING USING VISUAL C'S IDE
 
 Only the Win32 native port built on the Windows API, or Graphical
-NetHack, can be built using the Visual C IDE.
+GruntHack, can be built using the Visual C IDE.
 
 I. Dispelling the Myths:
 
-    Compiling NetHack using the Visual C IDE is straightforward, as long
+    Compiling GruntHack using the Visual C IDE is straightforward, as long
     as you have your compiler and tools correctly installed.  
 
     It is again assumed that you already changed your directory to
@@ -283,7 +283,7 @@ I. Dispelling the Myths:
     as described at the top of this document. If you didn't, you must go
     back and do so before proceeding.
 
-II. To compile your copy of NetHack for Windows on a Windows NT/2000/XP
+II. To compile your copy of GruntHack for Windows on a Windows NT/2000/XP
     machine using the Visual C IDE:
 
 Setting Up
@@ -293,7 +293,7 @@ Setting Up
     IDE it should correctly fire up when you choose it in your Start |
     Programs menus.)
 
-2.  Make sure all the NetHack files are in the appropriate directory
+2.  Make sure all the GruntHack files are in the appropriate directory
     structure.  You should have a main directory with subdirectories
     dat, doc, include, src, sys\share, sys\winnt, util, win\win32, and
     at this point you should also have a build directory and a binary
@@ -301,10 +301,10 @@ Setting Up
     earlier.)
 
     Other subdirectories may also be included in your distribution, but
-    they are not necessary for building the graphical version of NetHack
+    they are not necessary for building the graphical version of GruntHack
     (you can delete them to save space if you wish.)
 
-    Required Directories for building Graphical NetHack with the Visual
+    Required Directories for building Graphical GruntHack with the Visual
     C IDE:
 
                             top
@@ -318,7 +318,7 @@ Setting Up
                                share  winnt  win32
  
     Those last two (build and binary) are created during the building
-    process.  They are not disributed as part of the NetHack source 
+    process.  They are not disributed as part of the GruntHack source 
     distribution.  nhsetup.bat creates the build directory and moves a
     few files into it, including the Visual C project files.  The
     "binary" directory will house everything you need to play the game
@@ -328,7 +328,7 @@ Setting Up
     listing of what file is in which directory.  In order for the build
     process to work, all the source files must be in the proper
     locations.  Remember that nhsetup.bat moves/copies many files around
-    to their intended locations for building NetHack.
+    to their intended locations for building GruntHack.
 
     If you downloaded or ftp'd the sources from a UNIX system, the lines
     will probably end in UNIX-style newlines, instead of the carriage
@@ -348,9 +348,9 @@ Setting Up
 4.  Set up for the build.
 
     In the Visual C "Open Workspace" dialog box, navigate to the top of
-    your NetHack source directory.
+    your GruntHack source directory.
 
-    In there, highlight "nethack.dsw" and click on Open.
+    In there, highlight "grunthack.dsw" and click on Open.
     Once the workspace has been opened, you should see the following
     list in the Visual C selection window:
       + dgncomp files
@@ -359,25 +359,25 @@ Setting Up
       + levcomp files
       + levstuff files
       + makedefs files
-      + nethackw files
+      + grunthackw files
       + recover files
       + tile2bmp files
       + tilemap files
       + uudecode files
 
     On the Visual C menus, choose:
-        Project | Set Active Project | NetHackW
+        Project | Set Active Project | GruntHackW
 
     On the Visual C menus again, choose either:
-        Build | Set Active Configuration | NetHackW - Win32 Release
+        Build | Set Active Configuration | GruntHackW - Win32 Release
     or
-        Build | Set Active Configuration | NetHackW - Win32 Debug
+        Build | Set Active Configuration | GruntHackW - Win32 Debug
 
-    The first will create the Release build of NetHackW which does not
+    The first will create the Release build of GruntHackW which does not
     contain all the debugging information and is smaller, and runs
-    quicker.  The second will create the Debug build of NetHackW and
+    quicker.  The second will create the Debug build of GruntHackW and
     will spend a lot of time writing debug information to the disk as
-    the game is played. Unless you are debugging or enhancing NetHack
+    the game is played. Unless you are debugging or enhancing GruntHack
     for Windows, choose the Release build.
 
 Building
@@ -385,27 +385,27 @@ Building
 5.  Start your build.
 
     On the Visual C menus once again, choose:
-        Build | Build NetHackW.exe
+        Build | Build GruntHackW.exe
     This starts the build.  It is likely that the IDE message window 
     where you are doing the compiling will be occupied for a while.
 
-6.  If all has gone well to this point, you should now have a NetHack
-    executable called NetHackW.exe in the "binary" directory, along with
+6.  If all has gone well to this point, you should now have a GruntHack
+    executable called GruntHackW.exe in the "binary" directory, along with
     all the support files that it needs.
  
 
-RUNNING NETHACK
+RUNNING GRUNTHACK
 
 I. Checking the installation:
     Make sure all of the support files -- Guidebook.txt, license,
-    Defaults.nh, NetHack.exe or NetHackW.exe, nhdat, and recover.exe --
+    Defaults.nh, GruntHack.exe or GruntHackW.exe, ghdat, and recover.exe --
     were copied to the game directory.  If not, move them there
     yourself.
 
     Edit Defaults.nh to reflect your particular setup and personal 
     preferences, by following the comments.  As with all releases since
-    3.2.1, HACKDIR defaults to the same directory as that where the
-    NetHack.exe or NetHackW.exe executable resides.  You only need to
+    NetHack 3.2.1, HACKDIR defaults to the same directory as that where the
+    GruntHack.exe or GruntHackW.exe executable resides.  You only need to
     set HACKDIR in defaults.nh if, for some reason, you wish to override
     that (be careful).
   
@@ -413,12 +413,12 @@ II. Executing the game
 
 1.  Running from the command prompt:
 
-    If you add the directory containing the NetHack executable to your
-    PATH, you can just type "nethack" or "nethack -umike" or "nethackw"
-    or "nethackw -umike" to start it up.  Alternatively, you can
+    If you add the directory containing the GruntHack executable to your
+    PATH, you can just type "grunthack" or "grunthack -umike" or "grunthackw"
+    or "grunthackw -umike" to start it up.  Alternatively, you can
     explicitly invoke it with a command such as
-    "c:\nethack\binary\nethack.exe" or "c:\nethack\binary\nethackw.exe"
-    (specifying whatever drive and directory your NetHack executable
+    "c:\grunthack\binary\grunthack.exe" or "c:\grunthack\binary\grunthackw.exe"
+    (specifying whatever drive and directory your GruntHack executable
     resides in) each time.
 
 2.  Running from a Windows shortcut.
@@ -426,15 +426,15 @@ II. Executing the game
     If you will be running it by launching it from a shortcut, just use
     the following information when setting up the shortcut.
 
-        Description      :  NetHack 3.4.3 Console version
-        Command Line     :  C:\NETHACK\BINARY\NETHACK.EXE
+        Description      :  GruntHack 0.2.0 Console version
+        Command Line     :  C:\GRUNTHACK\BINARY\GRUNTHACK.EXE
 
-        Description      :  NetHack 3.4.3 Graphical Interface
-         Command Line     :  C:\NETHACK\BINARY\NETHACKW.EXE
+        Description      :  GruntHack 0.2.0 Graphical Interface
+        Command Line     :  C:\GRUNTHACK\BINARY\GRUNTHACKW.EXE
 
    (changing the directory to the appropriate one of course)
 
-III. Play NetHack.  If it works, you're done!
+III. Play GruntHack.  If it works, you're done!
 
 
 PROBLEMS
@@ -447,4 +447,4 @@ PROBLEMS
     to the NetHack source code feel free to drop us a line c/o:
         DevTeam (at) nethack.org
 
-    Happy NetHacking!
+    Happy GruntHacking!

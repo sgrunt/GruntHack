@@ -58,6 +58,7 @@ static struct Bool_Opt
 #else
 	{"BIOS", (boolean *)0, FALSE, SET_IN_FILE},
 #endif
+	{"bones", &iflags.bones, TRUE, SET_IN_GAME},
 #ifdef INSURANCE
 	{"checkpoint", &flags.ins_chkpt, TRUE, SET_IN_GAME},
 #else
@@ -143,16 +144,28 @@ static struct Bool_Opt
 	{"news", (boolean *)0, FALSE, SET_IN_FILE},
 #endif
 	{"null", &flags.null, TRUE, SET_IN_GAME},
+#ifdef NEW_CALL_MENU
+	{"old_C_behaviour", &iflags.old_C_behaviour, FALSE, SET_IN_GAME},
+#endif
 #ifdef MAC
 	{"page_wait", &flags.page_wait, TRUE, SET_IN_GAME},
 #else
 	{"page_wait", (boolean *)0, FALSE, SET_IN_FILE},
 #endif
+#ifdef PARANOID
+	{"paranoid_hit", &iflags.paranoid_hit, FALSE, SET_IN_GAME},
+	{"paranoid_quit", &iflags.paranoid_quit, FALSE, SET_IN_GAME},
+	{"paranoid_remove", &iflags.paranoid_remove, FALSE, SET_IN_GAME},
+#endif
 	{"perm_invent", &flags.perm_invent, FALSE, SET_IN_GAME},
+	{"pickup_thrown", &iflags.pickup_thrown, TRUE, SET_IN_GAME},
 	{"popup_dialog",  &iflags.wc_popup_dialog, FALSE, SET_IN_GAME},	/*WC*/
 	{"prayconfirm", &flags.prayconfirm, TRUE, SET_IN_GAME},
 	{"preload_tiles", &iflags.wc_preload_tiles, TRUE, DISP_IN_GAME},	/*WC*/
 	{"pushweapon", &flags.pushweapon, FALSE, SET_IN_GAME},
+#ifdef QUIVER_FIRED
+	{"quiver_fired", &iflags.quiver_fired, FALSE, SET_IN_GAME},
+#endif
 #if defined(MICRO) && !defined(AMIGA)
 	{"rawio", &iflags.rawio, FALSE, DISP_IN_GAME},
 #else
@@ -165,16 +178,28 @@ static struct Bool_Opt
 #else
 	{"sanity_check", (boolean *)0, FALSE, SET_IN_FILE},
 #endif
+#ifdef SHOW_BORN
+	{"showborn", &iflags.show_born, FALSE, SET_IN_GAME},
+#endif
 #ifdef EXP_ON_BOTL
 	{"showexp", &flags.showexp, FALSE, SET_IN_GAME},
 #else
 	{"showexp", (boolean *)0, FALSE, SET_IN_FILE},
 #endif
+	{"showbuc", &iflags.show_buc, FALSE, SET_IN_GAME},
 	{"showrace", &iflags.showrace, FALSE, SET_IN_GAME},
+#ifdef REALTIME_ON_BOTL
+  {"showrealtime", &iflags.showrealtime, FALSE, SET_IN_GAME},
+#endif
 #ifdef SCORE_ON_BOTL
 	{"showscore", &flags.showscore, FALSE, SET_IN_GAME},
 #else
 	{"showscore", (boolean *)0, FALSE, SET_IN_FILE},
+#endif
+#ifdef SHOWSYM
+	{"showsym", &iflags.showsym, TRUE, SET_IN_GAME},
+#else
+	{"showsym", (boolean *)0, FALSE, SET_IN_FILE},
 #endif
 	{"silent", &flags.silent, TRUE, SET_IN_GAME},
 	{"softkeyboard", &iflags.wc2_softkeyboard, FALSE, SET_IN_FILE},
@@ -198,6 +223,11 @@ static struct Bool_Opt
 	{"use_inverse",   &iflags.wc_inverse, TRUE, SET_IN_GAME},		/*WC*/
 #else
 	{"use_inverse",   &iflags.wc_inverse, FALSE, SET_IN_GAME},		/*WC*/
+#endif
+#ifdef WIN_EDGE
+	{"win_edge", &iflags.win_edge, FALSE, SET_IN_GAME},
+#else
+	{"win_edge", (boolean *)0, TRUE, SET_IN_FILE},
 #endif
 	{"verbose", &flags.verbose, TRUE, SET_IN_GAME},
 	{"wraptext", &iflags.wc2_wraptext, FALSE, SET_IN_GAME},
@@ -547,7 +577,7 @@ initoptions()
 		warnsyms[i] = def_warnsyms[i].sym;
 	iflags.bouldersym = 0;
 	iflags.travelcc.x = iflags.travelcc.y = -1;
-	flags.warnlevel = 1;
+	flags.warnlevel = 0;
 	flags.warntype = 0L;
 
      /* assert( sizeof flags.inv_order == sizeof def_inv_order ); */
@@ -599,7 +629,8 @@ initoptions()
 	objects[SLIME_MOLD].oc_name_idx = SLIME_MOLD;
 	nmcpy(pl_fruit, OBJ_NAME(objects[SLIME_MOLD]), PL_FSIZ);
 #ifndef MAC
-	opts = getenv("NETHACKOPTIONS");
+	opts = getenv("GRUNTHACKOPTIONS");
+	if (!opts) opts = getenv("NETHACKOPTIONS");
 	if (!opts) opts = getenv("HACKOPTIONS");
 	if (opts) {
 		if (*opts == '/' || *opts == '\\' || *opts == '@') {
@@ -718,7 +749,7 @@ const char *optname;
 #ifdef MICRO
 	pline("\"%s\" settable only from %s.", optname, configfile);
 #else
-	pline("%s can be set only from NETHACKOPTIONS or %s.", optname,
+	pline("%s can be set only from GRUNTHACKOPTIONS or %s.", optname,
 			configfile);
 #endif
 }
@@ -741,7 +772,7 @@ const char *opts;
 	if(from_file)
 	    raw_printf("Bad syntax in OPTIONS in %s: %s.", configfile, opts);
 	else
-	    raw_printf("Bad syntax in NETHACKOPTIONS: %s.", opts);
+	    raw_printf("Bad syntax in GRUNTHACKOPTIONS: %s.", opts);
 
 	wait_synch();
 }
@@ -1141,9 +1172,7 @@ boolean tinitial, tfrom_file;
 	}
 
 	/* strip leading and trailing white space */
-	while (isspace(*opts)) opts++;
-	op = eos(opts);
-	while (--op >= opts && isspace(*op)) *op = '\0';
+	opts = stripspace(opts);
 
 	if (!*opts) return;
 	negated = FALSE;
@@ -2525,7 +2554,7 @@ map_menu_cmd(ch)
 #if defined(MICRO) || defined(MAC) || defined(WIN32)
 # define OPTIONS_HEADING "OPTIONS"
 #else
-# define OPTIONS_HEADING "NETHACKOPTIONS"
+# define OPTIONS_HEADING "GRUNTHACKOPTIONS"
 #endif
 
 static char fmtstr_doset_add_menu[] = "%s%-15s [%s]   "; 
@@ -3023,7 +3052,6 @@ boolean setinitial,setfromfile;
         retval = TRUE;
 #ifdef AUTOPICKUP_EXCEPTIONS
     } else if (!strcmp("autopickup_exception", optname)) {
-    	boolean retval;
 	int pick_cnt, pick_idx, opt_idx, pass;
 	int totalapes = 0, numapes[2] = {0,0};
 	menu_item *pick_list = (menu_item *)0;
@@ -3515,11 +3543,11 @@ static const char *opt_intro[] = {
 #define CONFIG_SLOT 3	/* fill in next value at run-time */
 	(char *)0,
 #if !defined(MICRO) && !defined(MAC)
-	"or use `NETHACKOPTIONS=\"<options>\"' in your environment",
+	"or use `GRUNTHACKOPTIONS=\"<options>\"' in your environment",
 #endif
 	"(<options> is a list of options separated by commas)",
 #ifdef VMS
-	"-- for example, $ DEFINE NETHACKOPTIONS \"noautopickup,fruit:kumquat\"",
+	"-- for example, $ DEFINE GRUNTHACKOPTIONS \"noautopickup,fruit:kumquat\"",
 #endif
 	"or press \"O\" while playing and use the menu.",
 	"",

@@ -20,6 +20,47 @@ char msgs[DUMPMSGS][BUFSZ];
 int lastmsg = -1;
 #endif
 
+#ifdef MSGTYPE
+void
+msgpline_add(typ, pattern)
+     int typ;
+     char *pattern;
+{
+    struct _plinemsg *tmp = (struct _plinemsg *) alloc(sizeof(struct _plinemsg));
+    if (!tmp) return;
+    tmp->msgtype = typ;
+    tmp->pattern = (char *)strdup(pattern);
+    tmp->next = pline_msg;
+    pline_msg = tmp;
+}
+
+void
+msgpline_free()
+{
+    struct _plinemsg *tmp = pline_msg;
+    struct _plinemsg *tmp2;
+    while (tmp) {
+	free(tmp->pattern);
+	tmp2 = tmp;
+	tmp = tmp->next;
+	free(tmp2);
+    }
+    pline_msg = NULL;
+}
+
+int
+msgpline_type(msg)
+     char *msg;
+{
+    struct _plinemsg *tmp = pline_msg;
+    while (tmp) {
+	if (pmatch(tmp->pattern, msg)) return tmp->msgtype;
+	tmp = tmp->next;
+    }
+    return MSGTYP_NORMAL;
+}
+#endif /* MSGTYPE */
+
 /*VARARGS1*/
 /* Note that these declarations rely on knowledge of the internals
  * of the variable argument handling stuff in "tradstdc.h"
@@ -35,6 +76,10 @@ pline VA_DECL(const char *, line)
 	vpline(line, VA_ARGS);
 	VA_END();
 }
+
+# ifdef MSGTYPE
+char prevmsg[BUFSZ];
+# endif /* MSGTYPE */
 
 # ifdef USE_STDARG
 static void
@@ -53,6 +98,9 @@ pline VA_DECL(const char *, line)
 #endif	/* USE_STDARG | USE_VARARG */
 
 	char pbuf[BUFSZ];
+#ifdef MSGTYPE
+	int typ;
+#endif /* MSGTYPE */
 /* Do NOT use VA_START and VA_END in here... see above */
 
 	if (!line || !*line) return;
@@ -66,6 +114,9 @@ pline VA_DECL(const char *, line)
 	  strncpy(msgs[lastmsg], line, BUFSZ);
 	}
 #endif
+#ifdef MSGTYPE
+	typ = msgpline_type(line);
+#endif /* MSGTYPE */
 	if (!iflags.window_inited) {
 	    raw_print(line);
 	    return;
@@ -76,7 +127,15 @@ pline VA_DECL(const char *, line)
 #endif /* MAC */
 	if (vision_full_recalc) vision_recalc(0);
 	if (u.ux) flush_screen(1);		/* %% */
+#ifdef MSGTYPE
+	if (typ == MSGTYP_NOSHOW) return;
+	if (typ == MSGTYP_NOREP && !strcmp(line, prevmsg)) return;
+#endif /* MSGTYPE */
 	putstr(WIN_MESSAGE, 0, line);
+#ifdef MSGTYPE
+	strncpy(prevmsg, line, BUFSZ);
+	if (typ == MSGTYP_STOP) display_nhwindow(WIN_MESSAGE, TRUE); /* --more-- */
+#endif /* MSGTYPE */
 }
 
 /*VARARGS1*/
@@ -266,9 +325,9 @@ impossible VA_DECL(const char *, s)
 	    char pbuf[BUFSZ];
 	    Vsprintf(pbuf,s,VA_ARGS);
 	    paniclog("impossible", pbuf);
+	    pline(pbuf);
 	}
-	vpline(s,VA_ARGS);
-	pline("Program in disorder - perhaps you'd better #quit.");
+	pline("Program in disorder - perhaps you'd better #save or #quit.");
 	program_state.in_impossible = 0;
 	VA_END();
 }
@@ -373,13 +432,18 @@ ustatusline()
 
 	info[0] = '\0';
 	if (Sick) {
-		Strcat(info, ", dying from");
-		if (u.usick_type & SICK_VOMITABLE)
-			Strcat(info, " food poisoning");
-		if (u.usick_type & SICK_NONVOMITABLE) {
+		if (u.usick_type & SICK_ZOMBIE)
+			Strcat(info, ", zombifying");
+		if (!!(u.usick_type & ~SICK_ZOMBIE))
+		{
+			Strcat(info, ", dying from");
 			if (u.usick_type & SICK_VOMITABLE)
-				Strcat(info, " and");
-			Strcat(info, " illness");
+				Strcat(info, " food poisoning");
+			if (u.usick_type & SICK_NONVOMITABLE) {
+				if (u.usick_type & SICK_VOMITABLE)
+					Strcat(info, " and");
+				Strcat(info, " illness");
+			}
 		}
 	}
 	if (Stoned)		Strcat(info, ", solidifying");

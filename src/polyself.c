@@ -70,7 +70,8 @@ const char *fmt, *arg;
 			(urace.femalenum != NON_PM &&
 			(mvitals[urace.femalenum].mvflags & G_GENOD))) {
 	    /* intervening activity might have clobbered genocide info */
-	    killer = delayed_killer;
+	    killer = u.ugeno_cause;
+	    killer_format = u.ugeno_fmt;
 	    if (!killer || !strstri(killer, "genocid")) {
 		killer_format = KILLED_BY;
 		killer = "self-genocide";
@@ -96,6 +97,9 @@ const char *fmt, *arg;
 		spoteffects(TRUE);
 
 	see_monsters();
+#ifdef INVISIBLE_OBJECTS
+        see_objects();
+#endif
 }
 
 void
@@ -130,10 +134,12 @@ change_sex()
 	}
 }
 
+extern int FDECL(enermod, (int)); /* exper.c */
+
 STATIC_OVL void
 newman()
 {
-	int tmp, oldlvl;
+	int tmp, oldlvl, i, sign, num;
 
 	tmp = u.uhpmax;
 	oldlvl = u.ulevel;
@@ -160,17 +166,18 @@ newman()
 	/* random experience points for the new experience level */
 	u.uexp = rndexp(FALSE);
 
-	/* u.uhpmax * u.ulevel / oldlvl: proportionate hit points to new level
-	 * -10 and +10: don't apply proportionate HP to 10 of a starting
-	 *   character's hit points (since a starting character's hit points
-	 *   are not on the same scale with hit points obtained through level
-	 *   gain)
-	 * 9 - rn2(19): random change of -9 to +9 hit points
-	 */
-#ifndef LINT
-	u.uhpmax = ((u.uhpmax - 10) * (long)u.ulevel / oldlvl + 10) +
-		(9 - rn2(19));
-#endif
+	/* Polyself bug fix:
+	 * move HP and Pw up and down using the same formulas in exper.c.
+	 * For flavour, the +/- 9 HP/Pw is kept. */
+
+	i = abs(u.ulevel - oldlvl);
+	sign = sgn(u.ulevel - oldlvl);
+	for (; i > 0; i--) {
+		u.uhpmax += sign * newhp();
+	}
+
+	u.uhpmax += rn1(19, (-9));
+	if (u.uhpmax < 1) u.uhpmax = 1;
 
 #ifdef LINT
 	u.uhp = u.uhp + tmp;
@@ -179,9 +186,23 @@ newman()
 #endif
 
 	tmp = u.uenmax;
-#ifndef LINT
-	u.uenmax = u.uenmax * (long)u.ulevel / oldlvl + 9 - rn2(19);
-#endif
+
+	i = oldlvl;
+	for (; i != u.ulevel; i += sign) {
+		if (i < urole.xlev)
+		    num = rn1((int)ACURR(A_WIS)/2 + urole.enadv.lornd +
+		    		urace.enadv.lornd,
+			urole.enadv.lofix + urace.enadv.lofix);
+		else
+		    num = rn1((int)ACURR(A_WIS)/2 + urole.enadv.hirnd +
+		    	urace.enadv.hirnd,
+			urole.enadv.hifix + urace.enadv.hifix);
+		num = enermod(num);
+		u.uenmax += sign * num;
+	}
+
+	u.uenmax += rn1(19, (-9));
+
 	if (u.uenmax < 0) u.uenmax = 0;
 #ifndef LINT
 	u.uen = (tmp ? u.uen * (long)u.uenmax / tmp : u.uenmax);
@@ -191,7 +212,7 @@ newman()
 	u.uhunger = rn1(500,500);
 	if (Sick) make_sick(0L, (char *) 0, FALSE, SICK_ALL);
 	Stoned = 0;
-	delayed_killer = 0;
+	Strcpy(u.ustone_cause, "");
 	if (u.uhp <= 0 || u.uhpmax <= 0) {
 		if (Polymorph_control) {
 		    if (u.uhp <= 0) u.uhp = 1;
@@ -218,6 +239,9 @@ dead: /* we come directly here if their experience level went to 0 or less */
 	}
 	flags.botl = 1;
 	see_monsters();
+#ifdef INVISIBLE_OBJECTS
+	see_objects();
+#endif
 	(void) encumber_msg();
 }
 
@@ -395,7 +419,7 @@ int	mntmp;
 		You("turn to stone!");
 		mntmp = PM_STONE_GOLEM;
 		Stoned = 0;
-		delayed_killer = 0;
+		Strcpy(u.ustone_cause, "");
 	}
 
 	u.mtimedone = rn1(500, 500);
@@ -409,7 +433,7 @@ int	mntmp;
 
 	if (Stone_resistance && Stoned) { /* parnes@eniac.seas.upenn.edu */
 		Stoned = 0;
-		delayed_killer = 0;
+		Strcpy(u.ustone_cause, "");
 		You("no longer seem to be petrifying.");
 	}
 	if (Sick_resistance && Sick) {
@@ -505,7 +529,7 @@ int	mntmp;
 #ifdef YOUMONST_SPELL
 	    if (attacktype(youmonst.data, AT_MAGC))
 		pline(use_thec,monsterc,"cast monster spells");
-#endif //YOUMONST_SPELL
+#endif /*YOUMONST_SPELL*/
 	    if (can_breathe(youmonst.data))
 		pline(use_thec,monsterc,"use your breath weapon");
 	    if (attacktype(youmonst.data, AT_SPIT))
@@ -570,6 +594,9 @@ int	mntmp;
 	flags.botl = 1;
 	vision_full_recalc = 1;
 	see_monsters();
+#ifdef INVISIBLE_OBJECTS
+	see_objects();
+#endif
 	exercise(A_CON, FALSE);
 	exercise(A_WIS, TRUE);
 	(void) encumber_msg();
@@ -725,8 +752,10 @@ const char *reason;
 	/* You can't revert back while unchanging */
 	if (Unchanging && (u.mh < 1)) {
 	        Strcpy(killer_buf, reason);
-		Strcat(killer_buf, " while stuck in creature form");
-	        // caller sets killer_format
+		Strcat(killer_buf, ", while stuck in ");
+		Strcat(killer_buf, youmonst.data->mname);
+		Strcat(killer_buf, " form");
+	        /* caller sets killer_format */
 		killer = killer_buf; 
 		done(DIED);
 	}
@@ -1318,11 +1347,9 @@ int atyp;
 	    case SILVER_DRAGON_SCALE_MAIL:
 	    case SILVER_DRAGON_SCALES:
 		return PM_SILVER_DRAGON;
-#if 0	/* DEFERRED */
 	    case SHIMMERING_DRAGON_SCALE_MAIL:
 	    case SHIMMERING_DRAGON_SCALES:
 		return PM_SHIMMERING_DRAGON;
-#endif
 	    case RED_DRAGON_SCALE_MAIL:
 	    case RED_DRAGON_SCALES:
 		return PM_RED_DRAGON;

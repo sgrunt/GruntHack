@@ -37,7 +37,7 @@ typedef struct dlb_library {
 
 /* library definitions */
 # ifndef DLBFILE
-#  define DLBFILE	"nhdat"			/* name of library */
+#  define DLBFILE	"ghdat"			/* name of library */
 # endif
 # ifndef FILENAME_CMP
 #  define FILENAME_CMP	strcmp			/* case sensitive */

@@ -15,10 +15,11 @@
 #define qt_win_h
 
 #define QT_CLEAN_NAMESPACE
+#define QT3_SUPPORT
 
 #include <qdialog.h>
 #include <qpushbutton.h>
-#include <qbuttongroup.h>
+#include <q3buttongroup.h>
 #include <qlabel.h>
 #include <qlineedit.h> 
 #if defined(QWS)
@@ -29,14 +30,14 @@
 #include <qspinbox.h>
 #include <qcheckbox.h>
 #include <qfile.h> 
-#include <qlistbox.h> 
-#include <qlistview.h> 
+#include <q3listbox.h> 
+#include <q3listview.h> 
 #include <qmessagebox.h>
 #include <qpixmap.h>
 #include <qimage.h>
-#include <qarray.h>
+/*#include <qarray.h>*/
 #include <qcombobox.h>
-#include <qscrollview.h>
+#include <q3scrollview.h>
 #if QT_VERSION >= 300
 #include <qttableview.h>
 // Should stop using QTableView
@@ -44,8 +45,8 @@
 #else
 #include <qtableview.h>
 #endif
-#include <qmainwindow.h>
-#include <qwidgetstack.h>
+#include <q3mainwindow.h>
+#include <q3widgetstack.h>
 
 #ifdef KDE
 #include <kapp.h>
@@ -53,8 +54,18 @@
 #endif 
 
 #include "qt_clust.h"
+//Added by qt3to4:
+#include <QTimerEvent>
+#include <QKeyEvent>
+#include <Q3Frame>
+#include <QResizeEvent>
+#include <QFocusEvent>
+#include <QMouseEvent>
+#include <QEvent>
+#include <QPaintEvent>
+#include <QCloseEvent>
 
-class QVBox;
+class Q3VBox;
 class QMenuBar;
 class QRadioButton;
 class NhPSListView;
@@ -279,11 +290,11 @@ private:
 	int tiles_per_row;
 };
 
-class BlackScrollView : public QScrollView {
+class BlackScrollView : public Q3ScrollView {
 public:
     BlackScrollView()
     {
-	viewport()->setBackgroundColor(black);
+	viewport()->setBackgroundColor(Qt::black);
     }
 };
 
@@ -476,9 +487,9 @@ private:
 	NetHackQtLabelledIcon hallu;
 	NetHackQtLabelledIcon encumber;
 
-	QFrame hline1;
-	QFrame hline2;
-	QFrame hline3;
+	Q3Frame hline1;
+	Q3Frame hline2;
+	Q3Frame hline3;
 
 	int cursy;
 
@@ -745,7 +756,7 @@ private:
 	NetHackQtInvUsageWindow* invusage;
 
 	NetHackQtKeyBuffer& keysink;
-	QWidgetStack* stack;
+	Q3WidgetStack* stack;
 	int dirkey;
 
 	const char* *macro;

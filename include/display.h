@@ -216,7 +216,9 @@
 				cmap_to_glyph(youmonst.mappearance) :	\
 	youmonst.m_ap_type == M_AP_OBJECT ?				\
 				objnum_to_glyph(youmonst.mappearance) : \
-	/* else M_AP_MONSTER */ monnum_to_glyph(youmonst.mappearance))
+	/* else M_AP_MONSTER */ monnum_to_glyph(			\
+	(is_racial(&mons[youmonst.mappearance]) && iflags.showrace)     \
+	? mons_to_corpse(&youmonst) : youmonst.mappearance))
 
 /*
  * A glyph is an abstraction that represents a _unique_ monster, object,
@@ -337,7 +339,8 @@
 /* The hero's glyph when seen as a monster.
  */
 #define hero_glyph \
-	monnum_to_glyph((Upolyd || !iflags.showrace) ? u.umonnum : \
+	monnum_to_glyph((Upolyd || !iflags.showrace) ? \
+			racial_glyph(&youmonst) : \
 	                (flags.female && urace.femalenum != NON_PM) ? urace.femalenum : \
 	                urace.malenum)
 

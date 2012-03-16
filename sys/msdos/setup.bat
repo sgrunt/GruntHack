@@ -9,10 +9,6 @@ echo   NetHack may be freely redistributed.  See license for details.
 echo.
 REM setup batch file for msdos, see Install.dos for details.
 
-if not %1.==. goto ok_parm
-goto err_set
-
-:ok_parm
 echo Checking to see if directories are set up properly ...
 if not exist ..\..\include\hack.h  goto err_dir
 if not exist ..\..\src\hack.c      goto err_dir
@@ -83,37 +79,9 @@ echo "Warning - There is no NetHack Guidebook (..\..\doc\guideboo.txt)"
 echo "          included in your distribution.  Build will proceed anyway."
 :long3ok
 
-if "%1"=="GCC"   goto ok_gcc
-if "%1"=="gcc"   goto ok_gcc
-if "%1"=="nmake" goto ok_msc
-if "%1"=="NMAKE" goto ok_msc
-if "%1"=="BC"   goto ok_bc
-if "%1"=="bc"   goto ok_bc
-if "%1"=="MSC"   goto ok_msc
-if "%1"=="msc"   goto ok_msc
-goto err_set
-
-:ok_gcc
 echo Symbolic links, msdos style
 echo "Makefile.GCC -> ..\..\src\makefile"
 copy makefile.GCC ..\..\src\makefile
-goto done
-
-:ok_msc
-echo Copying Makefile for Microsoft C and Microsoft NMAKE.
-echo "Makefile.MSC -> ..\..\src\makefile"
-copy Makefile.MSC ..\..\src\makefile
-echo Copying overlay schemas to ..\..\src
-copy schema*.MSC ..\..\src\schema*.DEF
-:ok_cl
-goto done
-
-:ok_bc
-echo Copying Makefile for Borland C and Borland's MAKE.
-echo "Makefile.BC -> ..\..\src\makefile"
-copy Makefile.BC ..\..\src\makefile
-echo Copying overlay schemas to ..\..\src
-copy schema*.BC ..\..\src
 goto done
 
 :err_long

@@ -17,7 +17,7 @@ STATIC_DCL void NDECL(gcrownu);
 STATIC_DCL void FDECL(pleased,(ALIGNTYP_P));
 STATIC_DCL void FDECL(godvoice,(ALIGNTYP_P,const char*));
 STATIC_DCL void FDECL(god_zaps_you,(ALIGNTYP_P));
-STATIC_DCL void FDECL(fry_by_god,(ALIGNTYP_P));
+STATIC_DCL void FDECL(fry_by_god,(ALIGNTYP_P, BOOLEAN_P));
 STATIC_DCL void FDECL(gods_angry,(ALIGNTYP_P));
 STATIC_DCL void FDECL(gods_upset,(ALIGNTYP_P));
 STATIC_DCL void FDECL(consume_offering,(struct obj *));
@@ -70,8 +70,9 @@ static int p_type; /* (-1)-3: (-1)=really naughty, 3=really good */
  * order to have the values be meaningful.
  */
 
-#define TROUBLE_STONED			14
-#define TROUBLE_SLIMED			13
+#define TROUBLE_STONED			15
+#define TROUBLE_SLIMED			14
+#define TROUBLE_BURIED			13
 #define TROUBLE_STRANGLED		12
 #define TROUBLE_LAVA			11
 #define TROUBLE_SICK		        10	
@@ -137,6 +138,7 @@ in_trouble()
 	 */
 	if(Stoned) return(TROUBLE_STONED);
 	if(Slimed) return(TROUBLE_SLIMED);
+	if(u.uburied) return(TROUBLE_BURIED);
 	if(Strangled) return(TROUBLE_STRANGLED);
 	if(u.utrap && u.utraptype == TT_LAVA) return(TROUBLE_LAVA);
 	if(Sick) return(TROUBLE_SICK);
@@ -277,13 +279,21 @@ register int trouble;
 		    You_feel("more limber.");
 		    Stoned = 0;
 		    flags.botl = 1;
-		    delayed_killer = 0;
+		    Strcpy(u.ustone_cause, "");
 		    break;
 	    case TROUBLE_SLIMED:
 		    pline_The("slime disappears.");
 		    Slimed = 0;
 		    flags.botl = 1;
-		    delayed_killer = 0;
+		    Strcpy(u.uslime_cause, "");
+		    break;
+	    case TROUBLE_BURIED:
+	            You("find yourself on the surface again.");
+		    if(!safe_teleds(FALSE))
+		    	unearth_you();
+		    if (!Strangled)
+		    	Strcpy(u.usuff_cause, "");
+		    flags.botl = 1;
 		    break;
 	    case TROUBLE_STRANGLED:
 		    if (uamul && uamul->otyp == AMULET_OF_STRANGULATION) {
@@ -292,6 +302,7 @@ register int trouble;
 		    }
 		    You("can breathe again.");
 		    Strangled = 0;
+		    Strcpy(u.usuff_cause, "");
 		    flags.botl = 1;
 		    break;
 	    case TROUBLE_LAVA:
@@ -490,7 +501,7 @@ aligntyp resp_god;
 		shieldeff(u.ux, u.uy);
 		pline("It seems not to affect you.");
 	    } else
-		fry_by_god(resp_god);
+		fry_by_god(resp_god, FALSE);
 	}
 
 	pline("%s is not deterred...", align_gname(resp_god));
@@ -498,7 +509,7 @@ aligntyp resp_god;
 	    pline("A wide-angle disintegration beam aimed at you hits %s!",
 			mon_nam(u.ustuck));
 	    if (!resists_disint(u.ustuck)) {
-		pline("%s fries to a crisp!", Monnam(u.ustuck));
+		pline("%s crumbles to dust!", Monnam(u.ustuck));
 		xkilled(u.ustuck, 2); /* no corpse */
 	    } else
 		pline("%s seems unaffected.", Monnam(u.ustuck));
@@ -521,7 +532,7 @@ aligntyp resp_god;
 	    if (uarmu && !uarm && !uarmc) (void) destroy_arm(uarmu);
 #endif
 	    if (!Disint_resistance)
-		fry_by_god(resp_god);
+		fry_by_god(resp_god, TRUE);
 	    else {
 		You("bask in its %s glow for a minute...", NH_BLACK);
 		godvoice(resp_god, "I believe it not!");
@@ -538,15 +549,17 @@ aligntyp resp_god;
 }
 
 STATIC_OVL void
-fry_by_god(resp_god)
+fry_by_god(resp_god, disint)
 aligntyp resp_god;
+boolean disint;
 {
 	char killerbuf[64];
 
-	You("fry to a crisp.");
+	You(disint ? "crumble to dust." : "fry to a crisp.");
 	killer_format = KILLED_BY;
 	Sprintf(killerbuf, "the wrath of %s", align_gname(resp_god));
 	killer = killerbuf;
+	u.ugrave_arise = -3; /* don't leave a body - he fried to death */
 	done(DIED);
 }
 
@@ -687,7 +700,13 @@ gcrownu()
 	obj = mksobj(class_gift, TRUE, FALSE);
 	bless(obj);
 	obj->bknown = TRUE;
-	at_your_feet("A spellbook");
+#ifdef INVISIBLE_OBJECTS
+	obj->opresenceknown = FALSE;
+#endif
+	at_your_feet(distant_name(obj, Doname2));
+#ifdef INVISIBLE_OBJECTS
+	obj->opresenceknown = TRUE;
+#endif
 	dropy(obj);
 	u.ugifts++;
 	/* when getting a new book for known spell, enhance
@@ -717,7 +736,10 @@ gcrownu()
 	/* acquire Excalibur's skill regardless of weapon or gift */
 	unrestrict_weapon_skill(P_LONG_SWORD);
 	if (obj && obj->oartifact == ART_EXCALIBUR)
+	{
+	    u.uartigifts++;
 	    discover_artifact(ART_EXCALIBUR);
+	}
 	break;
     case A_NEUTRAL:
 	if (class_gift != STRANGE_OBJECT) {
@@ -736,7 +758,10 @@ gcrownu()
 	/* acquire Vorpal Blade's skill regardless of weapon or gift */
 	unrestrict_weapon_skill(P_LONG_SWORD);
 	if (obj && obj->oartifact == ART_VORPAL_BLADE)
+	{
+	    u.uartigifts++;
 	    discover_artifact(ART_VORPAL_BLADE);
+	}
 	break;
     case A_CHAOTIC:
       {
@@ -759,7 +784,10 @@ gcrownu()
 	/* acquire Stormbringer's skill regardless of weapon or gift */
 	unrestrict_weapon_skill(P_BROAD_SWORD);
 	if (obj && obj->oartifact == ART_STORMBRINGER)
+	{
+	    u.uartigifts++;
 	    discover_artifact(ART_STORMBRINGER);
+	}
 	break;
       }
     default:
@@ -992,10 +1020,9 @@ pleased(g_align)
 	    struct obj *otmp;
 	    int sp_no, trycnt = u.ulevel + 1;
 
-	    at_your_feet("An object");
 	    /* not yet known spells given preference over already known ones */
 	    /* Also, try to grant a spell for which there is a skill slot */
-	    otmp = mkobj(SPBOOK_CLASS, TRUE);
+	    otmp = mkobj(SPBOOK_CLASS, MO_ALLOW_ARTIFACT);
 	    while (--trycnt > 0) {
 		if (otmp->otyp != SPE_BLANK_PAPER) {
 		    for (sp_no = 0; sp_no < MAXSPELL; sp_no++)
@@ -1011,6 +1038,13 @@ pleased(g_align)
 	    }
 	    bless(otmp);
 	    place_object(otmp, u.ux, u.uy);
+#ifdef INVISIBLE_OBJECTS
+	    otmp->opresenceknown = FALSE;
+#endif
+	    at_your_feet(distant_name(otmp, Doname2));
+#ifdef INVISIBLE_OBJECTS
+	    otmp->opresenceknown = TRUE;
+#endif
 	    break;
 	}
 	default:	impossible("Confused deity!");
@@ -1160,6 +1194,7 @@ dosacrifice()
 	feel_cockatrice(otmp, TRUE);
 
 	if (otmp->corpsenm == PM_ACID_BLOB
+		|| otmp->oerodeproof
 		|| (monstermoves <= peek_at_iced_corpse_age(otmp) + 50)) {
 	    value = monstr[otmp->corpsenm] + 1;
 	    if (otmp->oeaten)
@@ -1286,10 +1321,15 @@ dosacrifice()
 		pline("Fortunately, %s permits you to live...", a_gname());
 		pline("A cloud of %s smoke surrounds you...",
 		      hcolor((const char *)"orange"));
-		killer_format = KILLED_BY; // sign for celestial disgrace
+		killer_format = KILLED_BY; /* sign for celestial disgrace */
 		done(ESCAPED);
 	    } else { /* super big win */
 		adjalign(10);
+
+#ifdef RECORD_ACHIEVE
+                achieve.ascended = 1;
+#endif
+
                 pline("%s sings, and you are bathed in radiance...",
                       Hallucination ? "The fat lady" : "An invisible choir");
 		godvoice(altaralign, "Congratulations, mortal!");
@@ -1473,14 +1513,16 @@ verbalize("In return for thy service, I grant thee the gift of Immortality!");
 	    /* The player can gain an artifact */
 	    /* The chance goes down as the number of artifacts goes up */
 	    if (u.ulevel > 2 && u.uluck >= 0) {
-	        if (!rn2(100 + (2 * u.ugifts * nartifacts)))
+	        if (((u.uartigifts == 0) && !rn2(25)) ||
+	            ((u.uartigifts > 0) &&
+		     !rn2(u.uartigifts * 100 + (2 * u.uartigifts * nartifacts))))
 		    otmp = mk_artifact((struct obj *)0, a_align(u.ux,u.uy));
-		else if (!rn2(10 + (2 * u.ugifts)))
+		else if (!rn2(10 + (5 * u.ugifts)))
 		{
 		    if (Role_if(PM_WIZARD) && rn2(3))
 		    {
 	                int sp_no, trycnt = u.ulevel + 1;
-                	otmp = mkobj(SPBOOK_CLASS, TRUE);
+                	otmp = mkobj(SPBOOK_CLASS, MO_ALLOW_ARTIFACT);
                 	while (--trycnt > 0) {
                 	    if (otmp->otyp != SPE_BLANK_PAPER) {
                 	        for (sp_no = 0; sp_no < MAXSPELL; sp_no++)
@@ -1499,7 +1541,8 @@ verbalize("In return for thy service, I grant thee the gift of Immortality!");
                 	}
                 	bless(otmp);
                     }
-		    else otmp = create_oprop((struct obj *)0);
+		    else 
+		    	otmp = create_oprop((struct obj *)0, FALSE);
 		}
 		else goto luck_change;
 		if (otmp) {
@@ -1508,7 +1551,13 @@ verbalize("In return for thy service, I grant thee the gift of Immortality!");
 		    if (otmp->otyp != SPBOOK_CLASS)
 		        otmp->oerodeproof = TRUE;
 		    dropy(otmp);
-		    at_your_feet("An object");
+#ifdef INVISIBLE_OBJECTS
+		    otmp->opresenceknown = FALSE;
+#endif
+		    at_your_feet(distant_name(otmp, Doname2));
+#ifdef INVISIBLE_OBJECTS
+		    otmp->opresenceknown = TRUE;
+#endif
 		    godvoice(u.ualign.type, "Use my gift wisely!");
 		    u.ugifts++;
 		    u.ublesscnt = rnz(300 + (50 * nartifacts));
@@ -1517,7 +1566,10 @@ verbalize("In return for thy service, I grant thee the gift of Immortality!");
 		    if (otmp->otyp != SPBOOK_CLASS)
 		    {
 		        unrestrict_weapon_skill(weapon_type(otmp));
-		        discover_artifact(otmp->oartifact);
+			if (otmp->oartifact) {
+		            discover_artifact(otmp->oartifact);
+			    u.uartigifts++;
+			}
 		    }
 		    return(1);
 		}
@@ -1970,6 +2022,11 @@ invoke_amulet(otmp)
     	        display_nhwindow(WIN_MESSAGE, FALSE);
     	        You("return home with %s...",
     			the(xname(otmp)));
+
+#ifdef RECORD_ACHIEVE
+                achieve.ascended = 1;
+#endif
+
     	        done(DEFIED);
     	    }
         }
@@ -1994,8 +2051,11 @@ invoke_amulet(otmp)
     	    change_luck(-3);
     	    adjalign(-12);
     	    gods_upset(u.ualign.type);
+	    return 1;
         }
     } /* fake Amulet */
+
+    return 1;
 }
 #endif
 

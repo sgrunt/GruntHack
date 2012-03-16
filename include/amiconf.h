@@ -42,11 +42,11 @@ typedef long off_t;
 
 /* data librarian defs */
 #ifndef NOCWD_ASSUMPTIONS
-# define DLBFILE	"NetHack:nhdat"		/* main library */
-# define DLBFILE2	"NetHack:nhsdat"	/* sound library */
+# define DLBFILE	"GruntHack:ghdat"	/* main library */
+# define DLBFILE2	"GruntHack:ghsdat"	/* sound library */
 #else
-# define DLBFILE	"nhdat"			/* main library */
-# define DLBFILE2	"nhsdat"		/* sound library */
+# define DLBFILE	"ghdat"			/* main library */
+# define DLBFILE2	"ghsdat"		/* sound library */
 #endif
 
 #define FILENAME_CMP	stricmp			/* case insensitive */
@@ -140,7 +140,7 @@ extern char *FDECL(gets, (char *));
 #define HACKFONT		/* Use special hack.font */
 #define SHELL			/* Have a shell escape command (!) */
 #define MAIL			/* Get mail at unexpected occasions */
-#define DEFAULT_ICON "NetHack:default.icon"	/* private icon */
+#define DEFAULT_ICON "GruntHack:default.icon"	/* private icon */
 #define AMIFLUSH		/* toss typeahead (select flush in .cnf) */
 /* #define OPT_DISPMAP		/* enable fast_map option */
 
@@ -161,7 +161,7 @@ extern char *FDECL(gets, (char *));
 #define AMII_MAXCOLORS	(1L<<DEPTH)
 typedef unsigned short AMII_COLOR_TYPE;
 
-#define PORT_HELP	"nethack:amii.hlp"
+#define PORT_HELP	"grunthack:amii.hlp"
 
 #undef	TERMLIB
 

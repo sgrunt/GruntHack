@@ -95,7 +95,11 @@ register struct obj *pen;
 	if(!paper)
 		return(0);
 	typeword = (paper->oclass == SPBOOK_CLASS) ? "spellbook" : "scroll";
-	if(Blind && !paper->dknown) {
+	if((Blind
+#ifdef INVISIBLE_OBJECTS
+		|| (paper->oinvis && !See_invisible)
+#endif
+	) && !paper->dknown) {
 		You("don't know if that %s is blank or not!", typeword);
 		return(1);
 	}
@@ -186,9 +190,13 @@ found:
 			pline_The(
 		       "spellbook is left unfinished and your writing fades.");
 			update_inventory();	/* pen charges */
-		} else {
+		} else if (pen->otyp == MAGIC_MARKER) {
 			pline_The("scroll is now useless and disappears!");
 			useup(paper);
+			makeknown(MAGIC_MARKER);
+		} else {
+			pline_The("writing quickly fades from the scroll.");
+			makeknown(FELT_MARKER);
 		}
 		obfree(new_obj, (struct obj *) 0);
 		return(1);
@@ -206,15 +214,28 @@ found:
        "write in your best handwriting:  \"My Diary\", but it quickly fades.");
 			update_inventory();	/* pen charges */
 		} else {
+			boolean disappear = (pen->otyp == MAGIC_MARKER);
 			if (by_descr) {
 			    Strcpy(namebuf, OBJ_DESCR(objects[new_obj->otyp]));
 			    wipeout_text(namebuf, (6+MAXULEV - u.ulevel)/6, 0);
 			} else
 			    Sprintf(namebuf, "%s was here!", plname);
-			You("write \"%s\" and the scroll disappears.", namebuf);
-			useup(paper);
+			You("write \"%s\"%s.", namebuf,
+				disappear ? " and the scroll disappears"
+				          : ", but it quickly fades");
+			makeknown(pen->otyp);
+			if (disappear)
+				useup(paper);
+			else
+				update_inventory();
 		}
 		obfree(new_obj, (struct obj *) 0);
+		return(1);
+	}
+
+	if (pen->otyp == FELT_MARKER) {
+		You("finish your writing, but it quickly fades.");
+		makeknown(FELT_MARKER);
 		return(1);
 	}
 

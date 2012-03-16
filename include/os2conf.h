@@ -23,7 +23,7 @@
  */
 
 #define OS2_USESYSHEADERS	/* use compiler's own system headers */
-/* #define OS2_HPFS		/* use OS/2 High Performance File System */
+#define OS2_HPFS		/* use OS/2 High Performance File System */
 
 #if defined(OS2_GCC) || defined(OS2_CSET2)
 # define OS2_32BITAPI		/* enable for compilation in OS/2 2.0 */
@@ -97,11 +97,7 @@
 #include <unistd.h>
 #endif
 
-#ifndef REDO
-# undef	Getchar
-# define Getchar nhgetch
-#endif
-
 void hangup(int i);
 #endif /* OS2CONF_H */
 #endif /* OS2 */
+

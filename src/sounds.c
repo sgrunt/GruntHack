@@ -873,16 +873,20 @@ dochat()
 	return(0);
     }
 
+    if (u.dz
 #ifdef STEED
-    if (u.usteed && u.dz > 0)
-	return (domonnoise(u.usteed));
+	&& (!u.usteed || u.dz <= 0)
 #endif
-    if (u.dz) {
+    ) {
 	pline("They won't hear you %s there.", u.dz < 0 ? "up" : "down");
 	return(0);
     }
 
-    if (u.dx == 0 && u.dy == 0) {
+    if (u.dx == 0 && u.dy == 0
+#ifdef STEED
+	&& u.dz == 0
+#endif
+    ) {
 /*
  * Let's not include this.  It raises all sorts of questions: can you wear
  * 2 helmets, 2 amulets, 3 pairs of gloves or 6 rings as a marilith,
@@ -895,9 +899,16 @@ dochat()
 	pline("Talking to yourself is a bad habit for a dungeoneer.");
 	return(0);
     }
-
+#ifdef STEED
+    if (u.usteed && u.dz > 0)
+    	mtmp = u.usteed;
+    else {
+#endif
     tx = u.ux+u.dx; ty = u.uy+u.dy;
     mtmp = m_at(tx, ty);
+#ifdef STEED
+    }
+#endif
 
     if (!mtmp || mtmp->mundetected ||
 		mtmp->m_ap_type == M_AP_FURNITURE ||
@@ -908,7 +919,11 @@ dochat()
     if ((!mtmp->mcanmove || mtmp->msleeping) && !mtmp->ispriest) {
 	/* If it is unseen, the player can't tell the difference between
 	   not noticing him and just not existing, so skip the message. */
-	if (canspotmon(mtmp))
+	if (canspotmon(mtmp)
+#ifdef STEED
+	    || mtmp == u.usteed
+#endif
+	)
 	    pline("%s seems not to notice you.", Monnam(mtmp));
 	return(0);
     }

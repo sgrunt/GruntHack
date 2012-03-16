@@ -109,7 +109,7 @@ CLIPPING must be defined for the AMIGA version
 #endif
 
 #ifdef	SHAREDLIB
-#include "NH:sys/amiga/lib/libmacs.h"
+#include "GH:sys/amiga/lib/libmacs.h"
 #endif
 
 #ifdef	INTUI_NEW_LOOK

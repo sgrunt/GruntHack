@@ -86,7 +86,7 @@
 	available; for example, by anonymous FTP from atari.archive.umich.edu.
 
 9.  Make sure the support files -- data, rumors, cmdhelp, opthelp, help, hh,
-    history, license, and oracles, or simply nhdat if DLB was defined --
+    history, license, and oracles, or simply ghdat if DLB was defined --
     were copied to the game directory.  If not, move them there from the
     dat directory yourself.  rumors can be created manually by entering
     "makedefs -r;" data by entering "makedefs -d."

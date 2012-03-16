@@ -97,14 +97,14 @@ $	set default [-.-.dat]	!move to data directory
 $	milestone "(dlb setup)"
 $! since DLB doesn't support wildcard expansion and we don't have shell
 $! file globbing, start by making a file listing its intended contents
-$ create nhdat.lst
-$	if f$search("nhdat.lst;-1").nes."" then -
-		purge/noConfirm/noLog nhdat.lst
+$ create ghdat.lst
+$	if f$search("ghdat.lst;-1").nes."" then -
+		purge/noConfirm/noLog ghdat.lst
 $! an old data file might fool us later, so get rid of it
 $	if f$search(data_libry).nes."" then -
 		delete/noConfirm/noLog 'data_libry';*
 $	if f$trnlnm("PFILE$").nes."" then  close/noLog pfile$
-$ open/Append pfile$ nhdat.lst
+$ open/Append pfile$ ghdat.lst
 $ i = 0
 $dloop:
 $   g = f$element(i,",",dlb_files)
@@ -130,7 +130,7 @@ $   goto dloop
 $ddone:
 $ close pfile$
 $	milestone "(dlb create)"
-$ dlb "-cfI" 'data_libry' nhdat.lst
+$ dlb "-cfI" 'data_libry' ghdat.lst
 $	set default [-]		!move up
 $ if p3.nes."" then  exit
 $

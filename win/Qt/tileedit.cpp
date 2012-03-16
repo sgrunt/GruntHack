@@ -14,14 +14,17 @@ tileedit: tileedit.cpp $(TEXT_IO)
 
 #include "tileedit.h"
 #include <qapplication.h>
-#include <qmainwindow.h>
-#include <qkeycode.h>
-#include <qpopupmenu.h>
+#include <q3mainwindow.h>
+#include <qnamespace.h>
+#include <q3popupmenu.h>
 #include <qmenubar.h>
 #include <qpainter.h>
 #include <qstatusbar.h>
-#include <qhbox.h>
+#include <q3hbox.h>
 #include <qlabel.h>
+//Added by qt3to4:
+#include <QPaintEvent>
+#include <QMouseEvent>
 
 extern "C" {
 #include "config.h"
@@ -67,7 +70,7 @@ TilePickerTab::TilePickerTab(const char* basename, int i, QWidget* parent) :
 	}
 	fclose_text_file();
     }
-    image = image.convertDepth( 8, AvoidDither );
+    image = image.convertDepth( 8, Qt::AvoidDither );
     pixmap.convertFromImage( image );
 }
 
@@ -100,7 +103,7 @@ void TilePickerTab::mousePressEvent(QMouseEvent* e)
     int ox = e->x()-e->x()%TILE_X;
     int oy = e->y()-e->y()%TILE_Y;
     QImage subimage = image.copy(ox,oy,TILE_X,TILE_Y);
-    if ( e->button() == RightButton ) {
+    if ( e->button() == Qt::RightButton ) {
 	setCurrent(subimage);
     } else {
 	last_pick = ox/TILE_X + oy/TILE_Y*TILES_ACROSS;
@@ -220,13 +223,13 @@ void TrivialTileEditor::mousePressEvent(QMouseEvent* e)
     if ( !img.rect().contains(p) )
 	return;
     uchar& pixel = img.scanLine(p.y())[p.x()];
-    if ( e->button() == LeftButton ) {
+    if ( e->button() == Qt::LeftButton ) {
 	pixel = penpixel;
 	QPainter painter(this);
 	paintPoint(painter,p);
-    } else if ( e->button() == RightButton ) {
+    } else if ( e->button() == Qt::RightButton ) {
 	emit pick( img.color(pixel) );
-    } else if ( e->button() == MidButton ) {
+    } else if ( e->button() == Qt::MidButton ) {
 	QPainter painter(this);
 	if ( pixel != penpixel )
 	    fill(painter,p,pixel);
@@ -349,7 +352,7 @@ void TilePalette::mousePressEvent(QMouseEvent* e)
 }
 
 TileEditor::TileEditor(QWidget* parent) :
-    QVBox(parent),
+    Q3VBox(parent),
     editor(this),
     palette(this)
 {
@@ -372,17 +375,17 @@ const QImage& TileEditor::image() const
     return editor.image();
 }
 
-class Main : public QMainWindow {
+class Main : public Q3MainWindow {
 public:
     Main() :
 	central(this),
 	editor(&central),
 	picker(&central)
     {
-	QPopupMenu* file = new QPopupMenu(menuBar());
-	file->insertItem("&Save", &picker, SLOT(save()), CTRL+Key_S);
+	Q3PopupMenu* file = new Q3PopupMenu(menuBar());
+	file->insertItem("&Save", &picker, SLOT(save()), Qt::CTRL+Qt::Key_S);
 	file->insertSeparator();
-	file->insertItem("&Exit", qApp, SLOT(quit()), CTRL+Key_Q);
+	file->insertItem("&Exit", qApp, SLOT(quit()), Qt::CTRL+Qt::Key_Q);
 	menuBar()->insertItem("&File", file);
 
 	connect( &picker, SIGNAL(pick(const QImage&)),
@@ -396,7 +399,7 @@ public:
     }
 
 private:
-    QHBox central; 
+    Q3HBox central; 
     TileEditor editor;
     TilePicker picker;
 };

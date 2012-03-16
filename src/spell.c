@@ -11,7 +11,7 @@ static NEARDATA struct obj *book;	/* last/current book being xscribed */
 #define SPELLMENU_CAST (-2)
 #define SPELLMENU_VIEW (-1)
 
-#define KEEN 20000
+#define KEEN 10000
 #define MAX_SPELL_STUDY 3
 #define incrnknow(spell)        spl_book[spell].sp_know = KEEN
 
@@ -29,10 +29,10 @@ STATIC_DCL boolean FDECL(getspell, (int *));
 STATIC_DCL boolean FDECL(dospellmenu, (const char *,int,int *));
 STATIC_DCL int FDECL(percent_success, (int));
 STATIC_DCL int NDECL(throwspell);
-STATIC_DCL void NDECL(cast_protection);
+/*STATIC_DCL*/ void NDECL(cast_protection);
 STATIC_DCL void FDECL(spell_backfire, (int));
 STATIC_DCL const char *FDECL(spelltypemnemonic, (int));
-STATIC_DCL int FDECL(isqrt, (int));
+int FDECL(isqrt, (int));
 
 /* The roles[] table lists the role-specific values for tuning
  * percent_success().
@@ -319,7 +319,7 @@ raise_dead:
 }
 
 STATIC_PTR int
-learn()
+learn(VOID_ARGS)
 {
 	int i;
 	short booktype;
@@ -327,11 +327,15 @@ learn()
 	boolean costly = TRUE;
 
 	/* JDS: lenses give 50% faster reading; 33% smaller read time */
-	if (delay && ublindf && ublindf->otyp == LENSES && rn2(2)) delay++;
+	if (delay && ublindf && ublindf->otyp == LENSES
+#ifdef INVISIBLE_OBJECTS
+		&& (!ublindf->oinvis || See_invisible)
+#endif
+		&& rn2(2)) delay++;
 	if (Confusion) {		/* became confused while learning */
 	    (void) confused_book(book);
 	    book = 0;			/* no longer studying */
-	    nomul(delay);		/* remaining delay is uninterrupted */
+	    nomul2(delay, "reading a book");	/* remaining delay is uninterrupted */
 	    delay = 0;
 	    return(0);
 	}
@@ -469,7 +473,7 @@ register struct obj *spellbook;
 		if (too_hard) {
 		    boolean gone = cursed_book(spellbook);
 
-		    nomul(delay);			/* study time */
+		    nomul2(delay, "misunderstanding a book");	/* study time */
 		    delay = 0;
 		    if(gone || !rn2(3)) {
 			if (!gone) pline_The("spellbook crumbles to dust!");
@@ -484,7 +488,7 @@ register struct obj *spellbook;
 		    if (!confused_book(spellbook)) {
 			spellbook->in_use = FALSE;
 		    }
-		    nomul(delay);
+		    nomul2(delay, "reading a book");
 		    delay = 0;
 		    return(1);
 		}
@@ -625,7 +629,8 @@ int booktype;
 	return (objects[booktype].oc_skill);
 }
 
-STATIC_OVL void
+/*STATIC_OVL*/
+void
 cast_protection()
 {
 	int loglev = 0;
@@ -715,6 +720,8 @@ int spell;
     return;
 }
 
+extern void you_aggravate(struct monst *);
+
 int
 spelleffects(spell, atme)
 int spell;
@@ -724,6 +731,7 @@ boolean atme;
 	int skill, role_skill;
 	boolean confused = (Confusion != 0);
 	struct obj *pseudo;
+	struct monst *mtmp;
 	coord cc;
 
 	/*
@@ -809,6 +817,11 @@ boolean atme;
 		return(1);
 	}
 
+	/* successful casting: you remember the spell better now) */
+	spl_book[spell].sp_know += rn1(100, 50);
+	if (spl_book[spell].sp_know >= KEEN)
+		spl_book[spell].sp_know = KEEN;
+
 	u.uen -= energy;
 	flags.botl = 1;
 	exercise(A_WIS, TRUE);
@@ -830,8 +843,33 @@ boolean atme;
 	 * effects, e.g. more damage, further distance, and so on, without
 	 * additional cost to the spellcaster.
 	 */
+	case SPE_CAUSE_AGGRAVATION:
+	    if (role_skill >= P_SKILLED) {
+	    	register struct monst *target = (struct monst *)0;
+	    	if (throwspell()) {
+		    if (u.uswallow)
+			target = u.ustuck;
+		    else if (MON_AT(u.dx, u.dy))
+		    	target = m_at(u.dx, u.dy);
+		    if (target)
+		    	you_aggravate(target);
+		    else
+		    {
+		    	You_feel("aggravated at %s.",
+				OBJ_AT(u.dx, u.dy)
+					? the(distant_name(
+						level.objects[u.dx][u.dy],
+						xname))
+					: surface(u.dx, u.dy));
+		    }
+		}
+		break;
+	    }
+	    goto wandeffect;
 	case SPE_CONE_OF_COLD:
 	case SPE_FIREBALL:
+	case SPE_POISON_BLAST:
+	case SPE_ACID_BLAST:
 	    if (role_skill >= P_SKILLED) {
 	        if (throwspell()) {
 		    cc.x=u.dx;cc.y=u.dy;
@@ -848,8 +886,13 @@ boolean atme;
 				    pseudo->otyp - SPE_MAGIC_MISSILE + 10,
 				    u.ulevel/2 + 1 + spell_damage_bonus(), 0,
 					(pseudo->otyp == SPE_CONE_OF_COLD) ?
-						EXPL_FROSTY : EXPL_FIERY);
-			    if (pseudo->otyp != SPE_CONE_OF_COLD)
+						EXPL_FROSTY :
+					(pseudo->otyp == SPE_POISON_BLAST) ?
+						EXPL_NOXIOUS :
+					(pseudo->otyp == SPE_ACID_BLAST) ?
+						EXPL_WET :
+						EXPL_FIERY);
+			    if (pseudo->otyp == SPE_FIREBALL)
 			        scatter(u.dx, u.dy,
 				        u.ulevel/2 + 1 + spell_damage_bonus(),
 					VIS_EFFECTS|MAY_HIT|
@@ -869,6 +912,7 @@ boolean atme;
 
 	/* these spells are all duplicates of wand effects */
 	case SPE_FORCE_BOLT:
+	case SPE_PSI_BOLT:
 	case SPE_SLEEP:
 	case SPE_MAGIC_MISSILE:
 	case SPE_KNOCK:
@@ -879,13 +923,16 @@ boolean atme;
 	case SPE_POLYMORPH:
 	case SPE_TELEPORT_AWAY:
 	case SPE_CANCELLATION:
+	case SPE_TOUCH_OF_DEATH:
 	case SPE_FINGER_OF_DEATH:
+	case SPE_LIGHTNING:
 	case SPE_LIGHT:
 	case SPE_DETECT_UNSEEN:
 	case SPE_HEALING:
 	case SPE_EXTRA_HEALING:
 	case SPE_DRAIN_LIFE:
 	case SPE_STONE_TO_FLESH:
+wandeffect:
 		if (!(objects[pseudo->otyp].oc_dir == NODIR)) {
 			if (atme) u.dx = u.dy = u.dz = 0;
 			else if (!getdir((char *)0)) {
@@ -961,6 +1008,48 @@ boolean atme;
 		if (!jump(max(role_skill,1)))
 			pline(nothing_happens);
 		break;
+	case SPE_FLAME_SPHERE:
+	case SPE_FREEZE_SPHERE:
+	case SPE_SHOCK_SPHERE:
+	{
+		int seencount = 0, heardcount = 0, count = 1;
+		if (role_skill >= P_EXPERT)
+			count += rn1(3, 2);
+	    	else if (role_skill >= P_SKILLED)
+			count += rn1(2, 1);
+
+		for (; count > 0; count--)
+		{
+			mtmp = makemon(
+				pseudo->otyp == SPE_FLAME_SPHERE  ? &mons[PM_FLAMING_SPHERE] :
+				pseudo->otyp == SPE_FREEZE_SPHERE ? &mons[PM_FREEZING_SPHERE] :
+				pseudo->otyp == SPE_SHOCK_SPHERE  ? &mons[PM_SHOCKING_SPHERE] :
+					(struct permonst *)0,
+				u.ux, u.uy, MM_EDOG);
+			if (mtmp) {
+				initedog(mtmp);
+				set_malign(mtmp);
+				mtmp->m_lev = u.ulevel;
+	    		    	mtmp->mhpmax = mtmp->mhp =
+					d((int)mtmp->m_lev, 8);
+				if (canseemon(mtmp)) {
+					seencount++;
+				} else {
+					heardcount++;
+				}
+			}
+		}
+		if (seencount) {
+		    	You("summon %s.", 
+				seencount > 1 ? makeplural(m_monnam(mtmp)) :
+						a_monnam(mtmp));
+		} else if (heardcount) {
+			if (flags.soundok) You_hear("crackling.");
+		} else {
+			pline(nothing_happens);
+		}
+		break;
+	}
 	default:
 		impossible("Unknown spell %d attempted.", spell);
 		obfree(pseudo, (struct obj *)0);
@@ -995,7 +1084,7 @@ throwspell()
 	if (distmin(u.ux, u.uy, cc.x, cc.y) > 10) {
 	    pline_The("spell dissipates over the distance!");
 	    return 0;
-	} else if (u.uswallow) {
+	} else if (u.uswallow || u.uburied) {
 	    pline_The("spell is cut short!");
 	    exercise(A_WIS, FALSE); /* What were you THINKING! */
 	    u.dx = 0;
@@ -1155,8 +1244,7 @@ dump_spells()
 #endif
 
 /* Integer square root function without using floating point. */
-STATIC_OVL int
-isqrt(val)
+int isqrt(val)
 int val;
 {
     int rt = 0;

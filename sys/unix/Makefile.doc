@@ -73,7 +73,7 @@ distrib: $(DISTRIB)
 Guidebook.txt	: Guidebook.mn tmac.n
 	$(GUIDECMD) > Guidebook.txt
 grunthack.txt	: grunthack.6
-	nroff -man grunthack.6 | $(COLCMD) > nethack.txt
+	nroff -man grunthack.6 | $(COLCMD) > grunthack.txt
 lev_comp.txt	: lev_comp.6
 	nroff -man lev_comp.6 | $(COLCMD) > lev_comp.txt
 dgn_comp.txt	: dgn_comp.6

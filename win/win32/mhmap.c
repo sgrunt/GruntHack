@@ -562,9 +562,6 @@ void onPaint(HWND hWnd)
 				TCHAR wch;
 				RECT  glyph_rect;
 				int   color;
-				unsigned special;
-				int mgch;
-				HBRUSH back_brush;
 				COLORREF OldFg;
 
 				nhcoord2display(data, i, j, &glyph_rect);

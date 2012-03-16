@@ -44,9 +44,6 @@ OPTIONS=IBMGraphics
 # or 2(on,legacy-mode) which causes 5='g', alt-5='G', alt-0='I'
 OPTIONS=time,noshowexp,number_pad:2,lit_corridor
 #
-# If you want to get rid of "use #quit to quit..." use:
-OPTIONS=suppress_alert:3.3.1
-#
 # Note: the rest_on_space in the next line may not be
 #       appropriate for a beginning NetHack player, since
 #       it could result in use of a turn unintentionally.

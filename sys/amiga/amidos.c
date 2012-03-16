@@ -29,9 +29,9 @@
 #endif
 
 /* Prototypes */
-#include "NH:sys/amiga/winami.p"
-#include "NH:sys/amiga/amiwind.p"
-#include "NH:sys/amiga/amidos.p"
+#include "GH:sys/amiga/winami.p"
+#include "GH:sys/amiga/amiwind.p"
+#include "GH:sys/amiga/amidos.p"
 
 extern char Initialized;
 extern struct window_procs amii_procs;
@@ -41,7 +41,7 @@ int Enable_Abort = 0;   /* for stdio package */
 #endif
 
 /* Initial path, so we can find NetHack.cnf */
-char PATH[PATHLEN] = "NetHack:";
+char PATH[PATHLEN] = "GruntHack";
 
 static boolean record_exists(void);
 

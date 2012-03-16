@@ -31,7 +31,7 @@ WSHR  = ..\win\share # Tile support files
 SWINCE= ..\wince 	   # wince files
 WINCE = ..\wince     # wince build area
 OBJ   = $(WINCE)\ceobj
-DLB = $(DAT)\nhdat
+DLB = $(DAT)\ghdat
 
 #==========================================
 # Setting up the compiler and linker
@@ -485,7 +485,7 @@ $(INCL)\win32api.h: $(NTSYS)\win32api.h
 
 
 #==========================================
-# DLB utility and nhdat file creation
+# DLB utility and ghdat file creation
 #==========================================
 
 $(U)dlb_main.exe: $(DLBOBJ) $(O)dlb.o
@@ -505,7 +505,7 @@ $(O)dlb_main.o: $(UTIL)\dlb_main.c $(INCL)\config.h $(INCL)\dlb.h
 #$(DAT)\porthelp: $(NTSYS)\porthelp
 #	copy $(NTSYS)\porthelp $@ >nul
 
-$(DAT)\nhdat:	$(U)dlb_main.exe $(DAT)\data $(DAT)\oracles $(OPTIONS_FILE) \
+$(DAT)\ghdat:	$(U)dlb_main.exe $(DAT)\data $(DAT)\oracles $(OPTIONS_FILE) \
 	$(DAT)\quest.dat $(DAT)\rumors $(DAT)\help $(DAT)\hh $(DAT)\cmdhelp \
 	$(DAT)\history $(DAT)\opthelp $(DAT)\wizhelp $(DAT)\dungeon  \
 	$(DAT)\license $(O)sp_lev.tag
@@ -527,7 +527,7 @@ $(DAT)\nhdat:	$(U)dlb_main.exe $(DAT)\data $(DAT)\oracles $(OPTIONS_FILE) \
 	echo dungeon >>dlb.lst
 	echo license >>dlb.lst
 	for %%N in (*.lev) do echo %%N >>dlb.lst
-	$(U)dlb_main cIf dlb.lst nhdat
+	$(U)dlb_main cIf dlb.lst ghdat
 	cd $(WINCE)
 
 #==========================================
@@ -688,8 +688,8 @@ $(O)Window.o: ..\win\X11\Window.c $(INCL)\xwindowp.h $(INCL)\xwindow.h \
 $(O)dialogs.o: ..\win\X11\dialogs.c $(CONFIG_H)
 	$(CC) $(CFLAGSU) -Fo$@ ..\win\X11\dialogs.c
 $(O)winX.o: ..\win\X11\winX.c $(HACK_H) $(INCL)\winX.h $(INCL)\dlb.h \
-		$(INCL)\patchlevel.h ..\win\X11\nh72icon \
-		..\win\X11\nh56icon ..\win\X11\nh32icon
+		$(INCL)\patchlevel.h ..\win\X11\gh72icon \
+		..\win\X11\gh56icon ..\win\X11\gh32icon
 	$(CC) $(CFLAGSU) -Fo$@ ..\win\X11\winX.c
 $(O)winmap.o: ..\win\X11\winmap.c $(INCL)\xwindow.h $(HACK_H) $(INCL)\dlb.h \
 		$(INCL)\winX.h $(INCL)\tile2x11.h

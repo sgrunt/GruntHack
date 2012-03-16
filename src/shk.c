@@ -780,6 +780,56 @@ register struct obj *obj;
 	}
 }
 
+/* Scatter the contents of the given object through the dungeon. */
+void
+scatter_contents(obj)
+register struct obj *obj;
+{
+	register struct bill_x *bp;
+	register struct monst *shkp;
+	register struct obj *curr;
+
+	while ((curr = obj->cobj) != 0) {
+	    int newlev = random_teleport_level();
+	    d_level dest;
+	    obj_extract_self(curr);
+	
+	    shkp = 0;
+
+	    if (curr->unpaid) {
+	        /* look for a shopkeeper who owns this object */
+	        for (shkp = next_shkp(fmon, TRUE); shkp;
+		        shkp = next_shkp(shkp->nmon, TRUE))
+		    if (onbill(obj, shkp, TRUE)) break;
+	    }
+
+	    /* sanity check, more or less */
+	    if (!shkp) shkp = shop_keeper(*u.ushops);
+
+	    /*
+	     * Note:  `shkp = shop_keeper(*u.ushops)' used to be
+	     *	  unconditional.  But obfree() is used all over
+	     *	  the place, so making its behavior be dependent
+	     *	  upon player location doesn't make much sense.
+	     */
+    
+	    if ((bp = onbill(curr, shkp, FALSE)) != 0) {
+		    subfrombill(curr, shkp);
+		    bill_dummy_object(curr);
+	    }
+
+	    if (newlev == depth(&u.uz) || In_endgame(&u.uz)) {
+		rloco(curr);
+	    } else {
+		add_to_migration(curr);
+		get_level(&dest, newlev);
+		curr->ox = dest.dnum;
+		curr->oy = dest.dlevel;
+		curr->owornmask = (long)MIGR_RANDOM;
+	    }
+	}
+}
+
 /* called with two args on merge */
 void
 obfree(obj, merge)
@@ -837,6 +887,18 @@ register struct obj *obj, *merge;
 #endif
 		}
 	}
+	if (obj == uwep) uwepgone();
+	else if (obj == uswapwep) uswapwepgone();
+	else if (obj == uquiver) uqwepgone();
+	else if ((obj == uarm) ||
+	         (obj == uarmc) ||
+		 (obj == uarmh) ||
+		 (obj == uarms) ||
+		 (obj == uarmg) ||
+#ifdef TOURIST
+		 (obj == uarmu) ||
+#endif
+		 (obj == uarmf)) setnotworn(obj);
 	dealloc_obj(obj);
 }
 #endif /* OVLB */
@@ -1396,7 +1458,8 @@ proceed:
 	}
 	/* now check items on bill */
 	if (eshkp->billct) {
-	    register boolean itemize;
+	    boolean itemize = FALSE;
+	    struct obj* payme_item = getnextgetobj();
 #ifndef GOLDOBJ
 	    if (!u.ugold && !eshkp->credit) {
 #else
@@ -1422,7 +1485,9 @@ proceed:
 
 	    /* this isn't quite right; it itemizes without asking if the
 	     * single item on the bill is partly used up and partly unpaid */
-	    itemize = (eshkp->billct > 1 ? yn("Itemized billing?") == 'y' : 1);
+	    if (!payme_item) {
+	    	itemize = (eshkp->billct > 1 ? yn("Itemized billing?") == 'y' : 1);
+	    }
 
 	    for (pass = 0; pass <= 1; pass++) {
 		tmp = 0;
@@ -1448,25 +1513,29 @@ proceed:
 			 * are processed on both passes */
 			tmp++;
 		    } else {
-			switch (dopayobj(shkp, bp, &otmp, pass, itemize)) {
-			  case PAY_CANT:
-				return 1;	/*break*/
-			  case PAY_BROKE:
-				paid = TRUE;
-				goto thanks;	/*break*/
-			  case PAY_SKIP:
-				tmp++;
-				continue;	/*break*/
-			  case PAY_SOME:
-				paid = TRUE;
+		    	if (payme_item == NULL || payme_item == otmp) {
+				switch (dopayobj(shkp, bp, &otmp, pass, itemize)) {
+				  case PAY_CANT:
+					return 1;	/*break*/
+				  case PAY_BROKE:
+					paid = TRUE;
+					goto thanks;	/*break*/
+				  case PAY_SKIP:
+					tmp++;
+					continue;	/*break*/
+				  case PAY_SOME:
+					paid = TRUE;
+					if (itemize) bot();
+					continue;	/*break*/
+				  case PAY_BUY:
+					paid = TRUE;
+					break;
+				}
 				if (itemize) bot();
-				continue;	/*break*/
-			  case PAY_BUY:
-				paid = TRUE;
-				break;
+				*bp = eshkp->bill_p[--eshkp->billct];
+			} else {
+				tmp++;
 			}
-			if (itemize) bot();
-			*bp = eshkp->bill_p[--eshkp->billct];
 		    }
 		}
 	    }
@@ -1852,27 +1921,27 @@ unsigned id;
 STATIC_DCL
 const int matprice[] = {
      0,
-     1, // LIQUID
-     1, // WAX
-     1, // VEGGY
-     3, // FLESH
-     2, // PAPER
-     3, // CLOTH
-     5, // LEATHER
-     8, // WOOD
-    20, // BONE
-   200, // DRAGON_HIDE - DSM to scale mail
-    10, // IRON
-    10, // METAL
-    10, // COPPER
-    30, // SILVER
-    30, // GOLD
-    30, // PLATINUM
-    32, // MITHRIL - mithril-coat to regular chain mail
-    10, // PLASTIC
-    20, // GLASS
-   500, // GEMSTONE
-    10  // MINERAL
+     1, /* LIQUID */
+     1, /* WAX */
+     1, /* VEGGY */
+     3, /* FLESH */
+     2, /* PAPER */
+     3, /* CLOTH */
+     5, /* LEATHER */
+     8, /* WOOD */
+    20, /* BONE */
+   200, /* DRAGON_HIDE - DSM to scale mail */
+    10, /* IRON */
+    10, /* METAL */
+    10, /* COPPER */
+    30, /* SILVER */
+    30, /* GOLD */
+    30, /* PLATINUM */
+    32, /* MITHRIL - mithril-coat to regular chain mail */
+    10, /* PLASTIC */
+    20, /* GLASS */
+   500, /* GEMSTONE */
+    10  /* MINERAL */
 };
 
 /* calculate the value that the shk will charge for [one of] an object */
@@ -2207,7 +2276,11 @@ const char *arg;
 	char *obj_name, fmtbuf[BUFSZ];
 	boolean was_unknown = !obj->dknown;
 
-	obj->dknown = TRUE;
+	obj->dknown =
+#ifdef INVISIBLE_OBJECTS
+	  obj->iknown =
+#endif
+		TRUE;
 	/* Use real name for ordinary weapons/armor, and spell-less
 	 * scrolls/books (that is, blank and mail), but only if the
 	 * object is within the shk's area of interest/expertise.
@@ -2906,8 +2979,8 @@ boolean shk_buying;
 		 i++)
 		 if (obj->oprops & (1 << i))
 		     factor *= next, next = (next == 2) ? 5 : 2;
-		         // 100, 500, 1000, 5000, 10000, 50000...
-			 // more than two is absurd, though, really
+		         /* 100, 500, 1000, 5000, 10000, 50000... */
+			 /* more than two is absurd, though, really */
             tmp += factor;
 	}
 	switch(obj->oclass) {
@@ -3902,7 +3975,8 @@ boolean altusage; /* some items have an "alternate" use with different cost */
 		   angry shk surchage) */
 		if (!altusage) tmp = (long) objects[OIL_LAMP].oc_cost;
 		else tmp += tmp / 3L;	/* djinni is being released */
-	} else if(otmp->otyp == MAGIC_MARKER) {		 /* 70 - 100 */
+	} else if((otmp->otyp == FELT_MARKER) ||
+		(otmp->otyp == MAGIC_MARKER)) {		 /* 70 - 100 */
 		/* no way to determine in advance   */
 		/* how many charges will be wasted. */
 		/* so, arbitrarily, one half of the */

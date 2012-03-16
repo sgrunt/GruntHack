@@ -151,7 +151,15 @@ vobj_at(x,y)
     register struct obj *obj = level.objects[x][y];
 
     while (obj) {
-	if (!obj->oinvis || See_invisible) return obj;
+    	if (!Blind && obj->oinvis && !See_invisible && (x != u.ux || y != u.uy))
+		obj->opresenceknown = FALSE;
+
+	if (obj->oinvis && !Blind)
+		obj->iknown = TRUE;
+
+	if (!(obj->oinvis && !See_invisible && 
+	      !(obj->opresenceknown || (!Blind && x == u.ux && y == u.uy))))
+		return obj;
 	obj = obj->nexthere;
     }
     return ((struct obj *) 0);
@@ -342,7 +350,8 @@ map_location(x,y,show)
 
 #define DETECTED 	2
 #define PHYSICALLY_SEEN 1
-#define is_worm_tail(mon)	((mon) && ((x != (mon)->mx)  || (y != (mon)->my)) && (x != (mon)->mix) && (y != (mon)->miy))
+#define is_worm_tail(mon)	((mon) && ((x != (mon)->mx)  || (y != (mon)->my)))
+#define is_worm_tail_image(mon)	((mon) && ((x != (mon)->mix)  || (y != (mon)->miy)))
 
 /*
  * display_monster()
@@ -409,9 +418,13 @@ display_monster(x, y, mon, sightflags, worm_tail)
 		break;
 	    }
 
-	    case M_AP_MONSTER:
-		show_glyph(x,y, monnum_to_glyph(what_mon((int)mon->mappearance)));
+	    case M_AP_MONSTER: {
+	    	struct permonst *olddat = mon->data;
+		mon->data = &mons[(int)mon->mappearance];
+		show_glyph(x,y, mon_to_glyph(mon));
+		mon->data = olddat;
 		break;
+	    }
 	}
 	
     }
@@ -636,7 +649,7 @@ newsym(x,y)
     if (in_mklev) return;
 
     /* only permit updating the hero when swallowed */
-    if (u.uswallow) {
+    if (u.uswallow || u.uburied) {
 	if (x == u.ux && y == u.uy) display_self();
 	return;
     }
@@ -666,7 +679,10 @@ newsym(x,y)
 	 */
 	lev->waslit = (lev->lit!=0);	/* remember lit condition */
 
-	if (reg != NULL && ACCESSIBLE(lev->typ)) {
+	if (reg != NULL &&
+	    (ACCESSIBLE(lev->typ) ||
+	     lev->typ == POOL || lev->typ == MOAT || lev->typ == WATER ||
+	     lev->typ == LAVAPOOL)) {
 	    show_region(reg,x,y);
 	    return;
 	}
@@ -682,7 +698,7 @@ newsym(x,y)
 	    boolean image = FALSE;
 	    mon = m_at(x,y);
 	    if (!mon) image = TRUE, mon = m_img_at(x, y);
-	    worm_tail = is_worm_tail(mon);
+	    worm_tail = image ? is_worm_tail_image(mon) : is_worm_tail(mon);
 	    see_it = mon && (worm_tail
 		? (!mon->minvis || See_invisible)
 		: (mon_visible(mon) && (image || !displaced(mon))) || 

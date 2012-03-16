@@ -59,13 +59,13 @@ extern "C" {
 #include "tile2x11.h"
 #undef Invisible
 #undef Warning
-#undef red
-#undef green
-#undef blue
+#undef Qt::red
+#undef Qt::green
+#undef Qt::blue
 #undef Black
 #undef curs
-#undef TRUE
-#undef FALSE
+/*#undef TRUE
+#undef FALSE*/
 #undef min
 #undef max
 #undef alloc
@@ -75,23 +75,38 @@ extern "C" {
 }
 
 #include "qt_win.h"
+//Added by qt3to4:
+#include <QTimerEvent>
+#include <QFocusEvent>
+#include <QPaintEvent>
+#include <Q3VBoxLayout>
+#include <QKeyEvent>
+#include <Q3Frame>
+#include <QResizeEvent>
+#include <QEvent>
+#include <QLabel>
+#include <Q3HBoxLayout>
+#include <QPixmap>
+#include <QMouseEvent>
+#include <QCloseEvent>
+#include <Q3GridLayout>
 #include <qregexp.h>
 #include <qpainter.h>
 #include <qdir.h>
 #include <qbitmap.h>
-#include <qkeycode.h>
+#include <qnamespace.h>
 #include <qmenubar.h>
-#include <qpopupmenu.h>
+#include <q3popupmenu.h>
 #include <qlayout.h>
-#include <qheader.h>
+#include <q3header.h>
 #include <qradiobutton.h>
-#include <qtoolbar.h>
+#include <q3toolbar.h>
 #include <qtoolbutton.h>
 #include <qcombobox.h>
-#include <qvbox.h>
-#include <qdragobject.h>
-#include <qtextbrowser.h>
-#include <qhbox.h>
+#include <q3vbox.h>
+#include <q3dragobject.h>
+#include <q3textbrowser.h>
+#include <q3hbox.h>
 #include <qsignalmapper.h>
 //#include <qgrid.h>
 //#include <qlabelled.h>
@@ -117,7 +132,7 @@ extern "C" {
 #if QT_VERSION < 220
 # define nh_WX11BypassWM 0x01000000
 #else
-# define nh_WX11BypassWM WX11BypassWM
+# define nh_WX11BypassWM Qt::WX11BypassWM
 #endif
 
 #ifdef USER_SOUNDS
@@ -128,6 +143,7 @@ extern "C" {
 # endif
 #endif
 
+using namespace Qt;
 
 #ifdef USER_SOUNDS
 extern "C" void play_sound_for_message(const char* str);
@@ -681,7 +697,7 @@ NetHackQtSettings::NetHackQtSettings(int w, int h) :
     fontsize.setCurrentItem(default_fontsize);
     connect(&fontsize,SIGNAL(activated(int)),this,SIGNAL(fontChanged()));
 
-    QGridLayout* grid = new QGridLayout(this, 5, 2, 8);
+    Q3GridLayout* grid = new Q3GridLayout(this, 5, 2, 8);
     grid->addMultiCellWidget(&whichsize, 0, 0, 0, 1);
     grid->addWidget(&tilewidth, 1, 1);  grid->addWidget(&widthlbl, 1, 0);
     grid->addWidget(&tileheight, 2, 1); grid->addWidget(&heightlbl, 2, 0);
@@ -858,10 +874,10 @@ void NetHackQtClickBuffer::Get()
     out=(out+1)%maxclick;
 }
 
-class NhPSListViewItem : public QListViewItem {
+class NhPSListViewItem : public Q3ListViewItem {
 public:
-    NhPSListViewItem( QListView* parent, const QString& name ) :
-	QListViewItem(parent, name)
+    NhPSListViewItem( Q3ListView* parent, const QString& name ) :
+	Q3ListViewItem(parent, name)
     {
     }
 
@@ -882,21 +898,21 @@ public:
 		    int column, int width, int alignment )
     {
 	if ( isSelectable() ) {
-	    QListViewItem::paintCell( p, cg, column, width, alignment );
+	    Q3ListViewItem::paintCell( p, cg, column, width, alignment );
 	} else {
 	    QColorGroup disabled(
 		cg.foreground().light(),
 		cg.button().light(),
 		cg.light(), cg.dark(), cg.mid(),
-		gray, cg.base() );
-	    QListViewItem::paintCell( p, disabled, column, width, alignment );
+		Qt::gray, cg.base() );
+	    Q3ListViewItem::paintCell( p, disabled, column, width, alignment );
 	}
     }
 };
 
 class NhPSListViewRole : public NhPSListViewItem {
 public:
-    NhPSListViewRole( QListView* parent, int id ) :
+    NhPSListViewRole( Q3ListView* parent, int id ) :
 	NhPSListViewItem(parent,
 #ifdef QT_CHOOSE_RACE_FIRST // Lowerize - looks better
 	    QString(QChar(roles[id].name.m[0])).lower()+QString(roles[id].name.m+1)
@@ -911,7 +927,7 @@ public:
 
 class NhPSListViewRace : public NhPSListViewItem {
 public:
-    NhPSListViewRace( QListView* parent, int id ) :
+    NhPSListViewRace( Q3ListView* parent, int id ) :
 	NhPSListViewItem(parent,
 #ifdef QT_CHOOSE_RACE_FIRST // Capitalize - looks better
 	    QString(QChar(races[id].noun[0])).upper()+QString(races[id].noun+1)
@@ -924,10 +940,10 @@ public:
     }
 };
 
-class NhPSListView : public QListView {
+class NhPSListView : public Q3ListView {
 public:
     NhPSListView( QWidget* parent ) :
-	QListView(parent)
+	Q3ListView(parent)
     {
 	setSorting(-1); // order is identity
 	header()->setClickEnabled(FALSE);
@@ -945,10 +961,10 @@ public:
 
     QSize sizeHint() const
     {
-	QListView::sizeHint();
+	Q3ListView::sizeHint();
 	QSize sz = header()->sizeHint();
 	int h=0;
-	QListViewItem* c=firstChild();
+	Q3ListViewItem* c=firstChild();
 	while (c) h+=c->height(),c = c->nextSibling();
 	sz += QSize(frameWidth()*2, h+frameWidth()*2);
 	return sz;
@@ -957,7 +973,7 @@ public:
     int selectedItemNumber() const
     {
 	int i=0;
-	QListViewItem* c = firstChild();
+	Q3ListViewItem* c = firstChild();
 	while (c) {
 	    if (c == selectedItem()) {
 		return i;
@@ -970,7 +986,7 @@ public:
 
     void setSelectedItemNumber(int i)
     {
-	QListViewItem* c=firstChild();
+	Q3ListViewItem* c=firstChild();
 	while (i--)
 	    c = c->nextSibling();
 	c->setSelected(TRUE);
@@ -1004,9 +1020,9 @@ NetHackQtPlayerSelector::NetHackQtPlayerSelector(NetHackQtKeyBuffer& ks) :
     */
 
     int marg=4;
-    QGridLayout *l = new QGridLayout(this,6,3,marg,marg);
+    Q3GridLayout *l = new Q3GridLayout(this,6,3,marg,marg);
 
-    QButtonGroup* namebox = new QButtonGroup(1,Horizontal,"Name",this);
+    Q3ButtonGroup* namebox = new Q3ButtonGroup(1,Qt::Horizontal,"Name",this);
     QLineEdit* name = new QLineEdit(namebox);
     name->setMaxLength(sizeof(plname)-1);
     if ( strncmp(plname,"player",6) && strncmp(plname,"games",5) )
@@ -1014,12 +1030,12 @@ NetHackQtPlayerSelector::NetHackQtPlayerSelector(NetHackQtKeyBuffer& ks) :
     connect(name, SIGNAL(textChanged(const QString&)),
 	    this, SLOT(selectName(const QString&)) );
     name->setFocus();
-    QButtonGroup* genderbox = new QButtonGroup("Sex",this);
-    QButtonGroup* alignbox = new QButtonGroup("Alignment",this);
-    QVBoxLayout* vbgb = new QVBoxLayout(genderbox,3,1);
+    Q3ButtonGroup* genderbox = new Q3ButtonGroup("Sex",this);
+    Q3ButtonGroup* alignbox = new Q3ButtonGroup("Alignment",this);
+    Q3VBoxLayout* vbgb = new Q3VBoxLayout(genderbox,3,1);
     vbgb->setAutoAdd(TRUE);
     vbgb->addSpacing(fontMetrics().height()*3/4);
-    QVBoxLayout* vbab = new QVBoxLayout(alignbox,3,1);
+    Q3VBoxLayout* vbab = new Q3VBoxLayout(alignbox,3,1);
     vbab->setAutoAdd(TRUE);
     vbab->addSpacing(fontMetrics().height());
     QLabel* logo = new QLabel(nh_attribution, this);
@@ -1041,7 +1057,7 @@ NetHackQtPlayerSelector::NetHackQtPlayerSelector(NetHackQtKeyBuffer& ks) :
 
     l->addWidget( genderbox, 1, 2 );
     l->addWidget( alignbox, 2, 2 );
-    l->addWidget( logo, 3, 2, AlignCenter );
+    l->addWidget( logo, 3, 2, Qt::AlignCenter );
     l->setRowStretch( 3, 5 );
 
     int i;
@@ -1149,7 +1165,7 @@ NetHackQtPlayerSelector::NetHackQtPlayerSelector(NetHackQtKeyBuffer& ks) :
     alignment[a]->setChecked(TRUE);
     selectAlignment(a);
 
-    QListViewItem* li;
+    Q3ListViewItem* li;
 
     li = role->firstChild();
     while (ro--) li=li->nextSibling();
@@ -1178,8 +1194,8 @@ void NetHackQtPlayerSelector::selectRole()
 #ifdef QT_CHOOSE_RACE_FIRST
     selectRace();
 #else
-    QListViewItem* i=role->currentItem();
-    QListViewItem* valid=0;
+    Q3ListViewItem* i=role->currentItem();
+    Q3ListViewItem* valid=0;
     int j;
     NhPSListViewItem* item;
     item = (NhPSListViewItem*)role->firstChild();
@@ -1214,8 +1230,8 @@ void NetHackQtPlayerSelector::selectRace()
 #ifndef QT_CHOOSE_RACE_FIRST
     selectRole();
 #else
-    QListViewItem* i=race->currentItem();
-    QListViewItem* valid=0;
+    Q3ListViewItem* i=race->currentItem();
+    Q3ListViewItem* valid=0;
     int j;
     NhPSListViewItem* item;
     item = (NhPSListViewItem*)race->firstChild();
@@ -1344,7 +1360,7 @@ NetHackQtStringRequestor::NetHackQtStringRequestor(NetHackQtKeyBuffer& ks, const
     connect(&input,SIGNAL(returnPressed()),this,SLOT(accept()));
     okay->setDefault(TRUE);
 
-    setFocusPolicy(StrongFocus);
+    setFocusPolicy(Qt::StrongFocus);
 }
 
 void NetHackQtStringRequestor::resizeEvent(QResizeEvent*)
@@ -1463,8 +1479,8 @@ NetHackQtMapWindow::NetHackQtMapWindow(NetHackQtClickBuffer& click_sink) :
 {
     viewport.addChild(this);
 
-    setBackgroundColor(black);
-    viewport.setBackgroundColor(black);
+    setBackgroundColor(Qt::black);
+    viewport.setBackgroundColor(Qt::black);
 
     pet_annotation = QPixmap(qt_compact_mode ? pet_mark_small_xpm : pet_mark_xpm);
 
@@ -1501,7 +1517,7 @@ void NetHackQtMapWindow::putMessage(int attr, const char* text)
 	messages += "\n";
     messages += text;
     QFontMetrics fm = fontMetrics();
-    messages_rect = fm.boundingRect(viewport.contentsX(),viewport.contentsY(),viewport.width(),0, WordBreak|AlignTop|AlignLeft|DontClip, messages);
+    messages_rect = fm.boundingRect(viewport.contentsX(),viewport.contentsY(),viewport.width(),0, Qt::TextWordWrap|Qt::AlignTop|Qt::AlignLeft|Qt::TextDontClip, messages);
     update(messages_rect);
 }
 
@@ -1580,7 +1596,7 @@ void NetHackQtMapWindow::mousePressEvent(QMouseEvent* event)
     clicksink.Put(
 	event->pos().x()/qt_settings->glyphs().width(),
 	event->pos().y()/qt_settings->glyphs().height(),
-	event->button()==LeftButton ? CLICK_1 : CLICK_2
+	event->button()==Qt::LeftButton ? CLICK_1 : CLICK_2
     );
     qApp->exit_loop();
 }
@@ -1640,7 +1656,7 @@ void NetHackQtMapWindow::paintEvent(QPaintEvent* event)
 	// You enter a VERY primitive world!
 
 	painter.setClipRect( event->rect() ); // (normally we don't clip)
-	painter.fillRect( event->rect(), black );
+	painter.fillRect( event->rect(), Qt::black );
 
 	if ( !rogue_font ) {
 	    // Find font...
@@ -1673,7 +1689,7 @@ void NetHackQtMapWindow::paintEvent(QPaintEvent* event)
 		int color, och;
 		unsigned special;
 
-		painter.setPen( green );
+		painter.setPen( Qt::green );
 		/* map glyph to character and color */
     		mapglyph(g, &och, &color, &special, i, j);
 		ch = (uchar)och;
@@ -1685,7 +1701,7 @@ void NetHackQtMapWindow::paintEvent(QPaintEvent* event)
 		    j*qt_settings->glyphs().height(),
 		    qt_settings->glyphs().width(),
 		    qt_settings->glyphs().height(),
-		    AlignCenter,
+		    Qt::AlignCenter,
 		    (const char*)&ch, 1
 		);
 		if (glyph_is_pet(g)
@@ -1719,9 +1735,9 @@ void NetHackQtMapWindow::paintEvent(QPaintEvent* event)
 #ifdef REINCARNATION
 	if (Is_rogue_level(&u.uz)) {
 #ifdef TEXTCOLOR
-	    painter.setPen( white );
+	    painter.setPen( Qt::white );
 #else
-	    painter.setPen( green ); // REALLY primitive
+	    painter.setPen( Qt::green ); // REALLY primitive
 #endif
 	} else
 #endif
@@ -1733,11 +1749,11 @@ void NetHackQtMapWindow::paintEvent(QPaintEvent* event)
 		hp100=u.uhpmax ? u.uhp*100/u.uhpmax : 100;
 	    }
 
-	    if (hp100 > 75) painter.setPen(white);
-	    else if (hp100 > 50) painter.setPen(yellow);
+	    if (hp100 > 75) painter.setPen(Qt::white);
+	    else if (hp100 > 50) painter.setPen(Qt::yellow);
 	    else if (hp100 > 25) painter.setPen(QColor(0xff,0xbf,0x00)); // orange
-	    else if (hp100 > 10) painter.setPen(red);
-	    else painter.setPen(magenta);
+	    else if (hp100 > 10) painter.setPen(Qt::red);
+	    else painter.setPen(Qt::magenta);
 	}
 
 	painter.drawRect(
@@ -1746,12 +1762,12 @@ void NetHackQtMapWindow::paintEvent(QPaintEvent* event)
     }
 
     if (area.intersects(messages_rect)) {
-	painter.setPen(black);
+	painter.setPen(Qt::black);
 	painter.drawText(viewport.contentsX()+1,viewport.contentsY()+1,
-	    viewport.width(),0, WordBreak|AlignTop|AlignLeft|DontClip, messages);
-	painter.setPen(white);
+	    viewport.width(),0, Qt::TextWordWrap|Qt::AlignTop|Qt::AlignLeft|Qt::TextDontClip, messages);
+	painter.setPen(Qt::white);
 	painter.drawText(viewport.contentsX(),viewport.contentsY(),
-	    viewport.width(),0, WordBreak|AlignTop|AlignLeft|DontClip, messages);
+	    viewport.width(),0, Qt::TextWordWrap|Qt::AlignTop|Qt::AlignLeft|Qt::TextDontClip, messages);
     }
 
     painter.end();
@@ -2054,8 +2070,8 @@ void NetHackQtLabelledIcon::initHighlight()
     const QPalette& pal=palette();
     const QColorGroup& pa=pal.normal();
     //QColorGroup good(white,darkGreen,pa.light(),pa.dark(),pa.mid(),white,pa.base());
-    QColorGroup good(black,green,pa.light(),pa.dark(),pa.mid(),black,pa.base());
-    QColorGroup bad(white,red,pa.light(),pa.dark(),pa.mid(),white,pa.base());
+    QColorGroup good(Qt::black,Qt::green,pa.light(),pa.dark(),pa.mid(),Qt::black,pa.base());
+    QColorGroup bad(Qt::white,Qt::red,pa.light(),pa.dark(),pa.mid(),Qt::white,pa.base());
     hl_good=pal.copy();
     hl_good.setNormal(good);
     hl_good.setActive(good);
@@ -2167,8 +2183,8 @@ void NetHackQtLabelledIcon::resizeEvent(QResizeEvent*)
 
 void NetHackQtLabelledIcon::setAlignments()
 {
-    if (label) label->setAlignment(AlignHCenter|AlignVCenter);
-    if (icon) icon->setAlignment(AlignHCenter|AlignVCenter);
+    if (label) label->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+    if (icon) icon->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
 }
 
 static void
@@ -2263,9 +2279,9 @@ NetHackQtStatusWindow::NetHackQtStatusWindow() :
 
     encumber.setIcon(p_encumber[0]);
 
-    hline1.setFrameStyle(QFrame::HLine|QFrame::Sunken);
-    hline2.setFrameStyle(QFrame::HLine|QFrame::Sunken);
-    hline3.setFrameStyle(QFrame::HLine|QFrame::Sunken);
+    hline1.setFrameStyle(Q3Frame::HLine|Q3Frame::Sunken);
+    hline2.setFrameStyle(Q3Frame::HLine|Q3Frame::Sunken);
+    hline3.setFrameStyle(Q3Frame::HLine|Q3Frame::Sunken);
     hline1.setLineWidth(1);
     hline2.setLineWidth(1);
     hline3.setLineWidth(1);
@@ -2688,7 +2704,7 @@ NetHackQtMenuWindow::NetHackQtMenuWindow(NetHackQtKeyBuffer& ks) :
 {
     setNumCols(4);
     setCellHeight(QMAX(qt_settings->glyphs().height()+1,fontMetrics().height()));
-    setBackgroundColor(lightGray);
+    setBackgroundColor(Qt::lightGray);
     setFrameStyle(Panel|Sunken);
     setLineWidth(2);
 
@@ -2714,13 +2730,13 @@ NetHackQtMenuWindow::NetHackQtMenuWindow(NetHackQtKeyBuffer& ks) :
     recreate(dialog,0,pos);
     prompt.recreate(dialog,0,pos);
 
-    setBackgroundColor(lightGray);
+    setBackgroundColor(Qt::lightGray);
 
     connect(dialog,SIGNAL(Resized()),this,SLOT(Layout()));
 
     setTableFlags(Tbl_autoHScrollBar|Tbl_autoVScrollBar
 	    |Tbl_smoothScrolling|Tbl_clipCellPainting);
-    setFocusPolicy(StrongFocus);
+    setFocusPolicy(Qt::StrongFocus);
 }
 
 NetHackQtMenuWindow::~NetHackQtMenuWindow()
@@ -2946,10 +2962,10 @@ int NetHackQtMenuWindow::SelectMenu(int h, MENU_ITEM_P **menu_list)
 }
 void NetHackQtMenuWindow::keyPressEvent(QKeyEvent* event)
 {
-    if (viewHeight() < totalHeight() && !(event->state()&ShiftButton)) {
-	if (event->key()==Key_Prior) {
+    if (viewHeight() < totalHeight() && !(event->state()&Qt::ShiftModifier)) {
+	if (event->key()==Qt::Key_PageUp) {
 	    setYOffset(yOffset()-viewHeight());
-	} else if (event->key()==Key_Next) {
+	} else if (event->key()==Qt::Key_PageDown) {
 	    setYOffset(yOffset()+viewHeight());
 	} else {
 	    event->ignore();
@@ -3008,11 +3024,11 @@ void NetHackQtMenuWindow::paintCell(QPainter* painter, int row, int col)
 
     MenuItem& i = item[row];
 
-    painter->setPen(black);
+    painter->setPen(Qt::black);
     painter->setFont(font());
 
     if (i.selected) {
-	painter->setPen(darkGreen);
+	painter->setPen(Qt::darkGreen);
     }
 
     switch (col) {
@@ -3030,13 +3046,13 @@ void NetHackQtMenuWindow::paintCell(QPainter* painter, int row, int col)
 		text.sprintf("%d",i.count);
 	    }
 	    painter->drawText(0,0,cellWidth(col),cellHeight(),
-	    AlignHCenter|AlignVCenter,text);
+	    Qt::AlignHCenter|Qt::AlignVCenter,text);
 	}
     break; case 1:
 	if ((signed char)i.ch >= 0) {
 	    char text[2]={i.ch,0};
 	    painter->drawText(0,0,cellWidth(col),cellHeight(),
-		AlignHCenter|AlignVCenter,text);
+		Qt::AlignHCenter|Qt::AlignVCenter,text);
 	}
     break; case 2:
 	if (i.glyph!=NO_GLYPH) {
@@ -3054,7 +3070,7 @@ void NetHackQtMenuWindow::paintCell(QPainter* painter, int row, int col)
 	     case ATR_ULINE:
 		newfont.setUnderline(TRUE);
 	    break; case ATR_BOLD:
-		painter->setPen(red);
+		painter->setPen(Qt::red);
 	    break; case ATR_BLINK:
 		newfont.setItalic(TRUE);
 	    break; case ATR_INVERSE:
@@ -3062,16 +3078,16 @@ void NetHackQtMenuWindow::paintCell(QPainter* painter, int row, int col)
 		newfont.setWeight(QFont::Bold);
 
 		if (i.selected) {
-		    painter->setPen(blue);
+		    painter->setPen(Qt::blue);
 		} else {
-		    painter->setPen(darkBlue);
+		    painter->setPen(Qt::darkBlue);
 		}
 	    }
 	}
 	painter->setFont(newfont);
 
 	painter->drawText(STR_MARGIN,0,cellWidth(col),cellHeight(),
-	    AlignLeft|AlignVCenter,i.str);
+	    Qt::AlignLeft|Qt::AlignVCenter,i.str);
     }
 }
 
@@ -3141,9 +3157,9 @@ void NetHackQtMenuWindow::mouseMoveEvent(QMouseEvent* event)
 }
 
 
-class NetHackQtTextListBox : public QListBox {
+class NetHackQtTextListBox : public Q3ListBox {
 public:
-    NetHackQtTextListBox(QWidget* parent) : QListBox(parent) { }
+    NetHackQtTextListBox(QWidget* parent) : Q3ListBox(parent) { }
 
     int TotalWidth()
     {
@@ -3158,11 +3174,11 @@ public:
 
     virtual void setFont(const QFont &font)
     {
-	QListBox::setFont(font);
+	Q3ListBox::setFont(font);
     }
     void keyPressEvent(QKeyEvent* e)
     {
-	QListBox::keyPressEvent(e);
+	Q3ListBox::keyPressEvent(e);
     }
 };
 
@@ -3208,7 +3224,7 @@ void NetHackQtRIP::paintEvent(QPaintEvent* event)
 	painter.drawPixmap(pix_x,pix_y,*pixmap);
 	for (int i=0; i<riplines; i++) {
 	    painter.drawText(rip_text_x-i/2,rip_text_y+i*rip_text_h,
-		1,1,DontClip|AlignHCenter,line[i]);
+		1,1,Qt::TextDontClip|Qt::AlignHCenter,line[i]);
 	}
 	painter.end();
     }
@@ -3229,9 +3245,9 @@ NetHackQtTextWindow::NetHackQtTextWindow(NetHackQtKeyBuffer& ks) :
     connect(&search,SIGNAL(clicked()),this,SLOT(Search()));
     connect(qt_settings,SIGNAL(fontChanged()),this,SLOT(doUpdate()));
 
-    QVBoxLayout* vb = new QVBoxLayout(this);
+    Q3VBoxLayout* vb = new Q3VBoxLayout(this);
     vb->addWidget(&rip);
-    QHBoxLayout* hb = new QHBoxLayout(vb);
+    Q3HBoxLayout* hb = new Q3HBoxLayout(vb);
     hb->addWidget(&ok);
     hb->addWidget(&search);
     vb->addWidget(lines);
@@ -3515,7 +3531,7 @@ public:
     SmallToolButton(const QPixmap & pm, const QString &textLabel,
                  const QString& grouptext,
                  QObject * receiver, const char* slot,
-                 QToolBar * parent) :
+                 Q3ToolBar * parent) :
 	QToolButton(pm, textLabel,
 #if QT_VERSION < 210
 		QString::null,
@@ -3538,7 +3554,7 @@ NetHackQtMainWindow::NetHackQtMainWindow(NetHackQtKeyBuffer& ks) :
     message(0), map(0), status(0), invusage(0),
     keysink(ks), dirkey(0)
 {
-    QToolBar* toolbar = new QToolBar(this);
+    Q3ToolBar* toolbar = new Q3ToolBar(this);
 #if QT_VERSION >= 210
     setToolBarsMovable(FALSE);
     toolbar->setHorizontalStretchable(TRUE);
@@ -3553,25 +3569,25 @@ NetHackQtMainWindow::NetHackQtMainWindow(NetHackQtKeyBuffer& ks) :
     else
 	setIcon(QPixmap(nh_icon));
 
-    QPopupMenu* game=new QPopupMenu;
-    QPopupMenu* apparel=new QPopupMenu;
-    QPopupMenu* act1=new QPopupMenu;
-    QPopupMenu* act2 = qt_compact_mode ? new QPopupMenu : act1;
-    QPopupMenu* magic=new QPopupMenu;
-    QPopupMenu* info=new QPopupMenu;
+    Q3PopupMenu* game=new Q3PopupMenu;
+    Q3PopupMenu* apparel=new Q3PopupMenu;
+    Q3PopupMenu* act1=new Q3PopupMenu;
+    Q3PopupMenu* act2 = qt_compact_mode ? new Q3PopupMenu : act1;
+    Q3PopupMenu* magic=new Q3PopupMenu;
+    Q3PopupMenu* info=new Q3PopupMenu;
 
-    QPopupMenu *help;
+    Q3PopupMenu *help;
 
 #ifdef KDE
     help = kapp->getHelpMenu( TRUE, "" );
     help->insertSeparator();
 #else
-    help = qt_compact_mode ? info : new QPopupMenu;
+    help = qt_compact_mode ? info : new Q3PopupMenu;
 #endif
 
     enum { OnDesktop=1, OnHandhelds=2 };
     struct Macro {
-	QPopupMenu* menu;
+	Q3PopupMenu* menu;
 	const char* name;
 	const char* action;
 	int flags;
@@ -3742,7 +3758,7 @@ NetHackQtMainWindow::NetHackQtMainWindow(NetHackQtKeyBuffer& ks) :
     sm->setMapping(tb, "Zc" );
     if ( !qt_compact_mode ) {
 	QWidget* filler = new QWidget(toolbar);
-	filler->setBackgroundMode(PaletteButton);
+	filler->setBackgroundMode(Qt::PaletteButton);
 	toolbar->setStretchableWidget(filler);
     }
 
@@ -3782,7 +3798,7 @@ NetHackQtMainWindow::NetHackQtMainWindow(NetHackQtKeyBuffer& ks) :
     setGeometry(x,y,w,h);
 
     if ( qt_compact_mode ) {
-	stack = new QWidgetStack(this);
+	stack = new Q3WidgetStack(this);
 	setCentralWidget(stack);
     } else {
 	setCentralWidget(new QWidget(this));
@@ -3814,15 +3830,15 @@ void NetHackQtMainWindow::raiseStatus()
     stack->raiseWidget(2);
 }
 
-class NetHackMimeSourceFactory : public QMimeSourceFactory {
+class NetHackMimeSourceFactory : public Q3MimeSourceFactory {
 public:
     const QMimeSource* data(const QString& abs_name) const
     {
 	const QMimeSource* r = 0;
-	if ( (NetHackMimeSourceFactory*)this == QMimeSourceFactory::defaultFactory() )
-	    r = QMimeSourceFactory::data(abs_name);
+	if ( (NetHackMimeSourceFactory*)this == Q3MimeSourceFactory::defaultFactory() )
+	    r = Q3MimeSourceFactory::data(abs_name);
 	else
-	    r = QMimeSourceFactory::defaultFactory()->data(abs_name);
+	    r = Q3MimeSourceFactory::defaultFactory()->data(abs_name);
 	if ( !r ) {
 	    int sl = abs_name.length();
 	    do {
@@ -3832,11 +3848,11 @@ public:
 		if ( dot >= 0 )
 		    name = name.left(dot);
 		if ( name == "map" )
-		    r = new QImageDrag(QImage(map_xpm));
+		    r = new Q3ImageDrag(QImage(map_xpm));
 		else if ( name == "msg" )
-		    r = new QImageDrag(QImage(msg_xpm));
+		    r = new Q3ImageDrag(QImage(msg_xpm));
 		else if ( name == "stat" )
-		    r = new QImageDrag(QImage(stat_xpm));
+		    r = new Q3ImageDrag(QImage(stat_xpm));
 	    } while (!r && sl>0);
 	}
 	return r;
@@ -3855,8 +3871,8 @@ void NetHackQtMainWindow::doMenuItem(int id)
 	break;
       case 3000: {
 	    QDialog dlg(this,0,TRUE);
-	    (new QVBoxLayout(&dlg))->setAutoAdd(TRUE);
-	    QTextBrowser browser(&dlg);
+	    (new Q3VBoxLayout(&dlg))->setAutoAdd(TRUE);
+	    Q3TextBrowser browser(&dlg);
 	    NetHackMimeSourceFactory ms;
 	    browser.setMimeSourceFactory(&ms);
 	    browser.setSource(QDir::currentDirPath()+"/Guidebook.html");
@@ -3975,51 +3991,51 @@ void NetHackQtMainWindow::keyPressEvent(QKeyEvent* event)
     //  567
 
     if ( event->isAutoRepeat() &&
-	event->key() >= Key_Left && event->key() <= Key_Down )
+	event->key() >= Qt::Key_Left && event->key() <= Qt::Key_Down )
 	return;
 
     const char* d = iflags.num_pad ? ndir : sdir; 
     switch (event->key()) {
-     case Key_Up:
+     case Qt::Key_Up:
 	if ( dirkey == d[0] )
 	    dirkey = d[1];
 	else if ( dirkey == d[4] )
 	    dirkey = d[3];
 	else
 	    dirkey = d[2];
-    break; case Key_Down:
+    break; case Qt::Key_Down:
 	if ( dirkey == d[0] )
 	    dirkey = d[7];
 	else if ( dirkey == d[4] )
 	    dirkey = d[5];
 	else
 	    dirkey = d[6];
-    break; case Key_Left:
+    break; case Qt::Key_Left:
 	if ( dirkey == d[2] )
 	    dirkey = d[1];
 	else if ( dirkey == d[6] )
 	    dirkey = d[7];
 	else
 	    dirkey = d[0];
-    break; case Key_Right:
+    break; case Qt::Key_Right:
 	if ( dirkey == d[2] )
 	    dirkey = d[3];
 	else if ( dirkey == d[6] )
 	    dirkey = d[5];
 	else
 	    dirkey = d[4];
-    break; case Key_Prior:
+    break; case Qt::Key_PageUp:
 	dirkey = 0;
 	if (message) message->Scroll(0,-1);
-    break; case Key_Next:
+    break; case Qt::Key_PageDown:
 	dirkey = 0;
 	if (message) message->Scroll(0,+1);
-    break; case Key_Space:
+    break; case Qt::Key_Space:
 	if ( flags.rest_on_space ) {
 	    event->ignore();
 	    return;
 	}
-	case Key_Enter:
+	case Qt::Key_Enter:
 	if ( map )
 	    map->clickCursor();
     break; default:
@@ -4147,15 +4163,15 @@ char NetHackQtYnDialog::Exec()
 	qlabel = question;
     }
     if (!ch.isNull()) {
-	QVBoxLayout vb(this);
+	Q3VBoxLayout vb(this);
 	vb.setAutoAdd(TRUE);
 	bool bigq = qlabel.length()>40;
 	if ( bigq ) {
 	    QLabel* q = new QLabel(qlabel,this);
-	    q->setAlignment(AlignLeft|WordBreak);
+	    q->setAlignment(Qt::AlignLeft|Qt::TextWordWrap);
 	    q->setMargin(4);
 	}
-	QButtonGroup group(ch_per_line, Horizontal,
+	Q3ButtonGroup group(ch_per_line, Qt::Horizontal,
 	    bigq ? QString::null : qlabel, this);
 
 	int nchoices=ch.length();
@@ -4192,7 +4208,7 @@ char NetHackQtYnDialog::Exec()
 	QLineEdit* le=0;
 
 	if (allow_count) {
-	    QHBox *hb = new QHBox(this);
+	    Q3HBox *hb = new Q3HBox(this);
 	    lb=new QLabel("Count: ",hb);
 	    le=new QLineEdit(hb);
 	}
@@ -4240,8 +4256,8 @@ char NetHackQtYnDialog::Exec()
     } else {
 	QLabel label(qlabel,this);
 	QPushButton cancel("Dismiss",this);
-	label.setFrameStyle(QFrame::Box|QFrame::Sunken);
-	label.setAlignment(AlignCenter);
+	label.setFrameStyle(Q3Frame::Box|Q3Frame::Sunken);
+	label.setAlignment(Qt::AlignCenter);
 	label.resize(fontMetrics().width(qlabel)+60,30+fontMetrics().height());
 	cancel.move(width()/2-cancel.width()/2,label.geometry().bottom()+8);
 	connect(&cancel,SIGNAL(clicked()),this,SLOT(reject()));
@@ -4460,14 +4476,14 @@ NetHackQtBind::NetHackQtBind(int& argc, char** argv) :
 {
     QPixmap pm("nhsplash.xpm");
     if ( iflags.wc_splash_screen && !pm.isNull() ) {
-	QVBox *vb = new QVBox(0,0,
-	    WStyle_Customize | WStyle_NoBorder | nh_WX11BypassWM | WStyle_StaysOnTop );
+	Q3VBox *vb = new Q3VBox(0,0,
+	    Qt::WStyle_Customize | Qt::WStyle_NoBorder | nh_WX11BypassWM | Qt::WStyle_StaysOnTop );
 	splash = vb;
 	QLabel *lsplash = new QLabel(vb);
-	lsplash->setAlignment(AlignCenter);
+	lsplash->setAlignment(Qt::AlignCenter);
 	lsplash->setPixmap(pm);
 	QLabel* capt = new QLabel("Loading...",vb);
-	capt->setAlignment(AlignCenter);
+	capt->setAlignment(Qt::AlignCenter);
 	if ( pm.mask() ) {
 	    lsplash->setFixedSize(pm.size());
 	    lsplash->setMask(*pm.mask());
@@ -4478,7 +4494,7 @@ NetHackQtBind::NetHackQtBind(int& argc, char** argv) :
 	if ( qt_compact_mode ) {
 	    splash->showMaximized();
 	} else {
-	    vb->setFrameStyle(QFrame::WinPanel|QFrame::Raised);
+	    vb->setFrameStyle(Q3Frame::WinPanel|Q3Frame::Raised);
 	    vb->setMargin(10);
 	    splash->adjustSize();
 	    splash->show();
@@ -4548,14 +4564,14 @@ void NetHackQtBind::qt_player_selection()
 NetHackQtSavedGameSelector::NetHackQtSavedGameSelector(const char** saved) :
     QDialog(qApp->mainWidget(),"sgsel",TRUE)
 {
-    QVBoxLayout *vbl = new QVBoxLayout(this,6);
-    QHBox* hb;
+    Q3VBoxLayout *vbl = new Q3VBoxLayout(this,6);
+    Q3HBox* hb;
 
     QLabel* logo = new QLabel(this); vbl->addWidget(logo);
-    logo->setAlignment(AlignCenter);
+    logo->setAlignment(Qt::AlignCenter);
     logo->setPixmap(QPixmap("nhsplash.xpm"));
     QLabel* attr = new QLabel("by the NetHack DevTeam",this);
-    attr->setAlignment(AlignCenter);
+    attr->setAlignment(Qt::AlignCenter);
     vbl->addWidget(attr);
     vbl->addStretch(2);
     /*
@@ -4567,15 +4583,15 @@ NetHackQtSavedGameSelector::NetHackQtSavedGameSelector(const char** saved) :
     new QLabel(nh_attribution,hb);
     */
 
-    hb = new QHBox(this);
-    vbl->addWidget(hb, AlignCenter);
+    hb = new Q3HBox(this);
+    vbl->addWidget(hb, Qt::AlignCenter);
     QPushButton* q = new QPushButton("Quit",hb);
     connect(q, SIGNAL(clicked()), this, SLOT(reject()));
     QPushButton* c = new QPushButton("New Game",hb);
     connect(c, SIGNAL(clicked()), this, SLOT(accept()));
     c->setDefault(TRUE);
 
-    QButtonGroup* bg = new QButtonGroup(3, Horizontal, "Saved Characters",this);
+    Q3ButtonGroup* bg = new Q3ButtonGroup(3, Qt::Horizontal, "Saved Characters",this);
     vbl->addWidget(bg);
     connect(bg, SIGNAL(clicked(int)), this, SLOT(done(int)));
     for (int i=0; saved[i]; i++) {
@@ -4775,7 +4791,7 @@ void NetHackQtBind::qt_display_file(const char *filename, BOOLEAN_P must_exist)
 #else
     QFile file(filename);
 
-    if (file.open(IO_ReadOnly)) {
+    if (file.open(QIODevice::ReadOnly)) {
 	char line[128];
 	while (file.readLine(line,127) >= 0) {
 	    line[strlen(line)-1]=0;// remove newline
@@ -4965,7 +4981,7 @@ char NetHackQtBind::qt_yn_function(const char *question, const char *choices, CH
 
 	int result=-1;
 	while (result<0) {
-	    char ch=NetHackQtBind::qt_nhgetch();
+	    char ch=nh_nhgetch();
 	    if (ch=='\033') {
 		result=yn_esc_map;
 	    } else if (choices && !index(choices,ch)) {
@@ -5002,15 +5018,15 @@ NetHackQtExtCmdRequestor::NetHackQtExtCmdRequestor(NetHackQtKeyBuffer& ks) :
     keysource(ks)
 {
     int marg=4;
-    QVBoxLayout *l = new QVBoxLayout(this,marg,marg);
+    Q3VBoxLayout *l = new Q3VBoxLayout(this,marg,marg);
 
     QPushButton* can = new QPushButton("Cancel", this);
     can->setDefault(TRUE);
     can->setMinimumSize(can->sizeHint());
     l->addWidget(can);
 
-    QButtonGroup *group=new QButtonGroup("",0);
-    QGroupBox *grid=new QGroupBox("Extended commands",this);
+    Q3ButtonGroup *group=new Q3ButtonGroup("",0);
+    Q3GroupBox *grid=new Q3GroupBox("Extended commands",this);
     l->addWidget(grid);
 
     int i;
@@ -5022,9 +5038,9 @@ NetHackQtExtCmdRequestor::NetHackQtExtCmdRequestor(NetHackQtKeyBuffer& ks) :
     int ncols=4;
     int nrows=(i+ncols-1)/ncols;
 
-    QVBoxLayout* bl = new QVBoxLayout(grid,marg);
+    Q3VBoxLayout* bl = new Q3VBoxLayout(grid,marg);
     bl->addSpacing(fm.height());
-    QGridLayout* gl = new QGridLayout(nrows,ncols,marg);
+    Q3GridLayout* gl = new Q3GridLayout(nrows,ncols,marg);
     bl->addLayout(gl);
     for (i=0; extcmdlist[i].ef_txt; i++) {
 	QPushButton* pb=new QPushButton(extcmdlist[i].ef_txt, grid);
@@ -5133,7 +5149,7 @@ bool NetHackQtBind::notify(QObject *receiver, QEvent *event)
     // Ignore Alt-key navigation to menubar, it's annoying when you
     // use Alt-Direction to move around.
     if ( main && event->type()==QEvent::KeyRelease && main==receiver
-	    && ((QKeyEvent*)event)->key() == Key_Alt )
+	    && ((QKeyEvent*)event)->key() == Qt::Key_Alt )
 	return TRUE;
 
     bool result=QApplication::notify(receiver,event);
@@ -5152,14 +5168,14 @@ bool NetHackQtBind::notify(QObject *receiver, QEvent *event)
 		}
 	    }
 	    char ch=key_event->ascii();
-	    if ( !ch && (key_event->state() & Qt::ControlButton) ) {
+	    if ( !ch && (key_event->state() & Qt::ControlModifier) ) {
 		// On Mac, ascii control codes are not sent, force them.
 		if ( k>=Qt::Key_A && k<=Qt::Key_Z )
 		    ch = k - Qt::Key_A + 1;
 	    }
 	    if (!macro && ch) {
-		bool alt = (key_event->state()&AltButton) ||
-		   (k >= Key_0 && k <= Key_9 && (key_event->state()&ControlButton));
+		bool alt = (key_event->state()&Qt::AltModifier) ||
+		   (k >= Qt::Key_0 && k <= Qt::Key_9 && (key_event->state()&Qt::ControlModifier));
 		keybuffer.Put(key_event->key(),ch + (alt ? 128 : 0),
 		    key_event->state());
 		key_event->accept();

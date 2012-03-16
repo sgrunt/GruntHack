@@ -1,0 +1,172 @@
+Key Rebinding patch
+
+
+This patch will allow simple rebinding of keys (any standard keyboard
+key, or a control- or meta- invocation of such) to any command.  It will
+allow limited changing of the regular (non-number-pad) directional and
+special (e.g. "G") keys.  It will allow the mapping of one key to a key
+combination (e.g. macros).  It will allow the changing of which extended
+commands (there are now a lot of them) are autocompleted (e.g. #ride and
+#quit can be turned off).  Finally, it shouldn't have any detrimental 
+effect on players who don't wish to take advantage of its features.
+
+
+What it does, in full:
+
+1.  Every command has been made an extended command.  Thus, there are
+now almost 100 extended commands.  Because of configurable auto-completion
+(see below), this should not change normal game play (unless the user
+desires it).
+
+2.  Keyboard commands point to their associated extended command.  For
+instance, the entry for 'a' points to the #apply command.
+
+3.  Keyboard commands can be rebound in the nethackrc file within the newly 
+created BINDINGS section.  It goes like this:
+	<key>:<command>   -> binds the key to the command
+Where <key> can be any one of
+	x	-> regular key <x>
+	mx	-> meta-<x>
+	cx
+	^x	-> ctrl-<x>
+	nnn	-> three-digit ascii code (in decimal).  _Must_ be 3-digit.
+	<enter> -> the enter key, '\n'.  (That's literally "<enter>".)
+	<space> -> the space key, ' '.
+	<esc>	-> the escape key, '\033'.  Same as 027.
+Upper or lower case may be used for m/c, and an optional '-' separator may 
+come between the special identifier (mc^) and the key/number.  In general, 
+anything listed by the keyboard help (?h) should be properly interpreted (if
+not, it's a bug).  For example:
+	BINDINGS=q:quaff,Q:quiver,^x:attributes,097:apply,<space>:wait
+sets 'q' to be #quaff, 'Q' to be #quiver, 'ctrl-x' to be #attributes, ascii 
+char 097 ('a') to be #apply, and the space bar to be #wait (in other
+words, changing nothing).  Any extended command can be bound.  Note that 
+a number of characters are not bindable without the use of ascii codes.
+	There is a reserved pseudo-extended command, "nothing", used to unbind
+the key.  I.e.
+	BINDINGS=q:nothing
+will unbind the q key.
+	The binding can also be done as part of an OPTIONS line.  This allows
+it to be included in the NETHACKOPTIONS environment variable, for instance,
+but is considerably longer if you're doing many bindings.  For example:
+	OPTIONS=bind:q:quaff,bind:Q:quiver
+will bind q to #quaff and Q to #quiver.
+
+4.  As Dion Nicolaas suggested, directional buttons can be rebound in the 
+nathackrc file in the OPTIONS section.  This affects only the standard
+directional keys, not the number_pad ones.  For instance:
+	OPTIONS=directionkeys:h y k u l n j b > <
+Only the "dir" is significant in the option name.
+	The parsing for these keys is identical to that for key binding (see
+#3, above).  However, the 8 regular-direction keys must be lower-case 
+letters, since shift-letter and ctrl-letter have other meanings.
+	The directional keys will take priority over the command keys, and are
+quite different - for instance, they're used to specify a direction for
+zapping.
+	Note that < and > are commands *and* directional buttons - and can be 
+rebound to be different keys, which would probably be bad.
+	These directionkeys will be completely ignored if number_pad is set.
+
+5.  Similarly, special keys can be rebound:
+	OPTIONS=specialkeys:g G F m M <esc> ^A
+These must not be duplicated.  Naturally, they are interpreted identically to
+other keys (see #3 above).  See the guidebook for more information on what
+these keys do (or do ?h).
+	Notes: ^A will be ignored if REDO isn't compiled into your game.  
+<esc> is hard-coded into the game in many places that haven't been replaced.  
+There is another special key, ctrl-c, that has not been modified at all (yet).
+
+6.  Nethack will now only autocomplete those extended commands marked to
+be autocompleted - i.e. only the original commands.  This is great for those
+commands, but awful if you want to use any other commands - but then, those
+other commands weren't there before at all, so you're not losing anything.
+	The autocomplete code is window-specific.  I have only changed the
+code for tty mode; all others will just ignore it and autocomplete
+everything (those that use autocomplete at all).  This shouldn't be hard to 
+update.  (I know some window systems pop up a menu of buttons.  I imagine
+this menu should include only autocompleted commands, and have a "see all
+commands" button that shows all of them.)
+	Which commands are autocompleted is shown when you get a list of
+extended commands from within the game (? command).
+
+7.  Ilkka Virta suggested that an AUTOCOMPLETE segment be added to allow
+the user to choose which extended commands were auto-completed, as in:
+	AUTOCOMPLETE=ride,pray,!quiver
+This just modifies the standard autocomplete settings that are compiled in
+(see #6 above), so the AUTOCOMPLETE line above will make no changes.  On the
+other hand, some people might want to use
+	AUTOCOMPLETE=!ride,!quit
+since I've heard some find it inconvienient that '#r' doesn't go straight 
+to rub (they never use riding), and removing quit makes it harder to 
+accidentally quit the game.
+	Just like the BINDINGS, this can be included in the OPTIONS as well.
+This may come to replace the old syntax:
+	OPTIONS=noautocomplete:ride:!!quit
+
+8.  The help for extended commands (formerly brought up with the ?h command
+sequence) has been modified to list *all* extended commands, and mark which 
+of them are currently autocompleted.  The descriptive texts for the new 
+extended commands are taken from the help entries for the commands they're 
+based upon.
+
+9.  The help for keyboard commands (generally brought up with the ?b command
+sequence) has not been changed.  I started to do this, then realized it wasn't 
+worth it at all.  Instead, a new help screen has been created (this idea
+originally from J. Ali Harlow).  It is currently labelled as "Full list of 
+keyboard commands" (generally ?h).  This dynamically creates a full list of 
+commands.  It's not as graphically pretty or well-organized as the original 
+list (which is kept around for these reasons), but since it's created 
+on-the-fly it will take into account changed bindings as well as (in theory) 
+other options (including number_pad, rest_on_space, and REDO).
+
+10.  The same code that interprets the key lists above is now used to interpret
+the MONSTER, etc. lines in the nethackrc file.  This means two things: (1) all 
+numeric entries must include the full 3 decimal digits and (2) the extra
+character values (i.e. a, m-a, ^a, <space>) can be used as well.
+
+11.  Key mappings (macros) are available as well as key bindings.  A key 
+mapping maps one key to one or more keys.  For instance:
+	MAPPINGS=h:Z a, i:n 3 0 s, j:Z a 6, k:z z
+will map the h key to Z and then a.  This will automatically cast the first
+spell on your list.  Mapped keys are interpreted only in place of command keys 
+(i.e instead of h moving you, it will execute Z a; h will still work normally 
+when prompted about what spell to cast or item to apply).  However, command 
+keys will take precedence over mapped keys, so you'll need to unbind the
+command key you wish to map.  There is no checking for infinite loops yet -- 
+WATCH OUT.  When the mapping takes place (i.e. you hit 'h'), the mapped-to
+keys will be placed in a queue.  This queue will be checked almost every time
+that the game wants a key entry.  'i' can therefore be used to search 30 times 
+(under number_pad).  'j' will cast your first spell eastward (under 
+number_pad); note that if you run low on magic points, the Z a will fail and 
+the 6 will move you east.  'k' will zap wand 'z'.
+	Notes: mappings may work wierdly with REDO's.  For instance, I'm not 
+sure what n30k would do.  You can also use this in an options line as
+	OPTIONS=map:h:n 3 0 s,bind:h:nothing
+Finally, this hasn't been tested much.
+
+
+What it doesn't do:
+
+1.  The names for the extended commands are currently less than ideal.
+
+2.  There are no additional key mappings available (i.e. no sample nethackrc
+files).  Those who use dvorak will no doubt want to make such a sample file.
+Any other ideas for good mappings would also be appreciated.  Send them to me
+to be included along with the patch itself.
+
+3.  There is no means for binding multi-byte escape sequences.  I actually
+coded this up, but the code is kept separate right now.
+
+
+Bugs:
+
+1.  There is no documentation in the guidebook.  In the meantime, this 
+document serves as documentation.
+
+2.  Key mappings are almost certainly buggy.
+
+3.  The update for 3.4.3 is incomplete.  It need a full audit.  In particular,
+    I'm not sure if all of the new commands are included in the extended
+    command list (I added #travel/'_' but that's all).
+
+--jason short

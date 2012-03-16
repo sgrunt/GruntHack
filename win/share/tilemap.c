@@ -36,17 +36,17 @@ struct conditionals {
 	{ MON_GLYPH, PM_HELL_HOUND, "Cerberus" },
 #endif
 	/* commented out in monst.c at present */
-	{ MON_GLYPH, PM_SHOCKING_SPHERE, "beholder" },
-	//{ MON_GLYPH, PM_BABY_SILVER_DRAGON, "baby shimmering dragon" },
-	//{ MON_GLYPH, PM_SILVER_DRAGON, "shimmering dragon" },
-	//{ MON_GLYPH, PM_JABBERWOCK, "vorpal jabberwock" },
+	/*{ MON_GLYPH, PM_SHOCKING_SPHERE, "beholder" },
+	 *{ MON_GLYPH, PM_BABY_SILVER_DRAGON, "baby shimmering dragon" },
+	 *{ MON_GLYPH, PM_SILVER_DRAGON, "shimmering dragon" },
+	 *{ MON_GLYPH, PM_JABBERWOCK, "vorpal jabberwock" },*/
 #ifndef KOPS
 	{ MON_GLYPH, PM_JABBERWOCK, "Keystone Kop" },
 	{ MON_GLYPH, PM_JABBERWOCK, "Kop Sergeant" },
 	{ MON_GLYPH, PM_JABBERWOCK, "Kop Lieutenant" },
 	{ MON_GLYPH, PM_JABBERWOCK, "Kop Kaptain" },
 #endif
-	//{ MON_GLYPH, PM_VAMPIRE_LORD, "vampire mage" },
+	/*{ MON_GLYPH, PM_VAMPIRE_LORD, "vampire mage" },*/
 #ifndef CHARON /* not supported yet */
 	{ MON_GLYPH, PM_CROESUS, "Charon" },
 #endif
@@ -72,8 +72,8 @@ struct conditionals {
 	{ OBJ_GLYPH, CLUB, "rubber hose" },
 #endif
 	/* objects commented out in objects.c at present */
-	//{ OBJ_GLYPH, SILVER_DRAGON_SCALE_MAIL, "shimmering dragon scale mail" },
-	//{ OBJ_GLYPH, SILVER_DRAGON_SCALES, "shimmering dragon scales" },
+	/*{ OBJ_GLYPH, SILVER_DRAGON_SCALE_MAIL, "shimmering dragon scale mail" },
+	 *{ OBJ_GLYPH, SILVER_DRAGON_SCALES, "shimmering dragon scales" },*/
 #ifndef TOURIST
 	{ OBJ_GLYPH, LEATHER_JACKET, "Hawaiian shirt" },
 	{ OBJ_GLYPH, LEATHER_JACKET, "T-shirt" },
@@ -266,7 +266,7 @@ int set, entry;
 #define TILE_FILE	"tile.c"
 
 #ifdef AMIGA
-# define SOURCE_TEMPLATE	"NH:src/%s"
+# define SOURCE_TEMPLATE	"GH:src/%s"
 #else
 # ifdef MAC
 #   define SOURCE_TEMPLATE	":src:%s"

@@ -5,17 +5,29 @@
 #ifndef FUNC_TAB_H
 #define FUNC_TAB_H
 
-struct func_tab {
-	char f_char;
-	boolean can_if_buried;
-	int NDECL((*f_funct));
-	const char *f_text;
-};
-
 struct ext_func_tab {
 	const char *ef_txt, *ef_desc;
 	int NDECL((*ef_funct));
 	boolean can_if_buried;
+	boolean autocomplete;
+
+  	/* for interrupted rpeteats; e.g.,
+	 * "searching" => "You stop searching." */
+	const char *f_text;
+};
+
+/* Tells what to do on a command key press: either an extended command or
+ * mapped to another set of characters (macro) */
+struct key_tab {
+	struct ext_func_tab * bind_cmd;
+	char * map_list;
+};
+
+/* Linked list of bindings; see "crappy hack" in cmd.c */
+struct binding_list_tab {
+	char key;	/* ascii code for key */
+	char* extcmd;	/* extended command key is going to be rebound to */
+	struct binding_list_tab * next;
 };
 
 extern struct ext_func_tab extcmdlist[];

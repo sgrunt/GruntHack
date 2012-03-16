@@ -596,6 +596,14 @@ doengrave()
 	     * therefore will know they are using a charge.
 	     */
 	    case WAND_CLASS:
+	    	if ((otmp->spe <= 0 ||
+		     (otmp->otyp != WAN_MAGIC_MISSILE &&
+		      otmp->otyp != WAN_DIGGING &&
+		      otmp->otyp != WAN_FIRE &&
+		      otmp->otyp != WAN_LIGHTNING)) && !can_reach_floor()) {
+		    You_cant("reach the %s!", surface(u.ux,u.uy));
+		    return(0);
+		}
 		if (zappable(otmp)) {
 		    check_unpaid(otmp);
 		    zapwand = TRUE;
@@ -754,8 +762,8 @@ doengrave()
 		    }
 		} else /* end if zappable */
 		    if (!can_reach_floor()) {
-			You_cant("reach the %s!", surface(u.ux,u.uy));
-			return(0);
+		        You_cant("reach the %s!", surface(u.ux,u.uy));
+		        return(0);
 		    }
 		break;
 
@@ -775,6 +783,7 @@ doengrave()
 		    return(0);
 		}
 		switch (otmp->otyp)  {
+		    case FELT_MARKER:
 		    case MAGIC_MARKER:
 			if (otmp->spe <= 0)
 			    Your("marker has dried out.");
@@ -870,7 +879,7 @@ doengrave()
 	if (!ptext) {		/* Early exit for some implements. */
 	    if (otmp->oclass == WAND_CLASS && !can_reach_floor())
 		You_cant("reach the %s!", surface(u.ux,u.uy));
-	    return(1);
+	    return(0);
 	}
 
 	/* Special effects should have deleted the current engraving (if
@@ -1065,7 +1074,8 @@ doengrave()
 	    case MARK:
 		multi = -(len/10);
 		if ((otmp->oclass == TOOL_CLASS) &&
-		    (otmp->otyp == MAGIC_MARKER)) {
+		    ((otmp->otyp == FELT_MARKER) ||
+		     (otmp->otyp == MAGIC_MARKER))) {
 		    maxelen = (otmp->spe) * 2; /* one charge / 2 letters */
 		    if (len > maxelen) {
 			Your("marker dries out.");

@@ -124,7 +124,7 @@ adjattrib(ndx, incr, msgflg)
 	       {
 	           if ((uarmg && uarmg->otyp == GAUNTLETS_OF_FUMBLING)) 
 		       Your("gloves vibrate for a moment.");
-		   else //must be boots
+		   else /* must be boots */
 		       You("quake in your boots.");
 	       }
 	       return FALSE;
@@ -546,6 +546,12 @@ long *ability;
 	if (!ability) return;
 	if (ability == &(HWarning) || ability == &(HSee_invisible))
 		see_monsters();
+#ifdef INVISIBLE_OBJECTS
+	if (ability == &(HSee_invisible)) {
+		see_objects();
+		make_blinded(Blinded, TRUE); /* blindfolds */
+	}
+#endif
 }
 
 void

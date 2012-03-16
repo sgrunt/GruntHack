@@ -79,6 +79,7 @@
 #define AD_ENCH		41	/* remove enchantment (disenchanter) */
 #define AD_CORR		42	/* corrode armor (black pudding) */
 #define AD_BHED         43	/* beheading (vorpal jabberwock) */
+#define AD_CNCL         44      /* cancellation (beholder) */
 
 #define AD_CLRC		240	/* random clerical spell */
 #define AD_SPEL		241	/* random magic spell */
@@ -97,5 +98,6 @@
 #define MM_HIT		0x1	/* aggressor hit defender */
 #define MM_DEF_DIED	0x2	/* defender died */
 #define MM_AGR_DIED	0x4	/* aggressor died */
+#define MM_MOVED	0x8     /* performed a time-consuming action */
 
 #endif /* MONATTK_H */

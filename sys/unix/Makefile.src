@@ -214,8 +214,8 @@ WINBEOBJ =
 
 #
 #
-WINSRC = $(WINTTYSRC)
-WINOBJ = $(WINTTYOBJ)
+WINSRC = $(WINTTYSRC) $(WINX11SRC)
+WINOBJ = $(WINTTYOBJ) $(WINX11OBJ)
 
 # on some systems the termcap library is in -ltermcap or -lcurses
 # on 386 Xenix, the -ltermlib tputs() seems not to work; use -lcurses instead
@@ -228,9 +228,9 @@ WINOBJ = $(WINTTYOBJ)
 #
 # libraries for tty ports
 # WINTTYLIB = -ltermcap
-WINTTYLIB = -lcurses
+# WINTTYLIB = -lcurses
 # WINTTYLIB = -lcurses16
-# WINTTYLIB = -lncurses
+WINTTYLIB = -lncurses
 # WINTTYLIB = -ltermlib
 #
 # libraries for X11
@@ -255,7 +255,7 @@ WINGEMLIB = -le_gem -lgem
 # libraries for BeOS 
 WINBELIB = -lbe
 
-WINLIB = $(WINTTYLIB)
+WINLIB = $(WINTTYLIB) $(WINX11LIB) 
 
 # any other strange libraries your system needs (for Sysunix only -- the more
 # specialized targets should already be right)
@@ -611,8 +611,8 @@ Window.o: ../win/X11/Window.c ../include/xwindowp.h ../include/xwindow.h \
 dialogs.o: ../win/X11/dialogs.c $(CONFIG_H)
 	$(CC) $(CFLAGS) -c ../win/X11/dialogs.c
 winX.o: ../win/X11/winX.c $(HACK_H) ../include/winX.h ../include/dlb.h \
-		../include/patchlevel.h ../win/X11/nh72icon \
-		../win/X11/nh56icon ../win/X11/nh32icon
+		../include/patchlevel.h ../win/X11/gh72icon \
+		../win/X11/gh56icon ../win/X11/gh32icon
 	$(CC) $(CFLAGS) -c ../win/X11/winX.c
 winmap.o: ../win/X11/winmap.c ../include/xwindow.h $(HACK_H) ../include/dlb.h \
 		../include/winX.h ../include/tile2x11.h

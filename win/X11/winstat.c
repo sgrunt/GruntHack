@@ -814,7 +814,7 @@ init_column(name, parent, top, left, col_indices)
     Widget form;
     Arg args[4];
     Cardinal num_args;
-    int max_width1, width1, max_width2, width2;
+    int max_width1, width1 = 0, max_width2, width2 = 0;
     int *ip;
     struct X_status_value *sv;
 

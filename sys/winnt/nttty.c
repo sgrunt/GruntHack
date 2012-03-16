@@ -65,7 +65,7 @@ static boolean display_cursor_info = FALSE;
 extern boolean getreturn_enabled;	/* from sys/share/pcsys.c */
 
 /* dynamic keystroke handling .DLL support */
-typedef int (__stdcall * PROCESS_KEYSTROKE)(
+typedef int (__cdecl * PROCESS_KEYSTROKE)(
     HANDLE,
     INPUT_RECORD *,
     boolean *,
@@ -73,12 +73,12 @@ typedef int (__stdcall * PROCESS_KEYSTROKE)(
     int
 );
 
-typedef int (__stdcall * NHKBHIT)(
+typedef int (__cdecl * NHKBHIT)(
     HANDLE,
     INPUT_RECORD *
 );
 
-typedef int (__stdcall * CHECKINPUT)(
+typedef int (__cdecl * CHECKINPUT)(
 	HANDLE,
 	INPUT_RECORD *,
 	DWORD *,
@@ -88,15 +88,15 @@ typedef int (__stdcall * CHECKINPUT)(
 	coord *
 );
 
-typedef int (__stdcall * SOURCEWHERE)(
+typedef int (__cdecl * SOURCEWHERE)(
     char **
 );
 
-typedef int (__stdcall * SOURCEAUTHOR)(
+typedef int (__cdecl * SOURCEAUTHOR)(
     char **
 );
 
-typedef int (__stdcall * KEYHANDLERNAME)(
+typedef int (__cdecl * KEYHANDLERNAME)(
     char **,
     int
 );

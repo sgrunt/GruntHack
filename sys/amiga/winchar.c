@@ -14,20 +14,20 @@
 #ifdef TESTING
 # include "hack.h"
 #else
-# include "NH:src/tile.c"
+# include "GH:src/tile.c"
 #endif
 
-#include "NH:win/share/tile.h"
+#include "GH:win/share/tile.h"
 
-#include "NH:sys/amiga/windefs.h"
-#include "NH:sys/amiga/winext.h"
-#include "NH:sys/amiga/winproto.h"
+#include "GH:sys/amiga/windefs.h"
+#include "GH:sys/amiga/winext.h"
+#include "GH:sys/amiga/winproto.h"
 
 #ifdef OPT_DISPMAP
 # define DISPMAP		/* use display_map() from dispmap.s */
 #endif
 
-/* NH:sys/amiga/winvchar.c */
+/* GH:sys/amiga/winvchar.c */
 int main ( int  , char ** );
 struct BitMap *MyAllocBitMap ( int  , int  , int  , long  );
 void MyFreeBitMap ( struct BitMap * );
@@ -78,11 +78,11 @@ struct PDAT pictdata;
 char *tileimages[] =
 {
 #define TBLMONTILE	0
-	"NetHack:tiles/monsters.iff",
+	"GruntHack:tiles/monsters.iff",
 #define TBLOBJTILE	1
-	"NetHack:tiles/objects.iff",
+	"GruntHack:tiles/objects.iff",
 #define TBLOTHTILE	2
-	"NetHack:tiles/other.iff",
+	"GruntHack:tiles/other.iff",
 	0,
 };
 
@@ -113,7 +113,7 @@ main( int argc, char **argv )
 	SA_Type, CUSTOMSCREEN,
 	SA_DetailPen, 0,
 	SA_BlockPen, 1,
-	SA_Title, "NetHack Chars",
+	SA_Title, "GruntHack Chars",
 	SA_Pens, pens,
 	TAG_DONE
 	);

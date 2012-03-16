@@ -30,9 +30,9 @@
 % $Revision: 1.61.2.20 $ $Date: 2003/12/03 03:00:47 $
 %.ds h0 "GruntHack Guidebook
 %.ds h1 %.ds h2 \%
-%.ds vr "GruntHack 0.1
+%.ds vr "GruntHack 0.2
 %.ds f0 "
-%.ds f1 %.ds f2 "October 21, 2006
+%.ds f1 %.ds f2 "March 15, 2012
 %.mt
 \title{\LARGE A Guide to the Mazes of Menace:\\
 \Large Guidebook for {\it GruntHack\/}}
@@ -40,7 +40,7 @@
 %.au
 \author{based on the original Guidebook for {\it NetHack\/}\\
 by Eric S. Raymond }
-\date{October 21, 2006}
+\date{March 15, 2012}
 
 \maketitle
 %.hn 1
@@ -277,30 +277,30 @@ been and what you have seen on the current dungeon level; as you
 explore more of the level, it appears on the screen in front of you.
 
 %.pg
-When {\it GruntHack/}'s ancestor %
+When {\it GruntHack}'s ancestor %
 {\it rogue}
 first appeared, its screen
 orientation was almost unique among computer fantasy games.  Since
 then, screen orientation has become the norm rather than the
-exception; {\it GruntHack/} continues this fine tradition.  Unlike text
+exception; {\it GruntHack} continues this fine tradition.  Unlike text
 adventure games that accept commands in pseudo-English sentences and
-explain the results in words, {\it GruntHack/} commands are all one or two
+explain the results in words, {\it GruntHack} commands are all one or two
 keystrokes and the results are displayed graphically on the screen.  A
 minimum screen size of 24 lines by 80 columns is recommended; if the
 screen is larger, only a 21x80 section will be used for the map.
 
 %.pg
-{\it GruntHack/} can even be played by blind players, with the assistance of Braille
-readers or speech synthesisers.  Instructions for configuring {\it GruntHack/} for
+{\it GruntHack} can even be played by blind players, with the assistance of Braille
+readers or speech synthesisers.  Instructions for configuring {\it GruntHack} for
 the blind are included later in this document.
 
 %.pg
-{\it GruntHack/} generates a new dungeon every time you play it; even the
+{\it GruntHack} generates a new dungeon every time you play it; even the
 authors still find it an entertaining and exciting game despite
 having won several times.
 
 %.pg
-{\it GruntHack/} offers a variety of display options.  The options available to you
+{\it GruntHack} offers a variety of display options.  The options available to you
 will vary from port to port, depending on the capabilities of your
 hardware and software, and whether various compile-time options were
 enabled when your executable was created.  The three possible display
@@ -315,10 +315,10 @@ use the default ASCII characters from the monochrome character display
 when referring to things you might see on the screen during your game.
 
 %.pg
-In order to understand what is going on in {\it GruntHack/}, first you must
-understand what {\it GruntHack/} is doing with the screen.  The {\it GruntHack/} screen
+In order to understand what is going on in {\it GruntHack}, first you must
+understand what {\it GruntHack} is doing with the screen.  The {\it GruntHack} screen
 replaces the ``{\tt You see ...}'' descriptions of text adventure games.
-Figure 1 is a sample of what a {\it GruntHack/} screen might look like.
+Figure 1 is a sample of what a {\it GruntHack} screen might look like.
 The way the screen looks for you depends on your platform.
 
 \vbox{ 
@@ -352,7 +352,7 @@ it.  Here are explanations of what the various status items mean
 (though your configuration may not have all the status items listed
 below):
 \blist{}
-\item[\bb{"Rank  "}]
+\item[\bb{``Rank  ''}]
 Your character's name and professional ranking (based on the
 experience level, see below).
 \item[\bb{Strength}]
@@ -396,7 +396,7 @@ How deep you are in the dungeon.  You start at level one and the number
 increases as you go deeper into the dungeon.  Some levels are special,
 and are identified by a name and not a number.  The Amulet of Yendor is
 reputed to be somewhere beneath the twentieth level.
-\item[\bb{"Gold  "}]
+\item[\bb{``Gold  ''}]
 The number of gold pieces you are openly carrying.  Gold which you have
 concealed in containers is not counted.
 \item[\bb{Hit Points}]
@@ -677,17 +677,17 @@ you should type zero or more object symbols possibly followed by
 `a' and/or `i' and/or `u' and/or `m'.  In addition, one or more of
 the blessed/uncursed/cursed groups may be typed.
 %.sd
-%.si
-DB  - drop all objects known to be blessed.
-DU  - drop all objects known to be uncursed.
-DC  - drop all objects known to be cursed.
-DX  - drop all objects of unknown B/U/C status.
-Da  - drop all objects, without asking for confirmation.
-Di  - examine your inventory before dropping anything.
-Du  - drop only unpaid objects (when in a shop).
-Dm  - use a menu to pick which object(s) to drop.
-D\%u - drop only unpaid food.
-%.ei
+\begin{itemize}
+\item DB  - drop all objects known to be blessed.
+\item DU  - drop all objects known to be uncursed.
+\item DC  - drop all objects known to be cursed.
+\item DX  - drop all objects of unknown B/U/C status.
+\item Da  - drop all objects, without asking for confirmation.
+\item Di  - examine your inventory before dropping anything.
+\item Du  - drop only unpaid objects (when in a shop).
+\item Dm  - use a menu to pick which object(s) to drop.
+\item D\%u - drop only unpaid food.
+\end{itemize}
 %.ed
 \item[\tb{\^D}]
 Kick something (usually a door).
@@ -702,9 +702,9 @@ you hand-to-hand (but if you attack, you will rub it out); this is
 often useful to give yourself a breather.  (This feature may be compiled out
 of the game, so your version might not have it.)
 %.sd
-%.si
-E- - write in the dust with your fingers.  
-%.ei
+\begin{itemize}
+\item E- - write in the dust with your fingers.  
+\end{itemize}
 %.ed
 \item[\tb{f}]
 Fire one of the objects placed in your quiver.  You may select
@@ -717,12 +717,12 @@ List your inventory (everything you're carrying).
 \item[\tb{I}]
 List selected parts of your inventory.
 %.sd
-%.si
-{\tt I*} - list all gems in inventory;
-{\tt Iu} - list all unpaid items;
-{\tt Ix} - list all used up items that are on your shopping bill;
-{\tt I\$} - count your money.
-%.ei
+\item \begin{itemize}
+\item {\tt I*} - list all gems in inventory;
+\item {\tt Iu} - list all unpaid items;
+\item {\tt Ix} - list all used up items that are on your shopping bill;
+\item {\tt I\$} - count your money.
+\item \end{itemize}
 %.ed
 \item[\tb{o}]
 Open a door.
@@ -773,9 +773,9 @@ Display the game history.
 \item[\tb{w}]
 Wield weapon.
 %.sd
-%.si
-{\tt w-} - wield nothing, use your bare hands.
-%.ei
+\begin{itemize}
+\item {\tt w-} - wield nothing, use your bare hands.
+\end{itemize}
 %.ed
 \item[\tb{W}]
 Wear armor.
@@ -1090,7 +1090,7 @@ Shopkeepers sometimes run out of money.  When that happens, you'll be
 offered credit instead of gold when you try to sell something.  Credit
 can be used to pay for purchases, but it is only good in the shop where
 it was obtained; other shopkeepers won't honor it.  (If you happen to
-find a "credit card" in the dungeon, don't bother trying to use it in
+find a ``credit card'' in the dungeon, don't bother trying to use it in
 shops; shopkeepers will not accept it.)
 
 %.pg
@@ -1120,7 +1120,7 @@ While the shopkeeper watches you like a hawk, he will generally ignore
 any other customers.
 %.lp * 2
 \item[$\bullet$]
-If a shop is "closed for inventory", it will not open of its own accord.
+If a shop is ``closed for inventory'', it will not open of its own accord.
 %.lp * 2
 \item[$\bullet$]
 Shops do not get restocked with new items, regardless of inventory depletion.
@@ -2016,12 +2016,12 @@ Cannot be set with the `O' command.
 \item[\tb{autodig}]
 Automatically dig if you are wielding a digging tool and moving into a place
 that can be dug (default false).
-\item[\tb{"autopickup  "}]
+\item[\tb{``autopickup  ''}]
 Automatically pick up things onto which you move (default on). 
 See
 {\it pickup\_types }
 to refine the behavior.
-\item[\tb{"autoquiver  "}]
+\item[\tb{``autoquiver  ''}]
 This option controls what happens when you attempt the `f' (fire)
 command with an empty quiver.  When true, the computer will fill
 your quiver with some suitable weapon.  Note that it will not take
@@ -2029,6 +2029,8 @@ into account the blessed/cursed status, enchantment, damage, or
 quality of the weapon; you are free to manually fill your quiver with
 the `Q' command instead.  If no weapon is found or the option is
 false, the `t' (throw) command is executed instead.  (default false)
+\item[\tb{bones   }]
+Allow bones files to be loaded (default true).
 \item[\tb{boulder}]
 Set the character used to display boulders (default is rock class symbol).
 \item[\tb{catname}]
@@ -2050,7 +2052,7 @@ Only applies when MFLOPPY was defined during compilation.
 \item[\tb{cmdassist}]
 Have the game provide some additional command assistance for 
 new players if it detects some anticipated mistakes (default on).
-\item[\tb{"confirm "}]
+\item[\tb{``confirm ''}]
 Have user confirm attacks on pets, shopkeepers, and other
 peaceable creatures (default on).
 \item[\tb{DECgraphics}]
@@ -2065,23 +2067,23 @@ Controls options for disclosing various information when the game ends (defaults
 to all possibilities being disclosed).
 The possibilities are:
 %.sd
-%.si
-i - disclose your inventory.
-a - disclose your attributes.
-v - summarize monsters that have been vanquished.
-g - list monster species that have been genocided.
-c - display your conduct.
-%.ei
+\item \begin{itemize}
+\item i - disclose your inventory.
+\item a - disclose your attributes.
+\item v - summarize monsters that have been vanquished.
+\item g - list monster species that have been genocided.
+\item c - display your conduct.
+\item \end{itemize}
 %.ed
 Each disclosure possibility can optionally be preceded by a prefix which
 let you refine how it behaves. Here are the valid prefixes:
 %.sd
-%.si
-y - prompt you and default to yes on the prompt.
-n - prompt you and default to no on the prompt.
-+ - disclose it without prompting.
-- - do not disclose it and do not prompt.
-%.ei
+\begin{itemize}
+\item y - prompt you and default to yes on the prompt.
+\item n - prompt you and default to no on the prompt.
+\item + - disclose it without prompting.
+\item - - do not disclose it and do not prompt.
+\end{itemize}
 %.ed
 (ex. ``{\tt disclose:yi na +v -g -c}'')
 The example sets 
@@ -2178,7 +2180,7 @@ Cannot be set with the `O' command.
 \item[\tb{fixinv}]
 An object's inventory letter sticks to it when it's dropped (default on).
 If this is off, dropping an object shifts all the remaining inventory letters.
-\item[\tb{"fruit   "}]
+\item[\tb{``fruit   ''}]
 Name a fruit after something you enjoy eating (ex. ``{\tt fruit:mango}'')
 (default ``{\tt slime mold}'').  Basically a nostalgic whimsy that GruntHack uses
 from time to time.  You should set this to something you find more
@@ -2217,9 +2219,9 @@ character as lit (default off).
 \item[\tb{lootabc}]
 Use the old `a', `b', and `c' keyboard shortcuts when
 looting, rather than the mnemonics `o', `i', and `b' (default off).
-\item[\tb{"mail    "}]
+\item[\tb{``mail    ''}]
 Enable mail delivery during the game (default on).
-\item[\tb{"male    "}]
+\item[\tb{``male    ''}]
 An obsolete synonym for ``{\tt gender:male}''.
 Cannot be set with the `O' command.
 \item[\tb{menustyle}]
@@ -2238,7 +2240,7 @@ objects for selection.
 \item[\tb{menu\_deselect\_all}]
 Menu character accelerator to deselect all items in a menu.
 Implemented by the Amiga, Gem, X11 and tty ports.
-tem[\ib{menu\_deselect\_page}]
+\item[\ib{menu\_deselect\_page}]
 Menu character accelerator to deselect all items on this page of a menu.
 Implemented by the Amiga, Gem and tty ports.
 Default `\verb+\+'.
@@ -2320,29 +2322,29 @@ Allows you to change the way recalled messages are displayed.
 (It is currently implemented for tty only.)
 The possible values are:
 %.sd
-%.si
-{\tt s} - single message (default, this was the behavior before 3.4.0).
-{\tt c} - combination, two messages as `single', then as `full'.
-{\tt f} - full window, oldest message first.
-{\tt r} - full window, newest message first.
-%.ei
+\begin{itemize}
+\item {\tt s} - single message (default, this was the behavior before 3.4.0).
+\item {\tt c} - combination, two messages as `single', then as `full'.
+\item {\tt f} - full window, oldest message first.
+\item {\tt r} - full window, newest message first.
+\end{itemize}
 %.ed
 For backward compatibility, no value needs to be specified (which
 defaults to `full'), or it can be negated (which defaults to `single').
-\item[\tb{"name    "}]
+\item[\tb{``name    ''}]
 Set your character's name (defaults to your user name).  You can also
 set your character's role by appending a dash and one or more letters of
 the role (that is, by suffixing one of
-``{\tt "-A -B -C -H -K -M -P -Ra -Ro -S -T -V -W" }'' ).
+``{\tt -A -B -C -H -K -M -P -Ra -Ro -S -T -V -W }'' ).
 If
-{\it "-@" }
+{\it ``-@'' }
 is used for the role, then a random one will be automatically chosen.
 Cannot be set with the `O' command.
-\item[\tb{"news    "}]
+\item[\tb{``news    ''}]
 Read the GruntHack news file, if present (default on).
 Since the news is shown at the beginning of the game, there's no point
 in setting this with the `O' command.
-\item[\tb{"null    "}]
+\item[\tb{``null    ''}]
 Send padding nulls to the terminal (default off).
 \item[\tb{number\_pad}]
 Use the number keys to move instead of [yuhjklbn] (default 0 or off).
@@ -2365,6 +2367,18 @@ Specify the order to list object types in (default
 ``\verb&")[%?+!=/(*`0_&''). The value of this option should be a string
 containing the symbols for the various object types.  Any omitted types
 are filled in at the end from the previous order.
+\item[\ib{paranoid\_hit}]
+If true, asks you to type the word ``yes'' when hitting any peaceful
+monster, not just the letter ``y''.
+%.lp
+\item[\ib{paranoid\_quit}]
+If true, asks you to type the word ``yes'' when quitting or entering
+Explore mode, not just the letter ``y''.
+%.lp
+\item[\ib{paranoid\_remove}]
+If true, always show menu with the R and T commands even when there is
+only one item to remove or take off.
+%.lp
 \item[\tb{perm\_invent}]
 If true, always display your current inventory in a window.  This only
 makes sense for windowing system interfaces that implement this feature.
@@ -2378,6 +2392,11 @@ When you pick up an item that would exceed this encumbrance
 level (Unburdened, Burdened, streSsed, straiNed, overTaxed,
 or overLoaded), you will be asked if you want to continue.
 (Default `S').
+\item[\ib{pickup\_thrown}]
+If this boolean option is true and {\it autopickup\/} is on, try to pick up
+things that you threw, even if they aren't in {\it pickup\_types\/}.
+Default is on.
+%.lp
 \item[\tb{pickup\_types}]
 Specify the object types to be picked up when
 {\it autopickup }
@@ -2387,17 +2406,26 @@ compile time option AUTOPICKUP\_EXCEPTIONS included, you may be able to use
 configuration file lines to further refine
 {\it autopickup }
 behavior.
+%.lp
 \item[\tb{prayconfirm}]
 Prompt for confirmation before praying (default on).
+%.lp
 \item[\tb{pushweapon}]
 Using the `w' (wield) command when already wielding
 something pushes the old item into your alternate weapon slot (default off).
+%.lp
+\item[\ib{quiver_fired}]
+Using the 'f' (fire) command when nothing is quivered, prompts for ammunition 
+to quiver, then fires it (default off).
+%.lp
 \item[\tb{race}]
 Selects your race (for example, ``{\tt race:human}'').  Default is random.
 Cannot be set with the `O' command.
+%.lp
 \item[\tb{rest\_on\_space}]
 Make the space bar a synonym for the `.' (rest) command (default off).
-\item[\tb{"role    "}]
+%.lp
+\item[\tb{``role    ''}]
 Pick your type of character (ex. ``{\tt role:Samurai}'');
 synonym for ``{\tt character''.  See ``name}'' for an alternate method
 of specifying your role.  Normally only the first letter of the
@@ -2409,12 +2437,12 @@ in multi-turn movement (running via shift+direction or control+direction
 and so forth, or via the travel command or mouse click).
 The possible values are:
 %.sd
-%.si
-teleport - update the map after movement has finished;
-run - update the map after every seven or so steps;
-walk - update the map after each step;
-crawl - like walk, but pause briefly after each step.
-%.ei
+\begin{itemize}
+\item teleport - update the map after movement has finished;
+\item run - update the map after every seven or so steps;
+\item walk - update the map after each step;
+\item crawl - like walk, but pause briefly after each step.
+\end{itemize}
 %.ed
 This option only affects the game's screen display, not the actual
 results of moving.  The default is `run'; versions prior to 3.4.1 
@@ -2426,6 +2454,11 @@ Prevent you from (knowingly) attacking your pets (default on).
 Control what parts of the score list you are shown at the end (ex.
 ``{\tt scores:5 top scores/4 around my score/own scores}'').  Only the first
 letter of each category (`t', `a', or `o') is necessary.
+\item[\ib{showborn}]
+When the game ends, show the number of each monster created
+in the ``Vanquished creatures'' list, if it differs from the
+number of those monsters killed.
+%.lp
 \item[\tb{showexp}]
 Show your accumulated experience points on bottom line (default off).
 \item[\tb{showrace}]
@@ -2435,19 +2468,19 @@ for your role; similarly display monsters as the glyph for their race
 the display, not the way the game treats you.
 \item[\tb{showscore}]
 Show your approximate accumulated score on bottom line (default off).
-\item[\tb{"silent  "}]
+\item[\tb{``silent  ''}]
 Suppress terminal beeps (default on).
 \item[\tb{sortloot}]
 Controls the behavior of the sortloot patch that sorts pickup lists for
 inventory and \#loot commands and some others.
 The possible values are:
 %.sd
-%.si
-full - always sort the lists;
-loot - only sort the lists that don't use inventory
+\begin{itemize}
+\item full - always sort the lists;
+\item loot - only sort the lists that don't use inventory
        letters, like with the \#loot and pickup commands;
-none - show lists the traditional way without sorting.
-%.ei
+\item none - show lists the traditional way without sorting.
+\end{itemize}
 %.ed
 \item[\tb{sortpack}]
 Sort the pack contents by type when displaying inventory (default on).
@@ -2467,7 +2500,7 @@ Boldface monsters and ``%
 This option may be set to a GruntHack version level to suppress
 alert notification messages about feature changes for that 
 and prior versions (ex. ``{\tt suppress\_alert:3.3.1}'').
-\item[\tb{"time    "}]
+\item[\tb{``time    ''}]
 Show the elapsed game time in turns on bottom line (default off).
 \item[\tb{timed\_delay}]
 When pausing momentarily for display effect, such as with explosions and
@@ -2510,6 +2543,9 @@ Provide more commentary during the game (default on).
 Select which windowing system to use, such as ``{\tt tty'' or ``X11}''
 (default depends on version).
 Cannot be set with the `{\tt O}' command.
+%.lp
+\item[\ib{win_edge}]
+Align menus and text windows in tty left instead of right. (default off)
 \elist
 %.hn 2
 \subsection*{Window Port Customization options}
@@ -2630,18 +2666,18 @@ path information.
 Cannot be set with the `O' command.
 \item[\tb{altmeta}]
 (default on, AMIGA GruntHack only).
-\item[\tb{"BIOS    "}]
+\item[\tb{``BIOS    ''}]
 Use BIOS calls to update the screen
 display quickly and to read the keyboard (allowing the use of arrow
 keys to move) on machines with an IBM PC compatible BIOS ROM (default off,
 OS/2, PC, and ST GruntHack only).
 \item[\tb{flush}]
 (default off, AMIGA GruntHack only).
-\item[\tb{"MACgraphics"}]
+\item[\tb{``MACgraphics''}]
 (default on, Mac GruntHack only).
 \item[\tb{page\_wait}]
 (default on, Mac GruntHack only).
-\item[\tb{"rawio   "}]
+\item[\tb{``rawio   ''}]
 Force raw (non-cbreak) mode for faster output and more
 bulletproof input (MS-DOS sometimes treats `\^{}P' as a printer toggle
 without it) (default off, OS/2, PC, and ST GruntHack only).
@@ -2709,20 +2745,20 @@ object at your location.
 %.pg
 You may use the following special characters in a pattern:
 %.sd
-%.si
-  *--- matches 0 or more characters.
-  ?--- matches any single character.
-%.ei
+\begin{itemize}
+\item  *--- matches 0 or more characters.
+\item  ?--- matches any single character.
+\end{itemize}
 %.ed
 
 %.pg
 In addition, some characters are treated specially if they occur as the first 
 character in the string pattern, specifically:
 %.sd
-%.si
-$<$ - always pickup an object that matches the pattern that follows.
-$>$ - never pickup an object that matches the pattern that follows.
-%.ei
+\begin{itemize}
+\item $<$ - always pickup an object that matches the pattern that follows.
+\item $>$ - never pickup an object that matches the pattern that follows.
+\end{itemize}
 %.ed
 
 %.pg
@@ -2732,11 +2768,11 @@ across saves and restores.
 %.pg
 Here's a couple of examples of autopickup\_exceptions:
 %.sd
-%.si
-autopickup\_exception="$<$*arrow"
-autopickup\_exception="$>$*corpse"
-autopickup\_exception="$>$* cursed*"
-%.ei
+\begin{itemize}
+\item autopickup\_exception="$<$*arrow"
+\item autopickup\_exception="$>$*corpse"
+\item autopickup\_exception="$>$* cursed*"
+\end{itemize}
 %.ed
 The first example above will result in autopickup of any type of arrow.
 The second example results in the exclusion of any corpse from autopickup.
@@ -2760,12 +2796,12 @@ The directory that houses the sound files to be played.
 An entry that maps a sound file to a user-specified message pattern.
 Each SOUND entry is broken down into the following parts:
 %.sd
-%.si
-MESG       - message window mapping (the only one supported in 3.4).
-pattern    - the pattern to match.
-sound file - the sound file to play.
-volume     - the volume to be set while playing the sound file.
-%.ei
+\begin{itemize}
+\item MESG       - message window mapping (the only one supported in 3.4).
+\item pattern    - the pattern to match.
+\item sound file - the sound file to play.
+\item volume     - the volume to be set while playing the sound file.
+\end{itemize}
 %.ed
 
 %.pg
@@ -2781,20 +2817,22 @@ which pattern matching is used by your port with the \#version command.
 GruntHack's internal pattern matching routine uses the following
 special characters in its pattern matching:
 %.sd
-%.si
-  *--- matches 0 or more characters.
-  ?--- matches any single character.
-%.ei
+\begin{itemize}
+\item  *--- matches 0 or more characters.
+\item  ?--- matches any single character.
+\end{itemize}
 %.ed
 
 %.pg
 Here's an example of a sound mapping using GruntHack's internal
 pattern matching facility:
 %.sd
-    SOUND=MESG "*chime of a cash register*" "gong.wav" 50
+\begin{itemize}
+\item SOUND=MESG ``*chime of a cash register*'' ``gong.wav'' 50
+\end{itemize}
 %.ed
-specifies that any message with "chime of a cash register" contained
-in it will trigger the playing of "gong.wav".  You can have multiple
+specifies that any message with ``chime of a cash register'' contained
+in it will trigger the playing of ``gong.wav''.  You can have multiple
 SOUND entries in your config file.
 
 %.pg
@@ -2846,7 +2884,7 @@ This will assist in the interface to speech synthesizers.
 A lot of speech access programs use the number-pad to review the screen.
 If this is the case, disable the number\_pad option and use the traditional
 Rogue-like commands.
-\item[\tb {"Character graphics"}]
+\item[\tb {``Character graphics''}]
 Comment out all character graphics sets found near the bottom of the
 %
 \bf defaults.gh \rm%
