@@ -256,8 +256,14 @@ do_mname()
 #ifdef STEED
 	    }
 #endif
-	} else
+	} else {
+	    mtmp = m_img_at(cx, cy);
+	    if (!mtmp) {
 	    mtmp = m_at(cx, cy);
+		if (mtmp && displaced_image(mtmp) &&
+		    !tp_sensemon(mtmp)) mtmp = 0;
+	    }
+	}
 
 	if (!mtmp || (!sensemon(mtmp) &&
 			(!(cansee(cx,cy) || see_with_infrared(mtmp)) || mtmp->mundetected
@@ -276,7 +282,41 @@ do_mname()
 	(void)mungspaces(buf);
 
 	if (mtmp->data->geno & G_UNIQ)
-	    pline("%s doesn't like being called names!", Monnam(mtmp));
+	{
+	    if (mtmp->data == &mons[PM_HIGH_PRIEST] &&
+	        Is_astralevel(&u.uz))
+	    {
+	        int tries = 0;
+		pline_The("gods take notice of your attempted trickery!");
+		pline(
+		    "Your life force is ripped from your body in their anger.");
+		do {
+	            killer_format = KILLED_BY;
+		    killer = "the gods for attempting to name a High Priest";
+		    done(DIED);
+		    switch(++tries)
+		    {
+		        case 1:
+			    pline(
+	        "Unfortunately, after a moment, you crumble to dust yourself.");
+		            break;
+			case 2:
+			    pline(
+     "The gods sense immense power at work, but try once more to destroy you.");
+                            pline(
+     "Your soul is ripped in two and your body collapses to the ground, dead.");
+		            break;
+			default:
+			    pline(
+                "Apparently your power is even greater than that of the gods.");
+                            pline(
+	        "They wisely decide to let you live.");
+		            break;
+		    }
+		} while (tries < 3);
+	    }
+	    else pline("%s doesn't like being called names!", Monnam(mtmp));
+	}
 	else
 	    (void) christen_monst(mtmp, buf);
 	return(0);
@@ -632,9 +672,14 @@ boolean called;
 	    name = priestname(mtmp, priestnambuf);
 	    EHalluc_resistance = save_prop;
 	    mtmp->minvis = save_invis;
-	    if (article == ARTICLE_NONE && !strncmp(name, "the ", 4))
+	    if (/*article == ARTICLE_NONE && */ !strncmp(name, "the ", 4))
 		name += 4;
-	    return strcpy(buf, name);
+	    if (article == ARTICLE_THE)
+	        Strcat(buf, "the ");
+            if (mtmp->mrace)
+	        Strcat(buf, racial_prefix(mtmp)); 
+	    Strcat(buf, name);
+	    return buf;
 	}
 
 	/* Shopkeepers: use shopkeeper name.  For normal shopkeepers, just
@@ -652,11 +697,13 @@ boolean called;
 		return buf;
 	    }
 	    Strcat(buf, shkname(mtmp));
-	    if (mdat == &mons[PM_SHOPKEEPER] && !do_invis)
-		return buf;
+	    if (mdat == &mons[PM_SHOPKEEPER] && !called) //do_invis)
+	    	return buf;
 	    Strcat(buf, " the ");
 	    if (do_invis)
 		Strcat(buf, "invisible ");
+            if (mtmp->mrace)
+	        Strcat(buf, racial_prefix(mtmp)); 
 	    Strcat(buf, mdat->mname);
 	    return buf;
 	}
@@ -671,6 +718,9 @@ boolean called;
 	    !Blind && !Hallucination)
 	    Strcat(buf, "saddled ");
 #endif
+        if (mtmp->mrace && !type_is_pname(mdat))
+	    Strcat(buf, racial_prefix(mtmp)); 
+
 	if (buf[0] != 0)
 	    has_adjectives = TRUE;
 	else

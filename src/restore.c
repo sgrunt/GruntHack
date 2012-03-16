@@ -473,6 +473,7 @@ unsigned int stuckid, steedid;	/* STEED */
 		if (!mtmp) panic("Cannot find the monster usteed.");
 		u.usteed = mtmp;
 		remove_monster(mtmp->mx, mtmp->my);
+		remove_monster_img(mtmp->mix, mtmp->miy);
 	}
 #endif
 }
@@ -802,7 +803,7 @@ boolean ghostly;
 			/* reset peaceful/malign relative to new character */
 			if(!mtmp->isshk)
 				/* shopkeepers will reset based on name */
-				mtmp->mpeaceful = peace_minded(mtmp->data);
+				mtmp->mpeaceful = peace_minded(mtmp);
 			set_malign(mtmp);
 		} else if (monstermoves > omoves)
 			mon_catchup_elapsed_time(mtmp, monstermoves - omoves);
@@ -833,7 +834,8 @@ boolean ghostly;
 	/* reset level.monsters for new level */
 	for (x = 0; x < COLNO; x++)
 	    for (y = 0; y < ROWNO; y++)
-		level.monsters[x][y] = (struct monst *) 0;
+		level.monsters[x][y] = (struct monst *) 0,
+		level.monster_images[x][y] = (struct monst *) 0;
 	for (mtmp = level.monlist; mtmp; mtmp = mtmp->nmon) {
 	    if (mtmp->isshk)
 		set_residency(mtmp, FALSE);

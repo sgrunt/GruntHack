@@ -113,7 +113,8 @@
 #define EHalluc_resistance	u.uprops[HALLUC_RES].extrinsic
 #define Halluc_resistance	(EHalluc_resistance || \
 				 (Upolyd && dmgtype(youmonst.data, AD_HALU)))
-#define Hallucination		(HHallucination && !Halluc_resistance)
+#define Hallucination		(HHallucination && !Halluc_resistance && \
+                                 (100 - rnl(100)) < HHallucination)
 
 /* Timeout, plus a worn mask */
 #define HFumbling		u.uprops[FUMBLING].intrinsic

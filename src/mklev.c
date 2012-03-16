@@ -554,12 +554,15 @@ clear_level_structures()
 #ifdef MICROPORT_BUG
 		level.objects[x][y] = (struct obj *)0;
 		level.monsters[x][y] = (struct monst *)0;
+		level.monster_images[x][y] = (struct monst *)0;
 #endif
 	    }
 	}
 #ifndef MICROPORT_BUG
 	(void) memset((genericptr_t)level.objects, 0, sizeof(level.objects));
 	(void) memset((genericptr_t)level.monsters, 0, sizeof(level.monsters));
+	(void) memset((genericptr_t)level.monster_images, 0,
+	              sizeof(level.monster_images));
 #endif
 	level.objlist = (struct obj *)0;
 	level.buriedobjlist = (struct obj *)0;
@@ -644,7 +647,10 @@ makelevel()
 			   (u.uz.dlevel < loc_lev->dlevel.dlevel) ? "a" : "b");
 		    makemaz(fillname);
 		    return;
-	    } else if(In_hell(&u.uz) ||
+	    } else if(In_hell(&u.uz)) {
+		    makemaz("hellfill");
+		    return;
+	    } else if (
 		  (rn2(5) && u.uz.dnum == medusa_level.dnum
 			  && depth(&u.uz) > depth(&medusa_level))) {
 		    makemaz("");
@@ -665,7 +671,7 @@ makelevel()
 
 	/* construct stairs (up and down in different rooms if possible) */
 	croom = &rooms[rn2(nroom)];
-	if (!Is_botlevel(&u.uz))
+	if (!Is_botlevel(&u.uz) && !Invocation_lev(&u.uz))
 	     mkstairs(somex(croom), somey(croom), 0, croom);	/* down */
 	if (nroom > 1) {
 	    troom = croom;
@@ -1527,7 +1533,7 @@ int dist;
 	break;
     case 4: /* pools (aka a wide moat) */
     case 5:
-	lev->typ = MOAT;
+	lev->typ = LAVAPOOL; //MOAT;
 	/* No kelp! */
 	break;
     default:

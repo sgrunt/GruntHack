@@ -343,7 +343,7 @@ rogue_vision(next, rmin, rmax)
 	     * positions are not updated because they were already in sight.
 	     * So, we have to do it here.
 	     */
-	    if (in_door && (zx == u.ux || zy == u.uy)) newsym(zx,zy);
+	    /*if (in_door && (zx == u.ux || zy == u.uy))*/ newsym(zx,zy);
 	}
     }
 }
@@ -559,7 +559,7 @@ vision_recalc(control)
 	    stop  = max(viz_rmax[row], next_rmax[row]);
 
 	    for (col = start; col <= stop; col++)
-		if (old_row[col] & IN_SIGHT) newsym(col,row);
+		/*if (old_row[col] & IN_SIGHT) */ newsym(col,row);
 	}
 
 	/* skip the normal update loop */
@@ -603,7 +603,7 @@ vision_recalc(control)
 		for(col=next_rmin[row]; col <= next_rmax[row]; col++)
 		    next_row[col] = IN_SIGHT | COULD_SEE;
 	    }
-	} else
+	} else 
 	    view_from(u.uy, u.ux, next_array, next_rmin, next_rmax,
 		0, (void FDECL((*),(int,int,genericptr_t)))0, (genericptr_t)0);
 
@@ -627,7 +627,7 @@ vision_recalc(control)
 			oldseenv = levl[col][row].seenv;
 			levl[col][row].seenv = SVALL;	/* see all! */
 			/* Update if previously not in sight or new angle. */
-			if (!(old_row_val & IN_SIGHT) || oldseenv != SVALL)
+			//if (!(old_row_val & IN_SIGHT) || oldseenv != SVALL)
 			    newsym(col,row);
 		    }
 
@@ -717,7 +717,7 @@ vision_recalc(control)
 		lev->seenv |= new_angle(lev,sv,row,col); /* update seen angle */
 
 		/* Update pos if previously not in sight or new angle. */
-		if ( !(old_row[col] & IN_SIGHT) || oldseenv != lev->seenv)
+		//if ( !(old_row[col] & IN_SIGHT) || oldseenv != lev->seenv)
 		    newsym(col,row);
 	    }
 
@@ -743,7 +743,7 @@ vision_recalc(control)
 			lev->seenv |= new_angle(lev,sv,row,col);
 
 			/* Update pos if previously not in sight or new angle.*/
-			if (!(old_row[col] & IN_SIGHT) || oldseenv!=lev->seenv)
+			//if (!(old_row[col] & IN_SIGHT) || oldseenv!=lev->seenv)
 			    newsym(col,row);
 		    } else
 			goto not_in_sight;	/* we don't see it */
@@ -755,7 +755,7 @@ vision_recalc(control)
 		    lev->seenv |= new_angle(lev,sv,row,col);
 
 		    /* Update pos if previously not in sight or new angle. */
-		    if ( !(old_row[col] & IN_SIGHT) || oldseenv != lev->seenv)
+		    //if ( !(old_row[col] & IN_SIGHT) || oldseenv != lev->seenv)
 			newsym(col,row);
 		}
 	    } else if ((next_row[col] & COULD_SEE) && lev->waslit) {
@@ -784,9 +784,9 @@ vision_recalc(control)
 	     */
 	    else {
 not_in_sight:
-		if ((old_row[col] & IN_SIGHT)
-			|| ((next_row[col] & COULD_SEE)
-				^ (old_row[col] & COULD_SEE)))
+		//if ((old_row[col] & IN_SIGHT)
+		//	|| ((next_row[col] & COULD_SEE)
+		//		^ (old_row[col] & COULD_SEE)))
 		    newsym(col,row);
 	    }
 

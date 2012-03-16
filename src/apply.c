@@ -276,7 +276,7 @@ use_stethoscope(obj)
 			mtmp->mundetected = 0;
 			if (cansee(rx,ry)) newsym(mtmp->mx,mtmp->my);
 		}
-		if (!canspotmon(mtmp))
+		if (!canspotmon(mtmp) || displaced_image(mtmp))
 			map_invisible(rx,ry);
 		return res;
 	}
@@ -560,7 +560,7 @@ register xchar x, y;
 		    dist2(x,y,mtmp->mx,mtmp->my)) {
 		if (!um_dist(mtmp->mx, mtmp->my, 3)) {
 		    ;	/* still close enough */
-		} else if (otmp->cursed && !breathless(mtmp->data)) {
+		} else if (otmp->cursed && !mbreathing(mtmp)) {
 		    if (um_dist(mtmp->mx, mtmp->my, 5) ||
 			    (mtmp->mhp -= rnd(2)) <= 0) {
 			long save_pacifism = u.uconduct.killer;
@@ -624,7 +624,7 @@ struct obj *obj;
 			pline(Hallucination ?
 			      "Yow!  The mirror stares back!" :
 			      "Yikes!  You've frozen yourself!");
-			nomul(-rnd((MAXULEV+6) - u.ulevel));
+			nomul2(-rnd((MAXULEV+6) - u.ulevel), "paralyzed");
 			} else You("stiffen momentarily under your gaze.");
 		    } else if (youmonst.data->mlet == S_VAMPIRE)
 			You("don't have a reflection.");
@@ -722,14 +722,14 @@ struct obj *obj;
 		(void) mpickobj(mtmp,obj);
 		if (!tele_restrict(mtmp)) (void) rloc(mtmp, FALSE);
 	} else if (!is_unicorn(mtmp->data) && !humanoid(mtmp->data) &&
-			(!mtmp->minvis || perceives(mtmp->data)) && rn2(5)) {
+			(!mtmp->minvis || sees_invis(mtmp)) && rn2(5)) {
 		if (vis)
 		    pline("%s is frightened by its reflection.", Monnam(mtmp));
 		monflee(mtmp, d(2,4), FALSE, FALSE);
 	} else if (!Blind) {
 		if (mtmp->minvis && !See_invisible)
 		    ;
-		else if ((mtmp->minvis && !perceives(mtmp->data))
+		else if ((mtmp->minvis && !sees_invis(mtmp))
 			 || !haseyes(mtmp->data))
 		    pline("%s doesn't seem to notice its reflection.",
 			Monnam(mtmp));
@@ -788,7 +788,8 @@ struct obj **optr;
 				break;
 			case 2: /* no explanation; it just happens... */
 				nomovemsg = "";
-				nomul(-rnd(2));
+				nomul2(-rnd(2),
+				       "watching a summoned nymph");
 				break;
 		}
 	    }
@@ -1358,7 +1359,7 @@ int magic; /* 0=Physical, otherwise skill level */
 		change_luck(-1);
 
 	    teleds(cc.x, cc.y, TRUE);
-	    nomul(-1);
+	    nomul2(-1, "landing from a jump");
 	    nomovemsg = "";
 	    morehungry(rnd(25));
 	    return 1;
@@ -1768,7 +1769,7 @@ struct obj *obj;
 	}
 
 	if (obj->spe > 0) {
-		if ((obj->cursed || Fumbling) && !rn2(2)) {
+		if ((obj->cursed || FUMBLED) && !rn2(2)) {
 			consume_obj_charge(obj, TRUE);
 
 			pline("%s from your %s.", Tobjnam(obj, "slip"),
@@ -1798,6 +1799,7 @@ struct obj *obj;
 			You("cover %s with a thick layer of grease.",
 			    yname(otmp));
 			otmp->greased = 1;
+			if (otmp == uarmg) Glib |= FROMOUTSIDE; //bad idea!
 			if (obj->cursed && !nohands(youmonst.data)) {
 			    incr_itimeout(&Glib, rnd(15));
 			    pline("Some of the grease gets all over your %s.",
@@ -1912,7 +1914,7 @@ struct obj *tstone;
 	    return;
 	} else {
 	    /* either a ring or the touchstone was not effective */
-	    if (objects[obj->otyp].oc_material == GLASS) {
+	    if (obj->omaterial == GLASS) {
 		do_scratch = TRUE;
 		break;
 	    }
@@ -1921,7 +1923,7 @@ struct obj *tstone;
 	break;		/* gem or ring */
 
     default:
-	switch (objects[obj->otyp].oc_material) {
+	switch (obj->omaterial) {
 	case CLOTH:
 	    pline("%s a little more polished now.", Tobjnam(tstone, "look"));
 	    return;
@@ -2031,7 +2033,7 @@ struct obj *otmp;
 	if (u.usteed && P_SKILL(P_RIDING) < P_BASIC) {
 	    boolean chance;
 
-	    if (Fumbling || otmp->cursed) chance = (rnl(10) > 3);
+	    if (FUMBLED || otmp->cursed) chance = (rnl(10) > 3);
 	    else  chance = (rnl(10) > 5);
 	    You("aren't very skilled at reaching from %s.",
 		mon_nam(u.usteed));
@@ -2094,7 +2096,7 @@ set_trap()
 	    if (!trapinfo.force_bungle)
 		You("finish arming %s.",
 			the(defsyms[trap_to_defsym(what_trap(ttyp))].explanation));
-	    if (((otmp->cursed || Fumbling) && (rnl(10) > 5)) || trapinfo.force_bungle)
+	    if (((otmp->cursed || FUMBLED) && (rnl(10) > 5)) || trapinfo.force_bungle)
 		dotrap(ttmp,
 			(unsigned)(trapinfo.force_bungle ? FORCEBUNGLE : 0));
 	} else {
@@ -2133,7 +2135,7 @@ struct obj *obj;
     if (Role_if(PM_ARCHEOLOGIST)) ++proficient;
     if (ACURR(A_DEX) < 6) proficient--;
     else if (ACURR(A_DEX) >= 14) proficient += (ACURR(A_DEX) - 14);
-    if (Fumbling) --proficient;
+    if (FUMBLED) --proficient;
     if (proficient > 3) proficient = 3;
     if (proficient < 0) proficient = 0;
 
@@ -2184,7 +2186,7 @@ struct obj *obj;
 	flags.botl = 1;
 	return 1;
 
-    } else if ((Fumbling || Glib) && !rn2(5)) {
+    } else if ((FUMBLED || Glib) && !rn2(5)) {
 	pline_The("bullwhip slips out of your %s.", body_part(HAND));
 	dropx(obj);
 
@@ -2241,7 +2243,7 @@ struct obj *obj;
 	} else pline(msg_snap);
 
     } else if (mtmp) {
-	if (!canspotmon(mtmp) &&
+	if ((!canspotmon(mtmp) || displaced_image(mtmp)) &&
 		!glyph_is_invisible(levl[rx][ry].glyph)) {
 	   pline("A monster is there that you couldn't see.");
 	   map_invisible(rx, ry);
@@ -2250,7 +2252,7 @@ struct obj *obj;
 	if (otmp) {
 	    char onambuf[BUFSZ];
 	    const char *mon_hand;
-	    boolean gotit = proficient && (!Fumbling || !rn2(10));
+	    boolean gotit = proficient && (!FUMBLED || !rn2(10));
 
 	    Strcpy(onambuf, cxname(otmp));
 	    if (gotit) {
@@ -2565,7 +2567,7 @@ use_grapple (obj)
 		mtmp->mundetected = 0;
 		rloc_to(mtmp, cc.x, cc.y);
 		return (1);
-	    } else if ((!bigmonst(mtmp->data) && !strongmonst(mtmp->data)) ||
+	    } else if ((!bigmonst(mtmp->data) && !is_strong(mtmp)) ||
 		       rn2(4)) {
 		(void) thitmonst(mtmp, uwep);
 		return (1);

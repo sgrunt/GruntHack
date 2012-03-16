@@ -62,17 +62,19 @@ struct objclass {
 #define GLASS		19
 #define GEMSTONE	20
 #define MINERAL		21
+#define MAX_MAT         22
 
-#define is_organic(otmp)	(objects[otmp->otyp].oc_material <= WOOD)
-#define is_metallic(otmp)	(objects[otmp->otyp].oc_material >= IRON && \
-				 objects[otmp->otyp].oc_material <= MITHRIL)
+#define is_organic(otmp)	(otmp->omaterial <= WOOD)
+#define is_metallic(otmp)	(otmp->omaterial >= IRON && \
+				 otmp->omaterial <= MITHRIL)
 
 /* primary damage: fire/rust/--- */
 /* is_flammable(otmp), is_rottable(otmp) in mkobj.c */
-#define is_rustprone(otmp)	(objects[otmp->otyp].oc_material == IRON)
+#define is_rustprone(otmp)	(otmp->omaterial == IRON)
 
 /* secondary damage: rot/acid/acid */
-#define is_corrodeable(otmp)	(objects[otmp->otyp].oc_material == COPPER || objects[otmp->otyp].oc_material == IRON)
+#define is_corrodeable(otmp)	(otmp->omaterial == COPPER || \
+                                 otmp->omaterial == IRON)
 
 #define is_damageable(otmp) (is_rustprone(otmp) || is_flammable(otmp) || \
 				is_rottable(otmp) || is_corrodeable(otmp))

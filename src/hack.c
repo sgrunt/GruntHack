@@ -232,7 +232,9 @@ moverock()
 #endif
 		  if (moves > lastmovetime+2 || moves < lastmovetime)
 		    pline("With %s effort you move %s.",
-			  throws_rocks(youmonst.data) ? "little" : "great",
+			  maybe_polyd(throws_rocks(youmonst.data),
+			              Race_if(PM_GIANT))
+				      ? "little" : "great",
 			  the(xname(otmp)));
 		  exercise(A_STR, TRUE);
 #ifdef STEED
@@ -264,7 +266,8 @@ moverock()
 	    You("try to move %s, but in vain.", the(xname(otmp)));
 	    if (Blind) feel_location(sx, sy);
 	cannot_push:
-	    if (throws_rocks(youmonst.data)) {
+	    if (maybe_polyd(throws_rocks(youmonst.data),
+	                    Race_if(PM_GIANT))) {
 #ifdef STEED
 		if (u.usteed && P_SKILL(P_RIDING) < P_BASIC) {
 		    You("aren't skilled enough to %s %s from %s.",
@@ -596,7 +599,7 @@ int mode;
 		    if (amorphous(youmonst.data))
 			You("try to ooze under the door, but can't squeeze your possessions through.");
 		    else if (x == ux || y == uy) {
-			if (Blind || Stunned || ACURR(A_DEX) < 10 || Fumbling) {
+			if (Blind || Stunned || ACURR(A_DEX) < 10 || FUMBLED) {
 #ifdef STEED
 			    if (u.usteed) {
 				You_cant("lead %s through that closed door.",
@@ -635,7 +638,8 @@ int mode;
 		You("cannot pass that way.");
 	    return FALSE;
 	}
-	if (bigmonst(youmonst.data)) {
+	if (maybe_polyd(bigmonst(youmonst.data),
+	                Race_if(PM_GIANT))) {
 	    if (mode == DO_MOVE)
 		Your("body is too large to fit through.");
 	    return FALSE;
@@ -1098,7 +1102,9 @@ domove()
 	/* specifying 'F' with no monster wastes a turn */
 	if (flags.forcefight ||
 	    /* remembered an 'I' && didn't use a move command */
-	    (glyph_is_invisible(levl[x][y].glyph) && !flags.nopick)) {
+	    ((glyph_is_invisible(levl[x][y].glyph) ||
+	      (m_img_at(x, y) != 0 && displaced_image(m_img_at(x, y))) &&
+	       !flags.nopick))) { 
 		boolean expl = (Upolyd && attacktype(youmonst.data, AT_EXPL));
 	    	char buf[BUFSZ];
 		Sprintf(buf,"a vacant spot on the %s", surface(x,y));
@@ -1106,12 +1112,17 @@ domove()
 		    expl ? "explode at" : "attack",
 		    !Underwater ? "thin air" :
 		    is_pool(x,y) ? "empty water" : buf);
+
+		if (m_img_at(x, y))
+		    displace_mon(m_img_at(x, y));
+
 		unmap_object(x, y); /* known empty -- remove 'I' if present */
 		newsym(x, y);
 		nomul(0);
 		if (expl) {
 		    u.mh = -1;		/* dead in the current form */
-		    rehumanize();
+		    killer_format = NO_KILLER_PREFIX; 
+		    rehumanize("exploded");
 		}
 		return;
 	}
@@ -1119,6 +1130,9 @@ domove()
 	    unmap_object(x, y);
 	    newsym(x, y);
 	}
+	if (m_img_at(x, y) &&
+	    m_img_at(x, y) != m_at(x, y))
+	    displace_mon(m_img_at(x, y));
 	/* not attacking an animal, so we try to move */
 #ifdef STEED
 	if (u.usteed && !u.usteed->mcanmove && (u.dx || u.dy)) {
@@ -1329,6 +1343,7 @@ domove()
 		Strcpy(pnambuf, y_monnam(mtmp));
 		mtmp->mtrapped = 0;
 		remove_monster(x, y);
+		remove_monster_img(mtmp->mix, mtmp->miy);
 		place_monster(mtmp, u.ux0, u.uy0);
 
 		/* check for displacing it into pools and traps */
@@ -1408,7 +1423,7 @@ domove()
 	/* delay next move because of ball dragging */
 	/* must come after we finished picking up, in spoteffects() */
 	if (cause_delay) {
-	    nomul(-2);
+	    nomul2(-2, "dragging an iron ball");
 	    nomovemsg = "";
 	}
 
@@ -1495,7 +1510,7 @@ stillinwater:;
 	    if (is_pool(u.ux, u.uy) || is_lava(u.ux, u.uy)) {
 #ifdef STEED
 		if (u.usteed && !is_flyer(u.usteed->data) &&
-			!is_floater(u.usteed->data) &&
+			!levitating(u.usteed) &&
 			!is_clinger(u.usteed->data)) {
 		    dismount_steed(Underwater ?
 			    DISMOUNT_FELL : DISMOUNT_GENERIC);
@@ -2067,7 +2082,18 @@ void
 nomul(nval)
 	register int nval;
 {
+        nomul2(nval, 0);
+}
+
+NEARDATA const char *multi_reason;
+
+void
+nomul2(nval, reason)
+register int nval;
+const char *reason;
+{
 	if(multi < nval) return;	/* This is a bug fix by ab@unido */
+	multi_reason = reason;
 	u.uinvulnerable = FALSE;	/* Kludge to avoid ctrl-C bug -dlc */
 	u.usleep = 0;
 	multi = nval;
@@ -2134,7 +2160,10 @@ boolean k_format;
 		if (u.mhmax < u.mh) u.mhmax = u.mh;
 		flags.botl = 1;
 		if (u.mh < 1)
-		    rehumanize();
+		{
+		    killer_format = k_format;
+		    rehumanize(knam);
+		}
 		else if (n > 0 && u.mh*10 < u.mhmax && Unchanging)
 		    maybe_wail();
 		return;
@@ -2173,7 +2202,7 @@ weight_cap()
 
 	if (Levitation || Is_airlevel(&u.uz)    /* pugh@cornell */
 #ifdef STEED
-			|| (u.usteed && strongmonst(u.usteed->data))
+			|| (u.usteed && is_strong(u.usteed))
 #endif
 	)
 		carrcap = MAX_CARR_CAP;
@@ -2208,11 +2237,15 @@ inv_weight()
 #endif
 	while (otmp) {
 #ifndef GOLDOBJ
-		if (otmp->otyp != BOULDER || !throws_rocks(youmonst.data))
+		if (otmp->otyp != BOULDER ||
+		    !maybe_polyd(throws_rocks(youmonst.data), 
+		                 Race_if(PM_GIANT)))
 #else
 		if (otmp->oclass == COIN_CLASS)
 			wt += (int)(((long)otmp->quan + 50L) / 100L);
-		else if (otmp->otyp != BOULDER || !throws_rocks(youmonst.data))
+		else if (otmp->otyp != BOULDER || 
+		         !maybe_polyd(throws_rocks(youmonst.data), 
+		                 Race_if(PM_GIANT)))
 #endif
 			wt += otmp->owt;
 		otmp = otmp->nobj;

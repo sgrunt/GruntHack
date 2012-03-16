@@ -535,7 +535,7 @@ const char *build_date;
     Strcat(subbuf, " Beta");
 #endif
 
-    Sprintf(outbuf, "%s NetHack%s Version %s - last build %s.",
+    Sprintf(outbuf, "%s GruntHack%s Version %s - last build %s.",
 	    PORT_ID, subbuf, version_string(versbuf), build_date);
     return outbuf;
 }
@@ -637,6 +637,9 @@ static const char *build_opts[] = {
 #ifdef AUTOPICKUP_EXCEPTIONS
 		"autopickup_exceptions",
 #endif
+#ifdef ASTR_ESC
+		"endgame escape",
+#endif
 #ifdef TEXTCOLOR
 		"color",
 #endif
@@ -678,6 +681,13 @@ static const char *build_opts[] = {
 #endif
 #ifdef MAIL
 		"mail daemon",
+#endif
+#ifdef MENU_COLOR
+# ifdef MENU_COLOR_REGEX
+		"menu colors via regular expressions",
+# else
+		"menu colors via pmatch",
+# endif
 #endif
 #ifdef GNUDOS
 		"MSDOS protected mode",
@@ -1315,7 +1325,10 @@ struct permonst *ptr;
 
 	    tmp2 = ptr->mattk[i].adtyp;
 	    if ((tmp2 == AD_DRLI) || (tmp2 == AD_STON) || (tmp2 == AD_DRST)
-		|| (tmp2 == AD_DRDX) || (tmp2 == AD_DRCO) || (tmp2 == AD_WERE))
+		|| (tmp2 == AD_DRDX) || (tmp2 == AD_DRCO) || (tmp2 == AD_WERE)
+		|| (tmp2 == AD_WRAP && 
+		    (ptr->mlet == S_EEL ||
+		     ptr->mattk[i].aatyp == AT_ENGL)))
 			n += 2;
 	    else if (strcmp(ptr->mname, "grid bug")) n += (tmp2 != AD_PHYS);
 	    n += ((int) (ptr->mattk[i].damd * ptr->mattk[i].damn) > 23);

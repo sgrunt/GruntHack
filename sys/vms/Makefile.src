@@ -77,7 +77,7 @@ WINOBJ = $(WINTTYOBJ)
 
 # make NetHack for VMS
 SYSTEM	= SysVMS.timestamp;
-GAME	= $(SRC)nethack.exe;
+GAME	= $(SRC)grunthack.exe;
 
 # RANDOM is defined in vmsconf.h
 RANDSRC = random.c
@@ -165,24 +165,24 @@ HOBJ  = $(FIRSTOBJ) $(SYSOBJ) $(WINOBJ) $(RANDOBJ) \
 	$(HOBJ1) $(HOBJ2) $(HOBJ3) $(HOBJ4) $(HOBJ5) $(HOBJ6)
 
 # simpler target name
-nethack : $(GAME)
-      @ $(ECHO) "nethack is up to date."
+grunthack : $(GAME)
+      @ $(ECHO) "grunthack is up to date."
 
 $(GAME) :	$(SYSTEM)
       @ $(NOOP)
 
-$(SYSTEM) :	$(LIBOPT) $(HOBJ) nethack.opt
+$(SYSTEM) :	$(LIBOPT) $(HOBJ) grunthack.opt
       @ $(ECHO) "Linking ..."
-	$(LINK)/Exe=$(GAME) $(LFLAGS) nethack.opt/Opt,$(LIBOPT)/Opt
+	$(LINK)/Exe=$(GAME) $(LFLAGS) grunthack.opt/Opt,$(LIBOPT)/Opt
 	$(TOUCH) $(SYSTEM)
 
 all :	$(GAME)
-      @ $(ECHO) "nethack is up to date."
+      @ $(ECHO) "grunthack is up to date."
 
 # linker options file for nethack's object modules
-nethack.opt :	$(MAKEFILE)	# this file
-	open/Write f nethack.opt
-	write f "! nethack.opt"
+grunthack.opt :	$(MAKEFILE)	# this file
+	open/Write f grunthack.opt
+	write f "! grunthack.opt"
       @ write f f$edit("$(SYSOBJ)","COLLAPSE")
       @ write f f$edit("$(WINOBJ)","COLLAPSE")
       @ write f f$edit("$(RANDOBJ)","COLLAPSE")
@@ -285,7 +285,7 @@ spotless :	clean
       - if f$search("tile.c")	.nes."" then  delete tile.c;
       - if f$search("tclib.c")	.nes."" then  delete tclib.c;
       - if f$search("random.c")	.nes."" then  delete random.c;
-      - if f$search("nethack.olb").nes."" then  delete nethack.olb;
+      - if f$search("grunthack.olb").nes."" then  delete grunthack.olb;
 
 #	dependencies (mostly cloned from sys/unix/Makefile.src)
 # config.h timestamp

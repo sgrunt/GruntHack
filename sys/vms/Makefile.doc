@@ -38,18 +38,18 @@ Guidebook.dvi :  Guidebook.tex
 all : $(ALLDOCS)
 	$(NOOP)
 
-GAME	= nethack
+GAME	= grunthack
 MANDIR	= HACKDIR:
 MANEXT	= man
 #MANDIR = /usr/man/man6
 #MANEXT = 6
 
 # manual non-installation; raw man pages may be better than nothing
-GAMEMANCREATE = copy nethack.6
+GAMEMANCREATE = copy grunthack.6
 LEVMANCREATE = copy lev_comp.6
 DGNMANCREATE = copy dgn_comp.6
 RCVRMANCREATE = copy recover.6
-# GAMEMANCREATE = nroff -man nethack.6 >
+# GAMEMANCREATE = nroff -man grunthack.6 >
 # LEVMANCREATE = nroff -man lev_comp.6 >
 # DGNMANCREATE = nroff -man dgn_comp.6 >
 # RCVRMANCREATE = nroff -man recover.6 >

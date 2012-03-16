@@ -1198,7 +1198,9 @@ register struct obj	*sobj;
 				if (cansee(mtmp->mx, mtmp->my)) {
 				    pline("%s is hit by %s!", Monnam(mtmp),
 	    	    	    			doname(otmp2));
-				    if (mtmp->minvis && !canspotmon(mtmp))
+				    if (mtmp->minvis && 
+				        (!canspotmon(mtmp) ||
+					 displaced_image(mtmp)))
 					map_invisible(mtmp->mx, mtmp->my);
 				}
 	    	    	    	mdmg = dmgval(otmp2, mtmp) * otmp2->quan;
@@ -1525,7 +1527,7 @@ do_class_genocide()
 				       monsters before ultimately dying */
 				    gameover = TRUE;
 				} else
-				    rehumanize();
+				    rehumanize(0);
 			    }
 			    /* Self-genocide if it matches either your race
 			       or role.  Assumption:  male and female forms
@@ -1633,7 +1635,7 @@ int how;
 			killplayer++;
 			break;
 		}
-		if (is_human(ptr)) adjalign(-sgn(u.ualign.type));
+		if (your_race_mdat(ptr)) adjalign(-sgn(u.ualign.type));
 		if (is_demon(ptr)) adjalign(sgn(u.ualign.type));
 
 		if(!(ptr->geno & G_GENO)) {
@@ -1705,7 +1707,9 @@ int how;
 		} else
 			done(GENOCIDED);
 	    } else if (ptr == youmonst.data) {
-		rehumanize();
+	        u.mh = -1;
+	        killer_format = NO_KILLER_PREFIX;
+		rehumanize("genocided");
 	    }
 	    reset_rndmonst(mndx);
 	    kill_genocided_monsters();
@@ -1786,7 +1790,7 @@ boolean revival;
 	/* SHOPKEEPERS can be revived now */
 	if (*mtype==PM_GUARD || (*mtype==PM_SHOPKEEPER && !revival)
 	     || *mtype==PM_ALIGNED_PRIEST || *mtype==PM_ANGEL) {
-		*mtype = PM_HUMAN_ZOMBIE;
+		*mtype = PM_ZOMBIE;
 		return TRUE;
 	} else if (*mtype==PM_LONG_WORM_TAIL) {	/* for create_particular() */
 		*mtype = PM_LONG_WORM;
@@ -1812,6 +1816,7 @@ create_particular()
 	struct monst *mtmp;
 	boolean madeany = FALSE;
 	boolean maketame, makepeaceful, makehostile;
+	long racemask = 0;
 
 	tries = 0;
 	do {
@@ -1831,6 +1836,34 @@ create_particular()
 	    } else if (!strncmpi(bufp, "hostile ", 8)) {
 		bufp += 8;
 		makehostile = TRUE;
+	    }
+	    if (!strncmpi(bufp, "human ", 6)) {
+	        bufp += 6;
+		racemask |= M2_HUMAN;
+	    } else if (!strncmpi(bufp, "elven ", 6)) {
+	        bufp += 6;
+		racemask |= M2_ELF;
+	    } else if (!strncmpi(bufp, "gnomish ", 8)) {
+	        bufp += 8;
+		racemask |= M2_GNOME;
+	    } else if (!strncmpi(bufp, "dwarvish ", 9)) {
+	        bufp += 9;
+		racemask |= M2_DWARF;
+	    } else if (!strncmpi(bufp, "orcish ", 7)) {
+	        bufp += 7;
+		racemask |= M2_ORC;
+	    } else if (!strncmpi(bufp, "giant ", 6)) {
+	        bufp += 6;
+		racemask |= M2_GIANT;
+	    } else if (!strncmpi(bufp, "ettin ", 6)) {
+	        bufp += 6;
+		racemask |= M2_ETTIN;
+	    } else if (!strncmpi(bufp, "kobold ", 7)) {
+	        bufp += 7;
+		racemask |= M2_KOBOLD;
+	    } else if (!strncmpi(bufp, "ogre ", 5)) {
+	        bufp += 5;
+		racemask |= M2_OGRE;
 	    }
 	    /* decide whether a valid monster was chosen */
 	    if (strlen(bufp) == 1) {
@@ -1852,14 +1885,86 @@ create_particular()
 	    for (i = 0; i <= multi; i++) {
 		if (monclass != MAXMCLASSES)
 		    whichpm = mkclass(monclass, 0);
+		if (monclass == S_GIANT)
+		    racemask = rn2(2) ? M2_GIANT : M2_ETTIN;
+		else if (monclass == S_HUMAN)
+		    racemask = rn2(2) ? M2_HUMAN : M2_ELF;
+		else racemask =
+		        (monclass == S_GNOME) ? M2_GNOME : 
+		        (monclass == S_HUMANOID) ? M2_DWARF : 
+		        (monclass == S_ORC) ? M2_ORC : 
+		        (monclass == S_OGRE) ? M2_OGRE : 
+		        (monclass == S_KOBOLD) ? M2_KOBOLD : racemask; 
 		if (maketame) {
-		    mtmp = makemon(whichpm, u.ux, u.uy, MM_EDOG);
+		    if (racemask)
+		    {
+		        mtmp = makemon(&mons[PM_LICHEN], u.ux, u.uy, MM_EDOG);
+			if (mtmp)
+			{
+			    mtmp->mrace = racemask;
+			    set_mon_data(mtmp, whichpm, 0);
+	                    mtmp->m_lev = adj_lev(whichpm);
+	                    if (-race_lev_mod(mtmp->mrace) > mtmp->m_lev)
+			        mtmp->m_lev = 0;
+	                    else
+	                    {
+	                       mtmp->m_lev += race_lev_mod(mtmp->mrace);
+	                        if (mtmp->m_lev > 49) mtmp->m_lev = 49;
+	                    }
+			    newsym(mtmp->mx, mtmp->my);
+			}             
+		    }
+		    else
+		        mtmp = makemon(whichpm, u.ux, u.uy, MM_EDOG);
 		    if (mtmp) {
 			initedog(mtmp);
 			set_malign(mtmp);
 		    }
 		} else {
-		    mtmp = makemon(whichpm, u.ux, u.uy, NO_MM_FLAGS);
+		    if (racemask)
+		    {
+		        mtmp = makemon(&mons[PM_LICHEN], u.ux, u.uy,
+			               NO_MM_FLAGS);
+			if (mtmp)
+			{
+			    mtmp->mrace = racemask;
+			    set_mon_data(mtmp, whichpm, 0);
+	                    mtmp->m_lev = adj_lev(whichpm);
+	                    if (-race_lev_mod(mtmp->mrace) > mtmp->m_lev)
+			        mtmp->m_lev = 0;
+	                    else
+	                    {
+	                       mtmp->m_lev += race_lev_mod(mtmp->mrace);
+	                        if (mtmp->m_lev > 49) mtmp->m_lev = 49;
+	                    }
+			    newsym(mtmp->mx, mtmp->my);
+			}             
+		    }
+		    else
+		    {
+		        if ((is_racial(whichpm) || is_were(whichpm))
+			    && racemask)
+			{
+		            mtmp = makemon(&mons[PM_LICHEN],
+			                   u.ux, u.uy, NO_MM_FLAGS);
+			    if (mtmp)
+			    {
+			        mtmp->mrace = racemask;
+			        set_mon_data(mtmp, whichpm, 0);
+	                        mtmp->m_lev = adj_lev(whichpm);
+	                        if (-race_lev_mod(mtmp->mrace) > mtmp->m_lev)
+			            mtmp->m_lev = 0;
+	                        else
+	                        {
+	                            mtmp->m_lev += race_lev_mod(mtmp->mrace);
+	                            if (mtmp->m_lev > 49) mtmp->m_lev = 49;
+	                        }
+			        newsym(mtmp->mx, mtmp->my);
+			    }
+			}
+			else
+		            mtmp = makemon(whichpm, u.ux, u.uy, NO_MM_FLAGS);
+		    }
 		    if ((makepeaceful || makehostile) && mtmp) {
 			mtmp->mtame = 0;	/* sanity precaution */
 			mtmp->mpeaceful = makepeaceful ? 1 : 0;
@@ -1872,6 +1977,421 @@ create_particular()
 	return madeany;
 }
 #endif /* WIZARD */
+
+/*
+ * Hit a monster (or you) with a scroll.
+ * Shamelessly borrowed from potionhit().
+ * returns TRUE if the scroll was used up.
+ */
+
+boolean
+scrollhit(mon, obj, your_fault, your_inv)
+register struct monst *mon;
+register struct obj *obj;
+boolean your_fault;
+boolean your_inv;
+{
+	boolean isyou = (mon == &youmonst);
+	boolean useup = FALSE;
+	int distance;
+
+	register struct obj *item;
+	
+	if(isyou) {
+		distance = 0;
+		pline_The("%s hits you.", distant_name(obj, xname));
+	} else {
+		distance = distu(mon->mx,mon->my);
+		if (your_inv) {
+		    You("hit %s with your %s.", mon_nam(mon),
+		                           distant_name(obj, xname));
+		} else if (cansee(mon->mx,mon->my)) {
+		    pline_The("%s hits %s.", distant_name(obj, xname),
+		                             mon_nam(mon));
+		}
+	}
+
+    if (isyou) {
+	switch (obj->otyp) {
+	default: break;
+	case SCR_TAMING:
+	    // You're already in your own service.
+	    useup = TRUE;
+	    break;
+	case SCR_IDENTIFY:
+	    useup = TRUE;
+	    if (your_fault)
+	        ustatusline();
+	    break;
+	case SCR_DESTROY_ARMOR:
+		// Corrode some armor with some type of damage.
+		// VERY NASTY, but better than losing it altogether.
+		switch(rn2(5)) {
+			case 0:
+			    if (uarmh)
+			        rust_dmg(uarmh, "helmet", rnd(3), FALSE,
+			        &youmonst);
+			    break;
+			case 1:
+			    if (uarmc)
+			        rust_dmg(uarmc, 
+				cloak_simple_name(uarmc),
+				rnd(3), FALSE, &youmonst);
+			    else if (uarm)
+			        rust_dmg(uarm, 
+				xname(uarm),
+				rnd(3), FALSE, &youmonst);
+#ifdef TOURIST
+			    else if (uarmu)
+			        rust_dmg(uarmu, 
+				"shirt",
+				rnd(3), FALSE, &youmonst);
+#endif
+			    break;
+			case 2:
+			    if (uarms)
+			        rust_dmg(uarms, 
+				"shield",	
+				rnd(3), FALSE, &youmonst);
+			    break;
+			case 3:
+			    if (uarmg)
+			        rust_dmg(uarmg, 
+				"gloves",	
+				rnd(3), FALSE, &youmonst);
+			    break;
+			case 4:
+			    if (uarmf)
+			        rust_dmg(uarmf, 
+				"boots",	
+				rnd(3), FALSE, &youmonst);
+			    break;
+		}
+		break;
+	case SCR_CONFUSE_MONSTER:
+		useup = TRUE;
+		You_feel("somewhat dizzy.");
+		make_confused(HConfusion + rnd(5), FALSE);
+		break;
+	case SCR_SCARE_MONSTER:
+	        useup = TRUE;
+	        You("are frightened to death, and unable to move.");
+		nomul2(-3, "scared");
+		break;
+	case SCR_GENOCIDE:
+		useup = TRUE;
+		if (obj->cursed)
+		{
+		    You_feel("your life being renewed!");
+		    healup(d(1,8),0,0,0);
+		}
+		else
+		{
+		    You_feel("your life being sapped!");
+		    losehp(d(obj->blessed ? 2 : 1, 8),
+			        "thrown scroll of genocide", KILLED_BY_AN);
+		}
+		break;
+	case SCR_TELEPORTATION:
+	       	useup = TRUE;
+		if (Antimagic)
+			You_feel("a wrenching sensation.");
+		else
+		{
+			if (obj->cursed) level_tele();
+	        	else tele();
+		}
+		break;
+	case SCR_FIRE:
+		if (!Fire_resistance) {
+		    useup = TRUE;
+		    if (mon->data == &mons[PM_STRAW_GOLEM] ||
+		        mon->data == &mons[PM_PAPER_GOLEM]) {
+			pline("You ignite!");
+			u.mh = -1;
+			killer_format = NO_KILLER_PREFIX;
+			rehumanize("set afire");
+		    } else {
+		        pline("This burns%s!", obj->blessed ? " a little" :
+				        obj->cursed ? " a lot" : "");
+		        losehp(d(obj->cursed ? 2 : 1, obj->blessed ? 2 : 4),
+				        "thrown scroll of fire", KILLED_BY_AN);
+		        // Burn armor, don't damage objects.
+		        burnarmor(&youmonst);
+		    }
+		}
+		You("smell smoke.");
+		break;
+	case SCR_CHARGING:
+		{
+		register int num;
+		useup = TRUE;
+		if (obj->cursed)
+			You_feel("drained.");
+		else
+			You_feel("energetic.");
+		num = rnd(5) + 5*obj->blessed + 1; //as for gain energy
+		u.uen += (obj->cursed) ? -num : num;
+		if (u.uen <= 0) u.uen = 0;
+		if (u.uen >= u.uenmax) u.uen = u.uenmax;
+		}
+		break;
+	case SCR_STINKING_CLOUD:
+		if (!Poison_resistance) {
+		    useup = TRUE;
+		    pline("You feel%s ill!", obj->blessed ? " slightly" :
+				    obj->cursed ? " very" : "");
+		    losehp(d(obj->cursed ? 2 : 1, obj->blessed ? 2 : 4),
+				    "thrown scroll of stinking cloud",
+				    KILLED_BY_AN);
+		}
+		You("smell rotten eggs.");
+		break;
+	}
+    } else {
+	boolean angermon = FALSE;
+	
+	switch (obj->otyp) {
+	case SCR_TAMING:
+	    useup = TRUE;
+	    if (your_fault)
+	    {
+	        maybe_tame(mon, obj);
+	    }
+	    break;
+	case SCR_IDENTIFY:
+	    useup = TRUE;
+	    if (your_fault)
+	        probe_monster(mon);
+	    break;
+	case SCR_DESTROY_ARMOR:
+		useup = TRUE;
+		angermon = TRUE;
+		switch(rn2(5)) {
+			case 0:
+			    item = which_armor(mon, W_ARMH);
+			    if (item)
+			        rust_dmg(item, "helmet", rnd(3), FALSE,
+			        mon);
+			    break;
+			case 1:
+			    item = which_armor(mon, W_ARMC);
+			    if (item)
+			    {
+			        rust_dmg(item, 
+				cloak_simple_name(uarmc),
+				rnd(3), FALSE, mon);
+				break;
+			    }
+			    item = which_armor(mon, W_ARM);
+			    if (item)
+			    {
+			        rust_dmg(item, 
+				xname(item),
+				rnd(3), FALSE, mon);
+				break;
+			    }
+#ifdef TOURIST
+			    item = which_armor(mon, W_ARMU);
+			    if (item)
+			    {
+			        rust_dmg(item, 
+				"shirt",
+				rnd(3), FALSE, mon);
+			    }
+#endif
+			    break;
+			case 2:
+			    item = which_armor(mon, W_ARMS);
+			    if (item)
+			        rust_dmg(item, 
+				"shield",	
+				rnd(3), FALSE, mon);
+			    break;
+			case 3:
+			    item = which_armor(mon, W_ARMG);
+			    if (item)
+			        rust_dmg(item, 
+				"gloves",	
+				rnd(3), FALSE, mon);
+			    break;
+			case 4:
+			    item = which_armor(mon, W_ARMF);
+			    if (item)
+			        rust_dmg(item, 
+				"boots",	
+				rnd(3), FALSE, mon);
+			    break;
+		}
+		break;
+	case SCR_CONFUSE_MONSTER:
+		angermon = TRUE;
+		useup = TRUE;
+		if (!resist(mon, SCROLL_CLASS, 0, NOTELL))
+		{
+			pline("%s looks confused.", Monnam(mon));
+			mon->mconf = TRUE;
+		}
+		break;
+	case SCR_SCARE_MONSTER:
+	        useup = TRUE;
+		angermon = TRUE;
+		monflee(mon, rnd(6), FALSE, TRUE);
+		break;
+	case SCR_GENOCIDE:
+	        useup = TRUE;
+	        if (obj->cursed)
+		{
+		    pline("%s looks a little healthier.", Monnam(mon));
+		    mon->mhp += d(1, 8);
+		    if (mon->mhp >= mon->mhpmax)
+		        mon->mhp = mon->mhpmax;
+		}
+		else
+		{
+		    angermon = TRUE;
+		    pline("%s %s in pain!", Monnam(mon),
+			  is_silent(mon->data) ? "writhes" : "shrieks");
+		    mon->mhp -= d(obj->blessed ? 2 : 1, 8);
+		    if (mon->mhp < 1) {
+			if (your_fault)
+			    killed(mon);
+			else
+			    monkilled(mon, "", AD_ACID);
+	            }
+		}
+		break;
+	case SCR_TELEPORTATION:
+	        useup = TRUE;
+		angermon = TRUE; //What if it's a shk?
+		if (obj->cursed)
+		{
+		        // Shamelessly ripped from muse.c
+			int nlev;
+			d_level flev;
+
+			if (mon_has_amulet(mon) || In_endgame(&u.uz)) {
+			    if (cansee(mon->mx,mon->my))
+				pline("%s seems very disoriented for a moment.",
+					Monnam(mon));
+		            break; 
+			}
+			nlev = random_teleport_level();
+			if (nlev == depth(&u.uz)) {
+		            if (cansee(mon->mx,mon->my))
+				pline("%s shudders for a moment.",
+								Monnam(mon));
+		            break; 
+			}
+			get_level(&flev, nlev);
+			migrate_to_level(mon, ledger_no(&flev), MIGR_RANDOM,
+				(coord *)0);
+		} else {
+		if (tele_restrict(mon)) {	/* mysterious force... */
+		    /* monster learns that teleportation isn't useful here */
+		    if (level.flags.noteleport)
+			mon->mtrapseen |= (1 << (TELEP_TRAP-1));
+		   break; 
+		}
+		if ((
+#if 0
+			mon_has_amulet(mon) ||
+#endif
+			On_W_tower_level(&u.uz)) && !rn2(3)) {
+		   if (cansee(mon->mx,mon->my))
+			pline("%s seems disoriented for a moment.",
+				Monnam(mon));
+		   break; 
+		}
+		(void) rloc(mon, FALSE);
+		}
+		break;
+	case SCR_FIRE:
+	        useup = TRUE;
+		angermon = TRUE;
+		if (!resists_fire(mon))
+		{
+		    if (mon->data == &mons[PM_STRAW_GOLEM] ||
+		        mon->data == &mons[PM_PAPER_GOLEM]) {
+			pline("%s ignites!", Monnam(mon));
+			if (your_fault)
+			    killed(mon);
+			else
+			    monkilled(mon, "", AD_FIRE);
+		    } else {
+		    pline("%s %s in pain!", Monnam(mon),
+			  is_silent(mon->data) ? "writhes" : "shrieks");
+		        burnarmor(mon);
+		    mon->mhp -= d(obj->cursed ? 2 : 1, obj->blessed ? 2 : 4);
+		    if (mon->mhp < 1) {
+			if (your_fault)
+			    killed(mon);
+			else
+			    monkilled(mon, "", AD_FIRE);
+		    }
+	            }
+		 }
+		You("smell smoke.");
+		break;
+	case SCR_CHARGING:
+                // Nothing at the moment, but it *should* do something.
+		break;
+	case SCR_STINKING_CLOUD:
+	        useup = TRUE;
+		angermon = TRUE;
+		if (!resists_poison(mon))
+		{
+		    pline("%s %s in pain!", Monnam(mon),
+			  is_silent(mon->data) ? "writhes" : "shrieks");
+		    mon->mhp -= d(obj->cursed ? 2 : 1, obj->blessed ? 2 : 4);
+		    if (mon->mhp < 1) {
+			if (your_fault)
+			    killed(mon);
+			else
+			    monkilled(mon, "", AD_FIRE);
+	            }
+		 }
+		You("smell rotten eggs.");
+		break;
+	}
+	if (angermon)
+	    wakeup(mon);
+	else
+	    mon->msleeping = 0;
+    }
+
+	if(*u.ushops && obj->unpaid) {
+	        register struct monst *shkp =
+			shop_keeper(*in_rooms(u.ux, u.uy, SHOPBASE));
+
+		if(!shkp)
+		    obj->unpaid = 0;
+		else {
+		    (void)stolen_value(obj, u.ux, u.uy,
+				 (boolean)shkp->mpeaceful, FALSE);
+		    subfrombill(obj, shkp);
+		}
+	}
+	if (useup)
+	{
+	    if (
+	        obj->dknown && !objects[obj->otyp].oc_name_known &&
+		   !objects[obj->otyp].oc_uname)
+		docall(obj);
+	    if (cansee(mon->mx, mon->my))
+	        pline("The scroll disappears.");
+	        if (your_inv) {
+		    if (obj->quan > 1L)
+		        obj = splitobj(obj, 1L);
+		    else
+		        setuwep((struct obj *)0);
+                    freeinv(obj);
+	        }
+		obfree(obj, (struct obj *)0);
+	    obj = 0;
+	}
+	return useup;
+}
 
 #endif /* OVLB */
 

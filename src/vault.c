@@ -76,7 +76,9 @@ register struct monst *grd;
 	if(!dispose) {
 		/* see comment by newpos in gd_move() */
 		remove_monster(grd->mx, grd->my);
+		remove_monster_img(grd->mix, grd->miy);
 		newsym(grd->mx, grd->my);
+		newsym(grd->mix, grd->miy);
 		place_monster(grd, 0, 0);
 		EGD(grd)->ogx = grd->mx;
 		EGD(grd)->ogy = grd->my;
@@ -594,7 +596,9 @@ letknow:
 			(void) rloc(m_at(m, n), FALSE);
 		    }
 		    remove_monster(grd->mx, grd->my);
+		    remove_monster_img(grd->mix, grd->miy);
 		    newsym(grd->mx, grd->my);
+		    newsym(grd->mix, grd->miy);
 		    place_monster(grd, m, n);
 		    mpickgold(grd);	/* does a newsym */
 		}
@@ -603,9 +607,12 @@ letknow:
 				grd->mpeaceful ? " calms down and" : "");
 		if(x != grd->mx || y != grd->my) {
 		    remove_monster(grd->mx, grd->my);
+		    remove_monster_img(grd->mix, grd->miy);
 		    newsym(grd->mx, grd->my);
+		    newsym(grd->mix, grd->miy);
 		    place_monster(grd, x, y);
 		    newsym(x, y);
+		    newsym(grd->mix, grd->miy);
 		}
 		if(!grd->mpeaceful) return(-1);
 		else {
@@ -715,7 +722,9 @@ cleanup:
 		see_guard = canspotmon(grd);
 		wallify_vault(grd);
 		remove_monster(grd->mx, grd->my);
-		newsym(grd->mx,grd->my);
+		remove_monster_img(grd->mix, grd->miy);
+		newsym(grd->mx, grd->my);
+		newsym(grd->mix, grd->miy);
 		place_monster(grd, 0, 0);
 		egrd->ogx = grd->mx;
 		egrd->ogy = grd->my;
@@ -731,6 +740,7 @@ cleanup:
 	egrd->ogx = grd->mx;	/* update old positions */
 	egrd->ogy = grd->my;
 	remove_monster(grd->mx, grd->my);
+	remove_monster_img(grd->mix, grd->miy);
 	place_monster(grd, nx, ny);
 	newsym(grd->mx,grd->my);
 	restfakecorr(grd);

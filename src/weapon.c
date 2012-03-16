@@ -9,6 +9,10 @@
  */
 #include "hack.h"
 
+#ifdef DUMP_LOG
+STATIC_DCL int FDECL(enhance_skill, (boolean));
+#endif
+
 /* Categories whose names don't come from OBJ_NAME(objects[type])
  */
 #define PN_BARE_HANDED			(-1)	/* includes martial arts */
@@ -27,6 +31,8 @@
 #define PN_MATTER_SPELL			(-14)
 
 STATIC_DCL void FDECL(give_may_advance_msg, (int));
+
+extern struct monst zeromonst;
 
 #ifndef OVLB
 
@@ -201,6 +207,8 @@ struct monst *mon;
 	struct permonst *ptr = mon->data;
 	boolean Is_weapon = (otmp->oclass == WEAPON_CLASS || is_weptool(otmp));
 
+	if (!ptr) ptr = &mons[NUMMONS];
+
 	if (otyp == CREAM_PIE) return 0;
 
 	if (bigmonst(ptr)) {
@@ -264,10 +272,10 @@ struct monst *mon;
 		if (tmp < 0) tmp = 0;
 	}
 
-	if (objects[otyp].oc_material <= LEATHER && thick_skinned(ptr))
+	if (otmp->omaterial <= LEATHER && thick_skinned(ptr))
 		/* thick skinned/scaled creatures don't feel it */
 		tmp = 0;
-	if (ptr == &mons[PM_SHADE] && objects[otyp].oc_material != SILVER)
+	if (ptr == &mons[PM_SHADE] && otmp->omaterial != SILVER)
 		tmp = 0;
 
 	/* "very heavy iron ball"; weight increase is in increments of 160 */
@@ -290,7 +298,7 @@ struct monst *mon;
 		bonus += rnd(4);
 	    if (is_axe(otmp) && is_wooden(ptr))
 		bonus += rnd(4);
-	    if (objects[otyp].oc_material == SILVER && hates_silver(ptr))
+	    if (otmp->omaterial == SILVER && hates_silver(ptr))
 		bonus += rnd(20);
 
 	    /* if the weapon is going to get a double damage bonus, adjust
@@ -325,7 +333,7 @@ oselect(mtmp, x)
 struct monst *mtmp;
 int x;
 {
-	struct obj *otmp;
+	struct obj *otmp, *obest = 0;
 
 	for (otmp = mtmp->minvent; otmp; otmp = otmp->nobj) {
 	    if (otmp->otyp == x &&
@@ -333,9 +341,13 @@ int x;
 		    !((x == CORPSE || x == EGG) &&
 			!touch_petrifies(&mons[otmp->corpsenm])) &&
 		    (!otmp->oartifact || touch_artifact(otmp,mtmp)))
-		return otmp;
+            {
+	        if (!obest ||
+		    dmgval(otmp, &zeromonst) > dmgval(obest, &zeromonst))
+		    obest = otmp;
 	}
-	return (struct obj *)0;
+	}
+	return obest;
 }
 
 static NEARDATA const int rwep[] =
@@ -352,7 +364,63 @@ static NEARDATA const int pwep[] =
 	GLAIVE, LUCERN_HAMMER, BEC_DE_CORBIN, FAUCHARD, PARTISAN, LANCE
 };
 
-static struct obj *propellor;
+boolean
+would_prefer_rwep(mtmp, otmp)
+struct monst *mtmp;
+struct obj *otmp;
+{
+    struct obj *wep = select_rwep(mtmp);
+
+    int i = 0;
+
+    if (otmp->omaterial == SILVER && hates_silver(mtmp->data))
+        return FALSE;
+    
+    if (wep)
+    {
+        if (wep == otmp) return TRUE;
+
+        if (wep->oartifact) return FALSE;
+    
+        if (mtmp->data->mlet == S_KOP &&  wep->otyp == CREAM_PIE) return FALSE;
+        if (mtmp->data->mlet == S_KOP && otmp->otyp == CREAM_PIE) return TRUE;
+
+        if (throws_rocks(mtmp->data) &&  wep->otyp == BOULDER) return FALSE;
+        if (throws_rocks(mtmp->data) && otmp->otyp == BOULDER) return TRUE;
+    }
+    
+    if (((is_strong(mtmp) && (mtmp->misc_worn_check & W_ARMS) == 0)
+	    || !objects[pwep[i]].oc_bimanual))
+    {
+        for (i = 0; i < SIZE(pwep); i++)
+        {
+            if ( wep &&
+	         wep->otyp == pwep[i] &&
+               !(otmp->otyp == pwep[i] &&
+	         dmgval(otmp, &zeromonst) > dmgval(wep, &zeromonst)))
+	        return FALSE;
+            if (otmp->otyp == pwep[i]) return TRUE;
+        }
+    }
+
+    if (is_pole(otmp)) return FALSE; // If we get this far,
+                                     // we failed the polearm strength check
+
+    for (i = 0; i < SIZE(rwep); i++)
+    {
+        if ( wep &&
+             wep->otyp == rwep[i] &&
+           !(otmp->otyp == rwep[i] &&
+	     dmgval(otmp, &zeromonst) > dmgval(wep, &zeromonst)))
+	    return FALSE;
+        if (otmp->otyp == rwep[i]) return TRUE;
+    }
+
+    return FALSE;
+}
+
+//static
+struct obj *propellor;
 
 struct obj *
 select_rwep(mtmp)	/* select a ranged weapon for the monster */
@@ -360,6 +428,8 @@ register struct monst *mtmp;
 {
 	register struct obj *otmp;
 	int i;
+
+	struct obj *tmpprop = &zeroobj;
 
 #ifdef KOPS
 	char mlet = mtmp->data->mlet;
@@ -380,17 +450,20 @@ register struct monst *mtmp;
 	 * one direction and 1 in another; one space beyond that would be 3 in
 	 * one direction and 2 in another; 3^2+2^2=13.
 	 */
-	if (dist2(mtmp->mx, mtmp->my, mtmp->mux, mtmp->muy) <= 13 && couldsee(mtmp->mx, mtmp->my)) {
+	// This check is disabled, as it's targeted towards attacking you
+	// and not any arbitrary target.
+	//if (dist2(mtmp->mx, mtmp->my, mtmp->mux, mtmp->muy) <= 13 && couldsee(mtmp->mx, mtmp->my))
+	{
 	    for (i = 0; i < SIZE(pwep); i++) {
 		/* Only strong monsters can wield big (esp. long) weapons.
 		 * Big weapon is basically the same as bimanual.
 		 * All monsters can wield the remaining weapons.
 		 */
-		if (((strongmonst(mtmp->data) && (mtmp->misc_worn_check & W_ARMS) == 0)
-			|| !objects[pwep[i]].oc_bimanual) &&
-		    (objects[pwep[i]].oc_material != SILVER
-			|| !hates_silver(mtmp->data))) {
-		    if ((otmp = oselect(mtmp, pwep[i])) != 0) {
+		if (((is_strong(mtmp) && (mtmp->misc_worn_check & W_ARMS) == 0)
+			|| !objects[pwep[i]].oc_bimanual)) {
+		    if ((otmp = oselect(mtmp, pwep[i])) != 0 &&
+		         (otmp->omaterial != SILVER || 
+			  !hates_silver(mtmp->data))) {
 			propellor = otmp; /* force the monster to wield it */
 			return otmp;
 		    }
@@ -435,6 +508,7 @@ register struct monst *mtmp;
 		case P_CROSSBOW:
 		  propellor = (oselect(mtmp, CROSSBOW));
 		}
+		if (!tmpprop) tmpprop = propellor;
 		if ((otmp = MON_WEP(mtmp)) && otmp->cursed && otmp != propellor
 				&& mtmp->weapon_check == NO_WEAPON_WANTED)
 			propellor = 0;
@@ -461,6 +535,7 @@ register struct monst *mtmp;
 	  }
 
 	/* failure */
+	if (tmpprop) propellor = tmpprop;
 	return (struct obj *)0;
 }
 
@@ -469,7 +544,7 @@ static const NEARDATA short hwep[] = {
 	  CORPSE,  /* cockatrice corpse */
 	  TSURUGI, RUNESWORD, DWARVISH_MATTOCK, TWO_HANDED_SWORD, BATTLE_AXE,
 	  KATANA, UNICORN_HORN, CRYSKNIFE, TRIDENT, LONG_SWORD,
-	  ELVEN_BROADSWORD, BROADSWORD, SCIMITAR, SILVER_SABER,
+	  ELVEN_BROADSWORD, BROADSWORD, SCIMITAR, SABER,
 	  MORNING_STAR, ELVEN_SHORT_SWORD, DWARVISH_SHORT_SWORD, SHORT_SWORD,
 	  ORCISH_SHORT_SWORD, MACE, AXE, DWARVISH_SPEAR, SILVER_SPEAR,
 	  ELVEN_SPEAR, SPEAR, ORCISH_SPEAR, FLAIL, BULLWHIP, QUARTERSTAFF,
@@ -481,25 +556,60 @@ static const NEARDATA short hwep[] = {
 	  ATHAME, SCALPEL, KNIFE, WORM_TOOTH
 	};
 
+boolean
+would_prefer_hwep(mtmp, otmp)
+struct monst *mtmp;
+struct obj *otmp;
+{
+    struct obj *wep = select_hwep(mtmp);
+
+    int i = 0;
+    
+    if (wep)
+    { 
+        if (wep == otmp) return TRUE;
+    
+        if (wep->oartifact) return FALSE;
+
+        if (is_giant(mtmp) &&  wep->otyp == CLUB) return FALSE;
+        if (is_giant(mtmp) && otmp->otyp == CLUB) return TRUE;
+    }
+    
+    for (i = 0; i < SIZE(hwep); i++)
+    {
+	if (hwep[i] == CORPSE && !(mtmp->misc_worn_check & W_ARMG))
+	    continue;
+
+        if ( wep &&
+	     wep->otyp == hwep[i] &&
+           !(otmp->otyp == hwep[i] &&
+	     dmgval(otmp, &zeromonst) > dmgval(wep, &zeromonst)))
+	    return FALSE;
+        if (otmp->otyp == hwep[i]) return TRUE;
+    }
+
+    return FALSE;
+}
+
 struct obj *
 select_hwep(mtmp)	/* select a hand to hand weapon for the monster */
 register struct monst *mtmp;
 {
 	register struct obj *otmp;
 	register int i;
-	boolean strong = strongmonst(mtmp->data);
+	boolean strong = is_strong(mtmp);
 	boolean wearing_shield = (mtmp->misc_worn_check & W_ARMS) != 0;
 
 	/* prefer artifacts to everything else */
 	for(otmp=mtmp->minvent; otmp; otmp = otmp->nobj) {
-		if (otmp->oclass == WEAPON_CLASS
-			&& otmp->oartifact && touch_artifact(otmp,mtmp)
-			&& ((strong && !wearing_shield)
+		if (otmp->oclass == WEAPON_CLASS &&
+		    otmp->oartifact && touch_artifact(otmp,mtmp) && 
+		    ((strong && !wearing_shield)
 			    || !objects[otmp->otyp].oc_bimanual))
 		    return otmp;
 	}
 
-	if(is_giant(mtmp->data))	/* giants just love to use clubs */
+	if(is_giant(mtmp))	/* giants just love to use clubs */
 	    Oselect(CLUB);
 
 	/* only strong monsters can wield big (esp. long) weapons */
@@ -509,10 +619,10 @@ register struct monst *mtmp;
 	    if (hwep[i] == CORPSE && !(mtmp->misc_worn_check & W_ARMG))
 		continue;
 	    if (((strong && !wearing_shield)
-			|| !objects[hwep[i]].oc_bimanual) &&
-		    (objects[hwep[i]].oc_material != SILVER
-			|| !hates_silver(mtmp->data)))
-		Oselect(hwep[i]);
+			|| !objects[hwep[i]].oc_bimanual))
+	        if ((otmp = oselect(mtmp, hwep[i])) != 0 &&
+	            (otmp->omaterial != SILVER || !hates_silver(mtmp->data)))
+		    return otmp;
 	}
 
 	/* failure */
@@ -620,7 +730,7 @@ register struct monst *mon;
 	}
 	if (obj && obj != &zeroobj) {
 		struct obj *mw_tmp = MON_WEP(mon);
-		if (mw_tmp && mw_tmp->otyp == obj->otyp) {
+		if (mw_tmp && mw_tmp == obj) {
 		/* already wielding it */
 			mon->weapon_check = NEED_WEAPON;
 			return 0;
@@ -662,7 +772,8 @@ register struct monst *mon;
 		setmnotwielded(mon, mw_tmp);
 		mon->weapon_check = NEED_WEAPON;
 		if (canseemon(mon)) {
-		    pline("%s wields %s!", Monnam(mon), doname(obj));
+		    pline("%s wields %s%s", Monnam(mon), doname(obj),
+		          mon->mtame ? "." : "!");
 		    if (obj->cursed && obj->otyp != CORPSE) {
 			pline("%s %s to %s %s!",
 			    Tobjnam(obj, "weld"),
@@ -851,6 +962,23 @@ const static struct skill_range {
  */
 int
 enhance_weapon_skill()
+#ifdef DUMP_LOG
+{
+	return enhance_skill(FALSE);
+}
+
+void dump_weapon_skill()
+{
+	enhance_skill(TRUE);
+}
+
+int enhance_skill(boolean want_dump)
+/* This is the original enhance_weapon_skill() function slightly modified
+ * to write the skills to the dump file. I added the wrapper functions just
+ * because it looked like the easiest way to add a parameter to the
+ * function call. - Jukka Lahtinen, August 2001
+ */
+#endif
 {
     int pass, i, n, len, longest,
 	to_advance, eventually_advance, maxxed_cnt;
@@ -860,8 +988,15 @@ enhance_weapon_skill()
     anything any;
     winid win;
     boolean speedy = FALSE;
+#ifdef DUMP_LOG
+    char buf2[BUFSZ];
+    boolean logged;
+#endif
 
 #ifdef WIZARD
+#ifdef DUMP_LOG
+	if (!want_dump)
+#endif
 	if (wizard && yn("Advance skills without practice?") == 'y')
 	    speedy = TRUE;
 #endif
@@ -878,6 +1013,11 @@ enhance_weapon_skill()
 		else if (peaked_skill(i)) maxxed_cnt++;
 	    }
 
+#ifdef DUMP_LOG
+	    if (want_dump)
+		dump("","Your skills at the end");
+	    else {
+#endif
 	    win = create_nhwindow(NHW_MENU);
 	    start_menu(win);
 
@@ -905,6 +1045,9 @@ enhance_weapon_skill()
 		add_menu(win, NO_GLYPH, &any, 0, 0, ATR_NONE,
 			     "", MENU_UNSELECTED);
 	    }
+#ifdef DUMP_LOG
+	    } /* want_dump or not */
+#endif
 
 	    /* List the skills, making ones that could be advanced
 	       selectable.  List the miscellaneous skills first.
@@ -916,8 +1059,26 @@ enhance_weapon_skill()
 		/* Print headings for skill types */
 		any.a_void = 0;
 		if (i == skill_ranges[pass].first)
+#ifdef DUMP_LOG
+		if (want_dump) {
+		    dump("  ",(char *)skill_ranges[pass].name);
+		    logged=FALSE;
+		} else
+#endif
 		    add_menu(win, NO_GLYPH, &any, 0, 0, iflags.menu_headings,
 			     skill_ranges[pass].name, MENU_UNSELECTED);
+#ifdef DUMP_LOG
+		if (want_dump) {
+		    if (P_SKILL(i) > P_UNSKILLED) {
+		 	Sprintf(buf2,"%-*s [%s]",
+			    longest, P_NAME(i),skill_level_name(i, buf));
+			dump("    ",buf2);
+			logged=TRUE;
+		    } else if (i == skill_ranges[pass].last && !logged) {
+			dump("    ","(none)");
+		    }
+               } else {
+#endif
 
 		if (P_RESTRICTED(i)) continue;
 		/*
@@ -962,6 +1123,9 @@ enhance_weapon_skill()
 		any.a_int = can_advance(i, speedy) ? i+1 : 0;
 		add_menu(win, NO_GLYPH, &any, 0, 0, ATR_NONE,
 			 buf, MENU_UNSELECTED);
+#ifdef DUMP_LOG
+		} /* !want_dump */
+#endif
 	    }
 
 	    Strcpy(buf, (to_advance > 0) ? "Pick a skill to advance:" :
@@ -970,6 +1134,12 @@ enhance_weapon_skill()
 	    if (wizard && !speedy)
 		Sprintf(eos(buf), "  (%d slot%s available)",
 			u.weapon_slots, plur(u.weapon_slots));
+#endif
+#ifdef DUMP_LOG
+	    if (want_dump) {
+		dump("","");
+		n=0;
+	    } else {
 #endif
 	    end_menu(win, buf);
 	    n = select_menu(win, to_advance ? PICK_ONE : PICK_NONE, &selected);
@@ -987,6 +1157,9 @@ enhance_weapon_skill()
 		    }
 		}
 	    }
+#ifdef DUMP_LOG
+	    }
+#endif
 	} while (speedy && n > 0);
 	return 0;
 }

@@ -16,6 +16,8 @@ STATIC_DCL void FDECL(distfleeck,(struct monst *,int *,int *,int *));
 STATIC_DCL int FDECL(m_arrival, (struct monst *));
 STATIC_DCL void FDECL(watch_on_duty,(struct monst *));
 
+long FDECL(mm_aggression, (struct monst *,struct monst *));
+
 #endif /* OVL0 */
 #ifdef OVLB
 
@@ -255,7 +257,7 @@ int *inrange, *nearby, *scared;
 	 * running into you by accident but possibly attacking the spot
 	 * where it guesses you are.
 	 */
-	if (!mtmp->mcansee || (Invis && !perceives(mtmp->data))) {
+	if (!mtmp->mcansee || (Invis && !sees_invis(mtmp))) {
 		seescaryx = mtmp->mux;
 		seescaryy = mtmp->muy;
 	} else {
@@ -295,7 +297,7 @@ dochug(mtmp)
 register struct monst *mtmp;
 {
 	register struct permonst *mdat;
-	register int tmp=0;
+	register int tmp=0, i;
 	int inrange, nearby, scared;
 #ifdef GOLDOBJ
         struct obj *ygold = 0, *lepgold = 0;
@@ -365,7 +367,11 @@ register struct monst *mtmp;
 
 	/* Monsters that want to acquire things */
 	/* may teleport, so do it before inrange is set */
-	if(is_covetous(mdat)) (void) tactics(mtmp);
+	if(is_covetous(mdat)) 
+	{
+	    if(tactics(mtmp))
+	        return 1; //moved on its own
+	}
 
 	/* check distance and scariness of attacks */
 	distfleeck(mtmp,&inrange,&nearby,&scared);
@@ -472,6 +478,27 @@ toofar:
 	    }
 	}
 
+/*      Look for other monsters to fight (at a distance) */
+        //for (i = 0; i < 2; i++)
+	if (( attacktype(mtmp->data, AT_BREA) ||
+	      attacktype(mtmp->data, AT_GAZE) ||
+	      attacktype(mtmp->data, AT_SPIT) ||
+	     (attacktype(mtmp->data, AT_WEAP) &&
+	      select_rwep(mtmp) != 0)) &&
+	    mtmp->mlstmv != monstermoves)
+	{
+	    register struct monst *mtmp2 = mfind_target(mtmp);
+	    if (mtmp2 && mtmp2 != &youmonst && mtmp2 != mtmp)
+	    {
+	        int res = (mtmp2 == &youmonst) ? mattacku(mtmp)
+		                               : mattackm(mtmp, mtmp2);
+	        if (res & MM_AGR_DIED)
+		    return 1; // Oops.
+
+		return 0; // that was our move for the round
+	    }
+	}
+
 /*	Now the actual movement phase	*/
 
 #ifndef GOLDOBJ
@@ -544,6 +571,8 @@ toofar:
 			return(1);
 		}
 	}
+
+	
 
 /*	Now, attack the player if possible - one attack set per monst	*/
 
@@ -637,7 +666,7 @@ register int after;
 	can_open = !(nohands(ptr) || verysmall(ptr));
 	can_unlock = ((can_open && m_carrying(mtmp, SKELETON_KEY)) ||
 		      mtmp->iswiz || is_rider(ptr));
-	doorbuster = is_giant(ptr);
+	doorbuster = is_giant(mtmp);
 	if(mtmp->wormno) goto not_special;
 	/* my dog gets special treatment */
 	if(mtmp->mtame) {
@@ -662,22 +691,24 @@ register int after;
 	}
 
 	/* and the acquisitive monsters get special treatment */
-	if(is_covetous(ptr)) {
-	    xchar tx = STRAT_GOALX(mtmp->mstrategy),
-		  ty = STRAT_GOALY(mtmp->mstrategy);
-	    struct monst *intruder = m_at(tx, ty);
+	if(is_covetous(ptr) && !mtmp->ispriest) {
+	    gx = STRAT_GOALX(mtmp->mstrategy);
+	    gy = STRAT_GOALY(mtmp->mstrategy);
+	    struct monst *intruder = 
+	        (telepathic(ptr)) ? m_at(gx, gy) : m_img_at(gx, gy);
+	    appr = (intruder == mtmp) ? 0 : 1;
 	    /*
 	     * if there's a monster on the object or in possesion of it,
 	     * attack it.
 	     */
-	    if((dist2(mtmp->mx, mtmp->my, tx, ty) < 2) &&
+	    if((dist2(mtmp->mx, mtmp->my, gx, gy) < 2) &&
 	       intruder && (intruder != mtmp)) {
 
-		notonhead = (intruder->mx != tx || intruder->my != ty);
+		notonhead = (intruder->mx != gx || intruder->my != gy);
 		if(mattackm(mtmp, intruder) == 2) return(2);
 		mmoved = 1;
 	    } else mmoved = 0;
-	    goto postmov;
+	    //goto postmov;
 	}
 
 	/* and for the priest */
@@ -711,11 +742,16 @@ not_special:
 	if(u.uswallow && !mtmp->mflee && u.ustuck != mtmp) return(1);
 	omx = mtmp->mx;
 	omy = mtmp->my;
-	gx = mtmp->mux;
-	gy = mtmp->muy;
-	appr = mtmp->mflee ? -1 : 1;
+	if (!is_covetous(mtmp->data)) //already set
+	{
+	    gx = mtmp->mux, 
+	    gy = mtmp->muy;
+	    appr = mtmp->mflee ? -1 : 1;
+	}
 	if (mtmp->mconf || (u.uswallow && mtmp == u.ustuck))
 		appr = 0;
+	else if (is_covetous(mtmp->data) && (gx != mtmp->mx || gy != mtmp->my))
+	        goto actualmove; // find our mark if necessary
 	else {
 #ifdef GOLDOBJ
 		struct obj *lepgold, *ygold;
@@ -726,7 +762,7 @@ not_special:
 				      (dist2(omx, omy, gx, gy) <= 36));
 
 		if (!mtmp->mcansee ||
-		    (should_see && Invis && !perceives(ptr) && rn2(11)) ||
+		    (should_see && Invis && !sees_invis(mtmp) && rn2(11)) ||
 		    (youmonst.m_ap_type == M_AP_OBJECT && youmonst.mappearance == STRANGE_OBJECT) || u.uundetected ||
 		    (youmonst.m_ap_type == M_AP_OBJECT && youmonst.mappearance == GOLD_PIECE && !likes_gold(ptr)) ||
 		    (mtmp->mpeaceful && !mtmp->isshk) ||  /* allow shks to follow */
@@ -761,7 +797,8 @@ not_special:
 							    ) {
 	    boolean in_line = lined_up(mtmp) &&
 		(distmin(mtmp->mx, mtmp->my, mtmp->mux, mtmp->muy) <=
-		    (throws_rocks(youmonst.data) ? 20 : ACURRSTR/2+1)
+		    (maybe_polyd(throws_rocks(youmonst.data),
+		                 Race_if(PM_GIANT)) ? 20 : ACURRSTR/2+1)
 		);
 
 	    if (appr != 1 || !in_line) {
@@ -833,7 +870,7 @@ not_special:
 		       (uses_items && searches_for_item(mtmp, otmp)) ||
 		       (likerock && otmp->otyp == BOULDER) ||
 		       (likegems && otmp->oclass == GEM_CLASS &&
-			objects[otmp->otyp].oc_material != MINERAL) ||
+			otmp->omaterial != MINERAL) ||
 		       (conceals && !cansee(otmp->ox,otmp->oy)) ||
 		       (ptr == &mons[PM_GELATINOUS_CUBE] &&
 			!index(indigestion, otmp->oclass) &&
@@ -844,7 +881,7 @@ not_special:
 			   (throws_rocks(ptr) ||
 				!sobj_at(BOULDER,xx,yy)) &&
 			   (!is_unicorn(ptr) ||
-			    objects[otmp->otyp].oc_material == GEMSTONE) &&
+			    otmp->omaterial == GEMSTONE) &&
 			   /* Don't get stuck circling an Elbereth */
 			   !(onscary(xx, yy, mtmp))) {
 			    minr = distmin(omx,omy,xx,yy);
@@ -878,6 +915,7 @@ not_special:
 	}
       }
 
+actualmove:
 	/* don't tunnel if hostile and close enough to prefer a weapon */
 	if (can_tunnel && needspick(ptr) &&
 	    ((!mtmp->mpeaceful || Conflict) &&
@@ -896,7 +934,7 @@ not_special:
 	if (passes_walls(ptr)) flag |= (ALLOW_WALL | ALLOW_ROCK);
 	if (passes_bars(ptr)) flag |= ALLOW_BARS;
 	if (can_tunnel) flag |= ALLOW_DIG;
-	if (is_human(ptr) || ptr == &mons[PM_MINOTAUR]) flag |= ALLOW_SSM;
+	if (is_human(mtmp) || ptr == &mons[PM_MINOTAUR]) flag |= ALLOW_SSM;
 	if (is_undead(ptr) && ptr->mlet != S_GHOST) flag |= NOGARLIC;
 	if (throws_rocks(ptr)) flag |= ALLOW_ROCK;
 	if (can_open) flag |= OPENDOOR;
@@ -1003,11 +1041,12 @@ not_special:
 		   (nix == mtmp->mux && niy == mtmp->muy)) {
 		struct monst *mtmp2;
 		int mstatus;
-		mtmp2 = m_at(nix,niy);
+		mtmp2 = (telepathic(mtmp->data)) ? m_at(nix, niy)
+		                                 : m_img_at(nix,niy);
 
 		notonhead = mtmp2 && (nix != mtmp2->mx || niy != mtmp2->my);
 		/* note: mstatus returns 0 if mtmp2 is nonexistent */
-		mstatus = mattackm(mtmp, mtmp2);
+		mstatus = (mtmp2 == mtmp) ? 0 : mattackm(mtmp, mtmp2);
 
 		if (mstatus & MM_AGR_DIED)		/* aggressor died */
 		    return 2;
@@ -1026,6 +1065,7 @@ not_special:
 	    if (!m_in_out_region(mtmp,nix,niy))
 	        return 3;
 	    remove_monster(omx, omy);
+	    remove_monster_img(mtmp->mix, mtmp->miy);
 	    place_monster(mtmp, nix, niy);
 	    for(j = MTSZ-1; j > 0; j--)
 		mtmp->mtrack[j] = mtmp->mtrack[j-1];
@@ -1257,7 +1297,7 @@ register struct monst *mtmp;
 	   if you haven't moved away */
 	if (mx == u.ux && my == u.uy) goto found_you;
 
-	notseen = (!mtmp->mcansee || (Invis && !perceives(mtmp->data)));
+	notseen = (!mtmp->mcansee || (Invis && !sees_invis(mtmp)));
 	/* add cases as required.  eg. Displacement ... */
 	if (notseen || Underwater) {
 	    /* Xorns can smell valuable metal like gold, treat as seen */
@@ -1337,7 +1377,7 @@ struct monst *mtmp;
 		    !(typ >= DAGGER && typ <= CRYSKNIFE) &&
 		    typ != SLING &&
 		    !is_cloak(obj) && typ != FEDORA &&
-		    !is_gloves(obj) && typ != LEATHER_JACKET &&
+		    !is_gloves(obj) && typ != JACKET &&
 #ifdef TOURIST
 		    typ != CREDIT_CARD && !is_shirt(obj) &&
 #endif

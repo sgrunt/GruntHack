@@ -97,6 +97,7 @@ register boolean clumsy;
 			pline("%s reels from the blow.", Monnam(mon));
 			if (m_in_out_region(mon, mdx, mdy)) {
 			    remove_monster(mon->mx, mon->my);
+			    remove_monster_img(mon->mix, mon->miy);
 			    newsym(mon->mx, mon->my);
 			    place_monster(mon, mdx, mdy);
 			    newsym(mon->mx, mon->my);
@@ -189,7 +190,7 @@ register xchar x, y;
 		else if(!rn2((i < j/5) ? 2 : 3)) clumsy = TRUE;
 	}
 
-	if(Fumbling) clumsy = TRUE;
+	if(FUMBLED) clumsy = TRUE;
 
 	else if(uarm && objects[uarm->otyp].oc_bulky && ACURR(A_DEX) < rnd(25))
 		clumsy = TRUE;
@@ -214,7 +215,7 @@ doit:
 			}
 			pline("%s %s, %s evading your %skick.", Monnam(mon),
 				(can_teleport(mon->data) ? "teleports" :
-				 is_floater(mon->data) ? "floats" :
+				 levitating(mon) ? "floats" :
 				 is_flyer(mon->data) ? "swoops" :
 				 (nolimbs(mon->data) || slithy(mon->data)) ?
 					"slides" : "jumps"),
@@ -360,7 +361,7 @@ struct obj *obj;
 	    const char *result = (char *)0;
 
 	    otmp2 = otmp->nobj;
-	    if (objects[otmp->otyp].oc_material == GLASS &&
+	    if (otmp->omaterial == GLASS &&
 		otmp->oclass != GEM_CLASS && !obj_resists(otmp, 33, 100)) {
 		result = "shatter";
 	    } else if (otmp->otyp == EGG && !rn2(3)) {
@@ -425,7 +426,7 @@ xchar x, y;
 		return 1;
 	}
 
-	if(Fumbling && !rn2(3)) {
+	if(FUMBLED/* && !rn2(3)*/) {
 		Your("clumsy kick missed.");
 		return(1);
 	}
@@ -435,7 +436,7 @@ xchar x, y;
 	    char kbuf[BUFSZ];
 
 	    You("kick the %s with your bare %s.",
-		corpse_xname(kickobj, TRUE), makeplural(body_part(FOOT)));
+		corpse_xname(kickobj, FALSE), makeplural(body_part(FOOT)));
 	    if (!(poly_when_stoned(youmonst.data) && polymon(PM_STONE_GOLEM))) {
 		You("turn to stone...");
 		killer_format = KILLED_BY;
@@ -745,7 +746,7 @@ dokick()
 		flags.forcefight = FALSE;
 		/* see comment in attack_checks() */
 		if (!DEADMONSTER(mtmp) &&
-		    !canspotmon(mtmp) &&
+		    (!canspotmon(mtmp) || displaced_image(mtmp))&&
 		    /* check x and y; a monster that evades your kick by
 		       jumping to an unseen square doesn't leave an I behind */
 		    mtmp->mx == x && mtmp->my == y &&
@@ -1344,7 +1345,7 @@ boolean shop_floor_obj;
 	if (breaktest(otmp)) {
 	    const char *result;
 
-	    if (objects[otmp->otyp].oc_material == GLASS
+	    if (otmp->omaterial == GLASS
 #ifdef TOURIST
 		|| otmp->otyp == EXPENSIVE_CAMERA
 #endif

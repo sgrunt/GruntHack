@@ -1,0 +1,90 @@
+GruntHack 0.1.0 - changes from NetHack 3.4.3
+
+Third party patches
+-------------------
+* Astral Escape,  by Chi (substantially modified)
+* Color Alchemy,  by Nephi
+* Dark Room,      by Clive Crous
+* Dump Character, by Jukka Lahtinen
+* hpmon,          by Ralph Churchill (substanially expanded)
+* Grudge,         by Nephi
+* Menucolors,     by Pasi Kallinen
+* Sortloot,       by Jukka Lahtinen
+* use_darkgray,   by Michael Deustchmann
+
+Simple mail support for dgamelaunch is also available.
+
+Additional changes from NetHack 3.4.3
+-------------------------------------
+Interface-related:
+* Most areas of the status line acquire colours when an important change
+  happens, e.g. your attributes turn green if they've just increased
+  or red if they've decreased.
+* In the tty windowing system, areas of the map not in your current line of
+  sight now take on a darker colour.
+* Hallucination causes the entire map to take on strange colours (in tty
+  GruntHack) and also distorts your perception of items.  Fortunately as
+  it times out its effects are gradually reduced.
+
+Dungeon-related:
+* Gehennom has been remodelled - instead of a series of mazes, it is now
+  a series of caverns complete with rivers of lava and hordes of demons.
+* The Gnomish Mines contain pools of water and the occasional river.
+* The Elemental Planes appear in random order in the end game.
+
+Player-related:
+* Optionally, players can play as a kobold, ogre, or giant, each of which
+  brings unique problems due to their respective sizes.
+* The arbitrary alignment restriction on elves has been removed; they
+  can now play any alignment (and can play a few new roles as well).
+* You can cast monster spells while polymorphed into a spell-casting form.
+* Low dexterity causes fumbling on an intermittent basis.  Gauntlets of
+  fumbling and fumble boots set dexterity to 6 as a consequence.
+* Wearing greased gauntlets grants "slippery fingers" extrinsically.
+* Attempting to abuse the astral call bug causes the gods to take notice.
+* Death messages while immobile now reflect the reason for immobility.
+* Death messages while stuck in creature form now reflect the method of
+  death as opposed to plain "stuck in creature form".
+
+Monster-related:
+* Some classes of monster can have a race, much as the player does.  Some
+  monsters have been merged as a result.  showrace now additionally
+  shows the race of monsters as well as yourself.
+* Shopkeepers that hate your race will charge extra.
+* Monsters that polymorph will revert to original form if killed;
+  their polymorph can also time out.
+* Monsters can now use ranged weapons against other monsters, including
+  polearms and monster spells.
+* Monsters can use scrolls of remove curse.
+* Intelligent pets will actively seek out better equipment to make use of.
+* Monsters can use additional types of equipment that grant magical effects
+  just as the player can.
+* Monsters actively target your pets as well as you.
+* The behaviour of covetous monsters has been improved. Most notably those
+  not capable of teleporting can no longer teleport.  If they manage to
+  acquire their desired target they will attempt to flee effectively.
+* Monster displacement is implemented.  Shimmering dragons are re-enabled
+  as a consequence.
+* In addition to the shimmering dragons, the vampire mage and vorpal
+  jabberwock are enabled.
+* Kings are now guaranteed to appear in throne rooms.
+* Pets will not eat if they are not hungry. Unintelligent pets can choke if
+  you overfeed them; intelligent pets can keep food with them. 
+* Gelatinous cubes and water elementals now have an engulfing attack,
+  making them much more fearsome opponents.
+* Puddings have their maximum HP halved when they divide.
+* Puddings are now split with edged weapons as opposed to any iron object.
+* Messages for monsters missing you are more verbose, explaining what
+  piece of armour stopped the blow.
+
+Object-related:
+* Non-artifact objects can have additional properties (e.g. ___ of fire
+  resistance).
+* Object material is now determined on a per-object basis.
+* Foobanes deal additional damaging effects to their targets.
+* Hitting monsters with a wielded scroll or wand causes some of the
+  object's magic to be released.  Throwing scrolls has a similar effect.
+* Hitting a water elemental with a potion of acid causes the potion
+  to explode.
+* Potions of gain ability and wands now interact plausibly.
+* Unidentified fake Amulets of Yendor cannot be put in containers.

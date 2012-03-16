@@ -26,6 +26,8 @@ E char SAVEP[];
 
 E NEARDATA int bases[MAXOCLASSES];
 
+E NEARDATA const char *multi_reason;
+
 E NEARDATA int multi;
 #if 0
 E NEARDATA int warnlevel;
@@ -184,6 +186,9 @@ E const char *delayed_killer;
 E long done_money;
 #endif
 E char killer_buf[BUFSZ];
+#ifdef DUMP_LOG
+E char dump_fn[];		/* dumpfile name (dump patch) */
+#endif
 E const char *configfile;
 E NEARDATA char plname[PL_NSIZ];
 E NEARDATA char dogname[];
@@ -260,6 +265,7 @@ E NEARDATA struct you u;
 #endif
 
 E NEARDATA struct monst youmonst;	/* init'd and defined in decl.c */
+E NEARDATA struct monst *curmonst;	/* currently moving monster */
 E NEARDATA struct monst *mydogs, *migrating_mons;
 
 E NEARDATA struct mvitals {
@@ -309,6 +315,7 @@ E struct c_common_strings {
 
 /* material strings */
 E const char *materialnm[];
+E const int  materialclr[];
 
 /* Monster name articles */
 #define ARTICLE_NONE	0
@@ -384,6 +391,10 @@ struct autopickup_exception {
 	struct autopickup_exception *next;
 };
 #endif /* AUTOPICKUP_EXCEPTIONS */
+
+#ifdef SIMPLE_MAIL
+E int mailckfreq;
+#endif
 
 #undef E
 

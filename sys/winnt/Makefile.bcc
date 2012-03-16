@@ -100,9 +100,9 @@ libsmt  = $(bcclib)\cw32mt.lib $(bcclib)\import32.lib
 #  It must be present prior to compilation.
 
 !IF "$(GRAPHICAL)" == "Y"
-GAME    = NetHackW                # Game Name
+GAME    = GruntHackW              # Game Name
 !ELSE
-GAME    = NetHack                 # Game Name
+GAME    = GruntHack               # Game Name
 !ENDIF
 GAMEDIR = ..\binary               # Game directory
 
@@ -542,10 +542,10 @@ $(O)install.tag: 	$(DAT)\data	$(DAT)\rumors	 $(DAT)\dungeon \
 	if exist $(GAMEDIR)\makefile del $(GAMEDIR)\makefile
 ! ENDIF
 	if exist $(DOC)\guidebook.txt copy $(DOC)\guidebook.txt $(GAMEDIR)\Guidebook.txt
-	if exist $(DOC)\nethack.txt copy $(DOC)\nethack.txt $(GAMEDIR)\NetHack.txt
+	if exist $(DOC)\grunthack.txt copy $(DOC)\gruntthack.txt $(GAMEDIR)\GruntHack.txt
 	@if exist $(SRC)\$(GAME).PDB copy $(SRC)\$(GAME).pdb $(GAMEDIR)\$(GAME).pdb
 	@if exist $(GAMEDIR)\$(GAME).PDB echo NOTE: You may want to remove $(GAMEDIR)\$(GAME).pdb to conserve space
-	-copy $(NTSYS)\defaults.nh   $(GAMEDIR)\defaults.nh
+	-copy $(NTSYS)\defaults.gh   $(GAMEDIR)\defaults.gh
 	echo install done > $@
 
 #	copy $(NTSYS)\winnt.hlp    $(GAMEDIR)
@@ -603,11 +603,11 @@ tileutil: $(U)gif2txt.exe $(U)txt2ppm.exe
 !IF "$(GRAPHICAL)"=="Y"
 $(NHRES): $(TILEBMP16) $(WIN32)\winhack.rc $(WIN32)\mnsel.bmp \
 	$(WIN32)\mnselcnt.bmp $(WIN32)\mnunsel.bmp \
-	$(WIN32)\petmark.bmp $(WIN32)\NetHack.ico $(WIN32)\rip.bmp \
+	$(WIN32)\petmark.bmp $(WIN32)\GruntHack.ico $(WIN32)\rip.bmp \
 	$(WIN32)\splash.bmp
 	@$(rc) -r -fo$@ -i$(WIN32) -i$(bccinc) -dNDEBUG $(WIN32)\winhack.rc
 !ELSE
-$(NHRES): $(NTSYS)\console.rc $(NTSYS)\NetHack.ico
+$(NHRES): $(NTSYS)\console.rc $(NTSYS)\GruntHack.ico
 	@$(rc) -r -fo$@ -i$(NTSYS) -i$(bccinc) -dNDEBUG $(NTSYS)\console.rc
 !ENDIF
 
@@ -745,14 +745,14 @@ $(U)uudecode.exe: $(O)uudecode.o
 
 $(O)uudecode.o: $(SSYS)\uudecode.c
 
-$(NTSYS)\NetHack.ico : $(U)uudecode.exe $(NTSYS)\nhico.uu
+$(NTSYS)\GruntHack.ico : $(U)uudecode.exe $(NTSYS)\ghico.uu
 	chdir $(NTSYS)
 	..\..\util\uudecode.exe nhico.uu
 	chdir ..\..\src
 
-$(WIN32)\NetHack.ico : $(U)uudecode.exe $(NTSYS)\nhico.uu
+$(WIN32)\GruntHack.ico : $(U)uudecode.exe $(NTSYS)\ghico.uu
 	chdir $(WIN32)
-	..\..\util\uudecode.exe ../../sys/winnt/nhico.uu
+	..\..\util\uudecode.exe ../../sys/winnt/ghico.uu
 	chdir ..\..\src
 
 $(WIN32)\mnsel.bmp: $(U)uudecode.exe $(WIN32)\mnsel.uu

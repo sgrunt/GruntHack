@@ -1,4 +1,4 @@
-/*	SCCS Id: @(#)do.c	3.4	2003/12/02	*/
+/*	SCCS Id: @@(#)do.c	3.4	2003/12/02	*/
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* NetHack may be freely redistributed.  See license for details. */
 
@@ -157,14 +157,16 @@ const char *verb;
 				vtense((const char *)0, verb),
 				(mtmp) ? "" : " with you");
 		    if (mtmp) {
-			if (!passes_walls(mtmp->data) &&
-				!throws_rocks(mtmp->data)) {
+			if (!passes_walls(mtmp->data) && 
+			    !throws_rocks(mtmp->data)) {
 			    if (hmon(mtmp, obj, TRUE) && !is_whirly(mtmp->data))
 				return FALSE;	/* still alive */
 			}
 			mtmp->mtrapped = 0;
 		    } else {
-			if (!Passes_walls && !throws_rocks(youmonst.data)) {
+			if (!Passes_walls &&
+			    !maybe_polyd(throws_rocks(mtmp->data),
+				         Race_if(PM_GIANT))) {
 			    losehp(rnd(15), "squished under a boulder",
 				   NO_KILLER_PREFIX);
 			    return FALSE;	/* player remains trapped */
@@ -968,8 +970,11 @@ boolean at_stairs, falling, portal;
 	if (dunlev(newlevel) > dunlevs_in_dungeon(newlevel))
 		newlevel->dlevel = dunlevs_in_dungeon(newlevel);
 	if (newdungeon && In_endgame(newlevel)) { /* 1st Endgame Level !!! */
+	        d_level newlev;
+		newlev.dnum = astral_level.dnum;
+		newlev.dlevel = dungeons[astral_level.dnum].entry_lev;
 		if (u.uhave.amulet)
-		    assign_level(newlevel, &earth_level);
+		    assign_level(newlevel, &newlev);
 		else return;
 	}
 	new_ledger = ledger_no(newlevel);
@@ -1067,6 +1072,10 @@ boolean at_stairs, falling, portal;
 	    /* discard unreachable levels; keep #0 */
 	    for (l_idx = maxledgerno(); l_idx > 0; --l_idx)
 		delete_levelfile(l_idx);
+	
+	    pline("Well done, mortal!");
+	    pline("But now thou must face the final Test...");
+	    pline("Prove thyself worthy or perish!");
 	}
 
 #ifdef REINCARNATION
@@ -1162,7 +1171,7 @@ boolean at_stairs, falling, portal;
 		    You("fly down along the %s.",
 			at_ladder ? "ladder" : "stairs");
 		else if (u.dz &&
-		    (near_capacity() > UNENCUMBERED || Punished || Fumbling)) {
+		    (near_capacity() > UNENCUMBERED || Punished || FUMBLED)) {
 		    You("fall down the %s.", at_ladder ? "ladder" : "stairs");
 		    if (Punished) {
 			drag_down();
@@ -1406,7 +1415,7 @@ final_level()
 		    mtmp->mhp = mtmp->mhpmax =
 					d((int)mtmp->m_lev,10) + 30 + rnd(30);
 		    if ((otmp = select_hwep(mtmp)) == 0) {
-			otmp = mksobj(SILVER_SABER, FALSE, FALSE);
+			otmp = mksobj(SABER, FALSE, FALSE);
 			if (mpickobj(mtmp, otmp))
 			    panic("merged weapon?");
 		    }
@@ -1561,7 +1570,7 @@ struct obj *corpse;
 		break;
 	    default:
 		/* we should be able to handle the other cases... */
-		impossible("revive_corpse: lost corpse @ %d", where);
+		impossible("revive_corpse: lost corpse @@ %d", where);
 		break;
 	}
 	return TRUE;

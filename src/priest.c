@@ -54,7 +54,7 @@ register xchar omx,omy,gx,gy;
 		allowflags |= OPENDOOR;
 		if (m_carrying(mtmp, SKELETON_KEY)) allowflags |= BUSTDOOR;
 	}
-	if (is_giant(mtmp->data)) allowflags |= BUSTDOOR;
+	if (is_giant(mtmp)) allowflags |= BUSTDOOR;
 	cnt = mfndpos(mtmp, poss, info, allowflags);
 
 	if(mtmp->isshk && avoid && uondoor) { /* perhaps we cannot avoid him */
@@ -93,6 +93,7 @@ pick_move:
 
 	if(nix != omx || niy != omy) {
 		remove_monster(omx, omy);
+		remove_monster_img(mtmp->mix, mtmp->miy);
 		place_monster(mtmp, nix, niy);
 		newsym(nix,niy);
 		if (mtmp->isshk && !in_his_shop && inhishop(mtmp))
@@ -393,7 +394,7 @@ register int roomno;
 		    set_malign(mtmp);
 		    if(flags.verbose)
 			You("are frightened to death, and unable to move.");
-		    nomul(-3);
+		    nomul2(-3, "scared");
 		    nomovemsg = "You regain your composure.";
 	       }
 	   }

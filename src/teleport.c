@@ -617,7 +617,7 @@ level_tele()
 			newlevel.dlevel = destlev;
 			if (In_endgame(&newlevel) && !In_endgame(&u.uz)) {
 				Sprintf(buf,
-				    "Destination is earth level");
+				    "Destination is endgame");
 				if (!u.uhave.amulet) {
 					struct obj *obj;
 					obj = mksobj(AMULET_OF_YENDOR,
@@ -627,7 +627,8 @@ level_tele()
 						Strcat(buf, " with the amulet");
 					}
 				}
-				assign_level(&newlevel, &earth_level);
+				newlevel.dlevel =
+				    dungeons[astral_level.dnum].entry_lev;
 				pline("%s.", buf);
 			}
 			force_dest = TRUE;
@@ -947,7 +948,9 @@ register int x, y;
 		remove_worm(mtmp);
 	    else {
 		remove_monster(oldx, oldy);
+		remove_monster_img(mtmp->mix, mtmp->miy);
 		newsym(oldx, oldy);		/* update old location */
+		newsym(mtmp->mix, mtmp->miy);
 	    }
 	}
 

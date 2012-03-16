@@ -216,7 +216,7 @@ shuffle_all()
 	shuffle(HELMET, HELM_OF_TELEPATHY, FALSE);
 
 	/* shuffle the gloves */
-	shuffle(LEATHER_GLOVES, GAUNTLETS_OF_DEXTERITY, FALSE);
+	shuffle(GLOVES, GAUNTLETS_OF_DEXTERITY, FALSE);
 
 	/* shuffle the cloaks */
 	shuffle(CLOAK_OF_PROTECTION, CLOAK_OF_DISPLACEMENT, FALSE);

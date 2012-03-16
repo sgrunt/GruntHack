@@ -49,6 +49,8 @@ const char *fmt, *arg;
 	u.mtimedone = 0;
 	skinback(FALSE);
 	u.uundetected = 0;
+	
+	break_armor();
 
 	if (sticky) uunstick();
 	find_ac();
@@ -205,7 +207,9 @@ dead: /* we come directly here if their experience level went to 0 or less */
 		}
 	}
 	newuhs(FALSE);
-	polyman("feel like a new %s!",
+	polyman(Upolyd ? "return to %s form!" :
+	        "feel like a new %s!",
+		(Upolyd) ? urace.adj :
 		(flags.female && urace.individual.f) ? urace.individual.f :
 		(urace.individual.m) ? urace.individual.m : urace.noun);
 	if (Slimed) {
@@ -252,7 +256,8 @@ boolean forcecontrol;
 			/* Note:  humans are illegal as monsters, but an
 			 * illegal monster forces newman(), which is what we
 			 * want if they specified a human.... */
-			else if (!polyok(&mons[mntmp]) && !your_race(&mons[mntmp]))
+			else if (!polyok(&mons[mntmp]) &&
+			         !your_race_mdat(&mons[mntmp]))
 				You("cannot polymorph into that.");
 			else break;
 		} while(++tries < 5);
@@ -304,7 +309,7 @@ boolean forcecontrol;
 	/* The below polyok() fails either if everything is genocided, or if
 	 * we deliberately chose something illegal to force newman().
 	 */
-	if (!polyok(&mons[mntmp]) || !rn2(5) || your_race(&mons[mntmp]))
+	if (!polyok(&mons[mntmp]) || !rn2(5) || your_race_mdat(&mons[mntmp]))
 		newman();
 	else if(!polymon(mntmp)) return;
 
@@ -497,6 +502,10 @@ int	mntmp;
 	if (flags.verbose) {
 	    static const char use_thec[] = "Use the command #%s to %s.";
 	    static const char monsterc[] = "monster";
+#ifdef YOUMONST_SPELL
+	    if (attacktype(youmonst.data, AT_MAGC))
+		pline(use_thec,monsterc,"cast monster spells");
+#endif //YOUMONST_SPELL
 	    if (can_breathe(youmonst.data))
 		pline(use_thec,monsterc,"use your breath weapon");
 	    if (attacktype(youmonst.data, AT_SPIT))
@@ -572,7 +581,8 @@ break_armor()
 {
     register struct obj *otmp;
 
-    if (breakarm(youmonst.data)) {
+    if (maybe_polyd(breakarm(youmonst.data),
+                    Race_if(PM_GIANT) || Race_if(PM_OGRE))) {
 	if ((otmp = uarm) != 0) {
 		if (donning(otmp)) cancel_don();
 		You("break out of your armor!");
@@ -597,14 +607,16 @@ break_armor()
 		useup(uarmu);
 	}
 #endif
-    } else if (sliparm(youmonst.data)) {
+    } else if (maybe_polyd(sliparm(youmonst.data),
+                          Race_if(PM_KOBOLD))) {
 	if (((otmp = uarm) != 0) && (racial_exception(&youmonst, otmp) < 1)) {
 		if (donning(otmp)) cancel_don();
 		Your("armor falls around you!");
 		(void) Armor_gone();
 		dropx(otmp);
 	}
-	if ((otmp = uarmc) != 0) {
+	if ((otmp = uarmc) != 0 &&
+	    (Upolyd || !Race_if(PM_KOBOLD))) {
 		if (is_whirly(youmonst.data))
 			Your("%s falls, unsupported!", cloak_simple_name(otmp));
 		else You("shrink out of your %s!", cloak_simple_name(otmp));
@@ -707,12 +719,15 @@ int alone;
 }
 
 void
-rehumanize()
+rehumanize(reason)
+const char *reason;
 {
 	/* You can't revert back while unchanging */
 	if (Unchanging && (u.mh < 1)) {
-		killer_format = NO_KILLER_PREFIX;
-		killer = "killed while stuck in creature form";
+	        Strcpy(killer_buf, reason);
+		Strcat(killer_buf, " while stuck in creature form");
+	        // caller sets killer_format
+		killer = killer_buf; 
 		done(DIED);
 	}
 
@@ -957,7 +972,7 @@ dogaze()
 	    if (DEADMONSTER(mtmp)) continue;
 	    if (canseemon(mtmp) && couldsee(mtmp->mx, mtmp->my)) {
 		looked++;
-		if (Invis && !perceives(mtmp->data))
+		if (Invis && !sees_invis(mtmp))
 		    pline("%s seems not to notice your gaze.", Monnam(mtmp));
 		else if (mtmp->minvis && !See_invisible)
 		    You_cant("see where to gaze at %s.", Monnam(mtmp));
@@ -1016,10 +1031,10 @@ dogaze()
 			if (!Free_action) {
 			    You("are frozen by %s gaze!",
 					     s_suffix(mon_nam(mtmp)));
-			    nomul((u.ulevel > 6 || rn2(4)) ?
-				    -d((int)mtmp->m_lev+1,
-					    (int)mtmp->data->mattk[0].damd)
-				    : -200);
+			    nomul2((u.ulevel > 6 || rn2(4)) ?
+				     -d((int)mtmp->m_lev+1,
+				 	     (int)mtmp->data->mattk[0].damd)
+				     : -200, "paralyzed");
 			    return 1;
 			} else
 			    You("stiffen momentarily under %s gaze.",

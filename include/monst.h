@@ -47,6 +47,7 @@ struct monst {
 	aligntyp malign;	/* alignment of this monster, relative to the
 				   player (positive = good to kill) */
 	xchar mx, my;
+	xchar mix, miy;         /* where the monster appears to be */
 	xchar mux, muy;		/* where the monster thinks you are */
 #define MTSZ	4
 	coord mtrack[MTSZ];	/* monster track */
@@ -60,7 +61,7 @@ struct monst {
 #define M_AP_MONSTER	3	/* a monster */
 
 	schar mtame;		/* level of tameness, implies peaceful */
-	unsigned short mintrinsics;	/* low 8 correspond to mresists */
+	unsigned int mintrinsics;	/* low 8 correspond to mresists */
 	int mspec_used;		/* monster's special ability attack timeout */
 
 	Bitfield(female,1);	/* is female */
@@ -138,6 +139,12 @@ struct monst {
 	struct obj *mw;
 	long misc_worn_check;
 	xchar weapon_check;
+
+        int  mtime;             /* polymorph time */
+	int  morigdata;         /* original monster data */
+	int  moriglev;          /* original monster level */
+
+	long mrace;             /* monster's race */
 
 	uchar mnamelth;		/* length of name (following mxlth) */
 	short mxlth;		/* length of following data */

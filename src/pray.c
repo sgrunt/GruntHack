@@ -70,11 +70,12 @@ static int p_type; /* (-1)-3: (-1)=really naughty, 3=really good */
  * order to have the values be meaningful.
  */
 
-#define TROUBLE_STONED			13
-#define TROUBLE_SLIMED			12
-#define TROUBLE_STRANGLED		11
-#define TROUBLE_LAVA			10
-#define TROUBLE_SICK			 9
+#define TROUBLE_STONED			14
+#define TROUBLE_SLIMED			13
+#define TROUBLE_STRANGLED		12
+#define TROUBLE_LAVA			11
+#define TROUBLE_SICK		        10	
+#define TROUBLE_HALLUCINATION	         9 
 #define TROUBLE_STARVING		 8
 #define TROUBLE_HIT			 7
 #define TROUBLE_LYCANTHROPE		 6
@@ -94,7 +95,6 @@ static int p_type; /* (-1)-3: (-1)=really naughty, 3=really good */
 #define TROUBLE_HUNGRY		       (-8)
 #define TROUBLE_STUNNED		       (-9)
 #define TROUBLE_CONFUSED	      (-10)
-#define TROUBLE_HALLUCINATION	      (-11)
 
 /* We could force rehumanize of polyselfed people, but we can't tell
    unintentional shape changes from the other kind. Oh well.
@@ -140,6 +140,7 @@ in_trouble()
 	if(Strangled) return(TROUBLE_STRANGLED);
 	if(u.utrap && u.utraptype == TT_LAVA) return(TROUBLE_LAVA);
 	if(Sick) return(TROUBLE_SICK);
+	if(HHallucination) return(TROUBLE_HALLUCINATION);
 	if(u.uhs >= WEAK) return(TROUBLE_STARVING);
 	if (Upolyd ? (u.mh <= 5 || u.mh*7 <= u.mhmax) :
 		(u.uhp <= 5 || u.uhp*7 <= u.uhpmax)) return TROUBLE_HIT;
@@ -150,7 +151,9 @@ in_trouble()
 	for (i= -1; i<=1; i++) for(j= -1; j<=1; j++) {
 		if (!i && !j) continue;
 		if (!isok(u.ux+i, u.uy+j) || IS_ROCK(levl[u.ux+i][u.uy+j].typ)
-		    || (blocked_boulder(i,j) && !throws_rocks(youmonst.data)))
+		    || (blocked_boulder(i,j) && 
+		        !maybe_polyd(throws_rocks(youmonst.data), 
+			             Race_if(PM_GIANT))))
 			count++;
 	}
 	if (count == 8 && !Passes_walls)
@@ -197,7 +200,6 @@ in_trouble()
 	if(u.uhs >= HUNGRY) return(TROUBLE_HUNGRY);
 	if(HStun) return (TROUBLE_STUNNED);
 	if(HConfusion) return (TROUBLE_CONFUSED);
-	if(Hallucination) return(TROUBLE_HALLUCINATION);
 	return(0);
 }
 
@@ -353,7 +355,7 @@ register int trouble;
 		    if (Upolyd && nohands(youmonst.data)) {
 			if (!Unchanging) {
 			    Your("shape becomes uncertain.");
-			    rehumanize();  /* "You return to {normal} form." */
+			    rehumanize(0);  /* "You return to {normal} form." */
 			} else if ((otmp = unchanger()) != 0 && otmp->cursed) {
 			    /* otmp is an amulet of unchanging */
 			    goto decurse;
@@ -1164,7 +1166,7 @@ dosacrifice()
 		value = eaten_stat(value, otmp);
 	}
 
-	if (your_race(ptr)) {
+	if (your_race_mdat(ptr)) {
 	    if (is_demon(youmonst.data)) {
 		You("find the idea very satisfying.");
 		exercise(A_WIS, TRUE);
@@ -1206,7 +1208,7 @@ dosacrifice()
 		    if (sgn(u.ualign.type) == sgn(dmon->data->maligntyp))
 			dmon->mpeaceful = TRUE;
 		    You("are terrified, and unable to move.");
-		    nomul(-3);
+		    nomul2(-3, "scared");
 		} else pline_The("%s.", demonless_msg);
 	    }
 
@@ -1287,7 +1289,8 @@ dosacrifice()
 		done(ESCAPED);
 	    } else { /* super big win */
 		adjalign(10);
-pline("An invisible choir sings, and you are bathed in radiance...");
+                pline("%s sings, and you are bathed in radiance...",
+                      Hallucination ? "The fat lady" : "An invisible choir");
 		godvoice(altaralign, "Congratulations, mortal!");
 		display_nhwindow(WIN_MESSAGE, FALSE);
 verbalize("In return for thy service, I grant thee the gift of Immortality!");
@@ -1304,7 +1307,9 @@ verbalize("In return for thy service, I grant thee the gift of Immortality!");
 	    if (!otmp->known) {
 		You("realize you have made a %s.",
 		    Hallucination ? "boo-boo" : "mistake");
+		makeknown(otmp->otyp);
 		otmp->known = TRUE;
+		update_inventory();
 		change_luck(-1);
 		return 1;
 	    } else {
@@ -1466,9 +1471,11 @@ verbalize("In return for thy service, I grant thee the gift of Immortality!");
 	    /* you were already in pretty good standing */
 	    /* The player can gain an artifact */
 	    /* The chance goes down as the number of artifacts goes up */
-	    if (u.ulevel > 2 && u.uluck >= 0 &&
-		!rn2(10 + (2 * u.ugifts * nartifacts))) {
+	    if (u.ulevel > 2 && u.uluck >= 0) {
+	        if (!rn2(100 + (2 * u.ugifts * nartifacts)))
 		otmp = mk_artifact((struct obj *)0, a_align(u.ux,u.uy));
+		else if (!rn2(10 + (2 * u.ugifts)))
+		    otmp = create_oprop((struct obj *)0);
 		if (otmp) {
 		    if (otmp->spe < 0) otmp->spe = 0;
 		    if (otmp->cursed) uncurse(otmp);
@@ -1579,7 +1586,7 @@ dopray()
 	}
     }
 #endif
-    nomul(-3);
+    nomul2(-3, "praying");
     nomovemsg = "You finish your prayer.";
     afternmv = prayer_done;
 
@@ -1606,7 +1613,9 @@ prayer_done()		/* M. Stephenson (1.0.3b) */
 		 "Walk no more, perversion of nature!");
 	You_feel("like you are falling apart.");
 	/* KMH -- Gods have mastery over unchanging */
-	rehumanize();
+	killer_format = KILLED_BY;
+	u.mh = -1;
+	rehumanize("undead turning");
 	losehp(rnd(20), "residual undead turning effect", KILLED_BY_AN);
 	exercise(A_CON, FALSE);
 	return(1);
@@ -1739,7 +1748,7 @@ doturn()
 		    }
 	    }
 	}
-	nomul(-5);
+	nomul2(-5, "turning undead");
 	return(1);
 }
 
@@ -1868,5 +1877,95 @@ int dx,dy;
 
     return FALSE;
 }
+
+#ifdef ASTR_ESC
+int
+invoke_amulet(otmp)
+    struct obj *otmp;
+{
+    aligntyp altaralign = a_align(u.ux,u.uy);
+
+    if (!on_altar()) {
+    	pline(nothing_happens);
+    	return 1;
+    }
+
+    /* Since this is a potentially terminal effect on the game,
+     * confirm action */
+    if (yn("Are you sure you want to defy the Gods by invoking the Amulet?")
+        == 'n')
+    	return 0;
+
+    if (otmp->otyp == AMULET_OF_YENDOR) {
+        if (!Is_astralevel(&u.uz)) {
+    	    if (Hallucination)
+    	        You_feel("homesick.");
+    	    else
+    	        You_feel("an urge to return to the surface.");
+    	    /* trying to #invoke whilst not on Astral plane still
+    	     * annoys your god */
+    	    if (flags.soundok)
+    		You_hear("a nearby thunderclap.");
+    	    change_luck(-1);
+    	    adjalign(-10);
+    	    gods_upset(u.ualign.type);
+    	    return 1;
+        } else {
+    	    /* The final Test.	Did you win? */
+    	    You("invoke %s.",the(xname(otmp)));
+    	    adjalign(-99);
+    	    pline("%s is enraged, but the power of %s protects you!",
+	        u_gname(), the(xname(otmp)));
+    	    if(!Blind) You("are surrounded by a shimmering %s sphere!",
+    				hcolor((const char *)"golden"));
+    	    else You_feel("weightless for a moment.");
+    	    /* No uevent.ascended, as we have spurned ascension */
+    	    if (u.ualign.type != altaralign) {
+    	        if(uamul == otmp) Amulet_off();
+    	        if (carried(otmp)) dropx(otmp);
+    	        if (Blind)
+    	            You_feel("%s fall from your pack!", the(xname(otmp)));
+    	        else
+    	            You("see %s fall out of your pack!", the(xname(otmp)));
+		pline("But you can't retrieve it.");
+    	        if (Hallucination)
+    		    You("feel like Dorothy travelling back to Kansas!");
+    	        else
+    		    You("return home...");
+    	        done(ESCAPED);
+    	    } else {
+    	        /* stick the proverbial two fingers up at the Gods,
+    	         * and go home */
+    	        display_nhwindow(WIN_MESSAGE, FALSE);
+    	        You("return home with %s...",
+    			the(xname(otmp)));
+    	        done(DEFIED);
+    	    }
+        }
+    } /* real Amulet */
+    if (otmp->otyp == FAKE_AMULET_OF_YENDOR) {
+        if (flags.soundok)
+    	    You_hear("a nearby thunderclap.");
+        if (!otmp->known) {
+    	    You("realize your gambit has failed.");
+    	        makeknown(otmp->otyp);
+    	    otmp->known = TRUE;
+    	    /* since we are willingly defying the Gods, this should cause 
+    	     * extreme anger */
+    	    change_luck(-1);
+    	    adjalign(-10);
+    	    gods_upset(u.ualign.type);
+    	    return 1;
+        } else {
+    	    /* not very wise, to defy the Gods with a *known* fake */
+    	    (void) adjattrib(A_WIS, -1, TRUE);
+    	    exercise(A_WIS, FALSE);
+    	    change_luck(-3);
+    	    adjalign(-12);
+    	    gods_upset(u.ualign.type);
+        }
+    } /* fake Amulet */
+}
+#endif
 
 /*pray.c*/

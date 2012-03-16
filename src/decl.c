@@ -140,6 +140,7 @@ struct mkroom *upstairs_room, *dnstairs_room, *sstairs_room;
 dlevel_t level;		/* level map */
 struct trap *ftrap = (struct trap *)0;
 NEARDATA struct monst youmonst = DUMMY;
+NEARDATA struct monst *curmonst = NULL;
 NEARDATA struct flag flags = DUMMY;
 NEARDATA struct instance_flags iflags = DUMMY;
 NEARDATA struct you u = DUMMY;
@@ -209,6 +210,15 @@ NEARDATA struct monst *migrating_mons = (struct monst *)0;
 
 NEARDATA struct mvitals mvitals[NUMMONS];
 
+/* originally from end.c */
+#ifdef DUMP_LOG
+#ifdef DUMP_FN
+char dump_fn[] = DUMP_FN;
+#else
+char dump_fn[PL_PSIZ] = DUMMY;
+#endif
+#endif /* DUMP_LOG */
+
 NEARDATA struct c_color_names c_color_names = {
 	"black", "amber", "golden",
 	"light blue", "red", "green",
@@ -235,6 +245,10 @@ const char *c_obj_colors[] = {
 	"white",		/* CLR_WHITE */
 };
 
+#ifdef MENU_COLOR
+struct menucoloring *menu_colorings = 0;
+#endif
+
 struct c_common_strings c_common_strings = {
 	"Nothing happens.",		"That's enough tries!",
 	"That is a silly thing to %s.",	"shudder for a moment.",
@@ -249,6 +263,13 @@ const char *materialnm[] = {
 	"paper", "cloth", "leather", "wooden", "bone", "dragonhide",
 	"iron", "metal", "copper", "silver", "gold", "platinum", "mithril",
 	"plastic", "glass", "gemstone", "stone"
+};
+
+const int materialclr[] = {
+	CLR_BLACK, HI_ORGANIC, CLR_WHITE, HI_ORGANIC, CLR_BROWN,
+	CLR_WHITE, HI_CLOTH, HI_LEATHER, HI_WOOD, CLR_WHITE, CLR_BLACK,
+	HI_METAL, HI_METAL, HI_COPPER, HI_SILVER, HI_GOLD, CLR_WHITE,
+	HI_METAL, CLR_WHITE, HI_SILVER, CLR_RED, CLR_GRAY 
 };
 
 /* Vision */

@@ -35,7 +35,7 @@ stoned_dialogue()
 	if (i == 5L)
 		HFast = 0L;
 	if (i == 3L)
-		nomul(-3);
+		nomul2(-3, "turning to stone");
 	exercise(A_DEX, FALSE);
 }
 
@@ -191,7 +191,7 @@ nh_timeout()
 		if (Unchanging)
 			u.mtimedone = rnd(100*youmonst.data->mlevel + 1);
 		else
-			rehumanize();
+			rehumanize(0);
 	}
 	if(u.ucreamed) u.ucreamed--;
 
@@ -318,31 +318,50 @@ nh_timeout()
 			(void) float_down(I_SPECIAL|TIMEOUT, 0L);
 			break;
 		case STRANGLED:
-			killer_format = KILLED_BY;
-			killer = (u.uburied) ? "suffocation" : "strangulation";
-			done(DIED);
+		        if (u.uswallow)
+			{
+		            char kbuf[BUFSZ];
+			    Sprintf(kbuf, "suffocated by %s",
+			                  an(l_monnam(u.ustuck)));
+			    killer_format = NO_KILLER_PREFIX;
+			    killer = kbuf;
+	                    if (multi) Strcat(kbuf, ", while helpless");
+			    done(DIED);
+			}
+			else
+			{
+			    killer_format = KILLED_BY;
+			    killer = (u.uburied || u.uswallow)
+			              ? "suffocation" : "strangulation";
+			    done(DIED);
+		        }
 			break;
 		case FUMBLING:
 			/* call this only when a move took place.  */
 			/* otherwise handle fumbling msgs locally. */
+			if (FUMBLED)
+			{
 			if (u.umoved && !Levitation) {
 			    slip_or_trip();
-			    nomul(-2);
+			    nomul2(-2, "fumbling");
 			    nomovemsg = "";
 			    /* The more you are carrying the more likely you
-			     * are to make noise when you fumble.  Adjustments
-			     * to this number must be thoroughly play tested.
+			         * are to make noise when you fumble.  
+				 * Adjustments to this number must be
+				 * thoroughly play tested.
 			     */
 			    if ((inv_weight() > -500)) {
 				You("make a lot of noise!");
 				wake_nearby();
 			    }
 			}
+			}
 			/* from outside means slippery ice; don't reset
 			   counter if that's the only fumble reason */
 			HFumbling &= ~FROMOUTSIDE;
-			if (Fumbling)
-			    HFumbling += rnd(20);
+			//if (FUMBLED)
+			HFumbling += rnd(10); //adj from 20, as dex 6 fumbles
+			                      //half the time here
 			break;
 		case DETECT_MONSTERS:
 			see_monsters();
@@ -362,7 +381,7 @@ int how_long;
 boolean wakeup_msg;
 {
 	stop_occupation();
-	nomul(how_long);
+	nomul2(how_long, "asleep");
 	/* generally don't notice sounds while sleeping */
 	if (wakeup_msg && multi == how_long) {
 	    /* caller can follow with a direct call to Hear_again() if
@@ -1220,7 +1239,7 @@ do_storms()
 	pline("Kaboom!!!  Boom!!  Boom!!");
 	if(!u.uinvulnerable) {
 	    stop_occupation();
-	    nomul(-3);
+	    nomul2(-3, "disoriented by thunder");
 	}
     } else
 	You_hear("a rumbling noise.");

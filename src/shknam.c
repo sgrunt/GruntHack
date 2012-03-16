@@ -201,7 +201,7 @@ const struct shclass shtypes[] = {
 	    {{85, RING_CLASS}, {10, GEM_CLASS}, {5, AMULET_CLASS}, {0, 0}},
 	    shkrings},
 	{"quality apparel and accessories", WAND_CLASS, 3, D_SHOP,
-	    {{90, WAND_CLASS}, {5, -LEATHER_GLOVES}, {5, -ELVEN_CLOAK}, {0, 0}},
+	    {{90, WAND_CLASS}, {5, -GLOVES}, {5, -ELVEN_CLOAK}, {0, 0}},
 	     shkwands},
 	{"hardware store", TOOL_CLASS, 3, D_SHOP,
 	    {{100, TOOL_CLASS}, {0, 0}, {0, 0}}, shktools},
@@ -286,6 +286,8 @@ const char * const *nlp;
 	    /* special-case minetown lighting shk */
 	    shname = "Izchak";
 	    shk->female = FALSE;
+            shk->mrace = M2_HUMAN;
+	    shk->morigdata = PM_ARCHON;
 	} else {
 	    /* We want variation from game to game, without needing the save
 	       and restore support which would be necessary for randomization;

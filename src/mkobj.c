@@ -78,6 +78,71 @@ const struct icp hellprobs[] = {
 { 4, AMULET_CLASS}
 };
 
+/* material probabilities. */
+// normal weapon/armour
+const struct icp materialprobs[] = {
+{80, IRON},
+{ 5, WOOD},
+{ 5, SILVER},
+{ 3, COPPER},
+{ 3, MITHRIL},
+{ 1, GOLD},
+{ 1, BONE},
+{ 1, GLASS},
+{ 1, PLASTIC}
+};
+
+// wooden items 
+const struct icp wmaterialprobs[] = {
+{80, WOOD},
+{10, MINERAL}, //stone
+{ 5, IRON},
+{ 3, BONE},
+{ 1, COPPER},
+{ 1, SILVER}
+};
+
+
+// cloth 
+const struct icp cmaterialprobs[] = {
+{60, CLOTH},
+{33, LEATHER},
+{ 6, PAPER},
+{ 1, FLESH},
+};
+
+// dwarvish equipment
+const struct icp dmaterialprobs[] = {
+{85, IRON},
+{10, MITHRIL},
+{ 2, COPPER},
+{ 1, SILVER},
+{ 1, GOLD},
+{ 1, PLATINUM}
+};
+
+// elven weapons 
+const struct icp ematerialprobs[] = {
+{80, WOOD},
+{10, COPPER},
+{ 5, MITHRIL},
+{ 3, SILVER},
+{ 2, GOLD}
+};
+
+//elven chain mail 
+const struct icp eamaterialprobs[] = {
+{80, COPPER},
+{20, MITHRIL}
+};
+
+// elven helm
+const struct icp ehmaterialprobs[] = {
+{50, LEATHER},
+{45, COPPER},
+{ 5, MITHRIL}
+};
+
 struct obj *
 mkobj_at(let, x, y, artif)
 char let;
@@ -387,6 +452,38 @@ boolean artif;
 #ifdef INVISIBLE_OBJECTS
 	otmp->oinvis = !rn2(1250);
 #endif
+        otmp->omaterial = objects[otmp->otyp].oc_material;
+	{
+	    const struct icp *materials = 0;
+	    if (is_elven_weapon(otmp) ||
+	        otmp->otyp == ELVEN_SHIELD)
+		materials = ematerialprobs;
+	    else if (otmp->otyp == ELVEN_CHAIN_MAIL)
+	        materials = eamaterialprobs;
+	    else if (otmp->otyp == ELVEN_HELM)
+	        materials = eamaterialprobs;
+	    else if (is_dwarvish_obj(otmp) && otmp->otyp != DWARVISH_CLOAK)
+		materials = dmaterialprobs;
+	    else if ((otmp->otyp == WEAPON_CLASS ||
+	              is_weptool(otmp) ||
+	              otmp->otyp == ARMOR_CLASS))
+            {
+		if (objects[otmp->otyp].oc_material == IRON)
+		    materials = materialprobs;
+		else if (objects[otmp->otyp].oc_material == WOOD)
+		    materials = wmaterialprobs;
+	    }
+            else if ((otmp->otyp == ARMOR_CLASS) &&
+	             (objects[otmp->otyp].oc_material == CLOTH ||
+		      objects[otmp->otyp].oc_material == LEATHER))
+		materials = cmaterialprobs;
+	    if (materials)
+	    {
+	        int i = rnd(100);
+		for(; (i -= materials->iprob) > 0; materials++);
+		otmp->omaterial = materials->iclass;
+	    }
+	}
 	if (init) switch (let) {
 	case WEAPON_CLASS:
 		otmp->quan = is_multigen(otmp) ? (long) rn1(6,6) : 1L;
@@ -402,6 +499,8 @@ boolean artif;
 
 		if (artif && !rn2(20))
 		    otmp = mk_artifact(otmp, (aligntyp)A_NONE);
+		else if (!rn2(100))
+		    otmp = create_oprop(otmp);
 		break;
 	case FOOD_CLASS:
 	    otmp->oeaten = 0;
@@ -409,8 +508,10 @@ boolean artif;
 	    case CORPSE:
 		/* possibly overridden by mkcorpstat() */
 		tryct = 50;
-		do otmp->corpsenm = undead_to_corpse(rndmonnum());
-		while ((mvitals[otmp->corpsenm].mvflags & G_NOCORPSE) && (--tryct > 0));
+		do otmp->corpsenm = rndmonnum();
+		while (((mvitals[otmp->corpsenm].mvflags & G_NOCORPSE) ||
+		        is_racial(&mons[otmp->corpsenm]))&&
+		       (--tryct > 0));
 		if (tryct == 0) {
 		/* perhaps rndmonnum() only wants to make G_NOCORPSE monsters on
 		   this level; let's create an adventurer's corpse instead, then */
@@ -434,9 +535,10 @@ boolean artif;
 		if (!rn2(6))
 		    otmp->spe = 1;		/* spinach */
 		else for (tryct = 200; tryct > 0; --tryct) {
-		    mndx = undead_to_corpse(rndmonnum());
+		    mndx = rndmonnum();
 		    if (mons[mndx].cnutrit &&
-			    !(mvitals[mndx].mvflags & G_NOCORPSE)) {
+			    !(mvitals[mndx].mvflags & G_NOCORPSE) &&
+			    !is_racial(&mons[mndx])) {
 			otmp->corpsenm = mndx;
 			break;
 		    }
@@ -507,7 +609,8 @@ boolean artif;
 		case FIGURINE:	{	int tryct2 = 0;
 					do
 					    otmp->corpsenm = rndmonnum();
-					while(is_human(&mons[otmp->corpsenm])
+					while(mons[otmp->corpsenm].mflags2
+					       & M2_HUMAN
 						&& tryct2++ < 30);
 					blessorcurse(otmp, 4);
 					break;
@@ -559,8 +662,10 @@ boolean artif;
 			otmp->blessed = rn2(2);
 			otmp->spe = rne(3);
 		} else	blessorcurse(otmp, 10);
-		if (artif && !rn2(40))                
+		if (artif && !rn2(20)) 
 		    otmp = mk_artifact(otmp, (aligntyp)A_NONE);
+		else if (!rn2(100))
+		    otmp = create_oprop(otmp);
 		/* simulate lacquered armor for samurai */
 		if (Role_if(PM_SAMURAI) && otmp->otyp == SPLINT_MAIL &&
 		    (moves <= 1 || In_quest(&u.uz))) {
@@ -789,6 +894,32 @@ register struct obj *otmp;
 #endif /* OVLB */
 #ifdef OVL0
 
+STATIC_DCL
+const int matweights[] = {
+     0,
+     1, // LIQUID
+     1, // WAX
+     1, // VEGGY
+     1, // FLESH
+     1, // PAPER
+     2, // CLOTH
+     3, // LEATHER
+     4, // WOOD
+     5, // BONE
+     2, // DRAGON_HIDE
+    12, // IRON
+    12, // METAL
+    10, // COPPER
+    12, // SILVER
+    14, // GOLD
+    10, // PLATINUM
+     6, // MITHRIL
+     3, // PLASTIC
+     5, // GLASS
+    16, // GEMSTONE
+    14  // MINERAL
+};
+
 /*
  *  Calculate the weight of the given object.  This will recursively follow
  *  and calculate the weight of any containers.
@@ -802,6 +933,10 @@ weight(obj)
 register struct obj *obj;
 {
 	int wt = objects[obj->otyp].oc_weight;
+
+	if (obj->omaterial != objects[obj->otyp].oc_material)
+	    wt = (wt * matweights[obj->omaterial]) /
+	               matweights[objects[obj->otyp].oc_material]; 
 
 	if (obj->otyp == LARGE_BOX && obj->spe == 1) /* Schroedinger's Cat */
 		wt += mons[PM_HOUSECAT].cwt;
@@ -853,6 +988,47 @@ register struct obj *obj;
 	else if (obj->otyp == HEAVY_IRON_BALL && obj->owt != 0)
 		return((int)(obj->owt));	/* kludge for "very" heavy iron ball */
 	return(wt ? wt*(int)obj->quan : ((int)obj->quan + 1)>>1);
+}
+
+STATIC_DCL
+const int matac[] = {
+     0,
+    -5, // LIQUID
+    -4, // WAX
+    -4, // VEGGY
+    -2, // FLESH
+    -4, // PAPER
+    -3, // CLOTH
+    -2, // LEATHER
+    -1, // WOOD
+     1, // BONE
+     5, // DRAGON_HIDE
+     0, // IRON
+     0, // METAL
+    -1, // COPPER
+     0, // SILVER
+    -2, // GOLD
+    -1, // PLATINUM
+     0, // MITHRIL
+    -2, // PLASTIC
+     0, // GLASS
+     2, // GEMSTONE
+     3  // MINERAL
+};
+
+int
+material_bonus(obj)
+register struct obj *obj;
+{
+    int tmp = matac[obj->omaterial] - matac[objects[obj->otyp].oc_material]; 
+
+    if (obj->omaterial == objects[obj->otyp].oc_material)
+       return 0;
+
+    if (tmp + objects[obj->otyp].a_ac < 0)
+        tmp = -(objects[obj->otyp].a_ac);
+
+    return tmp; 
 }
 
 static int treefruits[] = {APPLE,ORANGE,PEAR,BANANA,EUCALYPTUS_LEAF};
@@ -940,6 +1116,9 @@ boolean init;
 			(special_corpse(old_corpsenm) ||
 				special_corpse(otmp->corpsenm))) {
 		    obj_stop_timers(otmp);
+		    if (mtmp && ptr->mlet == S_TROLL &&
+		        mtmp->mcan == 1)
+			otmp->norevive = 1;
 		    start_corpse_timeout(otmp);
 		}
 	    }
@@ -1070,7 +1249,7 @@ is_flammable(otmp)
 register struct obj *otmp;
 {
 	int otyp = otmp->otyp;
-	int omat = objects[otyp].oc_material;
+	int omat = otmp->omaterial;
 
 	if (objects[otyp].oc_oprop == FIRE_RES || otyp == WAN_FIRE)
 		return FALSE;
@@ -1082,10 +1261,8 @@ boolean
 is_rottable(otmp)
 register struct obj *otmp;
 {
-	int otyp = otmp->otyp;
-
-	return((boolean)(objects[otyp].oc_material <= WOOD &&
-			objects[otyp].oc_material != LIQUID));
+	return((boolean)(otmp->omaterial <= WOOD &&
+			 otmp->omaterial != LIQUID));
 }
 
 #endif /* OVLB */

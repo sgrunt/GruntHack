@@ -42,6 +42,12 @@ struct obj {
 	char	invlet;		/* designation in inventory */
 	char	oartifact;	/* artifact array index */
 
+	long    oprops;         /* item properties
+	                           'band's "ego items" */
+        long    oprops_known;   /* known item properties */
+	
+	Bitfield(omaterial, 5); /* material of this object */
+
 	xchar where;		/* where the object thinks it is */
 #define OBJ_FREE	0		/* object not attached to anything */
 #define OBJ_FLOOR	1		/* object on floor */
@@ -165,9 +171,11 @@ struct obj {
 #define is_multigen(otmp)	(otmp->oclass == WEAPON_CLASS && \
 			 objects[otmp->otyp].oc_skill >= -P_SHURIKEN && \
 			 objects[otmp->otyp].oc_skill <= -P_BOW)
-#define is_poisonable(otmp)	(otmp->oclass == WEAPON_CLASS && \
-			 objects[otmp->otyp].oc_skill >= -P_SHURIKEN && \
-			 objects[otmp->otyp].oc_skill <= -P_BOW)
+//#define is_poisonable(otmp)	(otmp->oclass == WEAPON_CLASS && \
+//			 objects[otmp->otyp].oc_skill >= -P_SHURIKEN && \
+//			 objects[otmp->otyp].oc_skill <= -P_BOW)
+#define is_poisonable(otmp)     (otmp->oclass == WEAPON_CLASS && \
+                                 objects[otmp->otyp].oc_skill != WHACK)
 #define uslinging()	(uwep && objects[uwep->otyp].oc_skill == P_SLING)
 
 /* Armor */
@@ -185,8 +193,8 @@ struct obj {
 			 objects[otmp->otyp].oc_armcat == ARM_SHIRT)
 #define is_suit(otmp)	(otmp->oclass == ARMOR_CLASS && \
 			 objects[otmp->otyp].oc_armcat == ARM_SUIT)
-#define is_elven_armor(otmp)	((otmp)->otyp == ELVEN_LEATHER_HELM\
-				|| (otmp)->otyp == ELVEN_MITHRIL_COAT\
+#define is_elven_armor(otmp)	((otmp)->otyp == ELVEN_HELM\
+				|| (otmp)->otyp == ELVEN_CHAIN_MAIL\
 				|| (otmp)->otyp == ELVEN_CLOAK\
 				|| (otmp)->otyp == ELVEN_SHIELD\
 				|| (otmp)->otyp == ELVEN_BOOTS)
@@ -196,8 +204,8 @@ struct obj {
 				|| (otmp)->otyp == ORCISH_CLOAK\
 				|| (otmp)->otyp == URUK_HAI_SHIELD\
 				|| (otmp)->otyp == ORCISH_SHIELD)
-#define is_dwarvish_armor(otmp)	((otmp)->otyp == DWARVISH_IRON_HELM\
-				|| (otmp)->otyp == DWARVISH_MITHRIL_COAT\
+#define is_dwarvish_armor(otmp)	((otmp)->otyp == DWARVISH_HELM\
+				|| (otmp)->otyp == DWARVISH_CHAIN_MAIL\
 				|| (otmp)->otyp == DWARVISH_CLOAK\
 				|| (otmp)->otyp == DWARVISH_ROUNDSHIELD)
 #define is_gnomish_armor(otmp)	(FALSE)
@@ -289,10 +297,10 @@ struct obj {
 
 /* misc */
 #ifdef KOPS
-#define is_flimsy(otmp)		(objects[(otmp)->otyp].oc_material <= LEATHER || \
+#define is_flimsy(otmp)		(otmp->omaterial <= LEATHER || \
 				 (otmp)->otyp == RUBBER_HOSE)
 #else
-#define is_flimsy(otmp)		(objects[(otmp)->otyp].oc_material <= LEATHER)
+#define is_flimsy(otmp)		(otmp->omaterial <= LEATHER)
 #endif
 
 /* helpers, simple enough to be macros */
@@ -302,5 +310,27 @@ struct obj {
 /* Flags for get_obj_location(). */
 #define CONTAINED_TOO	0x1
 #define BURIED_TOO	0x2
+
+/* Item properties. */
+#define ITEM_FIRE         0x00000001L // fire damage or resistance
+#define ITEM_FROST        0x00000002L // frost damage or resistance
+#define ITEM_DRLI         0x00000004L // drains life or resists it
+#define ITEM_VORPAL       0x00000008L // capable of beheading or bisecting
+#define ITEM_REFLECTION   0x00000010L // reflects
+#define ITEM_SPEED        0x00000020L // grants speed
+#define ITEM_OILSKIN      0x00000040L // permanently greased
+#define ITEM_POWER        0x00000100L // grants a strength bonus
+#define ITEM_DEXTERITY    0x00000200L // grants a dexterity bonus
+#define ITEM_BRILLIANCE   0x00000400L // grants an int/wiz bonus
+#define ITEM_ESP          0x00000800L // grants extrinsic telepathy 
+#define ITEM_DISPLACEMENT 0x00001000L // grants displacement
+#define ITEM_SEARCHING    0x00002000L // grants searching 
+#define ITEM_WARNING      0x00004000L // grants warning 
+#define ITEM_STEALTH      0x00008000L // grants stealth 
+#define ITEM_FUMBLING     0x00010000L // fumbling
+#define ITEM_CLAIRVOYANCE 0x00020000L // clairvoyance
+
+#define ITEM_PROP_MASK    0x0003FFFFL // all current properties
+#define MAX_ITEM_PROPS    17
 
 #endif /* OBJ_H */

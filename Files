@@ -1,4 +1,4 @@
-This is a listing of all files in a full NetHack 3.4 distribution, organized
+This is a listing of all files in a full GruntHack 3.4 distribution, organized
 in their standard manner on a UNIX system.  It indicates which files are
 necessary for which versions, so that you can tell which files may be deleted
 from or not transferred to your system if you wish.
@@ -21,12 +21,10 @@ wizhelp         yendor.des
 
 doc:
 (files for all versions)
-Guidebook.mn    Guidebook.tex   Guidebook.txt   dgn_comp.6      dgn_comp.txt
-dlb.6           dlb.txt         fixes22.0       fixes30.0       fixes31.1
-fixes31.2       fixes31.3       fixes32.0       fixes32.1       fixes32.2
-fixes32.3       fixes33.0       fixes33.1       fixes34.0       fixes34.1
-fixes34.2       fixes34.3       lev_comp.6      lev_comp.txt    nethack.6
-nethack.txt     recover.6       recover.txt     tmac.n          window.doc
+changes01.0     grunthack.6     grunthack.txt   Guidebook.mn    Guidebook.tex
+Guidebook.txt   dgn_comp.6      dgn_comp.txt    dlb.6           dlb.txt
+lev_comp.6      lev_comp.txt    recover.6       recover.txt     tmac.n
+window.doc
 
 include:
 (files for all versions)
@@ -113,17 +111,17 @@ mgetline.c      mmodal.c        mrecover.c      mrecover.hqx    mttymain.c
 
 sys/msdos:
 (files for MSDOS version)
-Install.dos     Makefile.BC     Makefile.GCC    Makefile.MSC    NHAccess.nh
+GHAccess.gh     Install.dos     Makefile.BC     Makefile.GCC    Makefile.MSC    
 moveinit.pat    msdos.c         msdoshlp.txt    ovlinit.c       pckeys.c
 pctiles.c       pctiles.h       pcvideo.h       portio.h        schema1.BC
 schema2.BC      schema3.MSC     setup.bat       sound.c         tile2bin.c
 video.c         vidtxt.c        vidvga.c
 (files for running MSDOS binary under Windows)
-nhico.uu        nhpif.uu
+ghico.uu        ghpif.uu
 
 sys/os2:
 (files for OS/2 version)
-Install.os2     Makefile.os2    nhpmico.uu      os2.c
+ghpmico.uu      Install.os2     Makefile.os2    os2.c
 
 sys/share:
 (files for MSDOS and OS/2 versions)
@@ -176,7 +174,7 @@ vmsmisc.c       vmstty.c        vmsunix.c
 sys/wince:
 (files for Windows CE and PocketPC)
 Install.ce      bootstrp.mak    celib.c         cesetup.bat     cesound.c
-defaults.nh     keypad.uu       menubar.uu      mhaskyn.c       mhaskyn.h
+defaults.gh     keypad.uu       menubar.uu      mhaskyn.c       mhaskyn.h
 mhcmd.c         mhcmd.h         mhcolor.c       mhcolor.h       mhdlg.c
 mhdlg.h         mhfont.c        mhfont.h        mhinput.c       mhinput.h
 mhmain.c        mhmain.h        mhmap.c         mhmap.h         mhmenu.c
@@ -196,7 +194,7 @@ stat.h
 sys/winnt:
 (files for Windows 9x, NT and Windows2000 version)
 Install.nt      Makefile.bcc    Makefile.gcc    Makefile.msc    console.rc
-defaults.nh     mapimail.c      nethack.def     nh340key.c      nhdefkey.c
+defaults.gh     mapimail.c      nethack.def     nh340key.c      nhdefkey.c
 nhico.uu        nhraykey.c      nhsetup.bat     ntsound.c       nttty.c
 porthelp        win32api.h      winnt.c
 
@@ -215,9 +213,9 @@ tileedit.cpp    tileedit.h      qpe-nethack.control
 
 win/X11:
 (files for X versions)
-Install.X11     NetHack.ad      Window.c        dialogs.c       ibm.bdf
-nethack.rc      nh10.bdf        nh32icon        nh56icon        nh72icon
-nh_icon.xpm     pet_mark.xbm    rip.xpm         tile2x11.c      winX.c
+GruntHack.ad    Install.X11     Window.c        dialogs.c       gh10.bdf
+gh32icon        gh56icon        gh72icon        gh_icon.xpm     grunthack.rc
+ibm.bdf         pet_mark.xbm    rip.xpm         tile2x11.c      winX.c
 winmap.c        winmenu.c       winmesg.c       winmisc.c       winstat.c
 wintext.c       winval.c
 
@@ -288,13 +286,13 @@ Val-fila.lev    Val-filb.lev    Val-goal.lev    Val-loca.lev    Val-strt.lev
 Wiz-fila.lev    Wiz-filb.lev    Wiz-goal.lev    Wiz-loca.lev    Wiz-strt.lev
 air.lev         asmodeus.lev    astral.lev      baalz.lev       bigrm-1.lev
 bigrm-2.lev     bigrm-3.lev     bigrm-4.lev     bigrm-5.lev     castle.lev
-earth.lev       fakewiz1.lev    fakewiz2.lev    fire.lev        juiblex.lev
-knox.lev        medusa-1.lev    medusa-2.lev    minefill.lev    minend-1.lev
-minend-2.lev    minetn-1.lev    minetn-2.lev    oracle.lev      orcus.lev
-sanctum.lev     soko1-1.lev     soko1-2.lev     soko2-1.lev     soko2-2.lev
-soko3-1.lev     soko3-2.lev     soko4-1.lev     soko4-2.lev     tower1.lev
-tower2.lev      tower3.lev      valley.lev      water.lev       wizard1.lev
-wizard2.lev     wizard3.lev
+earth.lev       fakewiz1.lev    fakewiz2.lev    fire.lev        hellfill.lev
+juiblex.lev     knox.lev        medusa-1.lev    medusa-2.lev    minefill.lev
+minend-1.lev    minend-2.lev    minetn-1.lev    minetn-2.lev    oracle.lev     
+orcus.lev       sanctum.lev     soko1-1.lev     soko1-2.lev     soko2-1.lev     
+soko2-2.lev     soko3-1.lev     soko3-2.lev     soko4-1.lev     soko4-2.lev     
+tower1.lev      tower2.lev      tower3.lev      valley.lev      water.lev       
+wizard1.lev     wizard2.lev     wizard3.lev
 (tile files optionally generated for X ports at playground creation time)
 pet_mark.xbm    rip.xpm         x11tiles
 (files generated for Qt interface on Mac OS X)

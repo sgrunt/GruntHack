@@ -7,6 +7,7 @@
 # Keeping the Moat for old-time's sake
 MAZE:"wizard1",random
 FLAGS:noteleport,hardfloor
+INIT_MAP: '.' , ' ' , false, true, unlit, false
 GEOMETRY:center,center
 MAP
 ----------------------------.
@@ -91,6 +92,7 @@ OBJECT:'+',random,random
 # The middle wizard level.
 MAZE:"wizard2",random
 FLAGS:noteleport,hardfloor
+INIT_MAP: '.' , ' ' , false, true, unlit, false
 GEOMETRY:center,center
 MAP
 ----------------------------.
@@ -143,6 +145,7 @@ OBJECT:'"',random,(04,06)
 # Memorialize the fakewiz setup.
 MAZE:"wizard3",random
 FLAGS:noteleport,hardfloor
+INIT_MAP: '.' , ' ' , false, true, unlit, false
 GEOMETRY:center,center
 MAP
 ----------------------------.
@@ -218,6 +221,7 @@ OBJECT:'"',random,(11,07)
 # There are two of these, and we need to
 # distinguish between them for the portal.
 MAZE:"fakewiz1",random
+INIT_MAP: '.' , ' ' , false, true, unlit, false
 GEOMETRY:center,center
 MAP
 .........
@@ -247,6 +251,7 @@ TRAP:"board",(05,04)
 
 
 MAZE:"fakewiz2",random
+INIT_MAP: '.' , ' ' , false, true, unlit, false
 GEOMETRY:center,center
 MAP
 .........

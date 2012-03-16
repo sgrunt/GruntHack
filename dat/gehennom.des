@@ -4,6 +4,67 @@
 # NetHack may be freely redistributed.  See license for details.
 #
 
+MAZE: "hellfill" , ' '
+INIT_MAP: '.' , ' ' , false , true , unlit , false
+NOMAP
+#
+STAIR: random, up
+STAIR: random, down
+#
+OBJECT: random, random, random
+OBJECT: random, random, random
+OBJECT: random, random, random
+OBJECT: random, random, random
+OBJECT: random, random, random
+OBJECT: random, random, random
+OBJECT: random, random, random
+OBJECT: random, random, random
+OBJECT: random, random, random
+OBJECT: random, random, random
+#
+MONSTER: '&', random, random
+MONSTER: '&', random, random
+MONSTER: '&', random, random
+MONSTER: '&', random, random
+MONSTER: '&', random, random
+MONSTER: '&', random, random
+MONSTER: '&', random, random
+MONSTER: 'i', random, random
+MONSTER: 'i', random, random
+MONSTER: 'i', random, random
+MONSTER: 'i', random, random
+MONSTER: 'i', random, random
+MONSTER: 'i', random, random
+MONSTER: 'i', random, random
+MONSTER: 'i', random, random
+MONSTER: 'Z', "skeleton", random
+MONSTER: 'Z', random, random
+MONSTER: 'Z', random, random
+MONSTER: ' ', "shade", random
+MONSTER: ' ', "shade", random
+MONSTER: ' ', "shade", random
+MONSTER: ' ', "ghost", random
+MONSTER: ' ', "ghost", random
+MONSTER: ' ', "ghost", random
+MONSTER: ' ', "ghost", random
+MONSTER: random, random, random
+MONSTER: random, random, random
+MONSTER: random, random, random
+MONSTER: random, random, random
+MONSTER: random, random, random
+MONSTER: random, random, random
+#
+TRAP: "fire", random
+TRAP: "fire", random
+TRAP: "fire", random
+TRAP: "fire", random
+TRAP: "fire", random
+TRAP: random, random
+TRAP: random, random
+TRAP: random, random
+TRAP: random, random
+TRAP: random, random
+
 MAZE: "valley", ' '
 FLAGS: noteleport,hardfloor,nommap
 GEOMETRY:center,center
@@ -274,6 +335,7 @@ TRAP:"magic",random
 #
 MAZE:"orcus",random
 FLAGS: noteleport,shortsighted
+INIT_MAP: '.' , ' ' , false, true, unlit, false
 GEOMETRY:right,center
 # A ghost town
 MAP
@@ -372,7 +434,7 @@ OBJECT:random,random,random
 # The resident nasty
 MONSTER:'&',"Orcus",(33,15)
 # And its preferred companions
-MONSTER:'Z',"human zombie",(32,15)
+MONSTER:'Z',"zombie",(32,15)
 MONSTER:' ',"shade",(32,14)
 MONSTER:' ',"shade",(32,16)
 MONSTER:'V',"vampire",(35,16)
@@ -389,15 +451,15 @@ MONSTER:' ',"shade",random
 MONSTER:' ',"shade",random
 MONSTER:' ',"shade",random
 MONSTER:' ',"shade",random
-MONSTER:'Z',"giant zombie",random
-MONSTER:'Z',"giant zombie",random
-MONSTER:'Z',"giant zombie",random
-MONSTER:'Z',"ettin zombie",random
-MONSTER:'Z',"ettin zombie",random
-MONSTER:'Z',"ettin zombie",random
-MONSTER:'Z',"human zombie",random
-MONSTER:'Z',"human zombie",random
-MONSTER:'Z',"human zombie",random
+MONSTER:'Z',"zombie",random
+MONSTER:'Z',"zombie",random
+MONSTER:'Z',"zombie",random
+MONSTER:'Z',"zombie",random
+MONSTER:'Z',"zombie",random
+MONSTER:'Z',"zombie",random
+MONSTER:'Z',"zombie",random
+MONSTER:'Z',"zombie",random
+MONSTER:'Z',"zombie",random
 MONSTER:'V',"vampire",random
 MONSTER:'V',"vampire",random
 MONSTER:'V',"vampire",random
@@ -414,6 +476,7 @@ MONSTER:random,random,random
 #
 MAZE:"asmodeus",random
 FLAGS: noteleport
+INIT_MAP: '.' , ' ' , false, true, unlit, false
 # First part
 GEOMETRY:half-left,center
 MAP
@@ -498,6 +561,7 @@ TRAP:"magic", random
 #
 MAZE:"baalz",random
 FLAGS: noteleport
+INIT_MAP: '.' , ' ' , false, true, unlit, false
 GEOMETRY:right,center
 MAP
 -------------------------------------------------

@@ -1449,15 +1449,15 @@ const char *filename;
 
 const char *configfile =
 #ifdef UNIX
-			".nethackrc";
+			".grunthackrc";
 #else
 # if defined(MAC) || defined(__BEOS__)
-			"NetHack Defaults";
+			"GruntHack Defaults";
 # else
 #  if defined(MSDOS) || defined(WIN32)
-			"defaults.nh";
+			"defaults.gh";
 #  else
-			"NetHack.cnf";
+			"GruntHack.cnf";
 #  endif
 # endif
 #endif
@@ -1471,7 +1471,7 @@ const char *configfile =
  * the game will try the old name if there
  * is no defaults.nh.
  */
-const char *backward_compat_configfile = "nethack.cnf"; 
+const char *backward_compat_configfile = "grunthack.cnf"; 
 #endif
 
 #ifndef MFLOPPY
@@ -1794,6 +1794,10 @@ char		*tmp_levels;
 	} else if (match_varname(buf, "BOULDER", 3)) {
 	    (void) get_uchars(fp, buf, bufp, &iflags.bouldersym, TRUE,
 			      1, "BOULDER");
+	} else if (match_varname(buf, "MENUCOLOR", 9)) {
+#ifdef MENU_COLOR
+	    (void) add_menu_coloring(bufp);
+#endif
 	} else if (match_varname(buf, "GRAPHICS", 4)) {
 	    len = get_uchars(fp, buf, bufp, translate, FALSE,
 			     MAXPCHARS, "GRAPHICS");

@@ -15,6 +15,9 @@ static boolean FDECL(wishymatch, (const char *,const char *,BOOLEAN_P));
 #endif
 static char *NDECL(nextobuf);
 static void FDECL(add_erosion_words, (struct obj *, char *));
+#ifdef SORTLOOT
+char * FDECL(xname2, (struct obj *, boolean));
+#endif
 
 struct Jitem {
 	int item;
@@ -45,11 +48,40 @@ STATIC_OVL struct Jitem Japanese_items[] = {
 	{ KNIFE, "shito" },
 	{ PLATE_MAIL, "tanko" },
 	{ HELMET, "kabuto" },
-	{ LEATHER_GLOVES, "yugake" },
+	{ GLOVES, "yugake" },
 	{ FOOD_RATION, "gunyoki" },
 	{ POT_BOOZE, "sake" },
 	{0, "" }
 };
+
+STATIC_OVL const char *bogusobjs[] =
+{
+    "pillow", "digital watch",
+
+    "flesh-bound spellbook",
+
+    "plaid potion", "paisley potion",
+
+    "titanium wand", "plutonium wand", "tungsten wand",
+    "lead wand",
+
+    "Klein bottle",
+
+    "loadboulder",
+
+    "Pick-axe of Anhur", "magic lantern",
+
+    "elfin chain mail", "beef jerky", "steak", "cookie", 
+    "enormous rock", "Sphere of Power", "cross", /* JF Hack obsolete objects */
+
+    "Orb of Zot", /* Dungeon Crawl */
+
+    "head of Morgoth", /* Angband, sort of */
+
+    "hand of Vecna", "eye of the beholder", "key of Law",
+    "key of Neutrality", "key of Chaos" /* SLASH'EM */
+};
+
 
 #endif /* OVLB */
 
@@ -182,7 +214,11 @@ boolean
 obj_is_pname(obj)
 register struct obj *obj;
 {
-    return((boolean)(obj->dknown && obj->known && obj->onamelth &&
+    if (Hallucination) 
+        return FALSE; //lie
+
+    return((boolean)
+                    (obj->dknown && obj->known && obj->onamelth &&
 		     /* Since there aren't any objects which are both
 		        artifacts and unique, the last check is redundant. */
 		     obj->oartifact && !objects[obj->otyp].oc_unique));
@@ -230,48 +266,177 @@ boolean juice;	/* whether or not to append " juice" to the name */
 #endif /* OVLB */
 #ifdef OVL1
 
+STATIC_OVL
+void
+propnames(buf, props, weapon, has_of)
+register char *buf;
+register long props;
+boolean weapon;
+boolean has_of;
+{
+    char of[6];
+
+    if (Hallucination) return;
+
+    Strcpy(of, (has_of) ? " and" : " of");
+    if (props & ITEM_FIRE)
+        Strcat(buf, of),
+        Strcat(buf, weapon ? " fire" : " fire resistance"),
+	Strcpy(of, " and");
+    if (props & ITEM_FROST)
+        Strcat(buf, of),
+        Strcat(buf, weapon ? " frost" : " cold resistance"),
+	Strcpy(of, " and");
+    if ((props & ITEM_DRLI) && !weapon)
+        Strcat(buf, of),
+        Strcat(buf, " drain resistance"), 
+	Strcpy(of, " and");
+    if (props & ITEM_REFLECTION)
+        Strcat(buf, of),
+        Strcat(buf, " reflection"), 
+	Strcpy(of, " and");
+    if (props & ITEM_SPEED)
+        Strcat(buf, of),
+        Strcat(buf, " speed"), 
+	Strcpy(of, " and");
+    if (props & ITEM_POWER)
+        Strcat(buf, of),
+        Strcat(buf, " power"), 
+	Strcpy(of, " and");
+    if (props & ITEM_DEXTERITY)
+        Strcat(buf, of),
+        Strcat(buf, " dexterity"), 
+	Strcpy(of, " and");
+    if (props & ITEM_BRILLIANCE)
+        Strcat(buf, of),
+        Strcat(buf, " brilliance"), 
+	Strcpy(of, " and");
+    if (props & ITEM_ESP)
+        Strcat(buf, of),
+        Strcat(buf, " telepathy"), 
+	Strcpy(of, " and");
+    if (props & ITEM_DISPLACEMENT)
+        Strcat(buf, of),
+        Strcat(buf, " displacement"), 
+	Strcpy(of, " and");
+    if (props & ITEM_SEARCHING)
+        Strcat(buf, of),
+        Strcat(buf, " searching"), 
+	Strcpy(of, " and");
+    if (props & ITEM_WARNING)
+        Strcat(buf, of),
+        Strcat(buf, " warning"), 
+	Strcpy(of, " and");
+    if (props & ITEM_STEALTH)
+        Strcat(buf, of),
+        Strcat(buf, " stealth"), 
+	Strcpy(of, " and");
+    if (props & ITEM_FUMBLING)
+        Strcat(buf, of),
+        Strcat(buf, " fumbling"), 
+	Strcpy(of, " and");
+    if (props & ITEM_CLAIRVOYANCE)
+        Strcat(buf, of),
+        Strcat(buf, " clairvoyance"), 
+	Strcpy(of, " and");
+}
+
 char *
 xname(obj)
 register struct obj *obj;
+#ifdef SORTLOOT
 {
+	return xname2(obj, FALSE);
+}
+char *
+xname2(obj, ignore_oquan)
+register struct obj *obj;
+boolean ignore_oquan;
+#endif
+{
+        register boolean hallu = Hallucination;
 	register char *buf;
-	register int typ = obj->otyp;
+	register int typ = (hallu) ?
+	                   (rn2(NUM_OBJECTS+SIZE(bogusobjs)) >= NUM_OBJECTS
+			   ? STRANGE_OBJECT : rn2(NUM_OBJECTS + 1) - 1)
+			    : obj->otyp;
 	register struct objclass *ocl = &objects[typ];
-	register int nn = ocl->oc_name_known;
+	register int obclass = ocl->oc_class;
+	register int nn = hallu ? rn2(2) : ocl->oc_name_known;
 	register const char *actualn = OBJ_NAME(*ocl);
 	register const char *dn = OBJ_DESCR(*ocl);
-	register const char *un = ocl->oc_uname;
+	register const char *un = (hallu) ? 0 : ocl->oc_uname;
+	register int objknown = (hallu) ? rn2(2) : obj->known; 
+	
+	boolean tmp = FALSE;
+
+	if (!dn)
+	{
+	    if (typ == STRANGE_OBJECT)
+	        dn = bogusobjs[rn2(SIZE(bogusobjs))];
+	    else if (actualn)
+	        dn = actualn;
+	}
+
+	if (!actualn) {
+	    if (typ == STRANGE_OBJECT)
+	        actualn = (dn) ? dn : bogusobjs[rn2(SIZE(bogusobjs))];
+	    else if (dn)
+	        actualn = dn;
+	}
 
 	buf = nextobuf() + PREFIX;	/* leave room for "17 -3 " */
-	if (Role_if(PM_SAMURAI) && Japanese_item_name(typ))
-		actualn = Japanese_item_name(typ);
-
+	
 	buf[0] = '\0';
+	
+	if (Japanese_item_name(typ) &&
+	    ((Role_if(PM_SAMURAI)) ^
+	     (hallu && !rn2(10))))
+	    actualn = Japanese_item_name(typ);
+
+	if (!dn && !actualn)
+	{
+	    Strcpy(buf, "figment of your imagination");
+	    return;
+	}
+
 	/*
 	 * clean up known when it's tied to oc_name_known, eg after AD_DRIN
 	 * This is only required for unique objects since the article
 	 * printed for the object is tied to the combination of the two
 	 * and printing the wrong article gives away information.
 	 */
-	if (!nn && ocl->oc_uses_known && ocl->oc_unique) obj->known = 0;
-	if (!Blind) obj->dknown = TRUE;
-	if (Role_if(PM_PRIEST)) obj->bknown = TRUE;
-	if (obj_is_pname(obj))
-	    goto nameit;
-	switch (obj->oclass) {
+	if (!hallu)
+	{
+	    if (!nn && ocl->oc_uses_known && ocl->oc_unique) obj->known = 0;
+	    if (!Blind) obj->dknown = TRUE;
+	    if (Role_if(PM_PRIEST)) obj->bknown = TRUE;
+	    if (obj_is_pname(obj))
+	        goto nameit;
+	}
+	switch (obclass) {
 	    case AMULET_CLASS:
 		if (!obj->dknown)
 			Strcpy(buf, "amulet");
-		else if (typ == AMULET_OF_YENDOR ||
+		else {
+		    if (typ == AMULET_OF_YENDOR ||
 			 typ == FAKE_AMULET_OF_YENDOR)
 			/* each must be identified individually */
-			Strcpy(buf, obj->known ? actualn : dn);
+			Strcpy(buf, objknown ? actualn : dn);
 		else if (nn)
 			Strcpy(buf, actualn);
 		else if (un)
-			Sprintf(buf,"amulet called %s", un);
+			Strcpy(buf,"amulet");
 		else
 			Sprintf(buf,"%s amulet", dn);
+		    propnames(buf, obj->oprops&obj->oprops_known, FALSE,
+		              !!strstri(buf, " of "));
+		    if (!nn && un)
+		    {
+		        Strcat(buf, " called ");
+		        Strcat(buf, un);
+		    }
+		}
 		break;
 	    case WEAPON_CLASS:
 		if (is_poisonable(obj) && obj->opoisoned)
@@ -283,14 +448,52 @@ register struct obj *obj;
 
 		if (!obj->dknown)
 			Strcat(buf, dn ? dn : actualn);
-		else if (nn)
+		else {
+		    struct obj tmpobj = zeroobj;
+                    tmpobj.otyp = typ;
+
+		    if ((obj->oprops & ITEM_DRLI) &&
+		    (obj->oprops_known & ITEM_DRLI))
+		        Strcat(buf, "thirsty ");
+
+		    if ((obj->oprops & ITEM_VORPAL) &&
+		    (obj->oprops_known & ITEM_VORPAL))
+		        Strcat(buf, "vorpal ");
+                     
+		     if (is_orcish_obj(&tmpobj) && nn)
+		         Strcat(buf, "orcish "),
+			 actualn += 7;
+                     else if (is_elven_obj(&tmpobj) && nn)
+		         Strcat(buf, "elven "),
+			 actualn += 6;
+                     else if (is_dwarvish_obj(&tmpobj) && nn)
+		         Strcat(buf, "dwarvish "),
+			 actualn += 9;
+
+		    if (obj->omaterial != objects[typ].oc_material
+		     ^ (hallu && !rn2(5)))
+		    {
+		        int mat = (hallu) ? rn2(MAX_MAT) : obj->omaterial;
+			Strcat(buf, materialnm[mat]);
+			Strcat(buf, " ");
+		    }
+		    
+		    if (nn)
 			Strcat(buf, actualn);
 		else if (un) {
 			Strcat(buf, dn ? dn : actualn);
-			Strcat(buf, " called ");
-			Strcat(buf, un);
 		} else
 			Strcat(buf, dn ? dn : actualn);
+
+		    propnames(buf, obj->oprops&obj->oprops_known, TRUE,
+		              !!strstri(buf, " of "));
+		    
+		    if (!nn && un)
+		    {
+			Strcat(buf, " called ");
+			Strcat(buf, un);
+		    }
+	        }
 		/* If we use an() here we'd have to remember never to use */
 		/* it whenever calling doname() or xname(). */
 		if (typ == FIGURINE)
@@ -302,21 +505,73 @@ register struct obj *obj;
 		/* depends on order of the dragon scales objects */
 		if (typ >= GRAY_DRAGON_SCALES && typ <= YELLOW_DRAGON_SCALES) {
 			Sprintf(buf, "set of %s", actualn);
+
+			// should this even be possible?
+		        propnames(buf, obj->oprops&obj->oprops_known, TRUE,
+		                  FALSE);
 			break;
 		}
-		if(is_boots(obj) || is_gloves(obj)) Strcpy(buf,"pair of ");
+		
+		tmp = !!strstri(buf, "of");
+		
+		if(obclass == ARMOR_CLASS &&
+		   (objects[typ].oc_armcat == ARM_BOOTS ||
+		    objects[typ].oc_armcat == ARM_GLOVES))
+		    Strcpy(buf,"pair of ");
 
-		if(obj->otyp >= ELVEN_SHIELD && obj->otyp <= ORCISH_SHIELD
+		if (!hallu && obj->dknown &&
+		    (obj->oprops & ITEM_OILSKIN) &&
+		    (obj->oprops_known & ITEM_OILSKIN))
+		    Strcat(buf, "oilskin ");
+
+		if (((obj->omaterial != objects[typ].oc_material) ||
+		     (objects[typ].oc_material == LEATHER) ||
+		     (obclass == ARMOR_CLASS &&
+		      (objects[typ].oc_armcat == ARM_BOOTS ||
+		       objects[typ].oc_armcat == ARM_GLOVES)) ||
+		     (typ == DWARVISH_HELM) ||
+		     (typ == ELVEN_HELM))
+		  ^ (hallu && !rn2(5)))
+		{
+		     int mat = (hallu) ? rn2(MAX_MAT) : obj->omaterial;
+		     struct obj tmpobj = zeroobj;
+		     tmpobj.otyp = typ;
+		     if (typ == STUDDED_ARMOR)
+		         Strcat(buf, "studded "),
+			 actualn = dn = "armor";
+                     else if (is_orcish_obj(&tmpobj) && nn)
+		         Strcat(buf, "orcish "),
+			 actualn += 7;
+                     else if (is_elven_obj(&tmpobj) && nn)
+		         Strcat(buf, "elven "),
+			 actualn += 6;
+                     else if (is_dwarvish_obj(&tmpobj) && nn)
+		         Strcat(buf, "dwarvish "),
+			 actualn += 9;
+
+		     Strcat(buf, materialnm[mat]);
+		     Strcat(buf, " ");
+		}
+
+		if(typ >= ELVEN_SHIELD && typ <= ORCISH_SHIELD
 				&& !obj->dknown) {
-			Strcpy(buf, "shield");
+			Strcat(buf, "shield");
+		        propnames(buf, obj->oprops&obj->oprops_known, FALSE,
+			          FALSE);
 			break;
 		}
-		if(obj->otyp == SHIELD_OF_REFLECTION && !obj->dknown) {
-			Strcpy(buf, "smooth shield");
+		if(typ == SHIELD_OF_REFLECTION && !obj->dknown) {
+			Strcat(buf, "smooth shield");
+		        propnames(buf, obj->oprops&obj->oprops_known, FALSE,
+			          FALSE);
 			break;
 		}
 
-		if(nn)	Strcat(buf, actualn);
+		if(nn) {
+		    Strcat(buf, actualn);
+		    propnames(buf, obj->oprops&obj->oprops_known, FALSE,
+		              tmp);
+		}
 		else if(un) {
 			if(is_boots(obj))
 				Strcat(buf,"boots");
@@ -330,16 +585,23 @@ register struct obj *obj;
 				Strcpy(buf,"shield");
 			else
 				Strcpy(buf,"armor");
+		        propnames(buf, obj->oprops&obj->oprops_known, FALSE,
+		                  tmp);
 			Strcat(buf, " called ");
 			Strcat(buf, un);
-		} else	Strcat(buf, dn);
+		} else {
+		    Strcat(buf, dn);
+		    propnames(buf, obj->oprops&obj->oprops_known, FALSE,
+		              tmp);
+		}
 		break;
 	    case FOOD_CLASS:
 		if (typ == SLIME_MOLD) {
 			register struct fruit *f;
 
 			for(f=ffruit; f; f = f->nextf) {
-				if(f->fid == obj->spe) {
+				if(f->fid == obj->spe ||
+				   hallu) {
 					Strcpy(buf, f->fname);
 					break;
 				}
@@ -349,7 +611,7 @@ register struct obj *obj;
 		}
 
 		Strcpy(buf, actualn);
-		if (typ == TIN && obj->known) {
+		if (typ == TIN && objknown) {
 		    if(obj->spe > 0)
 			Strcat(buf, " of spinach");
 		    else if (obj->corpsenm == NON_PM)
@@ -366,15 +628,32 @@ register struct obj *obj;
 		break;
 	    case ROCK_CLASS:
 		if (typ == STATUE)
-		    Sprintf(buf, "%s%s of %s%s",
-			(Role_if(PM_ARCHEOLOGIST) && (obj->spe & STATUE_HISTORIC)) ? "historic " : "" ,
+		{
+		    Sprintf(buf, "%s%s%s%s of %s%s",
+			(Role_if(PM_ARCHEOLOGIST) &&
+			(obj->spe & STATUE_HISTORIC)) ? "historic " : "" ,
+			(obj->omaterial != objects[obj->otyp].oc_material)
+			    ? materialnm[obj->omaterial] : "",
+			(obj->omaterial != objects[obj->otyp].oc_material)
+			    ? " " : "",
 			actualn,
 			type_is_pname(&mons[obj->corpsenm]) ? "" :
 			  (mons[obj->corpsenm].geno & G_UNIQ) ? "the " :
 			    (index(vowels,*(mons[obj->corpsenm].mname)) ?
 								"an " : "a "),
 			mons[obj->corpsenm].mname);
-		else Strcpy(buf, actualn);
+		}
+		else
+		{
+		    if (obj->omaterial != objects[typ].oc_material
+		      ^ (hallu && !rn2(5)))
+		    {
+		         int mat = (hallu) ? rn2(MAX_MAT) : obj->omaterial;
+		         Strcat(buf, materialnm[mat]);
+			 Strcat(buf, " ");
+		    }
+		    Strcat(buf, actualn);
+		}
 		break;
 	    case BALL_CLASS:
 		Sprintf(buf, "%sheavy iron ball",
@@ -444,12 +723,21 @@ register struct obj *obj;
 	case RING_CLASS:
 		if(!obj->dknown)
 			Strcpy(buf, "ring");
-		else if(nn)
+		else {
+		    if(nn)
 			Sprintf(buf, "ring of %s", actualn);
 		else if(un)
-			Sprintf(buf, "ring called %s", un);
+			Sprintf(buf, "ring", un);
 		else
 			Sprintf(buf, "%s ring", dn);
+		    propnames(buf, obj->oprops&obj->oprops_known, FALSE,
+		              !!strstri(buf, " of "));
+		    if (!nn && un)
+		    {
+		        Strcat(buf, " called ");
+			Strcat(buf, un);
+		    }
+		}
 		break;
 	case GEM_CLASS:
 	    {
@@ -467,11 +755,17 @@ register struct obj *obj;
 		break;
 	    }
 	default:
-		Sprintf(buf,"glorkum %d %d %d", obj->oclass, typ, obj->spe);
+	        if (typ == STRANGE_OBJECT)
+		    Sprintf(buf, "%s", dn);
+		else
+		    Sprintf(buf,"glorkum %d %d %d", obj->oclass, typ, obj->spe);
 	}
+#ifdef SORTLOOT
+	if (!ignore_oquan)
+#endif
 	if (obj->quan != 1L) Strcpy(buf, makeplural(buf));
 
-	if (obj->onamelth && obj->dknown) {
+	if (obj->onamelth && obj->dknown && !hallu) {
 		Strcat(buf, " named ");
 nameit:
 		Strcat(buf, ONAME(obj));
@@ -508,6 +802,9 @@ boolean
 the_unique_obj(obj)
 register struct obj *obj;
 {
+    if (Hallucination)
+        return (boolean)(!rn2(4) ^ (objects[obj->otyp].oc_unique &&
+			  (obj->known || obj->otyp == AMULET_OF_YENDOR)));
     if (!obj->dknown)
 	return FALSE;
     else if (obj->otyp == FAKE_AMULET_OF_YENDOR && !obj->known)
@@ -557,6 +854,7 @@ char *
 doname(obj)
 register struct obj *obj;
 {
+        boolean hallu = Hallucination;
 	boolean ispoisoned = FALSE;
 	char prefix[PREFIX];
 	char tmpbuf[PREFIX+1];
@@ -589,7 +887,7 @@ register struct obj *obj;
 	if (obj->oinvis) Strcat(prefix,"invisible ");
 #endif
 
-	if (obj->bknown &&
+	if (!hallu && obj->bknown &&
 	    obj->oclass != COIN_CLASS &&
 	    (obj->otyp != POT_WATER || !objects[POT_WATER].oc_name_known
 		|| (!obj->cursed && !obj->blessed))) {
@@ -620,9 +918,39 @@ register struct obj *obj;
 			&& obj->otyp != AMULET_OF_YENDOR
 			&& !Role_if(PM_PRIEST))
 		Strcat(prefix, "uncursed ");
+	} else if (hallu && !rn2(5)) {
+	    Strcat(prefix, !rn2(8) ? "cursed " : !rn2(8) ? "blessed "
+	                                                : "uncursed ");
 	}
 
-	if (obj->greased) Strcat(prefix, "greased ");
+	if ((hallu && !rn2(5)) ||
+	    (!hallu && obj->greased)) Strcat(prefix, "greased ");
+	
+	if (hallu)
+	{
+	    if (!rn2(10))
+	    {
+	        if (!rn2(4))
+	            Strcat(prefix, rn2(2) ? "thoroughly " : "very ");
+	        switch(rn2(4))
+	        {
+	            case 0:
+		    default: Strcat(prefix, "rusty ");    break;
+		    case 1:  Strcat(prefix, "corroded "); break;
+		    case 2:  Strcat(prefix, "burnt ");    break;
+		    case 3:  Strcat(prefix, "rotted ");   break;
+	        }
+	    }
+	    if (!rn2(5))
+	    {
+	        if (!rn2(5)) Strcat(prefix, "poisoned ");
+	        Strcat(prefix, sitoa(rn1(15, -7)));
+		Strcat(prefix, " ");
+	    } else if (!rn2(5)) {
+	        Sprintf(eos(bp), " (%d:%d)", rn2(8), rn2(15));
+	    }
+	}
+
 
 	switch(obj->oclass) {
 	case AMULET_CLASS:
@@ -630,11 +958,11 @@ register struct obj *obj;
 			Strcat(bp, " (being worn)");
 		break;
 	case WEAPON_CLASS:
-		if(ispoisoned)
+		if(ispoisoned && !hallu)
 			Strcat(prefix, "poisoned ");
 plus:
-		add_erosion_words(obj, prefix);
-		if(obj->known) {
+		if (!hallu) add_erosion_words(obj, prefix);
+		if(obj->known && !hallu) {
 			Strcat(prefix, sitoa(obj->spe));
 			Strcat(prefix, " ");
 		}
@@ -646,7 +974,7 @@ plus:
 		goto plus;
 	case TOOL_CLASS:
 		/* weptools already get this done when we go to the +n code */
-		if (!is_weptool(obj))
+		if (!is_weptool(obj) && !hallu)
 		    add_erosion_words(obj, prefix);
 		if(obj->owornmask & (W_TOOL /* blindfold */
 #ifdef STEED
@@ -662,7 +990,8 @@ plus:
 		}
 		if (is_weptool(obj))
 			goto plus;
-		if (obj->otyp == CANDELABRUM_OF_INVOCATION) {
+		if (obj->otyp == CANDELABRUM_OF_INVOCATION
+		    && !hallu) {
 			if (!obj->spe)
 			    Strcpy(tmpbuf, "no");
 			else
@@ -673,7 +1002,7 @@ plus:
 			break;
 		} else if (obj->otyp == OIL_LAMP || obj->otyp == MAGIC_LAMP ||
 			obj->otyp == BRASS_LANTERN || Is_candle(obj)) {
-			if (Is_candle(obj) &&
+			if (!hallu && Is_candle(obj) &&
 			    obj->age < 20L * (long)objects[obj->otyp].oc_cost)
 				Strcat(prefix, "partly used ");
 			if(obj->lamplit)
@@ -684,9 +1013,9 @@ plus:
 		    goto charges;
 		break;
 	case WAND_CLASS:
-		add_erosion_words(obj, prefix);
+		if (!hallu) add_erosion_words(obj, prefix);
 charges:
-		if(obj->known)
+		if(obj->known && !hallu)
 		    Sprintf(eos(bp), " (%d:%d)", (int)obj->recharged, obj->spe);
 		break;
 	case POTION_CLASS:
@@ -694,7 +1023,7 @@ charges:
 		    Strcat(bp, " (lit)");
 		break;
 	case RING_CLASS:
-		add_erosion_words(obj, prefix);
+		if (!hallu) add_erosion_words(obj, prefix);
 ring:
 		if(obj->owornmask & W_RINGR) Strcat(bp, " (on right ");
 		if(obj->owornmask & W_RINGL) Strcat(bp, " (on left ");
@@ -702,12 +1031,13 @@ ring:
 		    Strcat(bp, body_part(HAND));
 		    Strcat(bp, ")");
 		}
-		if(obj->known && objects[obj->otyp].oc_charged) {
+		if(obj->known && objects[obj->otyp].oc_charged && !hallu) {
 			Strcat(prefix, sitoa(obj->spe));
 			Strcat(prefix, " ");
 		}
 		break;
 	case FOOD_CLASS:
+	        if (hallu) break; // no extra information
 		if (obj->oeaten)
 		    Strcat(prefix, "partly eaten ");
 		if (obj->otyp == CORPSE) {
@@ -836,6 +1166,10 @@ boolean ignore_oquan;	/* to force singular */
 {
 	char *nambuf = nextobuf();
 
+	if (Hallucination)
+	    return (ignore_oquan || otmp->quan < 2) ? xname(otmp)
+	                                            : makeplural(xname(otmp));
+
 	Sprintf(nambuf, "%s corpse", mons[otmp->corpsenm].mname);
 
 	if (ignore_oquan || otmp->quan < 2)
@@ -853,6 +1187,16 @@ struct obj *obj;
 	    return corpse_xname(obj, FALSE);
 	return xname(obj);
 }
+#ifdef SORTLOOT
+char *
+cxname2(obj)
+struct obj *obj;
+{
+	if (obj->otyp == CORPSE)
+	    return corpse_xname(obj, TRUE);
+	return xname2(obj, TRUE);
+}
+#endif /* SORTLOOT */
 
 /* treat an object as fully ID'd when it might be used as reason for death */
 char *
@@ -1501,9 +1845,9 @@ STATIC_OVL NEARDATA const struct o_range o_ranges[] = {
 	{ "candle",	TOOL_CLASS,   TALLOW_CANDLE,  WAX_CANDLE },
 	{ "horn",	TOOL_CLASS,   TOOLED_HORN,    HORN_OF_PLENTY },
 	{ "shield",	ARMOR_CLASS,  SMALL_SHIELD,   SHIELD_OF_REFLECTION },
-	{ "helm",	ARMOR_CLASS,  ELVEN_LEATHER_HELM, HELM_OF_TELEPATHY },
-	{ "gloves",	ARMOR_CLASS,  LEATHER_GLOVES, GAUNTLETS_OF_DEXTERITY },
-	{ "gauntlets",	ARMOR_CLASS,  LEATHER_GLOVES, GAUNTLETS_OF_DEXTERITY },
+	{ "helm",	ARMOR_CLASS,  ELVEN_HELM,     HELM_OF_TELEPATHY },
+	{ "gloves",	ARMOR_CLASS,  GLOVES, GAUNTLETS_OF_DEXTERITY },
+	{ "gauntlets",	ARMOR_CLASS,  GLOVES, GAUNTLETS_OF_DEXTERITY },
 	{ "boots",	ARMOR_CLASS,  LOW_BOOTS,      LEVITATION_BOOTS },
 	{ "shoes",	ARMOR_CLASS,  LOW_BOOTS,      IRON_SHOES },
 	{ "cloak",	ARMOR_CLASS,  MUMMY_WRAPPING, CLOAK_OF_DISPLACEMENT },
@@ -1710,8 +2054,7 @@ struct alt_spellings {
 } spellings[] = {
 	{ "pickax", PICK_AXE },
 	{ "whip", BULLWHIP },
-	{ "saber", SILVER_SABER },
-	{ "silver sabre", SILVER_SABER },
+	{ "sabre", SABER },
 	{ "smooth shield", SHIELD_OF_REFLECTION },
 	{ "grey dragon scale mail", GRAY_DRAGON_SCALE_MAIL },
 	{ "grey dragon scales", GRAY_DRAGON_SCALES },
@@ -1719,8 +2062,8 @@ struct alt_spellings {
 	{ "destroy armour", SCR_DESTROY_ARMOR },
 	{ "scroll of enchant armour", SCR_ENCHANT_ARMOR },
 	{ "scroll of destroy armour", SCR_DESTROY_ARMOR },
-	{ "leather armour", LEATHER_ARMOR },
-	{ "studded leather armour", STUDDED_LEATHER_ARMOR },
+	{ "armour", ARMOR },
+	{ "studded armour", STUDDED_ARMOR },
 	{ "iron ball", HEAVY_IRON_BALL },
 	{ "lantern", BRASS_LANTERN },
 	{ "mattock", DWARVISH_MATTOCK },
@@ -1784,6 +2127,11 @@ boolean from_user;
 	char oclass;
 	char *un, *dn, *actualn;
 	const char *name=0;
+
+	long objprops = 0,
+	     objpropcount = 0;
+
+	int objmaterial = 0;
 
 	cnt = spe = spesgn = typ = very = rechrg =
 		blessed = uncursed = iscursed =
@@ -1891,7 +2239,44 @@ boolean from_user;
 			isdiluted = 1;
 		} else if(!strncmpi(bp, "empty ", l=6)) {
 			contents = EMPTY;
-		} else break;
+		} else if(!strncmpi(bp, "vorpal ", l=7)) {
+		    if (!objpropcount
+#ifdef WIZARD
+                        || wizard
+#endif
+		       )
+		        objprops |= ITEM_VORPAL;
+		    objpropcount++;
+		} else if(!strncmpi(bp, "thirsty ", l=8)) {
+		    if (!objpropcount
+#ifdef WIZARD
+                        || wizard
+#endif
+		       )
+		        objprops |= ITEM_DRLI;
+		    objpropcount++;
+		} else if(!strncmpi(bp, "oilskin ", l=8) &&
+		         !!strncmpi(bp, "oilskin cloak", 13) &&
+			 !!strncmpi(bp, "oilskin sack", 12)) {
+		    if (!objpropcount
+#ifdef WIZARD
+                        || wizard
+#endif
+		       )
+		        objprops |= ITEM_OILSKIN;
+		    objpropcount++;
+		} else {
+		    for (i = 1; i < MAX_MAT; i++)
+		        if ((l = strlen(materialnm[i])) > 0 &&
+			    !strncmpi(bp, materialnm[i], l))
+			{
+			    objmaterial = i;
+			    l++;
+			    break;
+			}
+		    if (i == MAX_MAT)
+                        break;
+		}
 		bp += l;
 	}
 	if(!cnt) cnt = 1;		/* %% what with "gems" etc. ? */
@@ -2003,11 +2388,197 @@ boolean from_user;
 	 */
 	if (!strstri(bp, "wand ")
 	 && !strstri(bp, "spellbook ")
+	 && !strstri(bp, "scroll ")
 	 && !strstri(bp, "finger ")) {
-	    if ((p = strstri(bp, " of ")) != 0
-		&& (mntmp = name_to_mon(p+4)) >= LOW_PM)
+
+	    int l = 0;
+	    int of = 4;
+
+	    char *tmpp;
+
+	    p = bp;
+
+	    while (p != 0) {
+	        tmpp = strstri(p, " of ");
+		if (tmpp) of = 4, p = tmpp;
+		else {
+	            tmpp = strstri(p, " and ");
+		    if (tmpp) of = 5, p = tmpp;
+		    else {
+		        p = 0;
+		        break;
+		    }
+		}
+
+	        l = 0;
+
+
+	        if ((mntmp = name_to_mon(p+of)) >= LOW_PM)
+		    *p = 0, p = 0;
+		else if (!strncmpi((p+of), "fire", l=4) )
+		{
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    )
+                    objprops |= ITEM_FIRE;		    
+		    objpropcount++;
+		}
+		else if ((!strncmpi((p+of), "frost", l=5) ||
+		     !strncmpi((p+of), "cold", l=4) ))
+		{
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    )
+                    objprops |= ITEM_FROST;
+		    objpropcount++;
+		}
+		else if (!strncmpi((p+of), "drain", l=5) )
+		{
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    )
+                    objprops |= ITEM_DRLI;		    
+		    objpropcount++;
+		}
+		else if (!strncmpi((p+of), "reflection", l=10) )
+		{
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    )
+                    objprops |= ITEM_REFLECTION;		    
+		    objpropcount++;
+		}
+		else if (!strncmpi((p+of), "speed", l=5) )
+		{
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    )
+                    objprops |= ITEM_SPEED;		    
+		    objpropcount++;
+		}
+		else if (!strncmpi((p+of), "power", l=5) )
+		{
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    )
+                    objprops |= ITEM_POWER;		    
+		    objpropcount++;
+		}
+		else if (!strncmpi((p+of), "dexterity", l=9) )
+		{
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    )
+                    objprops |= ITEM_DEXTERITY;		    
+		    objpropcount++;
+		}
+		else if (!strncmpi((p+of), "brilliance", l=10) )
+		{
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    )
+                    objprops |= ITEM_BRILLIANCE;		    
+		    objpropcount++;
+		}
+		else if (!strncmpi((p+of), "telepathy", l=9) ||
+		    !strncmpi((p + 4), "ESP", 3))
+		{
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    )
+                    objprops |= ITEM_ESP;		    
+		    objpropcount++;
+		}
+		else if (!strncmpi((p+of), "displacement", l=12) )
+		{
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    )
+                    objprops |= ITEM_DISPLACEMENT;		    
+		    objpropcount++;
+		}
+		else if (!strncmpi((p+of), "searching", l=9))
+		{
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    )
+                    objprops |= ITEM_SEARCHING;		    
+		    objpropcount++;
+		}
+		else if (!strncmpi((p+of), "warning", l=7))
+		{
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    )
+                    objprops |= ITEM_WARNING;		    
+		    objpropcount++;
+		}
+		else if (!strncmpi((p+of), "stealth", l=7))
+		{
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    )
+                    objprops |= ITEM_STEALTH;		    
+		    objpropcount++;
+		}
+		else if (!strncmpi((p+of), "fumbling", l=8))
+		{
+		// uh, if they really want it...
+/*
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    ) */
+                    objprops |= ITEM_FUMBLING;		    
+		    objpropcount++;
+		}
+		else if (!strncmpi((p+of), "clairvoyance", l=12))
+		{
+		    if (!objpropcount
+#ifdef WIZARD
+                    || wizard
+#endif
+		    )
+                    objprops |= ITEM_CLAIRVOYANCE;		    
+		    objpropcount++;
+		} else l = 0;
+
+		if (l > 0)
 		*p = 0;
+
+                if (p)
+		    p += (of + l);
 	}
+	}
+
+
 	/* Find corpse type w/o "of" (red dragon scale mail, yeti corpse) */
 	if (strncmpi(bp, "samurai sword", 13)) /* not the "samurai" monster! */
 	if (strncmpi(bp, "wizard lock", 11)) /* not the "wizard" monster! */
@@ -2126,8 +2697,7 @@ boolean from_user;
 	   strncmpi(bp, "destroy ", 8) &&
 	   strncmpi(bp, "food detection", 14) &&
 	   strncmpi(bp, "ring mail", 9) &&
-	   strncmpi(bp, "studded leather arm", 19) &&
-	   strncmpi(bp, "leather arm", 11) &&
+	   strncmpi(bp, "studded arm", 11) &&
 	   strncmpi(bp, "tooled horn", 11) &&
 	   strncmpi(bp, "food ration", 11) &&
 	   strncmpi(bp, "meat ring", 9)
@@ -2142,7 +2712,13 @@ boolean from_user;
 			    /* else if(*bp) ?? */
 			} else
 			    actualn = bp;
-			goto srch;
+			if (oclass != ARMOR_CLASS || !objmaterial)
+			    goto srch; //might wish for "leather armor"
+			else {
+			    oclass = 0;
+			    typ = ARMOR; // studded checked above
+			    goto typfnd;
+			}
 		}
 		if(!BSTRCMPI(bp, p-j, wrp[i])){
 			oclass = wrpsym[i];
@@ -2150,7 +2726,13 @@ boolean from_user;
 			*p = 0;
 			if(p > bp && p[-1] == ' ') p[-1] = 0;
 			actualn = dn = bp;
-			goto srch;
+			if (oclass != ARMOR_CLASS || !objmaterial)
+			    goto srch;
+			else {
+			    oclass = 0;
+			    typ = ARMOR; // studded checked above
+			    goto typfnd;
+			}
 		}
 	}
 
@@ -2566,7 +3148,7 @@ typfnd:
 			break;
 		case FIGURINE:
 			if (!(mons[mntmp].geno & G_UNIQ)
-			    && !is_human(&mons[mntmp])
+			    && !mons[mntmp].mflags2 & M2_HUMAN
 #ifdef MAIL
 			    && mntmp != PM_MAIL_DAEMON
 #endif
@@ -2686,6 +3268,9 @@ typfnd:
 		if (otmp->oartifact) {
 			otmp->quan = 1L;
 			u.uconduct.wisharti++;	/* KMH, conduct */
+			if (otmp->oartifact == ART_GRAYSWANDIR ||
+			    otmp->oartifact == ART_WEREBANE)
+			    otmp->omaterial = SILVER;
 		}
 	}
 
@@ -2704,6 +3289,75 @@ typfnd:
 		  something,
 		  makeplural(body_part(HAND)));
 	}
+
+	if (!otmp->oartifact &&
+	    objmaterial > LIQUID &&
+	  (((otmp->oclass == ROCK_CLASS) &&
+	    objmaterial > FLESH)||
+	  ((is_elven_weapon(otmp) ||
+	    otmp->otyp == ELVEN_SHIELD ||
+	    (is_dwarvish_obj(otmp) && otmp->otyp != DWARVISH_CLOAK) ||
+	    ((otmp->oclass == WEAPON_CLASS ||
+	    otmp->oclass == ARMOR_CLASS) && 
+	    (objects[otmp->otyp].oc_material >= IRON ||
+	     objects[otmp->otyp].oc_material == WOOD))) &&
+	    (objmaterial >= IRON ||
+	     objmaterial == BONE ||
+	     objmaterial == WOOD)) ||
+	    (otmp->oclass == ARMOR_CLASS &&
+	     (objects[otmp->otyp].oc_material == LEATHER ||
+	      objects[otmp->otyp].oc_material == CLOTH) &&
+	     ((objmaterial > VEGGY &&
+	       objmaterial < WOOD) ||
+	       (objmaterial == DRAGON_HIDE &&
+	        !is_suit(otmp))))))
+	   
+	{
+	    // TODO: implement material restrictions
+	    otmp->omaterial = objmaterial;
+	}
+	else if (!otmp->oartifact)
+	    otmp->omaterial = objects[otmp->otyp].oc_material;
+
+        if (otmp->oclass == WEAPON_CLASS || 
+            is_weptool(otmp) || 
+    	    otmp->oclass == AMULET_CLASS || 
+    	    otmp->oclass == RING_CLASS || 
+    	    otmp->oclass == ARMOR_CLASS)
+        {
+    	    // check for restrictions
+    	    if (!((otmp->oclass == WEAPON_CLASS || is_weptool(otmp)) &&
+    	          is_blade(otmp))) 
+	        objprops &= ~ITEM_VORPAL;
+
+	    if (objprops & ITEM_FROST)
+	        objprops &= ~(ITEM_FIRE|ITEM_DRLI);
+	    else if (objprops & ITEM_FIRE)
+	        objprops &= ~(ITEM_FROST|ITEM_DRLI);
+	    else if (objprops & ITEM_DRLI)
+	        objprops &= ~(ITEM_FIRE|ITEM_FROST);
+    
+    	    if (is_boots(otmp) || is_gloves(otmp) || is_helmet(otmp))
+	        objprops &= ~ITEM_REFLECTION;
+    	
+    	    if (otmp->oclass == WEAPON_CLASS || is_weptool(otmp))
+	        objprops &= 
+    	          ~(ITEM_DISPLACEMENT|ITEM_POWER|ITEM_DEXTERITY|ITEM_BRILLIANCE
+    	           |ITEM_SPEED);
+    	
+    	    if (otmp->omaterial != CLOTH)
+	        objprops &= ~ITEM_OILSKIN;    
+    
+    	    otmp->oprops |= objprops;
+
+	    if (objprops & ITEM_REFLECTION &&
+	        (otmp->oclass == ARMOR_CLASS || otmp->oclass == WEAPON_CLASS ||
+		 is_weptool(otmp)) &&
+		objects[otmp->otyp].oc_material >= IRON &&
+		rn2(5))
+		otmp->omaterial = SILVER,
+		otmp->owt = weight(otmp);
+        }
 
 	if (halfeaten && otmp->oclass == FOOD_CLASS) {
 		if (otmp->otyp == CORPSE)

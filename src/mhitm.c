@@ -141,8 +141,8 @@ fightm(mtmp)		/* have monsters fight each other */
 		    }
 
 		    /* mtmp can be killed */
-		    bhitpos.x = mon->mx;
-		    bhitpos.y = mon->my;
+		    bhitpos.x = mon->mix;
+		    bhitpos.y = mon->miy;
 		    notonhead = 0;
 		    result = mattackm(mtmp,mon);
 
@@ -203,6 +203,10 @@ mattackm(magr, mdef)
 		    res[NATTK];	/* results of all attacks */
     struct attack   *mattk, alt_attk;
     struct permonst *pa, *pd;
+    boolean wildmiss = (mdef &&
+                        !telepathic(magr->data) && displaced_image(mdef) &&
+                        ((dist2(magr->mx, magr->my,
+			       mdef->mx, mdef->my) > 2) || !rn2(3)));
 
     if (!magr || !mdef) return(MM_MISS);		/* mike@genat */
     if (!magr->mcanmove || magr->msleeping) return(MM_MISS);
@@ -221,7 +225,8 @@ mattackm(magr, mdef)
     }
 
     /* undetect monsters become un-hidden if they are attacked */
-    if (mdef->mundetected) {
+    if (mdef->mundetected &&
+        dist2(mdef->mx, mdef->my, magr->mx, magr->my) > 2) {
 	mdef->mundetected = 0;
 	newsym(mdef->mx, mdef->my);
 	if(canseemon(mdef) && !sensemon(mdef)) {
@@ -233,7 +238,7 @@ mattackm(magr, mdef)
     }
 
     /* Elves hate orcs. */
-    if (is_elf(pa) && is_orc(pd)) tmp++;
+    if (is_elf(magr) && is_orc(mdef)) tmp++;
 
 
     /* Set up the visibility of action */
@@ -248,12 +253,25 @@ mattackm(magr, mdef)
 
     /* Now perform all attacks for the monster. */
     for (i = 0; i < NATTK; i++) {
+        int tmphp = mdef->mhp;
 	res[i] = MM_MISS;
 	mattk = getmattk(pa, i, res, &alt_attk);
 	otmp = (struct obj *)0;
 	attk = 1;
 	switch (mattk->aatyp) {
-	    case AT_WEAP:		/* "hand to hand" attacks */
+	    case AT_WEAP:		/* weapon attacks */
+#ifdef TAME_RANGED_ATTACKS
+		if (dist2(magr->mx,magr->my,mdef->mx,mdef->my) > 2)
+		{
+		    thrwmm(magr, mdef);
+		    if (tmphp > mdef->mhp) res[i] = MM_HIT;
+		    else res[i] = MM_MISS;
+		    if (mdef->mhp < 1) res[i] = MM_DEF_DIED;
+		    if (magr->mhp < 1) res[i] = MM_AGR_DIED;
+		    break;
+		}
+#endif //TAME_RANGED_ATTACKS
+
 		if (magr->weapon_check == NEED_WEAPON || !MON_WEP(magr)) {
 		    magr->weapon_check = NEED_HTH_WEAPON;
 		    if (mon_wield_item(magr) != 0) return 0;
@@ -274,8 +292,14 @@ mattackm(magr, mdef)
 	    case AT_BUTT:
 	    case AT_TENT:
 		/* Nymph that teleported away on first attack? */
-		if (distmin(magr->mx,magr->my,mdef->mx,mdef->my) > 1)
+		if (dist2(magr->mx,magr->my,mdef->mx,mdef->my) > 2)
+		{
+#ifdef TAME_RANGED_ATTACKS
+                    break; // might have more ranged attacks
+#else
 		    return MM_MISS;
+#endif //TAME_RANGED_ATTACKS
+		}
 		/* Monsters won't attack cockatrices physically if they
 		 * have a weapon instead.  This instinct doesn't work for
 		 * players, or under conflict or confusion. 
@@ -285,6 +309,21 @@ mattackm(magr, mdef)
 		    strike = 0;
 		    break;
 		}
+
+                if (wildmiss)
+		{
+		    if (vis)
+		    {
+		        char buf[BUFSZ];
+			Strcpy(buf, s_suffix(mon_nam(mdef)));
+		        pline("%s strikes at %s displaced image!",
+			      Monnam(magr), buf);
+			break;
+		    }
+		    res[i] = MM_MISS;
+		    break;
+		}
+
 		dieroll = rnd(20 + i);
 		strike = (tmp > dieroll);
 		/* KMH -- don't accumulate to-hit bonuses */
@@ -293,17 +332,24 @@ mattackm(magr, mdef)
 		if (strike) {
 		    res[i] = hitmm(magr, mdef, mattk);
 		    if((mdef->data == &mons[PM_BLACK_PUDDING] || mdef->data == &mons[PM_BROWN_PUDDING])
-		       && otmp && objects[otmp->otyp].oc_material == IRON
+		       && otmp && objects[otmp->otyp].oc_skill != WHACK 
 		       && mdef->mhp > 1 && !mdef->mcan)
 		    {
-			if (clone_mon(mdef, 0, 0)) {
+		        struct monst *mtmp2;
+			if (mtmp2 = clone_mon(mdef, 0, 0)) {
 			    if (vis) {
 				char buf[BUFSZ];
 
 				Strcpy(buf, Monnam(mdef));
 				pline("%s divides as %s hits it!", buf, mon_nam(magr));
 			    }
-			}
+			    mdef->mhpmax >>= 1;
+			    if (mdef->mhp > mdef->mhpmax)
+			        mdef->mhp = mdef->mhpmax;
+			    mtmp2->mhpmax >>= 1;
+			    if (mtmp2->mhp > mtmp2->mhpmax)
+			        mtmp2->mhp = mtmp2->mhpmax;
+			                        }
 		    }
 		} else
 		    missmm(magr, mdef, mattk);
@@ -316,12 +362,31 @@ mattackm(magr, mdef)
 
 		break;
 
+#ifdef TAME_RANGED_ATTACKS
+	    case AT_BREA:
+	        breamm(magr, mdef, mattk);
+		if (tmphp > mdef->mhp) res[i] = MM_HIT;
+		else res[i] = MM_MISS;
+		if (mdef->mhp < 1) res[i] = MM_DEF_DIED;
+		if (magr->mhp < 1) res[i] = MM_AGR_DIED;
+		break;
+
+	    case AT_SPIT:
+	        spitmm(magr, mdef, mattk);
+		if (tmphp > mdef->mhp) res[i] = MM_HIT;
+		else res[i] = MM_MISS;
+		if (mdef->mhp < 1) res[i] = MM_DEF_DIED;
+		if (magr->mhp < 1) res[i] = MM_AGR_DIED;
+		break;
+#endif //TAME_RANGED_ATTACKS
+
 	    case AT_GAZE:
 		strike = 0;	/* will not wake up a sleeper */
 		res[i] = gazemm(magr, mdef, mattk);
 		break;
 
 	    case AT_EXPL:
+		if (distmin(magr->mx,magr->my,mdef->mx,mdef->my) > 1) break;
 		res[i] = explmm(magr, mdef, mattk);
 		if (res[i] == MM_MISS) { /* cancelled--no attack */
 		    strike = 0;
@@ -331,6 +396,7 @@ mattackm(magr, mdef)
 		break;
 
 	    case AT_ENGL:
+		if (distmin(magr->mx,magr->my,mdef->mx,mdef->my) > 1) break;
 #ifdef STEED
 		if (u.usteed && (mdef == u.usteed)) {
 		    strike = 0;
@@ -350,13 +416,25 @@ mattackm(magr, mdef)
 		}
 		break;
 
+#ifdef TAME_RANGED_ATTACKS
+            case AT_MAGC:
+		if (dist2(magr->mx,magr->my,mdef->mx,mdef->my) > 2) break;
+
+	        res[i] = castmm(magr, mdef, mattk);
+		if (res[i] & MM_DEF_DIED)
+			return (MM_DEF_DIED |
+				(grow_up(magr,mdef) ? 0 : MM_AGR_DIED));
+		break;
+#endif //TAME_RANGED_ATTACKS
+
 	    default:		/* no attack */
 		strike = 0;
 		attk = 0;
 		break;
 	}
 
-	if (attk && !(res[i] & MM_AGR_DIED))
+	if (attk && !(res[i] & MM_AGR_DIED) &&
+	    dist2(magr->mx, magr->my, mdef->mx, mdef->my) < 3)
 	    res[i] = passivemm(magr, mdef, strike, res[i] & MM_DEF_DIED);
 
 	if (res[i] & MM_DEF_DIED) return res[i];
@@ -448,7 +526,7 @@ gazemm(magr, mdef, mattk)
 	}
 
 	if (magr->mcan || !magr->mcansee ||
-	    (magr->minvis && !perceives(mdef->data)) ||
+	    (magr->minvis && !sees_invis(mdef)) ||
 	    !mdef->mcansee || mdef->msleeping) {
 	    if(vis) pline("but nothing happens.");
 	    return(MM_MISS);
@@ -465,7 +543,7 @@ gazemm(magr, mdef, mattk)
 					"The gaze is reflected away by %s %s.");
 		    return (MM_MISS);
 		}
-		if (mdef->minvis && !perceives(magr->data)) {
+		if (mdef->minvis && !sees_invis(magr)) {
 		    if (canseemon(magr)) {
 			pline("%s doesn't seem to notice that %s gaze was reflected.",
 			      Monnam(magr), mhis(magr));
@@ -496,6 +574,15 @@ gulpmm(magr, mdef, mattk)
 
 	if (mdef->data->msize >= MZ_HUGE) return MM_MISS;
 
+	if (mdef &&
+	    !telepathic(magr->data) && displaced_image(mdef) &&
+            ((dist2(magr->mx, magr->my,
+	      mdef->mx, mdef->my) > 2) || !rn2(3)))
+	{
+	    pline("%s gulps at some air.", Monnam(magr));
+	    return(MM_MISS);
+	}
+
 	if (vis) {
 		Sprintf(buf,"%s swallows", Monnam(magr));
 		pline("%s %s.", buf, mon_nam(mdef));
@@ -517,8 +604,11 @@ gulpmm(magr, mdef, mattk)
 	 *  ender's position.
 	 */
 	remove_monster(ax, ay);
+	remove_monster(magr->mix, magr->miy);
+	newsym(magr->mix,magr->miy);	/* erase old position */
 	place_monster(magr, dx, dy);
 	newsym(ax,ay);			/* erase old position */
+	newsym(magr->mix,magr->miy);	/* erase old position */
 	newsym(dx,dy);			/* update new position */
 
 	status = mdamagem(magr, mdef, mattk);
@@ -559,6 +649,11 @@ explmm(magr, mdef, mattk)
 {
 	int result;
 
+        boolean wildmiss = (mdef &&
+	                    !telepathic(magr->data) && displaced_image(mdef) &&
+                            ((dist2(magr->mx, magr->my,
+			           mdef->mx, mdef->my) > 2) || !rn2(3)));
+
 	if (magr->mcan)
 	    return MM_MISS;
 
@@ -566,7 +661,7 @@ explmm(magr, mdef, mattk)
 		pline("%s explodes!", Monnam(magr));
 	else	noises(magr, mattk);
 
-	result = mdamagem(magr, mdef, mattk);
+	result = wildmiss ? MM_MISS : mdamagem(magr, mdef, mattk);
 
 	/* Kill off agressor if it didn't die. */
 	if (!(result & MM_AGR_DIED)) {
@@ -692,7 +787,8 @@ mdamagem(magr, mdef, mattk)
 				touch_petrifies(&mons[otmp->corpsenm]))
 			    goto do_stone;
 			tmp += dmgval(otmp, mdef);
-			if (otmp->oartifact) {
+			if ((otmp->oclass == WEAPON_CLASS && otmp->oprops) ||
+			    otmp->oartifact) {
 			    (void)artifact_hit(magr,mdef, otmp, &tmp, dieroll);
 			    if (mdef->mhp <= 0)
 				return (MM_DEF_DIED |
@@ -1107,6 +1203,64 @@ mdamagem(magr, mdef, mattk)
 		    pline("%s last thought fades away...",
 			          s_suffix(Monnam(mdef)));
 		break;
+	    case AD_DETH:
+	        if (vis)
+		    pline("%s reaches out with its deadly touch.",
+		          Monnam(magr));
+		if (is_undead(mdef->data)) {
+		    /* Still does normal damage */
+	            if (vis)
+		        pline("%s looks no deader than before.", Monnam(mdef));
+		    break;
+		}
+		switch (rn2(20)) {
+		case 19: case 18: case 17:
+		    if (!resist(mdef, 0, 0, 0)) {
+		        monkilled(mdef, "", AD_DETH);
+			tmp = 0;
+			break;
+		    } /* else FALLTHRU */
+		default: /* case 16: ... case 5: */
+		    if (vis)
+		        pline("%s looks weaker!", Monnam(mdef));
+		    mdef->mhpmax -= rn2(tmp / 2 + 1); // mhp will then 
+		                                      // still be less than 
+						      // this value
+		    break;
+		case 4: case 3: case 2: case 1: case 0:
+		    if (Antimagic) shieldeff(mdef->mx, mdef->my);
+	            if (vis)
+		        pline("That didn't work...");
+		    tmp = 0;
+		    break;
+		}
+		break;
+	    case AD_PEST:
+		Strcpy(buf, mon_nam(mdef));
+	        if (vis)
+		    pline("%s reaches out, and %s looks rather ill.",
+		  	    Monnam(magr), buf);
+		if((mdef->mhpmax > 3) && !resist(mdef, 0, 0, NOTELL))
+			mdef->mhpmax /= 2;
+		if((mdef->mhp > 2) && !resist(mdef, 0, 0, NOTELL))
+			mdef->mhp /= 2;
+		if (mdef->mhp > mdef->mhpmax) mdef->mhp = mdef->mhpmax;
+		break;
+	    case AD_FAMN:
+		Strcpy(buf, s_suffix(mon_nam(mdef)));
+	        if (vis)
+		    pline("%s reaches out, and %s body shrivels.",
+			    Monnam(magr), buf);
+		if (mdef->mtame && !mdef->isminion)
+		    EDOG(mdef)->hungrytime -= rn1(120, 120);
+		else
+		{
+		    tmp += rnd(10); /* lacks a food rating */
+		    if (tmp >= mdef->mhp && vis)
+		        pline("%s starves.", Monnam(mdef));
+		}
+		/* plus the normal damage */
+		break;
 	    case AD_SLIM:
 		if (cancelled) break;	/* physical damage only */
 		if (!rn2(4) && !flaming(mdef->data) &&
@@ -1120,7 +1274,17 @@ mdamagem(magr, mdef, mattk)
 		if (cancelled) tmp = 0;
 		break;
 	    case AD_WRAP: /* monsters cannot grab one another, it's too hard */
-		if (magr->mcan) tmp = 0;
+	        if (mattk->aatyp == AT_ENGL)
+		{
+			// Engulfing attacks are fair game, however.
+			if (mbreathing(mdef) ||
+			    (amphibious(mdef->data) &&
+			    magr->data == &mons[PM_WATER_ELEMENTAL]))
+				tmp = 0; 
+			else
+				tmp = mdef->mhp * 2;
+		}
+		else if (magr->mcan) tmp = 0;
 		break;
 	    case AD_ENCH:
 		/* there's no msomearmor() function, so just do damage */
@@ -1134,6 +1298,7 @@ mdamagem(magr, mdef, mattk)
 	if((mdef->mhp -= tmp) < 1) {
 	    if (m_at(mdef->mx, mdef->my) == magr) {  /* see gulpmm() */
 		remove_monster(mdef->mx, mdef->my);
+		remove_monster(mdef->mix, mdef->miy);
 		mdef->mhp = 1;	/* otherwise place_monster will complain */
 		place_monster(mdef, mdef->mx, mdef->my);
 		mdef->mhp = 0;
@@ -1308,6 +1473,20 @@ int mdead;
 		    }
 		} else tmp = 0;
 		goto assess_dmg;
+		case AD_MAGM:
+	    /* wrath of gods for attacking Oracle */
+	    if(resists_magm(magr)) {
+		if(canseemon(magr)) {
+		shieldeff(magr->mx, magr->my);
+		pline("A hail of magic missiles narrowly misses %s!",mon_nam(magr));
+		}
+	    } else {
+		if(canseemon(magr))
+			pline(magr->data == &mons[PM_WOODCHUCK] ? "ZOT!" : 
+			"%s is hit by magic missiles appearing from thin air!",Monnam(magr));
+		goto assess_dmg;
+	    }
+	    break;
 	    case AD_ENCH:	/* KMH -- remove enchantment (disenchanter) */
 		if (mhit && !mdef->mcan && otmp) {
 		    (void) drain_item(otmp);
@@ -1326,7 +1505,7 @@ int mdead;
 		if (mddat == &mons[PM_FLOATING_EYE]) {
 		    if (!rn2(4)) tmp = 127;
 		    if (magr->mcansee && haseyes(madat) && mdef->mcansee &&
-			(perceives(madat) || !mdef->minvis)) {
+			(sees_invis(magr) || !mdef->minvis)) {
 			Sprintf(buf, "%s gaze is reflected by %%s %%s.",
 				s_suffix(mon_nam(mdef)));
 			if (mon_reflects(magr,

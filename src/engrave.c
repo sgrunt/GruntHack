@@ -1015,7 +1015,8 @@ doengrave()
 	switch(type){
 	    default:
 		multi = -(len/10);
-		if (multi) nomovemsg = "You finish your weird engraving.";
+		if (multi)
+		    nomovemsg = "You finish your weird engraving.";
 		break;
 	    case DUST:
 		multi = -(len/10);
@@ -1081,6 +1082,9 @@ doengrave()
 		if (multi) nomovemsg = "You finish scrawling.";
 		break;
 	}
+
+	if (multi)
+	    multi_reason = "engraving";
 
 	/* Chop engraving down to size if necessary */
 	if (len > maxelen) {

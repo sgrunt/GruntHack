@@ -12,6 +12,7 @@
 struct wseg {
     struct wseg *nseg;
     xchar  wx, wy;	/* the segment's position */
+    xchar  wix, wiy;	/* the segment's image's position */
 };
 
 STATIC_DCL void FDECL(toss_wsegs, (struct wseg *,BOOLEAN_P));
@@ -153,9 +154,12 @@ toss_wsegs(curr, display_update)
 	/* need to check curr->wx for genocided while migrating_mon */
 	if (curr->wx) {
 	    remove_monster(curr->wx, curr->wy);
+	    remove_monster_img(curr->wix, curr->wiy);
 
 	    /* update screen before deallocation */
-	    if (display_update) newsym(curr->wx,curr->wy);
+	    if (display_update)
+	        newsym(curr->wx,curr->wy),
+		newsym(curr->wix,curr->wiy);
 	}
 
 	/* free memory used by the segment */
@@ -378,6 +382,7 @@ cutworm(worm, x, y, weap)
     }
 
     remove_monster(x, y);		/* clone_mon puts new head here */
+    remove_monster_img(curr->wix, curr->wiy);
     new_worm = clone_mon(worm, x, y);
     new_worm->wormno = new_wnum;	/* affix new worm number */
 
@@ -426,6 +431,7 @@ see_wsegs(worm)
 
     while (curr != wheads[worm->wormno]) {
 	newsym(curr->wx,curr->wy);
+	newsym(curr->wix,curr->wiy);
 	curr = curr->nseg;
     }
 }
@@ -550,6 +556,7 @@ place_wsegs(worm)
 
     while (curr != wheads[worm->wormno]) {
 	place_worm_seg(worm,curr->wx,curr->wy);
+	place_monster_img(worm,curr->wix,curr->wiy);
 	curr = curr->nseg;
     }
 }
@@ -572,7 +579,9 @@ remove_worm(worm)
 
     while (curr) {
 	remove_monster(curr->wx, curr->wy);
+	remove_monster_img(curr->wix, curr->wiy);
 	newsym(curr->wx, curr->wy);
+	newsym(curr->wix, curr->wiy);
 	curr = curr->nseg;
     }
 }
@@ -606,8 +615,8 @@ place_worm_tail_randomly(worm, x, y)
     wheads[wnum] = new_tail = curr;
     curr = curr->nseg;
     new_tail->nseg = (struct wseg *) 0;
-    new_tail->wx = x;
-    new_tail->wy = y;
+    new_tail->wix = new_tail->wx = x;
+    new_tail->wiy = new_tail->wy = y;
 
     while(curr)  {
 	xchar nx, ny;
@@ -621,8 +630,8 @@ place_worm_tail_randomly(worm, x, y)
 
 	if (tryct < 50)  {
 	    place_worm_seg(worm, nx, ny);
-	    curr->wx = ox = nx;
-	    curr->wy = oy = ny;
+	    curr->wix = curr->wx = ox = nx;
+	    curr->wiy = curr->wy = oy = ny;
 	    wtails[wnum] = curr;
 	    curr = curr->nseg;
 	    wtails[wnum]->nseg = new_tail;
@@ -711,15 +720,15 @@ create_worm_tail(num_segs)
 
     new_tail = curr = newseg();
     curr->nseg = (struct wseg *)0;
-    curr->wx = 0;
-    curr->wy = 0;
+    curr->wix = curr->wx = 0;
+    curr->wiy = curr->wy = 0;
 
     while (i < num_segs) {
 	curr->nseg = newseg();
 	curr = curr->nseg;
 	curr->nseg = (struct wseg *)0;
-	curr->wx = 0;
-	curr->wy = 0;
+        curr->wix = curr->wx = 0;
+        curr->wiy = curr->wy = 0;
 	i++;
     }
 

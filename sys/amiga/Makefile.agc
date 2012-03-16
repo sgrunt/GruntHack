@@ -13,11 +13,11 @@
 ### DIRECTORY STRUCTURE
 ###
 
-NH = nh:
+NH = gh:
 
 SBIN = $(NH)sbin/
 SLIB = $(NH)slib/
-NETHACK = $(NH)NetHack/
+NETHACK = $(NH)GruntHack/
 HACKEXE = $(NH)HackExe/
 AMI = $(NH)sys/amiga/
 DAT = $(NH)dat/
@@ -304,7 +304,7 @@ INSTDUNGEONFILES1= \
 	$(SLIB)wizard2.lev	$(SLIB)wizard3.lev \
 	$(XDFILES)
 
-INSTDUNGEONFILES= $(NETHACK)NetHack.cnf $(INSTDUNGEONFILES1)
+INSTDUNGEONFILES= $(NETHACK)GrntHack.cnf $(INSTDUNGEONFILES1)
 
 
 INSTDATAFILES= \
@@ -945,9 +945,9 @@ $(NETHACK)record:
 $(SLIB)wizhelp: $(DAT)wizhelp
 	copy $(DAT)wizhelp $@
 
-# Create the directories here because NetHack.cnf puts them there by default
-$(NETHACK)NetHack.cnf:  $(AMI)NetHack.cnf
-	copy $(AMI)NetHack.cnf $@
+# Create the directories here because GrntHack.cnf puts them there by default
+$(NETHACK)GrntHack.cnf:  $(AMI)GrntHack.cnf
+	copy $(AMI)GrntHack.cnf $@
 	-makedir $(NETHACK)save
 	-makedir $(NETHACK)levels
 

@@ -252,7 +252,15 @@ struct mkroom *sroom;
 			tx = mm.x; ty = mm.y;
 		} while (occupied((xchar)tx, (xchar)ty) && --i > 0);
 	    throne_placed:
-		/* TODO: try to ensure the enthroned monster is an M2_PRINCE */
+	        if (Is_knox(&u.uz)) break;  // Croesus' throne
+		mon = makemon(&mons[PM_KING], tx, ty, NO_MM_FLAGS);
+		if(mon) {
+			mon->msleeping = 1;
+			if (type==COURT && mon->mpeaceful) {
+				mon->mpeaceful = 0;
+				set_malign(mon);
+			}
+		}
 		break;
 	    case BEEHIVE:
 		tx = sroom->lx + (sroom->hx - sroom->lx + 1)/2;
@@ -289,6 +297,7 @@ struct mkroom *sroom;
 		/* don't place monster on explicitly placed throne */
 		if(type == COURT && IS_THRONE(levl[sx][sy].typ))
 		    continue;
+		if (MON_AT(sx, sy)) continue;
 		mon = makemon(
 		    (type == COURT) ? courtmon() :
 		    (type == BARRACKS) ? squadmon() :
@@ -665,10 +674,11 @@ courtmon()
 	int     i = rn2(60) + rn2(3*level_difficulty());
 	if (i > 100)		return(mkclass(S_DRAGON,0));
 	else if (i > 95)	return(mkclass(S_GIANT,0));
-	else if (i > 85)	return(mkclass(S_TROLL,0));
-	else if (i > 75)	return(mkclass(S_CENTAUR,0));
-	else if (i > 60)	return(mkclass(S_ORC,0));
-	else if (i > 45)	return(&mons[PM_BUGBEAR]);
+	else if (i > 90)	return(mkclass(S_TROLL,0));
+	else if (i > 70)	return(&mons[PM_LORD]);
+	else if (i > 65)	return(mkclass(S_CENTAUR,0));
+	else if (i > 60)	return(mkclass(S_HUMANOID,0));
+	else if (i > 45)	return(mkclass(S_ORC,0));
 	else if (i > 30)	return(&mons[PM_HOBGOBLIN]);
 	else if (i > 15)	return(mkclass(S_GNOME,0));
 	else			return(mkclass(S_KOBOLD,0));

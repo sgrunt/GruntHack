@@ -123,7 +123,13 @@ lookat(x, y, buf, monbuf)
     } else if (glyph_is_monster(glyph)) {
 	bhitpos.x = x;
 	bhitpos.y = y;
-	mtmp = m_at(x,y);
+	mtmp = m_img_at(x,y);
+	if (!mtmp)
+	{
+	    mtmp = m_at(x, y);
+	    if (mtmp && displaced_image(mtmp) &&
+	        !tp_sensemon(mtmp)) mtmp = 0;
+	}
 	if (mtmp != (struct monst *) 0) {
 	    char *name, monnambuf[BUFSZ];
 	    boolean accurate = !Hallucination;
@@ -135,11 +141,17 @@ lookat(x, y, buf, monbuf)
 
 	    pm = mtmp->data;
 	    Sprintf(buf, "%s%s%s",
-		    (mtmp->mx != x || mtmp->my != y) ?
+		    ((mtmp->mx != x || mtmp->my != y) &&
+		     (mtmp->mix != x || mtmp->miy != y)) ? 
 			((mtmp->isshk && accurate)
-				? "tail of " : "tail of a ") : "",
+				? "tail of " : "tail of a ") 
+				: "",
 		    (mtmp->mtame && accurate) ? "tame " :
-		    (mtmp->mpeaceful && accurate) ? "peaceful " : "",
+		    (mtmp->mpeaceful && accurate) ? "peaceful " : 
+		     (mtmp->mix == x && mtmp->miy == y && 
+		      (mtmp->mx != x || mtmp->my != y) && tp_sensemon(mtmp)) ?
+		      ((mtmp->isshk && accurate) ? "image of " : "image of a ")
+		      : "",
 		    name);
 	    if (u.ustuck == mtmp)
 		Strcat(buf, (Upolyd && sticks(youmonst.data)) ?
@@ -161,62 +173,66 @@ lookat(x, y, buf, monbuf)
 	    {
 		int ways_seen = 0, normal = 0, xraydist;
 		boolean useemon = (boolean) canseemon(mtmp);
+                boolean image = (x == mtmp->mix && y == mtmp->miy);
 
 		xraydist = (u.xray_range<0) ? -1 : u.xray_range * u.xray_range;
 		/* normal vision */
-		if ((mtmp->wormno ? worm_known(mtmp) : cansee(mtmp->mx, mtmp->my)) &&
+		if ((mtmp->wormno ? worm_known(mtmp) :
+		    (image && cansee(x, y))) &&
 			mon_visible(mtmp) && !mtmp->minvis) {
 		    ways_seen++;
 		    normal++;
 		}
 		/* see invisible */
-		if (useemon && mtmp->minvis)
+		if (useemon && image && mtmp->minvis)
 		    ways_seen++;
 		/* infravision */
-		if ((!mtmp->minvis || See_invisible) && see_with_infrared(mtmp))
+		if ((!mtmp->minvis || See_invisible) && 
+		    image && see_with_infrared(mtmp))
 		    ways_seen++;
 		/* telepathy */
-		if (tp_sensemon(mtmp))
+		if (tp_sensemon(mtmp) && !image)
 		    ways_seen++;
 		/* xray */
-		if (useemon && xraydist > 0 &&
+		if (useemon && xraydist > 0 && !image &&
 			distu(mtmp->mx, mtmp->my) <= xraydist)
 		    ways_seen++;
-		if (Detect_monsters)
+		if (Detect_monsters && !image)
 		    ways_seen++;
-		if (MATCH_WARN_OF_MON(mtmp))
+		if (MATCH_WARN_OF_MON(mtmp) && !image)
 		    ways_seen++;
 
-		if (ways_seen > 1 || !normal) {
+		if (ways_seen > 1 || !normal ||
+		    (image && tp_sensemon(mtmp))) {
 		    if (normal) {
 			Strcat(monbuf, "normal vision");
 			/* can't actually be 1 yet here */
 			if (ways_seen-- > 1) Strcat(monbuf, ", ");
 		    }
-		    if (useemon && mtmp->minvis) {
+		    if (useemon && image && mtmp->minvis) {
 			Strcat(monbuf, "see invisible");
 			if (ways_seen-- > 1) Strcat(monbuf, ", ");
 		    }
 		    if ((!mtmp->minvis || See_invisible) &&
-			    see_with_infrared(mtmp)) {
+			    image && see_with_infrared(mtmp)) {
 			Strcat(monbuf, "infravision");
 			if (ways_seen-- > 1) Strcat(monbuf, ", ");
 		    }
-		    if (tp_sensemon(mtmp)) {
+		    if (tp_sensemon(mtmp) && !image) {
 			Strcat(monbuf, "telepathy");
 			if (ways_seen-- > 1) Strcat(monbuf, ", ");
 		    }
-		    if (useemon && xraydist > 0 &&
+		    if (useemon && xraydist > 0 && !image &&
 			    distu(mtmp->mx, mtmp->my) <= xraydist) {
 			/* Eyes of the Overworld */
 			Strcat(monbuf, "astral vision");
 			if (ways_seen-- > 1) Strcat(monbuf, ", ");
 		    }
-		    if (Detect_monsters) {
+		    if (Detect_monsters && !image) {
 			Strcat(monbuf, "monster detection");
 			if (ways_seen-- > 1) Strcat(monbuf, ", ");
 		    }
-		    if (MATCH_WARN_OF_MON(mtmp)) {
+		    if (MATCH_WARN_OF_MON(mtmp) && !image) {
 		    	char wbuf[BUFSZ];
 			if (Hallucination)
 				Strcat(monbuf, "paranoid delusion");
@@ -261,7 +277,7 @@ lookat(x, y, buf, monbuf)
 	int tnum = what_trap(glyph_to_trap(glyph));
 	Strcpy(buf, defsyms[trap_to_defsym(tnum)].explanation);
     } else if(!glyph_is_cmap(glyph)) {
-	Strcpy(buf,"dark part of a room");
+	Strcpy(buf,"unexplored area");
     } else switch(glyph_to_cmap(glyph)) {
     case S_altar:
 	if(!In_endgame(&u.uz))
@@ -631,8 +647,8 @@ do_look(quick)
 	for (hit_trap = FALSE, i = 0; i < MAXPCHARS; i++) {
 	    x_str = defsyms[i].explanation;
 	    if (sym == (from_screen ? showsyms[i] : defsyms[i].sym) && *x_str) {
-		/* avoid "an air", "a water", or "a floor of a room" */
-		int article = (i == S_room) ? 2 :		/* 2=>"the" */
+		/* avoid "an air", "a water", "a floor of a room", "a dark part of a room" */
+		int article = ((i == S_room)||(i == S_darkroom)) ? 2 :		/* 2=>"the" */
 			      !(strcmp(x_str, "air") == 0 ||	/* 1=>"an"  */
 				strcmp(x_str, "water") == 0);	/* 0=>(none)*/
 

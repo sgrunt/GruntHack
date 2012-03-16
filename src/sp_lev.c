@@ -755,6 +755,7 @@ struct mkroom	*croom;
     coord cc;
     struct permonst *pm;
     unsigned g_mvflags;
+    long racemask = 0;
 
     if (rn2(100) < m->chance) {
 
@@ -788,8 +789,24 @@ struct mkroom	*croom;
 	    pm = mkclass(class,G_NOGEN);
 	    /* if we can't get a specific monster type (pm == 0) then the
 	       class has been genocided, so settle for a random monster */
+	    if (is_racial(pm))
+	    {
+    	        if (class == S_HUMAN)
+    	            racemask = rn2(2) ? M2_HUMAN : M2_ELF;
+    	        else if (class == S_GIANT)
+    	            racemask = rn2(2) ? M2_GIANT : M2_ETTIN;
+    	        else
+    	            racemask = (class == S_KOBOLD)   ? M2_KOBOLD :
+    		               (class == S_ORC)      ? M2_ORC    :
+    		               (class == S_OGRE)     ? M2_OGRE   :
+    			       (class == S_HUMANOID) ? M2_DWARF  :
+    			       (class == S_GNOME)    ? M2_GNOME  : 0;
+	    }
 	}
-	if (In_mines(&u.uz) && pm && your_race(pm) &&
+	if (In_mines(&u.uz) && pm &&
+	                is_racial(pm) && your_race_mdat(pm) &&
+			(pm->mflags2 & (~M2_DWARF & ~M2_GNOME & M2_RACEMASK)
+			    == 0L) &&
 			(Race_if(PM_DWARF) || Race_if(PM_GNOME)) && rn2(3))
 	    pm = (struct permonst *) 0;
 
@@ -809,13 +826,33 @@ struct mkroom	*croom;
 	if (MON_AT(x,y) && enexto(&cc, x, y, pm))
 	    x = cc.x,  y = cc.y;
 
+	
+
 	if(m->align != -12)
-	    mtmp = mk_roamer(pm, Amask2align(amask), x, y, m->peaceful);
+	    mtmp = mk_roamer(racemask ? &mons[PM_LICHEN] : pm,
+	                     Amask2align(amask), x, y, m->peaceful);
 	else if(PM_ARCHEOLOGIST <= m->id && m->id <= PM_WIZARD)
-	         mtmp = mk_mplayer(pm, x, y, FALSE);
-	else mtmp = makemon(pm, x, y, NO_MM_FLAGS);
+	    mtmp = mk_mplayer(pm, x, y, FALSE), racemask = 0;
+	else
+	    mtmp = makemon(racemask ? &mons[PM_LICHEN] : pm,
+	                   x, y, NO_MM_FLAGS);
 
 	if (mtmp) {
+	    if (racemask)
+	    {
+	        mtmp->mrace = racemask;
+		set_mon_data(mtmp, pm, 0);
+	        mtmp->m_lev = adj_lev(pm);
+	        if (-race_lev_mod(mtmp->mrace) > mtmp->m_lev)
+		    mtmp->m_lev = 0;
+	        else
+	        {
+	            mtmp->m_lev += race_lev_mod(mtmp->mrace);
+	            if (mtmp->m_lev > 49) mtmp->m_lev = 49;
+	        }
+		newsym(x, y);
+	    }
+
 	    /* handle specific attributes for some special monsters */
 	    if (m->name.str) mtmp = christen_monst(mtmp, m->name.str);
 
@@ -1070,6 +1107,10 @@ stair	*s;
 struct mkroom	*croom;
 {
 	schar		x,y;
+	
+	if (Invocation_lev(&u.uz) &&
+	    s->up == 0)
+	    return;
 
 	x = s->x; y = s->y;
 	get_free_room_loc(&x, &y, croom);
@@ -2447,13 +2488,24 @@ dlb *fd;
 		Fread((genericptr_t)&tmpstair, 1, sizeof(tmpstair), fd);
 
 		xi = 0;
+		try_again:
 		do {
 		    x = tmpstair.x;  y = tmpstair.y;
 		    get_location(&x, &y, DRY);
 		} while(prevstair.x && xi++ < 100 &&
 			distmin(x,y,prevstair.x,prevstair.y) <= 8);
 		if ((badtrap = t_at(x,y)) != 0) deltrap(badtrap);
-		mkstairs(x, y, (char)tmpstair.up, (struct mkroom *)0);
+		if (tmpstair.up || !Invocation_lev(&u.uz))
+		{
+		   mkstairs(x, y, (char)tmpstair.up, (struct mkroom *)0);
+		}
+		else
+		{
+		   if (x < 5 || x > COLNO-5 || y < 5 || y > COLNO - 5)
+		       goto try_again;
+		   inv_pos.x = x, inv_pos.y = y;
+		}
+
 		prevstair.x = x;
 		prevstair.y = y;
 	}

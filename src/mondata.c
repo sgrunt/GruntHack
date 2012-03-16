@@ -17,12 +17,66 @@ struct permonst *ptr;
 int flag;
 {
     mon->data = ptr;
+
     if (flag == -1) return;		/* "don't care" */
+
+    if (is_racial(ptr) && (mon == &youmonst))
+        mon->mrace = urace.selfmask;  // just in case?
+    else if (is_racial(ptr) && mon->isshk &&
+             !strcmp(shkname(mon), "Izchak"))
+    {
+        mon->mrace = M2_HUMAN;      // special case :-)
+	mon->morigdata = PM_ARCHON; // and don't you dare kill him
+    }
+    else if ((is_racial(ptr) && !(ptr->mflags2 & mon->mrace)) ||
+             (is_were(ptr) && !mon->mrace))
+    {
+        if (In_mines(&u.uz) && ((ptr->mflags2 & (M2_GNOME|M2_DWARF)) != 0))
+	{
+	    if (!(ptr->mflags2 & M2_GNOME) ||
+	         ((ptr->mflags2 & M2_DWARF) && rn2(2)))
+	        mon->mrace = M2_DWARF;
+            else
+	        mon->mrace = M2_GNOME;
+	}
+	else
+	{
+            int cnt = 0, races[10], j;
+            for(j = MINMRACE; j <= MAXMRACE; j <<= 1)
+            {
+    	        if ((ptr->mflags2 & j) ||
+		    is_were(ptr)) // cheat - werefoo can take any form
+    	        {
+    	            races[cnt] = j;
+    	            cnt++;
+    	        }
+    	    
+    	        if (cnt == 10) break; // avoid unpleasantness if races change
+    	    }
+    
+            if (cnt == 0) impossible("can't assign monster race?");
+            else
+    	    {
+                j = rn2(cnt);
+                mon->mrace = races[j];
+            }
+	}
+    }
+    else if (!is_racial(ptr) && !is_were(ptr) && mon->mrace)
+    {
+        mon->mintrinsics &= ~(mons[mons_to_corpse(mon)].mresists
+	                      & ~(ptr->mresists) & 0x00FF);
+        mon->mrace = 0;
+    }
 
     if (flag == 1)
 	mon->mintrinsics |= (ptr->mresists & 0x00FF);
     else
 	mon->mintrinsics = (ptr->mresists & 0x00FF);
+
+    if (mon->mrace)
+        mon->mintrinsics |= (mons[mons_to_corpse(mon)].mresists);
+
     return;
 }
 
@@ -75,6 +129,8 @@ struct monst *mon;
 			 (wep && wep->oartifact && defends(AD_DRLI, wep)));
 }
 
+boolean FDECL(obj_has_prop, (struct obj *, int));
+
 boolean
 resists_magm(mon)	/* TRUE if monster is magic-missile resistant */
 struct monst *mon;
@@ -93,7 +149,7 @@ struct monst *mon;
 	/* check for magic resistance granted by worn or carried items */
 	o = (mon == &youmonst) ? invent : mon->minvent;
 	for ( ; o; o = o->nobj)
-	    if ((o->owornmask && objects[o->otyp].oc_oprop == ANTIMAGIC) ||
+	    if ((o->owornmask && obj_has_prop(o, ANTIMAGIC)) ||
 		    (o->oartifact && protects(AD_MAGM, o)))
 		return TRUE;
 	return FALSE;
@@ -442,6 +498,14 @@ const char *in_str;
     {
 	static const struct alt_spl { const char* name; short pm_val; }
 	    names[] = {
+	    /* Obsolete monsters */
+		{ "dwarf lord",		PM_LORD },
+		{ "gnome lord",		PM_LORD },
+		{ "elf-lord",		PM_LORD },
+		{ "gnome king",		PM_KING },
+		{ "dwarf king",		PM_KING },
+		{ "elvenking",		PM_KING },
+		{ "orc-captain",	PM_CAPTAIN },
 	    /* Alternate spellings */
 		{ "grey dragon",	PM_GRAY_DRAGON },
 		{ "baby grey dragon",	PM_BABY_GRAY_DRAGON },
@@ -451,12 +515,12 @@ const char *in_str;
 	    /* Hyphenated names */
 		{ "ki rin",		PM_KI_RIN },
 		{ "uruk hai",		PM_URUK_HAI },
-		{ "orc captain",	PM_ORC_CAPTAIN },
+		{ "orc captain",	PM_CAPTAIN },
 		{ "woodland elf",	PM_WOODLAND_ELF },
 		{ "green elf",		PM_GREEN_ELF },
 		{ "grey elf",		PM_GREY_ELF },
 		{ "gray elf",		PM_GREY_ELF },
-		{ "elf lord",		PM_ELF_LORD },
+		{ "elf lord",		PM_LORD },
 #if 0	/* OBSOLETE */
 		{ "high elf",		PM_HIGH_ELF },
 #endif
@@ -559,18 +623,17 @@ static const short grownups[][2] = {
 	{PM_WINTER_WOLF_CUB, PM_WINTER_WOLF},
 	{PM_KITTEN, PM_HOUSECAT}, {PM_HOUSECAT, PM_LARGE_CAT},
 	{PM_PONY, PM_HORSE}, {PM_HORSE, PM_WARHORSE},
-	{PM_KOBOLD, PM_LARGE_KOBOLD}, {PM_LARGE_KOBOLD, PM_KOBOLD_LORD},
-	{PM_GNOME, PM_GNOME_LORD}, {PM_GNOME_LORD, PM_GNOME_KING},
-	{PM_DWARF, PM_DWARF_LORD}, {PM_DWARF_LORD, PM_DWARF_KING},
+	{PM_KOBOLD, PM_LORD}, {PM_GNOME, PM_LORD}, 
+	{PM_DWARF, PM_LORD}, {PM_LORD, PM_KING},
 	{PM_MIND_FLAYER, PM_MASTER_MIND_FLAYER},
-	{PM_ORC, PM_ORC_CAPTAIN}, {PM_HILL_ORC, PM_ORC_CAPTAIN},
-	{PM_MORDOR_ORC, PM_ORC_CAPTAIN}, {PM_URUK_HAI, PM_ORC_CAPTAIN},
+	// yields orcish sergeant, which eventually goes to orcish captain
+	{PM_ORC, PM_SERGEANT}, {PM_HILL_ORC, PM_SERGEANT},
+	{PM_MORDOR_ORC, PM_SERGEANT}, {PM_URUK_HAI, PM_SERGEANT},
 	{PM_SEWER_RAT, PM_GIANT_RAT},
 	{PM_CAVE_SPIDER, PM_GIANT_SPIDER},
-	{PM_OGRE, PM_OGRE_LORD}, {PM_OGRE_LORD, PM_OGRE_KING},
-	{PM_ELF, PM_ELF_LORD}, {PM_WOODLAND_ELF, PM_ELF_LORD},
-	{PM_GREEN_ELF, PM_ELF_LORD}, {PM_GREY_ELF, PM_ELF_LORD},
-	{PM_ELF_LORD, PM_ELVENKING},
+	{PM_OGRE, PM_LORD},
+	{PM_ELF, PM_LORD}, {PM_WOODLAND_ELF, PM_LORD},
+	{PM_GREEN_ELF, PM_LORD}, {PM_GREY_ELF, PM_LORD},
 	{PM_LICH, PM_DEMILICH}, {PM_DEMILICH, PM_MASTER_LICH},
 	{PM_MASTER_LICH, PM_ARCH_LICH},
 	{PM_VAMPIRE, PM_VAMPIRE_LORD}, {PM_BAT, PM_GIANT_BAT},

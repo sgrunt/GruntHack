@@ -498,7 +498,7 @@ struct entity *etmp;
 {
 	int tmp = 4;		/* out of 10 */
 
-	if (is_u(etmp)? (Sleeping || Fumbling) :
+	if (is_u(etmp)? (Sleeping || FUMBLED) :
 		        (!etmp->emon->mcanmove || etmp->emon->msleeping ||
 			 !etmp->edata->mmove   || etmp->emon->wormno))
 		return(FALSE);
@@ -660,6 +660,7 @@ struct entity *etmp;
 #endif
 		if (!is_u(etmp)) {
 			remove_monster(etmp->ex, etmp->ey);
+			remove_monster_img(etmp->emon->mix, etmp->emon->miy);
 			place_monster(etmp->emon, newx, newy);
 			update_monster_region(etmp->emon);
 		} else {

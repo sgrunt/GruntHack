@@ -83,7 +83,9 @@ int shotlimit;
 		return(0);
 	}
 	if ((obj->oartifact == ART_MJOLLNIR && ACURR(A_STR) < STR19(25))
-	   || (obj->otyp == BOULDER && !throws_rocks(youmonst.data))) {
+	   || (obj->otyp == BOULDER &&
+	       !maybe_polyd(throws_rocks(youmonst.data),
+	                    Race_if(PM_GIANT)))) {
 		pline("It's too heavy.");
 		return(1);
 	}
@@ -94,8 +96,8 @@ int shotlimit;
 	u_wipe_engr(2);
 	if (!uarmg && !Stone_resistance && (obj->otyp == CORPSE &&
 		    touch_petrifies(&mons[obj->corpsenm]))) {
-		You("throw the %s corpse with your bare %s.",
-		    mons[obj->corpsenm].mname, body_part(HAND));
+		You("throw the %s with your bare %s.",
+		    corpse_xname(obj, TRUE), body_part(HAND));
 		Sprintf(killer_buf, "%s corpse", an(mons[obj->corpsenm].mname));
 		instapetrify(killer_buf);
 	}
@@ -238,7 +240,7 @@ autoquiver()
 			 otmp->otyp == FLINT) ||
 			(objects[otmp->otyp].oc_name_known &&
 			 otmp->oclass == GEM_CLASS &&
-			 objects[otmp->otyp].oc_material == GLASS)) {
+			 otmp->omaterial == GLASS)) {
 		if (uslinging())
 		    oammo = otmp;
 		else if (ammo_and_launcher(otmp, uswapwep))
@@ -497,7 +499,9 @@ hurtle_step(arg, x, y)
 		bad_rock(youmonst.data,u.ux,y) && bad_rock(youmonst.data,x,u.uy)) {
 	    boolean too_much = (invent && (inv_weight() + weight_cap() > 600));
 	    /* Move at a diagonal. */
-	    if (bigmonst(youmonst.data) || too_much) {
+	    if (maybe_polyd(bigmonst(youmonst.data),
+	                    Race_if(PM_OGRE) || Race_if(PM_GIANT)) 
+			    || too_much) {
 		You("%sget forcefully wedged into a crevice.",
 			too_much ? "and all your belongings " : "");
 		losehp(rnd(2+*range), "wedging into a narrow crevice", KILLED_BY);
@@ -574,6 +578,7 @@ mhurtle_step(arg, x, y)
 	 */
 	if (goodpos(x, y, mon, 0) && m_in_out_region(mon, x, y)) {
 	    remove_monster(mon->mx, mon->my);
+	    remove_monster_img(mon->mix, mon->miy);
 	    newsym(mon->mx, mon->my);
 	    place_monster(mon, x, y);
 	    newsym(mon->mx, mon->my);
@@ -624,7 +629,7 @@ hurtle(dx, dy, range, verbose)
 
     if(!range || (!dx && !dy) || u.ustuck) return; /* paranoia */
 
-    nomul(-range);
+    nomul2(-range, "flying uncontrollably");
     if (verbose)
 	You("%s in the opposite direction.", range > 1 ? "hurtle" : "float");
     /* if we're in the midst of shooting multiple projectiles, stop */
@@ -744,6 +749,9 @@ boolean hitsroof;
 
     if (obj->oclass == POTION_CLASS) {
 	potionhit(&youmonst, obj, TRUE);
+    } else if (obj->oclass == SCROLL_CLASS) {
+	if (!scrollhit(&youmonst, obj, TRUE, FALSE))
+	    hitfloor(obj);
     } else if (breaktest(obj)) {
 	int otyp = obj->otyp, ocorpsenm = obj->corpsenm;
 	int blindinc;
@@ -781,7 +789,8 @@ boolean hitsroof;
 	boolean less_damage = uarmh && is_metallic(uarmh), artimsg = FALSE;
 	int dmg = dmgval(obj, &youmonst);
 
-	if (obj->oartifact)
+	if (obj->oartifact ||
+	    (obj->oclass == WEAPON_CLASS && obj->oprops))
 	    /* need a fake die roll here; rn1(18,2) avoids 1 and 20 */
 	    artimsg = artifact_hit((struct monst *)0, &youmonst,
 				   obj, &dmg, rn1(18,2));
@@ -791,7 +800,7 @@ boolean hitsroof;
 	    if (dmg < 1) dmg = 1;
 	    else if (dmg > 6) dmg = 6;
 	    if (youmonst.data == &mons[PM_SHADE] &&
-		    objects[obj->otyp].oc_material != SILVER)
+		    obj->omaterial != SILVER)
 		dmg = 0;
 	}
 	if (dmg > 1 && less_damage) dmg = 1;
@@ -865,7 +874,7 @@ boolean twoweap; /* used to restore twoweapon mode if wielded weapon returns */
 	register struct monst *mon;
 	register int range, urange;
 	boolean impaired = (Confusion || Stunned || Blind ||
-			   Hallucination || Fumbling);
+			   Hallucination || FUMBLED);
 
 	if ((obj->cursed || obj->greased) && (u.dx || u.dy) && !rn2(7)) {
 	    boolean slipok = TRUE;
@@ -1219,7 +1228,7 @@ register struct obj   *obj;
 	    case GAUNTLETS_OF_FUMBLING:
 		tmp -= 3;
 		break;
-	    case LEATHER_GLOVES:
+	    case GLOVES:
 	    case GAUNTLETS_OF_DEXTERITY:
 		break;
 	    default:
@@ -1229,7 +1238,7 @@ register struct obj   *obj;
 	}
 
 	tmp += omon_adj(mon, obj, TRUE);
-	if (is_orc(mon->data) && maybe_polyd(is_elf(youmonst.data),
+	if (is_orc(mon) && maybe_polyd(is_elf(&youmonst),
 			Race_if(PM_ELF)))
 	    tmp++;
 	if (guaranteed_hit) {
@@ -1288,7 +1297,7 @@ register struct obj   *obj;
 		     * Polymorphing won't make you a bow expert.
 		     */
 		    if ((Race_if(PM_ELF) || Role_if(PM_SAMURAI)) &&
-				(!Upolyd || your_race(youmonst.data)) &&
+				(!Upolyd || your_race(&youmonst)) &&
 				objects[uwep->otyp].oc_skill == P_BOW) {
 			tmp++;
 			if (Race_if(PM_ELF) && uwep->otyp == ELVEN_BOW)
@@ -1378,6 +1387,12 @@ register struct obj   *obj;
 	    potionhit(mon, obj, TRUE);
 	    return 1;
 
+	} else if (obj->oclass == SCROLL_CLASS &&
+		(guaranteed_hit || ACURR(A_DEX) > rnd(25))) {
+	    if (!scrollhit(mon, obj, TRUE, FALSE))
+	        return 0;    
+	    return 1;
+
 	} else if (befriend_with_obj(mon->data, obj) ||
 		   (mon->mtame && dogfood(mon, obj) <= ACCFOOD)) {
 	    if (tamedog(mon, obj))
@@ -1418,7 +1433,7 @@ register struct obj *obj;
 {
 	char buf[BUFSZ];
 	boolean is_buddy = sgn(mon->data->maligntyp) == sgn(u.ualign.type);
-	boolean is_gem = objects[obj->otyp].oc_material == GEMSTONE;
+	boolean is_gem = obj->omaterial == GEMSTONE;
 	int ret = 0;
 	static NEARDATA const char nogood[] = " is not interested in your junk.";
 	static NEARDATA const char acceptgift[] = " accepts your gift.";
@@ -1627,7 +1642,7 @@ breaktest(obj)
 struct obj *obj;
 {
 	if (obj_resists(obj, 1, 99)) return 0;
-	if (objects[obj->otyp].oc_material == GLASS && !obj->oartifact &&
+	if (obj->omaterial == GLASS && !obj->oartifact &&
 		obj->oclass != GEM_CLASS)
 	    return 1;
 	switch (obj->oclass == POTION_CLASS ? POT_WATER : obj->otyp) {
@@ -1656,9 +1671,9 @@ boolean in_view;
 	to_pieces = "";
 	switch (obj->oclass == POTION_CLASS ? POT_WATER : obj->otyp) {
 		default: /* glass or crystal wand */
-		    if (obj->oclass != WAND_CLASS)
+		    if (obj->oclass != WAND_CLASS &&
+		        obj->omaterial != GLASS)
 			impossible("breaking odd object?");
-		case CRYSTAL_PLATE_MAIL:
 		case LENSES:
 		case MIRROR:
 		case CRYSTAL_BALL:
@@ -1668,10 +1683,20 @@ boolean in_view;
 			to_pieces = " into a thousand pieces";
 			/*FALLTHRU*/
 		case POT_WATER:		/* really, all potions */
-			if (!in_view)
+		        if (obj->oclass == POTION_CLASS &&
+			    !flags.mon_moving &&
+			     obj->where == OBJ_FLOOR &&
+			     (Race_if(PM_ELF) || Role_if(PM_VALKYRIE) ||
+			      Role_if(PM_WIZARD)) &&
+			     !rn2(10))
+			    pline("%s shot the potion!",
+			          Role_if(PM_WIZARD) || Role_if(PM_VALKYRIE)
+				  ? urole.name.m : "Elf");
+			else if (!in_view)
 			    You_hear("%s shatter!", something);
 			else
-			    pline("%s shatter%s%s!", Doname2(obj),
+			    pline("%s shatter%s%s!", The(xname(obj)),
+			                           //Doname2(obj),
 				(obj->quan==1) ? "s" : "", to_pieces);
 			break;
 		case EGG:
