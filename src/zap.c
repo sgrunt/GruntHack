@@ -531,6 +531,7 @@ coord *cc;
 		mtmp2->mblinded = 0;
 		mtmp2->mstun = 0;
 		mtmp2->mconf = 0;
+		mtmp2->msick = 0;
 		replmon(mtmp,mtmp2);
 	}
 	return mtmp2;
@@ -1933,8 +1934,14 @@ boolean ordinary;
 		    break;
 
 		case SPE_FIREBALL:
-		    You("explode a fireball on top of yourself!");
-		    explode(u.ux, u.uy, 11, d(6,6), WAND_CLASS, EXPL_FIERY);
+		    {
+		        int dmg = d(6, 6);
+  		        You("explode a fireball on top of yourself!");
+		        explode(u.ux, u.uy, 11, dmg, WAND_CLASS, EXPL_FIERY);
+		        scatter(u.ux, u.uy, dmg,
+		                VIS_EFFECTS|MAY_HIT|MAY_DESTROY|MAY_FRACTURE,
+			        NULL);
+		    }
 		    break;
 		case WAN_FIRE:
 		    makeknown(WAN_FIRE);
@@ -2282,8 +2289,10 @@ boolean			youattack, allow_cancel_kill, self_cancel;
 	    if (is_were(mdef->data) && mdef->data->mlet != S_HUMAN)
 		were_change(mdef);
 
-	    if (mdef->data == &mons[PM_CLAY_GOLEM]) {
-		if (canseemon(mdef))
+	    //if (mdef->data == &mons[PM_CLAY_GOLEM]) {
+	    if (nonliving(mdef->data) && !is_undead(mdef->data))
+	    {
+		if (mdef->data == &mons[PM_CLAY_GOLEM] && canseemon(mdef))
 		    pline(writing_vanishes, s_suffix(mon_nam(mdef)));
 
 		if (allow_cancel_kill) {
@@ -3536,7 +3545,12 @@ register int dx,dy;
     }
     tmp_at(DISP_END,0);
     if (type == ZT_SPELL(ZT_FIRE))
-	explode(sx, sy, type, d(12,6), 0, EXPL_FIERY);
+    {
+        int dmg = d(12, 6);
+	explode(sx, sy, type, dmg, 0, EXPL_FIERY);
+        scatter(u.ux, u.uy, dmg, VIS_EFFECTS|MAY_HIT|MAY_DESTROY|MAY_FRACTURE,
+	        NULL);
+    }
     if (shopdamage)
 	pay_for_damage(abstype == ZT_FIRE ?  "burn away" :
 		       abstype == ZT_COLD ?  "shatter" :
@@ -3789,12 +3803,30 @@ void
 fracture_rock(obj)	/* fractured by pick-axe or wand of striking */
 register struct obj *obj;		   /* no texts here! */
 {
+        register int tmp;
+	
+	if (obj->otyp == CORPSE && is_rider(&mons[obj->corpsenm]))
+	    return; //no gibbing the riders
+
 	/* A little Sokoban guilt... */
 	if (obj->otyp == BOULDER && In_sokoban(&u.uz) && !flags.mon_moving)
 	    change_luck(-1);
+        
+	tmp = weight(obj) / objects[ROCK].oc_weight;
+
+	if (obj->otyp == CORPSE)
+	{
+	    if (vegetarian(&mons[obj->corpsenm]) ||
+	        vegan(&mons[obj->corpsenm]))
+	        obj->omaterial = VEGGY;
+	}
 
 	obj->otyp = ROCK;
-	obj->quan = (long) rn1(60, 7);
+//	obj->quan = (long) rn1(60, 7);
+	if (tmp < 5)
+	    obj->quan = rn2(tmp) + 1;
+	else
+	    obj->quan = rn1(tmp, 5);
 	obj->owt = weight(obj);
 	obj->oclass = GEM_CLASS;
 	obj->known = FALSE;

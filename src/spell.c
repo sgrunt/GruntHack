@@ -849,6 +849,11 @@ boolean atme;
 				    u.ulevel/2 + 1 + spell_damage_bonus(), 0,
 					(pseudo->otyp == SPE_CONE_OF_COLD) ?
 						EXPL_FROSTY : EXPL_FIERY);
+			    if (pseudo->otyp != SPE_CONE_OF_COLD)
+			        scatter(u.dx, u.dy,
+				        u.ulevel/2 + 1 + spell_damage_bonus(),
+					VIS_EFFECTS|MAY_HIT|
+					MAY_DESTROY|MAY_FRACTURE, NULL);
 			}
 			u.dx = cc.x+rnd(3)-2; u.dy = cc.y+rnd(3)-2;
 			if (!isok(u.dx,u.dy) || !cansee(u.dx,u.dy) ||

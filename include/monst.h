@@ -100,6 +100,7 @@ struct monst {
 	Bitfield(msleeping,1);	/* asleep until woken */
 	Bitfield(mstun,1);	/* stunned (off balance) */
 	Bitfield(mconf,1);	/* confused */
+	Bitfield(msick,2);	/* ill; high bit is from zombies */
 	Bitfield(mpeaceful,1);	/* does not attack unprovoked */
 	Bitfield(mtrapped,1);	/* trapped in a pit, web or bear trap */
 	Bitfield(mleashed,1);	/* monster is on a leash */

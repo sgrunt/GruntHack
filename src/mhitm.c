@@ -455,6 +455,8 @@ mattackm(magr, mdef)
     return(struck ? MM_HIT : MM_MISS);
 }
 
+extern const char * const behead_msg[];
+
 /* Returns the result of mdamagem(). */
 STATIC_OVL int
 hitmm(magr, mdef, mattk)
@@ -783,7 +785,8 @@ mdamagem(magr, mdef, mattk)
 		    tmp = 0;
 		} else if(mattk->aatyp == AT_WEAP) {
 		    if(otmp) {
-			if (otmp->otyp == CORPSE &&
+			if ((otmp->otyp == CORPSE ||
+			    (otmp->otyp == ROCK && otmp->corpsenm != 0)) &&
 				touch_petrifies(&mons[otmp->corpsenm]))
 			    goto do_stone;
 			tmp += dmgval(otmp, mdef);
@@ -1180,6 +1183,11 @@ mdamagem(magr, mdef, mattk)
 		    tmp = 0;
 		    break;
 		}
+		if (pa == &mons[PM_ZOMBIE]  && rn2(5)) {
+		    if (vis && !resists_sick(mdef))
+			pline("%s looks rather ill.", Monnam(mdef));
+		    goto msickness;
+		}
 		if ((mdef->misc_worn_check & W_ARMH) && rn2(8)) {
 		    if (vis) {
 			Strcpy(buf, s_suffix(Monnam(mdef)));
@@ -1202,6 +1210,12 @@ mdamagem(magr, mdef, mattk)
 		if (tmp >= mdef->mhp && vis)
 		    pline("%s last thought fades away...",
 			          s_suffix(Monnam(mdef)));
+		if (tmp < mdef->mhp && pa == &mons[PM_ZOMBIE])
+		{
+		    if (vis && !resists_sick(mdef))
+		        pline("%s looks rather ill.", Monnam(mdef));
+		    goto msickness;
+		}
 		break;
 	    case AD_DETH:
 	        if (vis)
@@ -1238,13 +1252,23 @@ mdamagem(magr, mdef, mattk)
 	    case AD_PEST:
 		Strcpy(buf, mon_nam(mdef));
 	        if (vis)
-		    pline("%s reaches out, and %s looks rather ill.",
-		  	    Monnam(magr), buf);
+		{
+		    if (resists_sick(mdef))
+		        pline("%s reaches out, but %s looks unaffected.",
+		  	        Monnam(magr), buf);
+		    else
+		        pline("%s reaches out, and %s looks rather ill.",
+		  	        Monnam(magr), buf);
+	        }
+msickness:
+                if (resists_sick(mdef)) break;
+		/*
 		if((mdef->mhpmax > 3) && !resist(mdef, 0, 0, NOTELL))
 			mdef->mhpmax /= 2;
 		if((mdef->mhp > 2) && !resist(mdef, 0, 0, NOTELL))
 			mdef->mhp /= 2;
-		if (mdef->mhp > mdef->mhpmax) mdef->mhp = mdef->mhpmax;
+		if (mdef->mhp > mdef->mhpmax) mdef->mhp = mdef->mhpmax; */
+		mdef->msick = (pa == &mons[PM_ZOMBIE]) ? 3 : 1;
 		break;
 	    case AD_FAMN:
 		Strcpy(buf, s_suffix(mon_nam(mdef)));
@@ -1265,6 +1289,7 @@ mdamagem(magr, mdef, mattk)
 		if (cancelled) break;	/* physical damage only */
 		if (!rn2(4) && !flaming(mdef->data) &&
 				mdef->data != &mons[PM_GREEN_SLIME]) {
+                    mdef->morigdata = PM_GREEN_SLIME; //it's permanent
 		    (void) newcham(mdef, &mons[PM_GREEN_SLIME], FALSE, vis);
 		    mdef->mstrategy &= ~STRAT_WAITFORU;
 		    tmp = 0;
@@ -1290,6 +1315,33 @@ mdamagem(magr, mdef, mattk)
 		/* there's no msomearmor() function, so just do damage */
 	     /* if (cancelled) break; */
 		break;
+	    case AD_BHED:
+	        if (dieroll == 1 ||
+		    mdef->data->mlet == S_JABBERWOCK)
+		{
+		    if (!has_head(mdef->data)) {
+		        Strcpy(buf, mon_nam(mdef));
+			pline("Somehow, %s misses %s wildly.", 
+			      mon_nam(magr), buf);
+			tmp = 0;
+			break;
+		    }
+		    if (noncorporeal(mdef->data) ||
+		        amorphous(mdef->data)) {
+		        Strcpy(buf, s_suffix(mon_nam(mdef)));
+			pline("%s slices through %s %s.",
+			      Monnam(magr),
+			      buf, mbodypart(mdef, NECK));
+			break;
+		    }
+		    tmp = 2 * mdef->mhp + 200; //FATAL_DAMAGE_MODIFIER;
+		    if (mdef->data == &mons[PM_ZOMBIE])
+		        mdef->mcan = 1; //beheaded zombies don't revive
+		    Strcpy(buf, mon_nam(mdef));
+		    pline(behead_msg[rn2(2)],
+			  Monnam(magr), buf);
+		}
+		break;
 	    default:	tmp = 0;
 			break;
 	}
@@ -1303,6 +1355,15 @@ mdamagem(magr, mdef, mattk)
 		place_monster(mdef, mdef->mx, mdef->my);
 		mdef->mhp = 0;
 	    }
+	    if (pa == &mons[PM_ZOMBIE] && !nonliving(pd) && is_racial(pd))
+	    {
+		mdef->mtame = mdef->mpeaceful = 0;
+                mdef->morigdata = PM_ZOMBIE; //it's permanent
+		mdef->mhp = 1; //so they don't try to remove it
+		if (mdef->isshk) shkgone(mdef);
+	        (void) newcham(mdef, &mons[PM_ZOMBIE], FALSE, TRUE);
+		return MM_HIT;
+	    }
 	    monkilled(mdef, "", (int)mattk->adtyp);
 	    if (mdef->mhp > 0) return 0; /* mdef lifesaved */
 
@@ -1312,6 +1373,7 @@ mdamagem(magr, mdef, mattk)
 		if (mdef->cham != CHAM_ORDINARY) {
 		    (void) newcham(magr, (struct permonst *)0, FALSE, TRUE);
 		} else if (mdef->data == &mons[PM_GREEN_SLIME]) {
+                    mdef->morigdata = PM_GREEN_SLIME; //it's permanent
 		    (void) newcham(magr, &mons[PM_GREEN_SLIME], FALSE, TRUE);
 		} else if (mdef->data == &mons[PM_WRAITH]) {
 		    (void) grow_up(magr, (struct monst *)0);

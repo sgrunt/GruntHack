@@ -326,6 +326,8 @@ register struct monst *mtmp;
 		u.ugrave_arise = PM_VAMPIRE;
 	else if (mtmp->data == &mons[PM_GHOUL])
 		u.ugrave_arise = PM_GHOUL;
+	else if (mtmp->data == &mons[PM_ZOMBIE])
+	        u.ugrave_arise = PM_ZOMBIE;
 	if (u.ugrave_arise >= LOW_PM &&
 				(mvitals[u.ugrave_arise].mvflags & G_GENOD))
 		u.ugrave_arise = NON_PM;
@@ -940,8 +942,13 @@ die:
 */
 	if (u.uhave.amulet) Strcat(kilbuf, " (with the Amulet)");
 	else if (how == ESCAPED) {
-	    if (Is_astralevel(&u.uz))	/* offered Amulet to wrong deity */
-		Strcat(kilbuf, " (in celestial disgrace)");
+	    if (Is_astralevel(&u.uz))	
+            {
+	        if (killer_format == NO_KILLER_PREFIX)
+                    Strcpy(kilbuf, "lost the Amulet to another adventurer");
+		else /* offered Amulet to wrong deity */
+		    Strcat(kilbuf, " (in celestial disgrace)");
+	    }
 	    else if (carrying(FAKE_AMULET_OF_YENDOR))
 		Strcat(kilbuf, " (with a fake Amulet)");
 		/* don't bother counting to see whether it should be plural */

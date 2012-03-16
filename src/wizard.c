@@ -223,7 +223,9 @@ target_on(mask, mtmp)
 	register struct obj *otmp;
 	register struct monst *mtmp2;
 
-	if(!M_Wants(mask))	return(STRAT_NONE);
+	// player monsters take whatever they can get
+	if(!M_Wants(mask) && !is_mplayer(mtmp->data))
+	    return(STRAT_NONE);
 
 	otyp = which_arti(mask);
 	if(!mon_has_arti(mtmp, otyp)) {
@@ -237,7 +239,30 @@ target_on(mask, mtmp)
 	        return(STRAT(STRAT_NONE, u.ux, u.uy, mask));
 	}
 
+#define a_align(x,y)    ((aligntyp)Amask2align(levl[x][y].altarmask & AM_MASK))
+
 	// we have the thing; let's attempt to escape
+	if (Is_astralevel(&u.uz))
+	{
+	    // Take the amulet to our altar!
+	    int targetx = u.ux, targety = u.uy;
+	    aligntyp malign = sgn(mtmp->data->maligntyp);
+
+	    //HACK: these are hardcoded and really should be stored
+	    //when Astral is generated...
+	    if      (IS_ALTAR(levl[10][10].typ) &&
+	             a_align(10,10) == malign)
+		     targetx = 10, targety = 10;
+	    else if (IS_ALTAR(levl[40][ 6].typ) &&
+	             a_align(40,6) == malign)
+		     targetx = 40, targety = 6;
+	    else if (IS_ALTAR(levl[70][10].typ) &&
+	             a_align(70,10) == malign)
+		     targetx = 70, targety = 10;
+
+	    return(STRAT(STRAT_NONE, targetx, targety, mask));
+	}
+
 	if (In_W_tower(mtmp->mx, mtmp->my, &u.uz) ||
 	    In_quest(&u.uz) || // won't leave its fortress...
 	    !xupstair)

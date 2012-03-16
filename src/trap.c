@@ -2265,7 +2265,10 @@ const char *arg;
 {
 	char kbuf[BUFSZ];
 
-	if(uwep && uwep->otyp == CORPSE && touch_petrifies(&mons[uwep->corpsenm])
+	if(uwep &&
+	   (uwep->otyp == CORPSE ||
+	    (uwep->otyp == ROCK && uwep->corpsenm != 0))
+	     && touch_petrifies(&mons[uwep->corpsenm])
 			&& !Stone_resistance) {
 		pline("%s touch the %s.", arg,
 		        corpse_xname(uwep, FALSE));
@@ -2273,7 +2276,9 @@ const char *arg;
 		instapetrify(kbuf);
 	}
 	/* Or your secondary weapon, if wielded */
-	if(u.twoweap && uswapwep && uswapwep->otyp == CORPSE &&
+	if(u.twoweap && uswapwep && 
+	                (uswapwep->otyp == CORPSE ||
+			(uswapwep->otyp == ROCK && uwep->corpsenm != 0)) &&
 			touch_petrifies(&mons[uswapwep->corpsenm]) && !Stone_resistance){
 		pline("%s touch the %s.", arg,
 		        xname(uwep));
@@ -2290,7 +2295,9 @@ boolean byplayer;
 {
 	struct obj *mwep = MON_WEP(mon);
 
-	if (mwep && mwep->otyp == CORPSE && touch_petrifies(&mons[mwep->corpsenm])) {
+	if (mwep && (mwep->otyp == CORPSE ||
+	             (mwep->otyp == ROCK && mwep->corpsenm != 0))
+		     && touch_petrifies(&mons[mwep->corpsenm])) {
 		if (cansee(mon->mx, mon->my)) {
 			pline("%s%s touches the %s.",
 			    arg ? arg : "", arg ? mon_nam(mon) : Monnam(mon),
@@ -2725,7 +2732,7 @@ xchar x, y;
 	    delobj(obj);
 	    retval++;
 	} else if (is_flammable(obj)) {
-	    rust_dmg(obj, xname(obj), 0, FALSE, m_at(x, y));
+	    rust_dmg(obj, simple_typename(obj->otyp), 0, FALSE, m_at(x, y));
 	}
     }
 
@@ -2789,7 +2796,7 @@ register boolean force, here;
 				obj->odiluted = 0;
 			} else if (obj->otyp != POT_WATER)
 				obj->odiluted++;
-		} else if (is_rustprone(obj) && obj->oeroded < MAX_ERODE &&
+		} else if (is_rustprone(obj) &&
 			  !(obj->oerodeproof || (obj->blessed && !rnl(4)))) {
 			/* all metal stuff and armor except (body armor
 			   protected by oilskin cloak) */
@@ -2798,7 +2805,10 @@ register boolean force, here;
 			   !(uarmc->otyp == OILSKIN_CLOAK ||
 			     (uarmc->oprops & ITEM_OILSKIN)) ||
 			   (uarmc->cursed && !rn2(3)))
-				obj->oeroded++;
+			   {
+			       rust_dmg(obj, simple_typename(obj->otyp),
+			                1, FALSE, &youmonst);
+			   }
 		}
 	}
 }

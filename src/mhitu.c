@@ -943,6 +943,8 @@ struct monst *mon;
 	return armpro;
 }
 
+extern const char * const behead_msg[];
+
 /*
  * hitmu: monster hits you
  *	  returns 2 if monster dies (e.g. "yellow light"), 1 otherwise
@@ -1019,7 +1021,8 @@ hitmu(mtmp, mattk)
 		    }
 		} else {			  /* hand to hand weapon */
 		    if(mattk->aatyp == AT_WEAP && otmp) {
-			if (otmp->otyp == CORPSE
+			if ((otmp->otyp == CORPSE ||
+			    (otmp->otyp == ROCK && otmp->corpsenm != 0))
 				&& touch_petrifies(&mons[otmp->corpsenm])) {
 			    dmg = 1;
 			    pline("%s hits you with the %s.",
@@ -1161,6 +1164,12 @@ dopois:
 		}
 		if (u_slip_free(mtmp,mattk)) break;
 
+		if (mtmp->data == &mons[PM_ZOMBIE] && rn2(5))
+		{
+                    diseasemu(mtmp->data);
+		    return;
+		}
+
 		if (uarmh && rn2(8)) {
 		    /* not body_part(HEAD) */
 		    Your("helmet blocks the attack to your head.");
@@ -1208,6 +1217,8 @@ dopois:
 		forget_levels(25);	/* lose memory of 25% of levels */
 		forget_objects(25);	/* lose memory of 25% of objects */
 		exercise(A_WIS, FALSE);
+		if (mtmp->data == &mons[PM_ZOMBIE])
+		    diseasemu(mtmp->data);
 		break;
 	    case AD_PLYS:
 		hitmsg(mtmp, mattk);
@@ -1253,7 +1264,7 @@ dopois:
 		  } else {
 		    if (uarmf) {
 			if (rn2(2) && (uarmf->otyp == LOW_BOOTS ||
-					     uarmf->otyp == IRON_SHOES))
+					     uarmf->otyp == SHOES))
 			    pline("%s pricks the exposed part of your %s %s!",
 				Monnam(mtmp), sidestr, body_part(LEG));
 			else if (!rn2(5))
@@ -1654,6 +1665,28 @@ dopois:
 		    }
 		}
 		break;
+	    case AD_BHED:	/* beheading attack (vorpal jabberwock) */
+	        if (dieroll == 1 ||
+		    youmonst.data->mlet == S_JABBERWOCK)
+		{
+		    if (!has_head(youmonst.data)) {
+			pline("Somehow, %s misses you wildly.", mtmp);
+			dmg = 0;
+			break;
+		    }
+		    if (noncorporeal(youmonst.data) ||
+		        amorphous(youmonst.data)) {
+			pline("%s slices through your %s.",
+			      Monnam(mtmp), body_part(NECK));
+			break;
+		    }
+		    dmg = 2 * (Upolyd ? u.mh : u.uhp)
+				  + 200; //FATAL_DAMAGE_MODIFIER;
+		    pline(behead_msg[rn2(2)],
+			  Monnam(mtmp), "you");
+		}
+		else hitmsg(mtmp, mattk);
+	        break;
 	    default:	dmg = 0;
 			break;
 	}

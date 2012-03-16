@@ -238,6 +238,7 @@ struct obj *otmp;
 #define MUSE_UNICORN_HORN 17
 #define MUSE_POT_FULL_HEALING 18
 #define MUSE_LIZARD_CORPSE 19
+#define MUSE_OFFER_AMULET 20 
 /*
 #define MUSE_INNATE_TPT 9999
  * We cannot use this.  Since monsters get unlimited teleportation, if they
@@ -267,6 +268,12 @@ struct monst *mtmp;
 	                 gy = STRAT_GOALY(mtmp->mstrategy);
 	    if (gx == x && gy == y)
 	    {
+		if (Is_astralevel(&u.uz) &&
+		    IS_ALTAR(levl[x][y].typ))
+		{
+		    m.has_defense = MUSE_OFFER_AMULET;
+		    return TRUE;
+		}
 		if (x == xupstair && y == yupstair && ledger_no(&u.uz) != 1)
 		{
 		    m.has_defense = MUSE_UPSTAIRS;
@@ -287,7 +294,7 @@ struct monst *mtmp;
 	/* since unicorn horns don't get used up, the monster would look
 	 * silly trying to use the same cursed horn round after round
 	 */
-	if (mtmp->mconf || mtmp->mstun || !mtmp->mcansee) {
+	if (mtmp->mconf || mtmp->mstun || mtmp->msick || !mtmp->mcansee) {
 	    if (!is_unicorn(mtmp->data) && !nohands(mtmp->data)) {
 		for(obj = mtmp->minvent; obj; obj = obj->nobj)
 		    if (obj->otyp == UNICORN_HORN && !obj->cursed)
@@ -569,6 +576,10 @@ struct monst *mtmp;
 		    mtmp->mcansee = 1;
 		    mtmp->mblinded = 0;
 		    if (vismon) pline(mcsa, Monnam(mtmp));
+		} else if (mtmp->msick) {
+		    mtmp->msick = 0;
+		    if (vismon)
+			pline("%s looks relieved.", Monnam(mtmp));
 		} else if (mtmp->mconf || mtmp->mstun) {
 		    mtmp->mconf = mtmp->mstun = 0;
 		    if (vismon)
@@ -871,6 +882,11 @@ mon_tele:
 			if (vismon) pline(mcsa, Monnam(mtmp));
 		}
 		if (vismon) pline("%s looks better.", Monnam(mtmp));
+		if (mtmp->msick && !!otmp->blessed)
+		{
+		    mtmp->msick = 0;
+		    if (vismon) pline("%s looks relieved.", Monnam(mtmp));
+		}
 		if (oseen) makeknown(POT_HEALING);
 		m_useup(mtmp, otmp);
 		return 2;
@@ -886,6 +902,11 @@ mon_tele:
 			if (vismon) pline(mcsa, Monnam(mtmp));
 		}
 		if (vismon) pline("%s looks much better.", Monnam(mtmp));
+		if (mtmp->msick && !otmp->cursed)
+		{
+		    mtmp->msick = 0;
+		    if (vismon) pline("%s looks relieved.", Monnam(mtmp));
+		}
 		if (oseen) makeknown(POT_EXTRA_HEALING);
 		m_useup(mtmp, otmp);
 		return 2;
@@ -899,12 +920,51 @@ mon_tele:
 			if (vismon) pline(mcsa, Monnam(mtmp));
 		}
 		if (vismon) pline("%s looks completely healed.", Monnam(mtmp));
+		if (mtmp->msick)
+		{
+		    mtmp->msick = 0;
+		    if (vismon) pline("%s looks relieved.", Monnam(mtmp));
+		}
 		if (oseen) makeknown(otmp->otyp);
 		m_useup(mtmp, otmp);
 		return 2;
 	case MUSE_LIZARD_CORPSE:
 		/* not actually called for its unstoning effect */
 		mon_consume_unstone(mtmp, otmp, FALSE, FALSE);
+		return 2;
+	case MUSE_OFFER_AMULET:
+		/* oops, you lost the amulet and some other adventurer
+		 * beat you to the punch... */
+		if (canseemon(mtmp))
+		    pline("%s offers the Amulet of Yendor to %s...",
+		          Monnam(mtmp), a_gname_at(mtmp->mx, mtmp->my));
+		else
+		    pline("Suddenly, you hear a voice making a ritual offering "
+		          "to %s...",
+		          a_gname_at(mtmp->mx, mtmp->my));
+		if (sgn(mtmp->data->maligntyp) == u.ualign.type)
+		{
+		    if (canseemon(mtmp))
+		        pline("An invisible choir sings, and %s is bathed in"
+			      " radiance...",
+			      mon_nam(mtmp));
+                    else if (flags.soundok)
+		        You_hear("the singing of a choir...");
+		}
+		else
+		{
+		    pline("%s accepts %s gift, and gains dominion over %s...",
+		          a_gname_at(mtmp->mx, mtmp->my),
+			  canseemon(mtmp) ? mhis(mtmp) : "the",
+			  u_gname());
+		    pline("%s is enraged...", u_gname());
+		    pline("Fortunately, %s permits you to live...",
+		          a_gname_at(mtmp->mx, mtmp->my));
+		}
+		pline("A cloud of %s smoke surrounds you...",
+		      hcolor((const char *)"orange"));
+		killer_format = NO_KILLER_PREFIX; // sign for lost Amulet 
+		done(ESCAPED);
 		return 2;
 	case 0: return 0; /* i.e. an exploded wand */
 	default: impossible("%s wanted to perform action %d?", Monnam(mtmp),
@@ -2107,6 +2167,9 @@ struct obj *obj;
 	    if (typ == EGG)
 		return (boolean)(touch_petrifies(&mons[obj->corpsenm]));
 	    break;
+	case GEM_CLASS:
+	    if (typ == ROCK && obj->corpsenm != 0)
+		return (boolean)(touch_petrifies(&mons[obj->corpsenm]));
 	default:
 	    break;
 	}

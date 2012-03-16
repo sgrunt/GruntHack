@@ -373,6 +373,8 @@ struct obj *otmp;
 
     int i = 0;
 
+    if (!attacktype(mtmp->data, AT_WEAP)) return FALSE;
+
     if (otmp->omaterial == SILVER && hates_silver(mtmp->data))
         return FALSE;
     
@@ -564,6 +566,8 @@ struct obj *otmp;
     struct obj *wep = select_hwep(mtmp);
 
     int i = 0;
+    
+    if (!attacktype(mtmp->data, AT_WEAP)) return FALSE;
     
     if (wep)
     { 

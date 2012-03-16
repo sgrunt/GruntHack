@@ -187,7 +187,7 @@ Boots_on()
 
     switch(uarmf->otyp) {
 	case LOW_BOOTS:
-	case IRON_SHOES:
+	case SHOES:
 	case HIGH_BOOTS:
 	case JUMPING_BOOTS:
 	case KICKING_BOOTS:
@@ -357,7 +357,7 @@ Boots_off()
 		}
 		break;
 	case LOW_BOOTS:
-	case IRON_SHOES:
+	case SHOES:
 	case HIGH_BOOTS:
 	case JUMPING_BOOTS:
 	case KICKING_BOOTS:
@@ -638,7 +638,8 @@ Gloves_off()
     (void) encumber_msg();		/* immediate feedback for GoP */
 
     /* Prevent wielding cockatrice when not wearing gloves */
-    if (uwep && uwep->otyp == CORPSE &&
+    if (uwep && (uwep->otyp == CORPSE ||
+                 (uwep->otyp == ROCK && uwep->corpsenm != 0)) &&
 		touch_petrifies(&mons[uwep->corpsenm])) {
 	char kbuf[BUFSZ];
 
@@ -650,7 +651,9 @@ Gloves_off()
     }
 
     /* KMH -- ...or your secondary weapon when you're wielding it */
-    if (u.twoweap && uswapwep && uswapwep->otyp == CORPSE &&
+    if (u.twoweap && uswapwep && 
+        (uswapwep->otyp == CORPSE || 
+	 (uswapwep->otyp == ROCK && uwep->corpsenm != 0)) &&
 	touch_petrifies(&mons[uswapwep->corpsenm])) {
 	char kbuf[BUFSZ];
 
@@ -749,7 +752,7 @@ STATIC_PTR
 int
 Armor_on()
 {
-    Oprops_off(uarm, W_ARM);
+    Oprops_on(uarm, W_ARM);
     return 0;
 }
 
@@ -997,7 +1000,7 @@ boolean gone;
     long mask = (obj->owornmask & W_RING);
     int old_attrib, which;
 
-    Oprops_on(obj, mask);
+    Oprops_off(obj, mask);
 
     takeoff_mask &= ~mask;
     if(!(u.uprops[objects[obj->otyp].oc_oprop].extrinsic & mask))

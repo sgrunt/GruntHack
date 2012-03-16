@@ -77,6 +77,17 @@ const char *name;	/* if null, then format `obj' */
 	} else {
 		if(Blind || !flags.verbose) You("are hit!");
 		else You("are hit by %s%s", onm, exclam(dam));
+	    
+	        if (obj && (obj->otyp == CORPSE ||
+	            (obj->otyp == ROCK && obj->corpsenm != 0)) &&
+		    touch_petrifies(&mons[obj->corpsenm]) &&
+		    !Stoned && !Stone_resistance
+		    && !(poly_when_stoned(youmonst.data) &&
+			polymon(PM_STONE_GOLEM)))
+		{
+		    Stoned = 5;
+		    return(1);
+	        }
 
 		if (obj && obj->omaterial == SILVER
 				&& hates_silver(youmonst.data)) {
@@ -92,6 +103,7 @@ const char *name;	/* if null, then format `obj' */
 			losehp(dam, knm, kprefix);
 			exercise(A_STR, FALSE);
 		}
+		// no detonation here; that's handeld in drop_throw 
 		return(1);
 	}
 }
@@ -131,6 +143,28 @@ int x,y;
 			objgone = ship_object(obj, x, y, FALSE);
 		if (!objgone) {
 			if (!flooreffects(obj,x,y,"fall")) { /* don't double-dip on damage */
+                	    if ((obj->oprops & ITEM_DETONATIONS ||
+			         (mtmp && MON_WEP(mtmp) != NULL &&
+				  MON_WEP(mtmp)->oprops & ITEM_DETONATIONS &&
+				  ammo_and_launcher(obj, MON_WEP(mtmp)))) &&
+			        (is_ammo(obj) || is_missile(obj)))
+                	    {
+                                int dmg = d(4, 4);
+                		pline_The("%s explodes!", xname(obj));
+                	        obfree(obj, (struct obj *)0);
+                
+/* ZT_SPELL(ZT_FIRE) = ZT_SPELL(AD_FIRE-1) = 10+(2-1) = 11 */
+#define ZT_SPELL_O_FIRE 11 /* value kludge, see zap.c */
+                
+                                explode(x, y,
+				        ZT_SPELL_O_FIRE,
+                		        dmg, obj->otyp, EXPL_FIERY);
+                                scatter(x, y, dmg,
+                	                VIS_EFFECTS|MAY_HIT|MAY_DESTROY
+				        |MAY_FRACTURE, NULL);
+                
+                	        return 1;
+                	    }
 			    place_object(obj, x, y);
 			    if (!mtmp && x == u.ux && y == u.uy)
 				mtmp = &youmonst;
@@ -201,6 +235,16 @@ boolean verbose;  /* give message(s) even when you can't see what happened */
 	    if (vis) hit(distant_name(otmp,mshot_xname), mtmp, exclam(damage));
 	    else if (verbose) pline("%s is hit%s", Monnam(mtmp), exclam(damage));
 
+	    if ((otmp->otyp == CORPSE ||
+	        (otmp->otyp == ROCK && otmp->corpsenm != 0)) &&
+		touch_petrifies(&mons[otmp->corpsenm]) &&
+		!resists_ston(mtmp))
+	    {
+	        if (!munstone(mtmp, TRUE))
+		    minstapetrify(mtmp, (curmonst == &youmonst));
+	        goto dropobj;
+	    }
+
 	    if (otmp->opoisoned && is_poisonable(otmp)) {
 		if (resists_poison(mtmp)) {
 		    if (vis) pline_The("poison doesn't seem to affect %s.",
@@ -257,6 +301,7 @@ boolean verbose;  /* give message(s) even when you can't see what happened */
 	    if (is_pole(otmp))
 	        return 1;
 
+dropobj:
 	    objgone = drop_throw(otmp, 1, bhitpos.x, bhitpos.y);
 	    if (!objgone && range == -1) {  /* special case */
 		    obj_extract_self(otmp); /* free it for motion again */

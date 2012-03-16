@@ -576,6 +576,11 @@ int thrown;
 	    if(obj->oclass == WEAPON_CLASS || is_weptool(obj) ||
 	       obj->oclass == GEM_CLASS) {
 
+	        if (obj->otyp == ROCK && obj->corpsenm != 0)
+		    goto rock2;
+
+rock1:
+
 		/* is it not a melee weapon? */
 		if (/* if you strike with a bow... */
 		    is_launcher(obj) ||
@@ -770,12 +775,18 @@ int thrown;
 			/*NOTREACHED*/
 			break;
 #endif
+                    case ROCK:
 		    case CORPSE:		/* fixed by polder@cs.vu.nl */
+rock2:
 			if (touch_petrifies(&mons[obj->corpsenm])) {
 			    static const char withwhat[] = "corpse";
 			    tmp = 1;
 			    hittxt = TRUE;
-			    You("hit %s with %s %s.", mon_nam(mon),
+			    if (obj->otyp == ROCK)
+			        You("hit %s with %s.",
+				    mon_nam(mon), the(xname(obj)));
+			    else
+			    You("hit %s with %s%s.", mon_nam(mon),
 				obj->dknown ? the(mons[obj->corpsenm].mname) :
 				an(mons[obj->corpsenm].mname),
 				(obj->quan > 1) ? makeplural(withwhat) : withwhat);
@@ -789,6 +800,7 @@ int thrown;
 			    /* maybe turn the corpse into a statue? */
 #endif
 			}
+			if (obj->otyp == ROCK) goto rock1;
 			tmp = (obj->corpsenm >= LOW_PM ?
 					mons[obj->corpsenm].msize : 0) + 1;
 			break;
@@ -1311,11 +1323,16 @@ struct attack *mattk;
 	    otmp = hold_another_object(otmp, "You snatched but dropped %s.",
 				       doname(otmp), "You steal: ");
 	    if (otmp->where != OBJ_INVENT) continue;
-	    if (otmp->otyp == CORPSE &&
+	    if ((otmp->otyp == CORPSE ||
+	        (otmp->otyp == ROCK && otmp->corpsenm != 0)) &&
 		    touch_petrifies(&mons[otmp->corpsenm]) && !uarmg) {
 		char kbuf[BUFSZ];
 
-		Sprintf(kbuf, "stolen %s corpse", mons[otmp->corpsenm].mname);
+                if (otmp->otyp == ROCK)
+		    Sprintf(kbuf, "stolen %s", singular(otmp, xname));
+		else
+		    Sprintf(kbuf, "stolen %s corpse",
+		                  mons[otmp->corpsenm].mname);
 		instapetrify(kbuf);
 		break;		/* stop the theft even if hero survives */
 	    }
@@ -1331,6 +1348,8 @@ struct attack *mattk;
 	    if (!stealoid) break;	/* only taking one item */
 	}
 }
+
+extern const char * const behead_msg[];
 
 int
 damageum(mdef, mattk)
@@ -1576,6 +1595,16 @@ register struct attack *mattk;
 		}
 		break;
 	    case AD_DRIN:
+	        if (youmonst.data == &mons[PM_ZOMBIE] && rn2(5))
+		{
+zombie:
+                    if (!resists_sick(mdef))
+		    {
+		        pline("%s looks rather ill.");
+			mdef->msick = 3;
+		    }
+		    break;
+		}
 		if (notonhead || !has_head(mdef->data)) {
 		    pline("%s doesn't seem harmed.", Monnam(mdef));
 		    tmp = 0;
@@ -1619,6 +1648,7 @@ register struct attack *mattk;
 			flags.botl = 1;
 		}
 		exercise(A_WIS, TRUE);
+	        if (youmonst.data == &mons[PM_ZOMBIE]) goto zombie;
 		break;
 	    case AD_STCK:
 		if (!negated && !sticks(mdef->data))
@@ -1695,6 +1725,32 @@ register struct attack *mattk;
 		    mdef->mconf = 1;
 		}
 		break;
+	    case AD_BHED:
+	        if (!negated && (dieroll == 1 ||
+		    mdef->data->mlet == S_JABBERWOCK))
+		{
+		    char buf[BUFSZ];
+		    if (!has_head(mdef->data)) {
+		        Strcpy(buf, mon_nam(mdef));
+			pline("Somehow, you miss %s wildly.", buf);
+			tmp = 0;
+			break;
+		    }
+		    if (noncorporeal(mdef->data) ||
+		        amorphous(mdef->data)) {
+		        Strcpy(buf, s_suffix(mon_nam(mdef)));
+			pline("You slice through %s %s.",
+			      buf, mbodypart(mdef, NECK));
+			break;
+		    }
+		    tmp = 2 * mdef->mhp + 200; //FATAL_DAMAGE_MODIFIER;
+		    if (mdef->data == &mons[PM_ZOMBIE])
+		        mdef->mcan = 1; //beheaded zombies don't revive
+		    Strcpy(buf, mon_nam(mdef));
+		    pline(behead_msg[rn2(2)],
+			  "Your attack", buf);
+		}
+	        break;
 	    default:	tmp = 0;
 		break;
 	}

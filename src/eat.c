@@ -126,7 +126,8 @@ register struct obj *obj;
 
      /* return((boolean)(!!index(comestibles, obj->oclass))); */
 	return (boolean)(obj->oclass == FOOD_CLASS ||
-	                 obj->omaterial == FLESH);
+	                 obj->omaterial == FLESH ||
+			 obj->omaterial == VEGGY);
 }
 
 #endif /* OVL1 */
@@ -439,8 +440,8 @@ boolean message;
 
 	if(victual.piece->otyp == CORPSE)
 		cpostfx(victual.piece->corpsenm);
-	else
-		fpostfx(victual.piece);
+	//else
+	fpostfx(victual.piece);
 
 	if (carried(victual.piece)) useup(victual.piece);
 	else useupf(victual.piece, 1L);
@@ -1039,7 +1040,7 @@ opentin()		/* called during each move whilst opening a tin */
 	if(tin.usedtime < tin.reqtime)
 		return(1);		/* still busy */
 	if(tin.tin->otrapped ||
-	   (tin.tin->cursed && tin.tin->spe != -1 && !rn2(8))) {
+	   (tin.tin->cursed && tin.tin->spe > -1 && !rn2(8))) {
 		b_trapped("tin", 0);
 		costly_tin("destroyed");
 		goto use_me;
@@ -1091,7 +1092,8 @@ opentin()		/* called during each move whilst opening a tin */
 		violated_vegetarian();
 
 	    tin.tin->dknown = tin.tin->known = TRUE;
-	    cprefx(tin.tin->corpsenm); cpostfx(tin.tin->corpsenm);
+	    cprefx(tin.tin->corpsenm); fprefx(tin.tin);
+	    cpostfx(tin.tin->corpsenm); fpostfx(tin.tin);
 
 	    /* charge for one at pre-eating cost */
 	    costly_tin((const char*)0);
@@ -1280,7 +1282,9 @@ eatcorpse(otmp)		/* called when a corpse is selected as food */
 			/* make sure new ill doesn't result in improvement */
 			if (Sick && (sick_time > Sick))
 			    sick_time = (Sick > 1L) ? Sick - 1L : 1L;
-			if (!uniq)
+			if (otmp->otyp == ROCK)
+			    Sprintf(buf, "%s", singular(otmp, xname));
+			else if (!uniq)
 			    Sprintf(buf, "rotted %s", corpse_xname(otmp,TRUE));
 			else
 			    Sprintf(buf, "%s%s rotted corpse",
@@ -1309,6 +1313,8 @@ eatcorpse(otmp)		/* called when a corpse is selected as food */
 		You_feel("%ssick.", (Sick) ? "very " : "");
 		losehp(rnd(8), "cadaver", KILLED_BY_AN);
 	}
+
+	if (otmp->otyp == ROCK) return 0;
 
 	/* delay is weight dependent */
 	victual.reqtime = 3 + (mons[mnum].cwt >> 6);
@@ -1359,6 +1365,7 @@ start_eating(otmp)		/* called as you start to eat */
 
 	if (otmp->otyp == CORPSE) {
 	    cprefx(victual.piece->corpsenm);
+	    fprefx(victual.piece);
 	    if (!victual.piece || !victual.eating) {
 		/* rider revived, or died and lifesaved */
 		return;
@@ -1465,6 +1472,36 @@ struct obj *otmp;
 		      ? "bland." :
 		      Hallucination ? "gnarly!" : "delicious!");
 		break;
+	    case CORPSE:
+	    case TIN:
+	    case ROCK:
+	        if (otmp->corpsenm && otmp->spe == -2 && !Sick_resistance)
+		{
+		    // zombie meat
+		    long sick_time = (long) rn1(10, 10);
+		    /* make sure new ill doesn't result in improvement */
+		    if (Sick && (sick_time > Sick))
+		        sick_time = (Sick > 1L) ? Sick - 1L : 1L;
+		    make_sick(sick_time, "zombie meat", TRUE,
+		                                        SICK_NONVOMITABLE);
+		}
+		else if (otmp->corpsenm &&
+		         otmp->spe < -2 && otmp->spe >= -5 &&
+		         u.ulycn <= LOW_PM)
+		{
+		    // lycanthrope meat
+		    u.ulycn = (otmp->spe == -2) ? PM_WERERAT :
+		              (otmp->spe == -3) ? PM_WEREJACKAL :
+			      (otmp->spe == -4) ? PM_WEREWOLF :
+			      LOW_PM;
+	            You_feel("feverish.");
+	            if (u.ulycn >= LOW_PM && defends(AD_WERE, uwep)) {
+	                if (!touch_artifact(uwep, &youmonst)) {
+		            dropx(uwep);
+		            uwepgone();
+	                }
+	            }
+		}
 	}
 }
 
@@ -1639,6 +1676,17 @@ eatspecial() /* called after eating non-food */
 		eataccessory(otmp);
 	else if (otmp->otyp == LEASH && otmp->leashmon)
 		o_unleash(otmp);
+	else if (otmp->otyp == ROCK && otmp->corpsenm != 0)
+	{
+	        int prob = mons[otmp->corpsenm].cwt / weight(otmp);
+	        cprefx(otmp->corpsenm);
+		fprefx(otmp);
+		if (prob <= 0 || !rn2(prob)) 
+		{
+		    cpostfx(otmp->corpsenm);
+		    fpostfx(otmp);
+		}
+	}
 
 	/* KMH -- idea by "Tommy the Terrorist" */
 	if ((otmp->otyp == TRIDENT) && !otmp->cursed)
@@ -1797,7 +1845,10 @@ struct obj *otmp;
 	 * order from most detrimental to least detrimental.
 	 */
 
-	if (cadaver && mnum != PM_ACID_BLOB && rotted > 5L && !Sick_resistance) {
+	if ((((cadaver && mnum != PM_ACID_BLOB && rotted > 5L) || 
+	      cadaver && otmp->spe == -2)
+	       && !Sick_resistance) || (otmp->spe < -2 && otmp->spe >= -5))
+	    {
 		/* Tainted meat */
 		Sprintf(buf, "%s like %s could be tainted! %s",
 			foodsmell, it_or_they, eat_it_anyway);
@@ -1868,7 +1919,10 @@ struct obj *otmp;
 		else return 2;
 	}
 
-	if (cadaver && mnum != PM_ACID_BLOB && rotted > 5L && Sick_resistance) {
+	if (((cadaver && mnum != PM_ACID_BLOB && rotted > 5L) || 
+	      cadaver && otmp->spe == -2)
+	       && Sick_resistance)
+	{
 		/* Tainted meat with Sick_resistance */
 		Sprintf(buf, "%s like %s could be tainted! %s",
 			foodsmell, it_or_they, eat_it_anyway);
@@ -1952,6 +2006,7 @@ doeat()		/* generic "eat" command funtion (see cmd.c) */
 	}
 	if (otmp->oclass != FOOD_CLASS) {
 	    int material;
+	    dont_start = FALSE;
 	    victual.reqtime = 1;
 	    victual.piece = otmp;
 		/* Don't split it, we don't need to if it's 1 move */
@@ -1978,6 +2033,17 @@ doeat()		/* generic "eat" command funtion (see cmd.c) */
 		u.uconduct.unvegan++;
 	    u.uconduct.food++;
 	    
+	    if (otmp->otyp == ROCK)
+	    {
+	        int tmp = eatcorpse(otmp);
+	        if (tmp == 2) {
+		    /* used up */
+		    victual.piece = (struct obj *)0;
+		    return(1);
+	        } else if (tmp)
+		    dont_start = TRUE;
+	    }
+	    
 	    if (otmp->cursed)
 		(void) rottenfood(otmp);
 
@@ -1989,11 +2055,18 @@ doeat()		/* generic "eat" command funtion (see cmd.c) */
 		} else
 		    You("seem unaffected by the poison.");
 	    } else if (!otmp->cursed)
-		pline("This %s is delicious!",
+		pline("This %s %s!",
 		      otmp->oclass == COIN_CLASS ? foodword(otmp) :
-		      singular(otmp, xname));
+		      singular(otmp, xname),
+		      otmp->otyp == ROCK && (otmp->corpsenm == 0 ||
+		  (vegan(&mons[otmp->corpsenm]) ?
+		   (!carnivorous(youmonst.data) && herbivorous(youmonst.data)) :
+		   (carnivorous(youmonst.data) && !herbivorous(youmonst.data))))
+		                         ? "is delicious"
+		                         : "tastes terrible");
 
-	    eatspecial();
+            if (!dont_start)
+	        eatspecial();
 	    return 1;
 	}
 
@@ -2059,6 +2132,7 @@ doeat()		/* generic "eat" command funtion (see cmd.c) */
 		    u.uconduct.unvegan++;
 		break;
 	    }
+
 
 	    victual.reqtime = objects[otmp->otyp].oc_delay;
 	    if (otmp->otyp != FORTUNE_COOKIE &&

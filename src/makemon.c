@@ -131,15 +131,17 @@ register int x, y, n;
 	mm.x = x;
 	mm.y = y;
 	while(cnt--) {
-		if (peace_minded(mtmp)) continue;
+		//if (peace_minded(mtmp)) continue;
 		/* Don't create groups of peaceful monsters since they'll get
 		 * in our way.  If the monster has a percentage chance so some
 		 * are peaceful and some are not, the result will just be a
 		 * smaller group.
 		 */
+		/* counterpoint: peaceful monsters can actually be of some
+		 * use with the intelligent pet enhancements */
 		if (enexto(&mm, mm.x, mm.y, mtmp->data)) {
 		    mon = makemon(mtmp->data, mm.x, mm.y, NO_MM_FLAGS);
-		    mon->mpeaceful = FALSE;
+		    mon->mpeaceful = mtmp->mpeaceful;
 		    mon->mavenge = 0;
 		    set_malign(mon);
 		    /* Undo the second peace_minded() check in makemon(); if the
@@ -195,35 +197,55 @@ register struct monst *mtmp;
 	switch (ptr->mlet) {
 	    case S_HUMAN:
 		if(is_mercenary(ptr)) {
-		    int w1 = 0, w2 = 0;
+		    int w1 = 0, w2 = 0, w3 = 0;
 		    switch (mm) {
 
 			case PM_WATCHMAN:
 			case PM_SOLDIER:
-			  if (!rn2(3)) {
+			  if (!rn2(3)) 
 			      w1 = rn1(BEC_DE_CORBIN - PARTISAN + 1, PARTISAN);
-			      w2 = rn2(2) ? DAGGER : KNIFE;
-			  } else w1 = rn2(2) ? SPEAR : SHORT_SWORD;
+			  else w1 = rn2(2) ? SPEAR : SHORT_SWORD;
+			  w2 = rn2(2) ? DAGGER : KNIFE;
+			  w3 = rn2(3) ? CROSSBOW : BOW;
 			  break;
 			case PM_SERGEANT:
 			  w1 = rn2(2) ? FLAIL : MACE;
+			  w3 = rn2(2) ? BOW : CROSSBOW;
 			  break;
 			case PM_LIEUTENANT:
 			  w1 = rn2(2) ? BROADSWORD : LONG_SWORD;
+			  w3 = rn2(3) ? BOW : CROSSBOW;
 			  break;
 			case PM_CAPTAIN:
 			case PM_WATCH_CAPTAIN:
 			  w1 = rn2(2) ? LONG_SWORD : SABER;
+			  w3 = rn2(4) ? BOW : CROSSBOW;
 			  break;
 			default:
 			  if (!rn2(4)) w1 = DAGGER;
 			  if (!rn2(7)) w2 = SPEAR;
+			  if (!rn2(5)) w3 = rn2(2) ? BOW : CROSSBOW;
 			  break;
 		    }
 		    if (w1) (void)mongets(mtmp, w1);
 		    if (!w2 && w1 != DAGGER && !rn2(4)) w2 = KNIFE;
 		    if (w2) (void)mongets(mtmp, w2);
+		    if (w3)
+		    {
+		        if (is_elf(mtmp)) w3 = ELVEN_BOW;
+		        if (is_orc(mtmp)) w3 = ORCISH_BOW;
+			if (is_dwarf(mtmp)) w3 = CROSSBOW;
+		        (void)mongets(mtmp, w3);
+		        if (w3 == BOW)
+		            m_initthrow(mtmp, ARROW, 12);
+			if (w3 == ELVEN_BOW)
+		            m_initthrow(mtmp, ELVEN_ARROW, 12);
+			if (w3 == ORCISH_BOW)
+		            m_initthrow(mtmp, ORCISH_ARROW, 12);
+		        if (w3 == CROSSBOW)
+		            m_initthrow(mtmp, CROSSBOW_BOLT, 12);
 		    }
+		}
 		else if (ptr->msound == MS_PRIEST ||
 			quest_mon_represents_role(ptr,PM_PRIEST)) {
 		    otmp = mksobj(MACE, FALSE, FALSE);
@@ -414,7 +436,7 @@ register struct monst *mtmp;
 		}
 	    } else if (is_dwarf(mtmp)) {
 		if (rn2(7)) (void)mongets(mtmp, DWARVISH_CLOAK);
-		if (rn2(7)) (void)mongets(mtmp, IRON_SHOES);
+		if (rn2(7)) (void)mongets(mtmp, SHOES);
 		if (!rn2(4)) {
 		    (void)mongets(mtmp, DWARVISH_SHORT_SWORD);
 		    /* note: you can't use a mattock with a shield */
@@ -442,7 +464,7 @@ register struct monst *mtmp;
 		    case PM_URUK_HAI:
 			if(!rn2(3)) (void)mongets(mtmp, ORCISH_CLOAK);
 			if(!rn2(3)) (void)mongets(mtmp, ORCISH_SHORT_SWORD);
-			if(!rn2(3)) (void)mongets(mtmp, IRON_SHOES);
+			if(!rn2(3)) (void)mongets(mtmp, SHOES);
 			if(!rn2(3)) {
 			    (void)mongets(mtmp, ORCISH_BOW);
 			    m_initthrow(mtmp, ORCISH_ARROW, 12);
@@ -1670,10 +1692,10 @@ register struct monst *mtmp;
 		return TRUE;
 	if (ptr->msound == MS_NEMESIS)	return FALSE;
 
-	if (race_peaceful(ptr)) return TRUE;
+	//if (race_peaceful(ptr)) return TRUE;
 	if (race_peaceful(&mons[mons_to_corpse(mtmp)])) return TRUE;
-	if (race_hostile(ptr)) return FALSE;
-	if (race_hostile(&mons[mons_to_corpse(mtmp)])) return TRUE;
+	//if (race_hostile(ptr)) return FALSE;
+	if (race_hostile(&mons[mons_to_corpse(mtmp)])) return FALSE;
 
 	/* the monster is hostile if its alignment is different from the
 	 * player's */

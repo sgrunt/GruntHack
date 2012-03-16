@@ -256,6 +256,20 @@ nh_timeout()
 				Strcpy(u.usick_cause, killer);
 				killer_format = KILLED_BY;
 			    }
+	                    if (m_idx == PM_ZOMBIE)
+			    {
+	                        u.ugrave_arise = PM_ZOMBIE;
+				killer_format = NO_KILLER_PREFIX;
+				if (!strcmp(killer, "zombie meat"))
+				    killer = "zombified by eating zombie meat";
+				else
+				{
+				    char tmpbuf[BUFSZ];
+				    Sprintf(tmpbuf, "zombified by %s",
+				                    an(killer));
+				    killer = tmpbuf;
+				}
+			    }
 			}
 			u.usick_type = 0;
 			done(POISONING);

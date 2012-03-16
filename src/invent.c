@@ -2427,7 +2427,9 @@ boolean picked_some;
 	    putstr(tmpwin, 0, Blind ? "Things that you feel here:" :
 				      "Things that are here:");
 	    for ( ; otmp; otmp = otmp->nexthere) {
-		if (otmp->otyp == CORPSE && will_feel_cockatrice(otmp, FALSE)) {
+		if ((otmp->otyp == CORPSE ||
+		    (otmp->otyp == ROCK && otmp->corpsenm != 0))
+		    && will_feel_cockatrice(otmp, FALSE)) {
 			char buf[BUFSZ];
 			felt_cockatrice = TRUE;
 			Strcpy(buf, doname(otmp));
@@ -2458,7 +2460,9 @@ struct obj *otmp;
 boolean force_touch;
 {
 	if ((Blind || force_touch) && !uarmg && !Stone_resistance &&
-		(otmp->otyp == CORPSE && touch_petrifies(&mons[otmp->corpsenm])))
+		((otmp->otyp == CORPSE ||
+		 (otmp->otyp == ROCK && otmp->corpsenm != 0)) &&
+		 touch_petrifies(&mons[otmp->corpsenm])))
 			return TRUE;
 	return FALSE;
 }
@@ -2533,7 +2537,9 @@ mergable(otmp, obj)	/* returns TRUE if obj  & otmp can be merged */
 					  obj->orotten != otmp->orotten))
 	    return(FALSE);
 
-	if (obj->otyp == CORPSE || obj->otyp == EGG || obj->otyp == TIN) {
+	if (obj->otyp == CORPSE || obj->otyp == EGG || obj->otyp == TIN ||
+	    (obj->otyp == ROCK && (obj->corpsenm != 0 ||
+	                           otmp->corpsenm != 0))) {
 		if (obj->corpsenm != otmp->corpsenm)
 				return FALSE;
 	}

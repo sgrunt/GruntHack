@@ -321,6 +321,7 @@ register struct monst *mtmp;
 	if (mtmp->mblinded || !mtmp->mcansee)
 				  Strcat(info, ", blind");
 	if (mtmp->mstun)	  Strcat(info, ", stunned");
+	if (mtmp->msick)	  Strcat(info, ", ill");
 	if (mtmp->msleeping)	  Strcat(info, ", asleep");
 #if 0	/* unfortunately mfrozen covers temporary sleep and being busy
 	   (donning armor, for instance) as well as paralysis */

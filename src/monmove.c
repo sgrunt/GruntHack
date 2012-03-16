@@ -343,6 +343,39 @@ register struct monst *mtmp;
 	/* stunned monsters get un-stunned with larger probability */
 	if (mtmp->mstun && !rn2(10)) mtmp->mstun = 0;
 
+	/* sick monsters die with some probability */
+	if (mtmp->msick && !rn2(10))
+	{
+	    if (resists_sick(mtmp))
+	    {
+	        // Perhaps monster changed form?
+		mtmp->msick = 0;
+	    }
+	    else
+	    {
+	        if (cansee(mtmp->mx, mtmp->my))
+	            pline("%s dies from %s illness.",
+		           Monnam(mtmp), mhis(mtmp));
+		if ((mtmp->msick & 2) &&
+		    is_racial(mtmp->data) && !nonliving(mtmp->data))
+		{
+	            mtmp->msick = 0;
+		    mtmp->mtame = mtmp->mpeaceful = 0;
+                    mtmp->morigdata = PM_ZOMBIE; //it's permanent
+		    if (mtmp->isshk) shkgone(mtmp);
+ 	            (void) newcham(mtmp, &mons[PM_ZOMBIE], FALSE, TRUE);
+		}
+		else
+		{
+		    mtmp->msick = 0;
+ 	            mtmp->mhp = -1;
+                    mondied(mtmp);
+		}
+
+	        return (mtmp->mhp > 0) ? 0 : 1; //might lifesave
+	    }
+	}
+
 	/* some monsters teleport */
 	if (mtmp->mflee && !rn2(40) && can_teleport(mdat) && !mtmp->iswiz &&
 	    !level.flags.noteleport) {
@@ -350,6 +383,8 @@ register struct monst *mtmp;
 		return(0);
 	}
 	if (mdat->msound == MS_SHRIEK && !um_dist(mtmp->mx, mtmp->my, 1))
+	    m_respond(mtmp);
+	if (mdat == &mons[PM_ZOMBIE] && !rn2(10))
 	    m_respond(mtmp);
 	if (mdat == &mons[PM_MEDUSA] && couldsee(mtmp->mx, mtmp->my))
 	    m_respond(mtmp);
@@ -874,7 +909,8 @@ not_special:
 		       (conceals && !cansee(otmp->ox,otmp->oy)) ||
 		       (ptr == &mons[PM_GELATINOUS_CUBE] &&
 			!index(indigestion, otmp->oclass) &&
-			!(otmp->otyp == CORPSE &&
+			!((otmp->otyp == CORPSE ||
+			   (otmp->otyp == ROCK && otmp->corpsenm != 0)) &&
 			  touch_petrifies(&mons[otmp->corpsenm])))
 		      ) && touch_artifact(otmp,mtmp)) {
 			if(can_carry(mtmp,otmp) &&

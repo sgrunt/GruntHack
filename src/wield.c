@@ -127,7 +127,9 @@ struct obj *wep;
 		res++;
 	    } else
 		You("are already empty %s.", body_part(HANDED));
-	} else if (!uarmg && !Stone_resistance && wep->otyp == CORPSE
+	} else if (!uarmg && !Stone_resistance && 
+	           (wep->otyp == CORPSE ||
+		    (wep->otyp == ROCK && wep->corpsenm != 0))
 				&& touch_petrifies(&mons[wep->corpsenm])) {
 	    /* Prevent wielding cockatrice when not wearing gloves --KAA */
 	    char kbuf[BUFSZ];
@@ -489,7 +491,9 @@ can_twoweapon()
 	else if (uswapwep->oartifact)
 		pline("%s %s being held second to another weapon!",
 			Yname2(uswapwep), otense(uswapwep, "resist"));
-	else if (!uarmg && !Stone_resistance && (uswapwep->otyp == CORPSE &&
+	else if (!uarmg && !Stone_resistance && 
+	            ((uswapwep->otyp == CORPSE ||
+		     (uswapwep->otyp == ROCK && uswapwep->corpsenm != 0)) &&
 		    touch_petrifies(&mons[uswapwep->corpsenm]))) {
 		char kbuf[BUFSZ];
 

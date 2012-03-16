@@ -94,7 +94,9 @@ int shotlimit;
 		return(0);
 	}
 	u_wipe_engr(2);
-	if (!uarmg && !Stone_resistance && (obj->otyp == CORPSE &&
+	if (!uarmg && !Stone_resistance &&
+	            ((obj->otyp == CORPSE ||
+		     (obj->otyp == ROCK && obj->corpsenm != 0)) &&
 		    touch_petrifies(&mons[obj->corpsenm]))) {
 		You("throw the %s with your bare %s.",
 		    corpse_xname(obj, TRUE), body_part(HAND));
@@ -348,6 +350,28 @@ register struct obj *obj;
 	else
 		pline("%s hit%s the %s.", Doname2(obj),
 		      (obj->quan == 1L) ? "s" : "", surface(u.ux,u.uy));
+
+	if ((obj->oprops & ITEM_DETONATIONS ||
+	     (uwep->oprops & ITEM_DETONATIONS &&
+	      ammo_and_launcher(obj, uwep))) &&
+	    (is_ammo(obj) || is_missile(obj)))
+	{
+            int dmg = d(4, 4);
+	    pline_The("%s explodes!", xname(obj));
+	    thrownobj = (struct obj*)0;
+	    obfree(obj, (struct obj *)0);
+
+/* ZT_SPELL(ZT_FIRE) = ZT_SPELL(AD_FIRE-1) = 10+(2-1) = 11 */
+#define ZT_SPELL_O_FIRE 11 /* value kludge, see zap.c */
+
+            explode(bhitpos.x, bhitpos.y, ZT_SPELL_O_FIRE,
+	            dmg, obj->otyp, EXPL_FIERY);
+            scatter(bhitpos.x, bhitpos.y, dmg,
+	            VIS_EFFECTS|MAY_HIT|MAY_DESTROY|MAY_FRACTURE,
+		    NULL);
+
+	    return;
+	}
 
 	if (hero_breaks(obj, u.ux, u.uy, TRUE)) return;
 	if (ship_object(obj, u.ux, u.uy, FALSE)) return;
@@ -813,9 +837,13 @@ boolean hitsroof;
 		if (!artimsg)
 		    pline("Fortunately, you are wearing a hard helmet.");
 	    } else if (flags.verbose &&
-		    !(obj->otyp == CORPSE && touch_petrifies(&mons[obj->corpsenm])))
+		    !((obj->otyp == CORPSE ||
+		      (obj->otyp == ROCK && obj->corpsenm != 0))
+		      && touch_petrifies(&mons[obj->corpsenm])))
 		Your("%s does not protect you.", xname(uarmh));
-	} else if (obj->otyp == CORPSE && touch_petrifies(&mons[obj->corpsenm])) {
+	} else if ((obj->otyp == CORPSE ||
+	           (obj->otyp == ROCK && obj->corpsenm != 0))
+		   && touch_petrifies(&mons[obj->corpsenm])) {
 	    if (!Stone_resistance &&
 		    !(poly_when_stoned(youmonst.data) && polymon(PM_STONE_GOLEM))) {
  petrify:
@@ -1081,6 +1109,24 @@ boolean twoweap; /* used to restore twoweapon mode if wielded weapon returns */
 		}
 		if(flooreffects(obj,bhitpos.x,bhitpos.y,"fall")) return;
 		obj_no_longer_held(obj);
+		if ((obj->oprops & ITEM_DETONATIONS ||
+		     (uwep->oprops & ITEM_DETONATIONS &&
+		      ammo_and_launcher(obj, uwep))) &&
+		    (is_ammo(obj) || is_missile(obj)))
+		{
+                    int dmg = d(4, 4);
+		    pline_The("%s explodes!", xname(obj));
+		    thrownobj = (struct obj*)0;
+		    obfree(obj, (struct obj *)0);
+
+                    explode(bhitpos.x, bhitpos.y, ZT_SPELL_O_FIRE,
+		            dmg, obj->otyp, EXPL_FIERY);
+                    scatter(bhitpos.x, bhitpos.y, dmg,
+		            VIS_EFFECTS|MAY_HIT|MAY_DESTROY|MAY_FRACTURE,
+			    NULL);
+
+		    return;
+		}
 		if (mon && mon->isshk && is_pick(obj)) {
 		    if (cansee(bhitpos.x, bhitpos.y))
 			pline("%s snatches up %s.",
@@ -1325,6 +1371,23 @@ register struct obj   *obj;
 		exercise(A_DEX, TRUE);
 		/* projectiles other than magic stones
 		   sometimes disappear when thrown */
+		if ((obj->oprops & ITEM_DETONATIONS ||
+		     (uwep->oprops & ITEM_DETONATIONS &&
+		      ammo_and_launcher(obj, uwep))) &&
+		    (is_ammo(obj) || is_missile(obj)))
+		{
+                    int dmg = d(4, 4);
+		    pline_The("%s explodes!", xname(obj));
+		    obfree(obj, (struct obj *)0);
+
+                    explode(bhitpos.x, bhitpos.y, ZT_SPELL_O_FIRE,
+		            dmg, obj->otyp, EXPL_FIERY);
+                    scatter(bhitpos.x, bhitpos.y, dmg,
+		            VIS_EFFECTS|MAY_HIT|MAY_DESTROY|MAY_FRACTURE,
+			    NULL);
+
+		    return 1;
+		}
 		if (objects[otyp].oc_skill < P_NONE &&
 				objects[otyp].oc_skill > -P_BOOMERANG &&
 				!objects[otyp].oc_magic) {
@@ -1406,7 +1469,9 @@ register struct obj   *obj;
 	} else if (guaranteed_hit) {
 	    /* this assumes that guaranteed_hit is due to swallowing */
 	    wakeup(mon);
-	    if (obj->otyp == CORPSE && touch_petrifies(&mons[obj->corpsenm])) {
+	    if ((obj->otyp == CORPSE ||
+	        (obj->otyp == ROCK && obj->corpsenm != 0))
+		&& touch_petrifies(&mons[obj->corpsenm])) {
 		if (is_animal(u.ustuck->data)) {
 			minstapetrify(u.ustuck, TRUE);
 			/* Don't leave a cockatrice corpse available in a statue */

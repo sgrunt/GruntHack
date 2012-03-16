@@ -1428,6 +1428,8 @@ register struct obj *obj;
 	    can->owt = weight(can);
 	    can->known = 1;
 	    can->spe = -1;  /* Mark tinned tins. No spinach allowed... */
+	    if (corpse->spe < -1)
+	        can->spe = corpse->spe;
 	    if (carried(corpse)) {
 		if (corpse->unpaid)
 		    verbalize(you_buy_it);
@@ -2307,7 +2309,8 @@ struct obj *obj;
 #endif /* 0 */
 		    /* right into your inventory */
 		    You("snatch %s %s!", s_suffix(mon_nam(mtmp)), onambuf);
-		    if (otmp->otyp == CORPSE &&
+		    if ((otmp->otyp == CORPSE ||
+		         (otmp->otyp == ROCK && otmp->corpsenm != 0)) &&
 			    touch_petrifies(&mons[otmp->corpsenm]) &&
 			    !uarmg && !Stone_resistance &&
 			    !(poly_when_stoned(youmonst.data) &&

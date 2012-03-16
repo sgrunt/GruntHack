@@ -15,39 +15,36 @@
 \newcommand{\blist}[1]
 {\begin{list}{$\bullet$}
     {\leftmargin 30mm \topsep 2mm \partopsep 0mm \parsep 0mm \itemsep 1mm
-     \labelwidth 28mm \labelsep 2mm
-     #1}}
-
+         \labelwidth 28mm \labelsep 2mm
+	      #1}}
+	      
 \newcommand{\elist}{\end{list}}
-
+	      
 % this will make \tt underscores look better, but requires that
 % math subscripts will never be used in this document
 \catcode`\_=12
-
 \begin{document}
 %
-% input file: guidebook.mn
-% $Revision: 1.61.2.19 $ $Date: 2003/12/03 03:00:50 $
+% input file: guidebook.mn 
 %
-%.ds h0 "
+% $Revision: 1.61.2.20 $ $Date: 2003/12/03 03:00:47 $
+%.ds h0 "GruntHack Guidebook
 %.ds h1 %.ds h2 \%
+%.ds vr "GruntHack 0.1
 %.ds f0 "
-
+%.ds f1 %.ds f2 "October 21, 2006
 %.mt
 \title{\LARGE A Guide to the Mazes of Menace:\\
-\Large Guidebook for {\it NetHack\/}}
+\Large Guidebook for {\it GruntHack\/}}
 
 %.au
-\author{Eric S. Raymond\\
-(Extensively edited and expanded for 3.4)}
-\date{December 2, 2003}
+\author{based on the original Guidebook for {\it NetHack\/}\\
+by Eric S. Raymond }
+\date{October 21, 2006}
 
 \maketitle
-
 %.hn 1
 \section{Introduction}
-
-%.pg
 
 Recently, you have begun to find yourself unfulfilled and distant 
 in your daily occupation.  Strange dreams of prospecting, stealing, 
@@ -67,8 +64,9 @@ After all, when other adventurers came back this way after spending time
 in the caverns, they usually seemed better off than when they passed 
 through the first time.  And who was to say that all of those who did 
 not return had not just kept going?
-%.pg
 
+
+%.pg
 Asking around, you hear about a bauble, called the Amulet of Yendor by some,
 which, if you can find it, will bring you great wealth.  One legend you were
 told even mentioned that the one who finds the amulet will be granted
@@ -84,22 +82,23 @@ your dreams along the way.  You spend one last night fortifying yourself
 at the local inn, becoming more and more depressed as you watch the odds 
 of your success being posted on the inn's walls getting lower and lower.  
 
+
 %.pg
-\nd In the morning you awake, collect your belongings, and 
+  In the morning you awake, collect your belongings, and 
 set off for the dungeon.  After several days of uneventful 
 travel, you see the ancient ruins that mark the entrance to the 
 Mazes of Menace.  It is late at night, so you make camp at the entrance 
 and spend the night sleeping under the open skies.  In the morning, you 
 gather your gear, eat what may be your last meal outside, and enter the 
-dungeon\ldots
+dungeon...
 
 %.hn 1
 \section{What is going on here?}
 
 %.pg
-You have just begun a game of {\it NetHack}.  Your goal is to grab as much
+You have just begun a game of GruntHack.  Your goal is to grab as much
 treasure as you can, retrieve the Amulet of Yendor, and escape the
-Mazes of Menace alive.  
+Mazes of Menace alive.
 
 %.pg
 Your abilities and strengths for dealing with the hazards of adventure
@@ -112,75 +111,92 @@ will vary with your background and training:
 understand dungeons pretty well; this enables them
 to move quickly and sneak up on the local nasties.  They start equipped
 with the tools for a proper scientific expedition.
+
 %.pg
 %
 \item[\bb{Barbarians}]%
 are warriors out of the hinterland, hardened to battle.
 They begin their quests with naught but uncommon strength, a trusty hauberk,
 and a great two-handed sword.
+
 %.pg
 %
-\item[\bb{Cavemen {\rm and} Cavewomen}]
-start with exceptional strength, but unfortunately, neolithic weapons.
+\item[\bb{Cavemen}]%
+and %
+\item[\bb{Cavewomen}]%
+start with exceptional strength but,
+unfortunately, with neolithic weapons.
+
 %.pg
 %
 \item[\bb{Healers}]%
 are wise in medicine and apothecary.  They know the
 herbs and simples that can restore vitality, ease pain, anesthetize,
-and neutralize
-poisons; and with their instruments, they can divine a being's state
-of health or sickness.  Their medical practice earns them quite reasonable
-amounts of money, with which they enter the dungeon.
+and neutralize poisons; and with their instruments, they can divine a
+being's state of health or sickness.  Their medical practice earns them
+quite reasonable amounts of money, with which they enter the dungeon.
+
 %.pg
 %
 \item[\bb{Knights}]%
 are distinguished from the common skirmisher by their
 devotion to the ideals of chivalry and by the surpassing excellence of
 their armor.
+
 %.pg
 %
 \item[\bb{Monks}]%
 are ascetics, who by rigorous practice of physical and mental
 disciplines have become capable of fighting as effectively without weapons
 as with.  They wear no armor but make up for it with increased mobility.
+
 %.pg
 %
-\item[\bb{Priests {\rm and} Priestesses}]%
+\item[\bb{Priests}]%
+and %
+\item[\bb{Priestesses}]%
 are clerics militant, crusaders
 advancing the cause of righteousness with arms, armor, and arts
 thaumaturgic.  Their ability to commune with deities via prayer
 occasionally extricates them from peril, but can also put them in it.
+
 %.pg
 %
 \item[\bb{Rangers}]%
 are most at home in the woods, and some say slightly out
 of place in a dungeon.  They are, however, experts in archery as well
 as tracking and stealthy movement.
+
 %.pg
 %
 \item[\bb{Rogues}]%
 are agile and stealthy thieves, with knowledge of locks,
 traps, and poisons.  Their advantage lies in surprise, which they employ
 to great advantage.
+
 %.pg
 %
 \item[\bb{Samurai}]%
 are the elite warriors of feudal Nippon.  They are lightly
 armored and quick, and wear the %
-{\it dai-sho}, two swords of the deadliest
+{\it  dai-sho}%
+, two swords of the deadliest
 keenness.
+
 %.pg
 %
 \item[\bb{Tourists}]%
 start out with lots of gold (suitable for shopping with),
 a credit card, lots of food, some maps, and an expensive camera.  Most
 monsters don't like being photographed.
+
 %.pg
 %
 \item[\bb{Valkyries}]%
 are hardy warrior women.  Their upbringing in the harsh
 Northlands makes them strong, inures them to extremes of cold, and instills
 in them stealth and cunning.
+
 %.pg
 %
 \item[\bb{Wizards}]%
@@ -200,12 +216,14 @@ are smaller than humans or elves, but are stocky and solid
 individuals.  Dwarves' most notable trait is their great expertise in mining
 and metalwork.  Dwarvish armor is said to be second in quality not even to the
 mithril armor of the Elves.
+
 %.pg
 %
 \item[\bb{Elves}]%
 are agile, quick, and perceptive; very little of what goes
 on will escape an Elf.  The quality of Elven craftsmanship often gives
 them an advantage in arms and armor.
+
 %.pg
 %
 \item[\bb{Gnomes}]%
@@ -213,12 +231,14 @@ are smaller than but generally similar to dwarves.  Gnomes are
 known to be expert miners, and it is known that a secret underground mine
 complex built by this race exists within the Mazes of Menace, filled with
 both riches and danger.
+
 %.pg
 %
 \item[\bb{Humans}]%
 are by far the most common race of the surface world, and
 are thus the norm by which other races are often compared.  Although
 they have no special abilities, they can succeed in any role.
+
 %.pg
 %
 \item[\bb{Orcs}]%
@@ -226,39 +246,62 @@ are a cruel and barbaric race that hate every living thing
 (including other orcs).  Above all others, Orcs hate Elves with a passion
 unequalled, and will go out of their way to kill one at any opportunity.
 The armor and weapons fashioned by the Orcs are typically of inferior quality.
-\elist
 
+%.pg
+%
+\item[\bb{Kobolds}]%
+are a sly offshoot of orcs, smaller and nimbler but physically
+weaker.  They are shunned by most other civilized races, and can only make
+use of very little armor due to their small size. 
+
+%.pg
+%
+\item[\bb{Ogres}]%
+are big, heavy, and crude; they possess immense strength, but
+a detrimental lack of intelligence to back this up.  They tend to be looked
+down upon as barbaric, but can be very effective fighters.
+
+%.pg
+%
+\item[\bb{Giants}]%
+are effectively large humans; some of their number also
+possess great magical ability.  However, due to their stature they are largely
+incapable of using armor or maneuvering effectively in the dungeon.
+\elist
 %.hn 1
 \section{What do all those things on the screen mean?}
-%.pg
-On the screen is kept a map of where you have been and what you have 
-seen on the current dungeon level; as you explore more of the level, 
-it appears on the screen in front of you.
 
 %.pg
-When {\it NetHack\/}'s ancestor {\it rogue\/} first appeared, its screen
+On the screen is kept a map of where you have
+been and what you have seen on the current dungeon level; as you
+explore more of the level, it appears on the screen in front of you.
+
+%.pg
+When {\it GruntHack/}'s ancestor %
+{\it rogue}
+first appeared, its screen
 orientation was almost unique among computer fantasy games.  Since
 then, screen orientation has become the norm rather than the
-exception; {\it NetHack\/} continues this fine tradition.  Unlike text
+exception; {\it GruntHack/} continues this fine tradition.  Unlike text
 adventure games that accept commands in pseudo-English sentences and
-explain the results in words, {\it NetHack\/} commands are all one or two
+explain the results in words, {\it GruntHack/} commands are all one or two
 keystrokes and the results are displayed graphically on the screen.  A
 minimum screen size of 24 lines by 80 columns is recommended; if the
-screen is larger, only a $21\times80$ section will be used for the map.
+screen is larger, only a 21x80 section will be used for the map.
 
 %.pg
-{\it NetHack\/} can even be played by blind players, with the assistance of
-Braille readers or speech synthesisers.  Instructions for configuring
-{\it NetHack\/} for the blind are included later in this document.
+{\it GruntHack/} can even be played by blind players, with the assistance of Braille
+readers or speech synthesisers.  Instructions for configuring {\it GruntHack/} for
+the blind are included later in this document.
 
 %.pg
-{\it NetHack\/} generates a new dungeon every time you play it; even the
+{\it GruntHack/} generates a new dungeon every time you play it; even the
 authors still find it an entertaining and exciting game despite
 having won several times.
 
 %.pg
-{\it NetHack\/} offers a variety of display options.  The options available to
-you will vary from port to port, depending on the capabilities of your
+{\it GruntHack/} offers a variety of display options.  The options available to you
+will vary from port to port, depending on the capabilities of your
 hardware and software, and whether various compile-time options were
 enabled when your executable was created.  The three possible display
 options are: a monochrome character interface, a color character interface,
@@ -270,23 +313,24 @@ with respect to game play.  Because we cannot reproduce the tiles or
 colors in the Guidebook, and because it is common to all ports, we will
 use the default ASCII characters from the monochrome character display
 when referring to things you might see on the screen during your game.
+
 %.pg
-In order to understand what is going on in {\it NetHack}, first you must
-understand what {\it NetHack\/} is doing with the screen.  The {\it NetHack\/}
-screen replaces the ``You see \ldots'' descriptions of text adventure games.
-Figure 1 is a sample of what a {\it NetHack\/} screen might look like.
+In order to understand what is going on in {\it GruntHack/}, first you must
+understand what {\it GruntHack/} is doing with the screen.  The {\it GruntHack/} screen
+replaces the ``{\tt You see ...}'' descriptions of text adventure games.
+Figure 1 is a sample of what a {\it GruntHack/} screen might look like.
 The way the screen looks for you depends on your platform.
 
-\vbox{
+\vbox{ 
 \begin{verbatim}
         The bat bites!
 
                 ------
-                |....|    ----------
+                |....|    ---------- 
                 |.<..|####...@...$.|
                 |....-#   |...B....+
-                |....|    |.d......|
-                ------    -------|--
+                |....|    |.d......| 
+                ------    -------|-- 
 
 
 
@@ -297,7 +341,6 @@ The way the screen looks for you depends on your platform.
 Figure 1
 \end{center}
 }
-
 %.hn 2
 \subsection*{The status lines (bottom)}
 
@@ -308,13 +351,10 @@ becomes longer than the width of the screen, you might not see all of
 it.  Here are explanations of what the various status items mean
 (though your configuration may not have all the status items listed
 below):
-
-%.lp
 \blist{}
-\item[\bb{Rank}]
+\item[\bb{"Rank  "}]
 Your character's name and professional ranking (based on the
 experience level, see below).
-%.lp
 \item[\bb{Strength}]
 A measure of your character's strength; one of your six basic
 attributes.  A human character's attributes can range from 3 to 18 inclusive;
@@ -324,199 +364,177 @@ also cause attributes to exceed the normal limits).  The
 higher your strength, the stronger you are.  Strength affects how
 successfully you perform physical tasks, how much damage you do in
 combat, and how much loot you can carry.
-%.lp
 \item[\bb{Dexterity}]
 Dexterity affects your chances to hit in combat, to avoid traps, and
 do other tasks requiring agility or manipulation of objects.
-%.lp
 \item[\bb{Constitution}]
 Constitution affects your ability to recover from injuries and other
 strains on your stamina.
-%.lp
 \item[\bb{Intelligence}]
 Intelligence affects your ability to cast spells and read spellbooks.
-%.lp
 \item[\bb{Wisdom}]
 Wisdom comes from your practical experience (especially when dealing with
 magic).  It affects your magical energy.
-%.lp
 \item[\bb{Charisma}]
 Charisma affects how certain creatures react toward you.  In
 particular, it can affect the prices shopkeepers offer you.
-%.lp
 \item[\bb{Alignment}]
 %
-{\it Lawful}, {\it Neutral\/} or {\it Chaotic}.  Often, Lawful is
-taken as good and Chaotic is evil, but legal and ethical do not always
+{\it  Lawful}%
+, %
+{\it  Neutral}%
+, or %
+{\it  Chaotic}%
+.  Often, Lawful is
+taken as good and Chaotic as evil, but legal and ethical do not always
 coincide.  Your alignment influences how other
 monsters react toward you.  Monsters of a like alignment are more likely
 to be non-aggressive, while those of an opposing alignment are more likely
 to be seriously offended at your presence.
-%.lp
 \item[\bb{Dungeon Level}]
 How deep you are in the dungeon.  You start at level one and the number
 increases as you go deeper into the dungeon.  Some levels are special,
 and are identified by a name and not a number.  The Amulet of Yendor is
 reputed to be somewhere beneath the twentieth level.
-%.lp
-\item[\bb{Gold}]
+\item[\bb{"Gold  "}]
 The number of gold pieces you are openly carrying.  Gold which you have
 concealed in containers is not counted.
-%.lp
 \item[\bb{Hit Points}]
 Your current and maximum hit points.  Hit points indicate how much
 damage you can take before you die.  The more you get hit in a fight,
 the lower they get.  You can regain hit points by resting, or by using
 certain magical items or spells.  The number in parentheses is the maximum
 number your hit points can reach.
-%.lp
 \item[\bb{Power}]
-Spell points.  This tells you how much mystic energy ({\it mana\/})
+Spell points.  This tells you how much mystic energy (%
+{\it  mana}%
+)
 you have available for spell casting.  Again, resting will regenerate the
 amount available.
-%.lp
 \item[\bb{Armor Class}]
 A measure of how effectively your armor stops blows from unfriendly
 creatures.  The lower this number is, the more effective the armor; it
-is quite possible to have negative armor class.
-%.lp
+is quite possible to have negative armor class. 
 \item[\bb{Experience}]
 Your current experience level and experience points.  As you
 adventure, you gain experience points.  At certain experience point
 totals, you gain an experience level.  The more experienced you are,
 the better you fight and withstand magical attacks.  Many dungeons
 show only your experience level here.
-%.lp
 \item[\bb{Time}]
 The number of turns elapsed so far, displayed if you have the
-{\it time\/} option set.
-%.lp
-\item[\bb{Hunger Status}]
+{\it time}
+option set.
+\item[\bb{Hunger status}]
 Your current hunger status, ranging from %
-{\it Satiated\/} down to {\it Fainting}.  If your hunger status is normal,
-it is not displayed.
-%.pg
-Additional status flags may appear after the hunger status:
-{\it Conf\/} when you're confused, {\it FoodPois\/} or {\it Ill\/}
-when sick, {\it Blind\/}
-when you can't see, {\it Stun\/} when stunned, and {\it Hallu\/} when
-hallucinating.
-\elist
+{\it Satiated}
+down to
+%
+{\it  Fainting}%
+.  If your hunger status is normal, it is not displayed.
 
+%.pg
+Additional status flags may appear after the hunger status:  %
+{\it Conf}
+when you're confused, %
+{\it FoodPois}
+or %
+\bf Ill \rm%
+when sick, %
+\bf Blind \rm%
+when you can't
+see, %
+\bf Stun \rm%
+when stunned, and %
+\bf Hallu \rm%
+when hallucinating.
+\elist
 %.hn 2
 \subsection*{The message line (top)}
 
 %.pg
 The top line of the screen is reserved for messages that describe
 things that are impossible to represent visually.  If you see a
-``{\tt --More--}'' on the top line, this means that {\it NetHack\/} has
+``%
+{\it  --More--}%
+'' on the top line, this means that GruntHack has
 another message to display on the screen, but it wants to make certain
 that you've read the one that is there first.  To read the next message,
 just press the space bar.
-
 %.hn 2
 \subsection*{The map (rest of the screen)}
 
 %.pg
 The rest of the screen is the map of the level as you have explored it
 so far.  Each symbol on the screen represents something.  You can set
-various graphics
-options to change some of the symbols the game uses; otherwise, the
-game will use default symbols.  Here is a list of what the default
-symbols mean:
-
+various graphics options to change some of the symbols the game uses;
+otherwise, the game will use default symbols.  Here is a list of what the
+default symbols mean:
 \blist{}
-%.lp
-\item[\tb{- {\rm and} |}]
-The walls of a room, or an open door.  Or a grave ({\tt |}).
-%.lp
+\item[\tb{- and |}]
+The walls of a room, or an open door.  Or a grave ($|$).
 \item[\tb{.}]
 The floor of a room, ice, or a doorless doorway.
-%.lp
 \item[\tb{\#}]
 A corridor, or iron bars, or a tree, or possibly a kitchen sink (if
 your dungeon has sinks), or a drawbridge.
-%.lp
 \item[\tb{>}]
 Stairs down: a way to the next level.
-%.lp
 \item[\tb{<}]
 Stairs up: a way to the previous level.
-%.lp
 \item[\tb{+}]
 A closed door, or a spellbook containing a spell you may be able to learn.
-%.lp
 \item[\tb{@}]
 Your character or a human.
-%.lp
 \item[\tb{\$}]
 A pile of gold.
-%.lp
 \item[\tb{\^}]
 A trap (once you have detected it).
-%.lp
 \item[\tb{)}]
 A weapon.
-%.lp
 \item[\tb{[}]
 A suit or piece of armor.
-%.lp
 \item[\tb{\%}]
 Something edible (not necessarily healthy).
-%.lp
 \item[\tb{?}]
 A scroll.
-%.lp
 \item[\tb{/}]
 A wand.
-%.lp
 \item[\tb{=}]
 A ring.
-%.lp
 \item[\tb{!}]
 A potion.
-%.lp
 \item[\tb{(}]
-A useful item (pick-axe, key, lamp \ldots).
-%.lp
-\item[\tb{"}]
+A useful item (pick-axe, key, lamp...).
+\item[\tb{"""}]
 An amulet or a spider web.
-%.lp
 \item[\tb{*}]
 A gem or rock (possibly valuable, possibly worthless).
-%.lp
 \item[\tb{`}]
 A boulder or statue.
-%.lp
 \item[\tb{0}]
 An iron ball.
-%.lp
 \item[\tb{_}]
 An altar, or an iron chain.
-%.lp
 \item[\tb{\{}]
 A fountain.
-%.lp
 \item[\tb{\}}]
 A pool of water or moat or a pool of lava.
-%.lp
-\item[\tb{$\backslash$}]
+\item[\tb{\/}]
 An opulent throne.
-%.lp
-\item[\tb{a-zA-Z {\rm \& other symbols}}]
+{\it em[\tb{a-zA-Z {} and other symbols}}]
 Letters and certain other symbols represent the various inhabitants
 of the Mazes of Menace.  Watch out, they can be nasty and vicious.
 Sometimes, however, they can be helpful.
-%.lp
 \item[\tb{I}]
 This marks the last known location of an invisible or otherwise unseen
-monster.  Note that the monster could have moved.  The `F' and `m' commands
+monster.  Note that the monster could have moved.  The 'F' and 'm' commands
 may be useful here.
-
 \elist
+
 %.pg
 You need not memorize all these symbols; you can ask the game what any
-symbol represents with the `{\tt /}' command (see the next section for
+symbol represents with the `/' command (see the next section for
 more info).
 
 %.hn 1
@@ -524,83 +542,76 @@ more info).
 
 %.pg
 Commands are initiated by typing one or two characters.  Some commands,
-like ``{\tt search}'', do not require that any more information be collected
-by {\it NetHack\/}.  Other commands might require additional information, for
+like ``{\tt search}'', do not require that any more information be collected by
+GruntHack.  Other commands might require additional information, for
 example a direction, or an object to be used.  For those commands that
-require additional information, {\it NetHack\/} will present you with either 
-a menu of choices, or with a command line prompt requesting information.  Which
+require additional information, GruntHack will present you with either a
+menu of choices or with a command line prompt requesting information.  Which
 you are presented with will depend chiefly on how you have set the
-`{\it menustyle\/}'
+{\it menustyle }
 option.
 
 %.pg
-For example, a common question in the form ``{\tt What do you want to
+For example, a common question, in the form ``{\tt What do you want to
 use? [a-zA-Z\ ?*]}'', asks you to choose an object you are carrying.
 Here, ``{\tt a-zA-Z}'' are the inventory letters of your possible choices.
-Typing `{\tt ?}' gives you an inventory list of these items, so you can see
-what each letter refers to.  In this example, there is also a `{\tt *}'
+Typing `?' gives you an inventory list of these items, so you can see
+what each letter refers to.  In this example, there is also a `*'
 indicating that you may choose an object not on the list, if you
-wanted to use something unexpected.  Typing a `{\tt *}' lists your entire
+wanted to use something unexpected.  Typing a `*' lists your entire
 inventory, so you can see the inventory letters of every object you're
 carrying.  Finally, if you change your mind and decide you don't want
-to do this command after all, you can press the `ESC' key to abort the
+to do this command after all, you can press the ESC key to abort the
 command.
 
 %.pg
 You can put a number before some commands to repeat them that many
 times; for example, ``{\tt 10s}'' will search ten times.  If you have the
-{\it number\_pad\/}
-option set, you must type `{\tt n}' to prefix a count, so the example above
+{\it number\_pad }
+option set, you must type `n' to prefix a count, so the example above
 would be typed ``{\tt n10s}'' instead.  Commands for which counts make no
 sense ignore them.  In addition, movement commands can be prefixed for
 greater control (see below).  To cancel a count or a prefix, press the
-`ESC' key.
+ESC key.
 
 %.pg
 The list of commands is rather long, but it can be read at any time
-during the game through the `{\tt ?}' command, which accesses a menu of
+during the game through the `?' command, which accesses a menu of
 helpful texts.  Here are the commands for your reference:
-
 \blist{}
-%.lp
 \item[\tb{?}]
 Help menu:  display one of several help texts available.
-%.lp
 \item[\tb{/}]
 Tell what a symbol represents.  You may choose to specify a location
 or type a symbol (or even a whole word) to explain.
 Specifying a location is done by moving the cursor to a particular spot
-on the map and then pressing one of `{\tt .}', `{\tt ,}', `{\tt ;}',
-or `{\tt :}'.  `{\tt .}' will explain the symbol at the chosen location,
+on the map and then pressing one of `.', `,', `;',
+or `:'.  `.' will explain the symbol at the chosen location,
 conditionally check for ``{\tt More info?}'' depending upon whether the
-{\it help\/}
+{\it help }
 option is on, and then you will be asked to pick another location;
-`{\tt ,}' will explain the symbol but skip any additional
-information; `{\tt ;}' will skip additional info and also not bother asking
-you to choose another location to examine; `{\tt :}' will show additional
+`,' will explain the symbol but skip any additional
+information; `;' will skip additional info and also not bother asking
+you to choose another location to examine; `:' will show additional
 info, if any, without asking for confirmation.  When picking a location,
-pressing the {\tt ESC} key will terminate this command, or pressing `{\tt ?}'
+pressing the ESC key will terminate this command, or pressing `?'
 will give a brief reminder about how it works.
 
 %.pg
 Specifying a name rather than a location
 always gives any additional information available about that name.
-%.lp
 \item[\tb{\&}]
 Tell what a command does.
-%.lp
 \item[\tb{<}]
 Go up to the previous level (if you are on a staircase or ladder).
-%.lp
 \item[\tb{>}]
 Go down to the next level (if you are on a staircase or ladder).
-%.lp
 \item[\tb{[yuhjklbn]}]
 Go one step in the direction indicated (see Figure 2).  If you sense
 or remember
 a monster there, you will fight the monster instead.  Only these
 one-step movement commands cause you to fight monsters; the others
-(below) are ``safe.''
+(below) are ``{\tt safe.}''
 %.sd
 \begin{center}
 \begin{tabular}{cc}
@@ -616,130 +627,105 @@ one-step movement commands cause you to fight monsters; the others
 \begin{center}
 Figure 2
 \end{center}
-%.lp
+
 \item[\tb{[YUHJKLBN]}]
 Go in that direction until you hit a wall or run into something.
-%.lp
 \item[\tb{m[yuhjklbn]}]
 Prefix:  move without picking up objects or fighting (even if you remember
 a monster there)
-%.lp
 \item[\tb{F[yuhjklbn]}]
 Prefix:  fight a monster (even if you only guess one is there)
-%.lp
 \item[\tb{M[yuhjklbn]}]
-Prefix:  Move far, no pickup.
-%.lp
-\item[\tb{g[yuhjklbn]}]
-Prefix:  Move until something interesting is found.
-%.lp
-\item[\tb{G[yuhjklbn] {\rm or} <CONTROL->[yuhjklbn]}]
-Prefix:  Same as `{\tt g}', but forking of corridors is not considered
-interesting.
-%.lp
-\item[\tb{_}]
+Prefix:  move far, no pickup.
+\item[\tb{"g[yuhjklbn]}]
+Prefix:  move until something interesting is found.
+\item[\tb{"G[yuhjklbn] or <CONTROL->[yuhjklbn]}]
+Prefix:  same as `g', but forking of corridors is not considered interesting.
+\item[\tb{\_}]
 Travel to a map location via a shortest-path algorithm.  The shortest path
 is computed over map locations the hero knows about (e.g. seen or
 previously traversed).  If there is no known path, a guess is made instead.
-Stops on most of 
+Stops on most of
 the same conditions as the `G' command, but without picking up
 objects, similar to the `M' command.  For ports with mouse 
 support, the command is also invoked when a mouse-click takes place on a 
 location other than the current position.
-%.lp
 \item[\tb{.}]
 Rest, do nothing for one turn.
-%.lp
 \item[\tb{a}]
 Apply (use) a tool (pick-axe, key, lamp \ldots).
-%.lp
 \item[\tb{A}]
 Remove one or more worn items, such as armor.
-Use `{\tt T}' (take off) to take off only one piece of armor 
-or `{\tt R}' (remove) to take off only one accessory.
-%.lp
-\item[\tb{\^{}A}]
+Use `T' (take off) to take off only one piece of armor 
+or `R' (remove) to take off only one accessory.
+\item[\tb{\^A}]
 Redo the previous command.
-%.lp
 \item[\tb{c}]
 Close a door.
-%.lp
 \item[\tb{C}]
 Call (name) an individual monster.
-%.lp
-\item[\tb{\^{}C}]
+\item[\tb{\^C}]
 Panic button.  Quit the game.
-%.lp
 \item[\tb{d}]
-Drop something.\\
-{\tt d7a} --- drop seven items of object
-{\it a}.
-%.lp
+Drop something.  Ex. ``{\tt d7a}'' means drop seven items of object %
+{\it  a}%
+.
 \item[\tb{D}]
 Drop several things.  In answer to the question
 ``{\tt What kinds of things do you want to drop? [!\%= BUCXaium]}''
-you should type zero or more object symbols possibly followed by
-`{\tt a}' and/or `{\tt i}' and/or `{\tt u}' and/or `{\tt m}'.
-In addition, one or more of
-the blessed/uncursed/cursed groups may be typed.\\
+you should type zero or more object symbols possibly followed by 
+`a' and/or `i' and/or `u' and/or `m'.  In addition, one or more of
+the blessed/uncursed/cursed groups may be typed.
 %.sd
 %.si
-{\tt DB}  --- drop all objects known to be blessed.\\
-{\tt DU}  --- drop all objects known to be uncursed.\\
-{\tt DC}  --- drop all objects known to be cursed.\\
-{\tt DX}  --- drop all objects of unknown B/U/C status.\\
-{\tt Da}  --- drop all objects, without asking for confirmation.\\
-{\tt Di}  --- examine your inventory before dropping anything.\\
-{\tt Du}  --- drop only unpaid objects (when in a shop).\\
-{\tt Dm}  --- use a menu to pick which object(s) to drop.\\
-{\tt D\%u} --- drop only unpaid food.
+DB  - drop all objects known to be blessed.
+DU  - drop all objects known to be uncursed.
+DC  - drop all objects known to be cursed.
+DX  - drop all objects of unknown B/U/C status.
+Da  - drop all objects, without asking for confirmation.
+Di  - examine your inventory before dropping anything.
+Du  - drop only unpaid objects (when in a shop).
+Dm  - use a menu to pick which object(s) to drop.
+D\%u - drop only unpaid food.
 %.ei
 %.ed
-%.lp
-\item[\tb{\^{}D}]
+\item[\tb{\^D}]
 Kick something (usually a door).
-%.lp
 \item[\tb{e}]
 Eat food.
-%.lp
-% Make sure Elbereth is not hyphenated below, the exact spelling matters.
-% (Only specified here to parallel Guidebook.mn; use of \tt font implicity
-% prevents automatic hyphenation in TeX and LaTeX.)
-\hyphenation{Elbereth}		%override the deduced syllable breaks
+% Make sure Elbereth is not hyphenated below, the exact spelling matters
+%.hw Elbereth
 \item[\tb{E}]
 Engrave a message on the floor.
 Engraving the word ``{\tt Elbereth}'' will cause most monsters to not attack
 you hand-to-hand (but if you attack, you will rub it out); this is
 often useful to give yourself a breather.  (This feature may be compiled out
-of the game, so your version might not have it.)\\
+of the game, so your version might not have it.)
 %.sd
 %.si
-{\tt E-} --- write in the dust with your fingers.
+E- - write in the dust with your fingers.  
 %.ei
 %.ed
-%.Ip
 \item[\tb{f}]
 Fire one of the objects placed in your quiver.  You may select
-ammunition with a previous `{\tt Q}' command, or let the computer pick
-something appropriate if {\it autoquiver\/} is true.
-%.lp
+ammunition with a previous `Q' command, or let the computer pick
+something appropriate if
+{\it autoquiver }
+is true.
 \item[\tb{i}]
 List your inventory (everything you're carrying).
-%.lp
 \item[\tb{I}]
-List selected parts of your inventory.\\
+List selected parts of your inventory.
 %.sd
 %.si
-{\tt I*} --- list all gems in inventory;\\
-{\tt Iu} --- list all unpaid items;\\
-{\tt Ix} --- list all used up items that are on your shopping bill;\\
-{\tt I\$} --- count your money.
+{\tt I*} - list all gems in inventory;
+{\tt Iu} - list all unpaid items;
+{\tt Ix} - list all used up items that are on your shopping bill;
+{\tt I\$} - count your money.
 %.ei
 %.ed
-%.lp
 \item[\tb{o}]
 Open a door.
-%.lp
 \item[\tb{O}]
 Set options.  A menu showing the current option values will be
 displayed.  You can change most values simply by selecting the menu
@@ -748,323 +734,233 @@ it, depending on your user interface).  For the non-boolean choices,
 a further menu or prompt will appear once you've closed this menu.
 The available options
 are listed later in this Guidebook.  Options are usually set before the
-game rather than with the `{\tt O}' command; see the section on options below.
-%.lp
+game rather than with the `O' command; see the section on options below.
 \item[\tb{p}]
 Pay your shopping bill.
-%.lp
 \item[\tb{P}]
 Put on a ring or other accessory (amulet, blindfold).
-%.lp
-\item[\tb{\^{}P}]
-Repeat previous message.  Subsequent {\tt \^{}P}'s repeat earlier messages.
-The behavior can be varied via the msg_window option.
-%.lp
+\item[\tb{\^P}]
+Repeat previous message.  Subsequent \^{}P's repeat earlier messages.
+The behavior can be varied via the msg\_window option.
 \item[\tb{q}]
 Quaff (drink) something (potion, water, etc).
-%.lp
 \item[\tb{Q}]
 Select an object for your quiver.  You can then throw this using
 the `f' command.  (In versions prior to 3.3 this was the command to quit
 the game, which has now been moved to `{\tt \#quit}'.)
-%.lp
 \item[\tb{r}]
 Read a scroll or spellbook.
-%.lp
 \item[\tb{R}]
 Remove an accessory (ring, amulet, etc).
-%.lp
-\item[\tb{\^{}R}]
+\item[\tb{\^R}]
 Redraw the screen.
-%.lp
 \item[\tb{s}]
 Search for secret doors and traps around you.  It usually takes several
 tries to find something.
-%.lp
 \item[\tb{S}]
 Save (and suspend) the game.  The game will be restored automatically the
 next time you play.
-%.lp
 \item[\tb{t}]
 Throw an object or shoot a projectile.
-%.lp
 \item[\tb{T}]
 Take off armor.
-%.lp
-\item[\tb{\^{}T}]
+\item[\tb{\^T}]
 Teleport, if you have the ability.
-%.lp
 \item[\tb{v}]
 Display version number.
-%.lp
 \item[\tb{V}]
 Display the game history.
-%.lp
 \item[\tb{w}]
-Wield weapon.\\
+Wield weapon.
 %.sd
 %.si
-{\tt w-} --- wield nothing, use your bare hands.
+{\tt w-} - wield nothing, use your bare hands.
 %.ei
 %.ed
-%.lp
 \item[\tb{W}]
 Wear armor.
-%.lp
 \item[\tb{x}]
 Exchange your wielded weapon with the item in your alternate
 weapon slot.  The latter is used as your secondary weapon when engaging in
 two-weapon combat.  Note that if one of these slots is empty,
 the exchange still takes place.
-%.lp
 \item[\tb{X}]
 Enter explore (discovery) mode, explained in its own section later.
-%.lp
-\item[\tb{\^{}X}]
+\item[\tb{\^X}]
 Display your name, role, race, gender, and alignment as well as
 the various deities in your game.
-%.lp
 \item[\tb{z}]
-Zap a wand.  To aim at yourself, use `{\tt .}' for the direction.
-%.lp
+Zap a wand.  To aim at yourself, use `.' for the direction.
 \item[\tb{Z}]
-Zap (cast) a spell.  To cast at yourself, use `{\tt .}' for the direction.
-%.lp
-\item[\tb{\^{}Z}]
+Zap (cast) a spell.  To cast at yourself, use `.' for the direction.
+\item[\tb{\^Z}]
 Suspend the game (UNIX versions with job control only).
-%.lp
 \item[\tb{:}]
 Look at what is here.
-%.lp
 \item[\tb{;}]
 Show what type of thing a visible symbol corresponds to.
-%.lp
 \item[\tb{,}]
-Pick up some things. May be preceded by `{\tt m}' to force a selection menu.
-%.lp
+Pick up some things. May be preceded by `m' to force a selection menu.
 \item[\tb{@}]
-Toggle the {\it autopickup\/} option on and off.
-%.lp
-\item[\tb{\^{}}]
+Toggle the
+{\it autopickup }
+option on and off.
+\item[\tb{\^}]
 Ask for the type of a trap you found earlier.
-%.lp
 \item[\tb{)}]
 Tell what weapon you are wielding.
-%.lp
 \item[\tb{[}]
 Tell what armor you are wearing.
-%.lp
 \item[\tb{=}]
 Tell what rings you are wearing.
-%.lp
 \item[\tb{"}]
 Tell what amulet you are wearing.
-%.lp
 \item[\tb{(}]
 Tell what tools you are using.
-%.lp
 \item[\tb{*}]
 Tell what equipment you are using; combines the preceding five type-specific
 commands into one.
-%.lp
 \item[\tb{\$}]
 Count your gold pieces.
-%.lp
 \item[\tb{+}]
 List the spells you know.  Using this command, you can also rearrange
 the order in which your spells are listed.  They are shown via a menu,
 and if you select a spell in that menu, you'll be re-prompted for
 another spell to swap places with it, and then have opportunity to
 make further exchanges.
-%.lp
 \item[\tb{$\backslash$}]
 Show what types of objects have been discovered.
-%.lp
 \item[\tb{!}]
 Escape to a shell.
-%.lp
 \item[\tb{\#}]
-Perform an extended command.  As you can see, the authors of {\it NetHack\/}
+Perform an extended command.  As you can see, the authors of GruntHack
 used up all the letters, so this is a way to introduce the less frequently
 used commands.
-What extended commands are available depends on what features
-the game was compiled with.
-%.lp
+What extended commands are available depends on what features the game was
+compiled with.
 \item[\tb{\#adjust}]
 Adjust inventory letters (most useful when the
-{\it fixinv\/}
-option is ``on'').
-%.lp
+{\it fixinv }
+option is ``{\tt on}'').
 \item[\tb{\#chat}]
 Talk to someone.
-%.lp
 \item[\tb{\#conduct}]
 List which challenges you have adhered to.  See the section below entitled
-``Conduct'' for details.
-%.lp
+``{\tt Conduct}'' for details.
 \item[\tb{\#dip}]
 Dip an object into something.
-%.lp
 \item[\tb{\#enhance}]
 Advance or check weapons and spell skills.
-%.lp
 \item[\tb{\#force}]
 Force a lock.
-%.lp
 \item[\tb{\#invoke}]
 Invoke an object's special powers.
-%.lp
 \item[\tb{\#jump}]
 Jump to another location.
-%.lp
 \item[\tb{\#loot}]
 Loot a box or bag on the floor beneath you, or the saddle 
 from a horse standing next to you.
-%.lp
 \item[\tb{\#monster}]
 Use a monster's special ability (when polymorphed into monster form).
-%.lp
 \item[\tb{\#name}]
 Name an item or type of object.
-%.lp
 \item[\tb{\#offer}]
 Offer a sacrifice to the gods.
-%.lp
 \item[\tb{\#pray}]
 Pray to the gods for help.
-%.lp
 \item[\tb{\#quit}]
 Quit the program without saving your game.
-%.lp
 \item[\tb{\#ride}]
 Ride (or stop riding) a monster.
-%.lp
 \item[\tb{\#rub}]
 Rub a lamp or a stone.
-%.lp
 \item[\tb{\#sit}]
 Sit down.
-%.lp
 \item[\tb{\#turn}]
 Turn undead.
-%.lp
 \item[\tb{\#twoweapon}]
 Toggle two-weapon combat on or off.  Note that you must
 use suitable weapons for this type of combat, or it will
 be automatically turned off.
-%.lp
 \item[\tb{\#untrap}]
 Untrap something (trap, door, or chest).
-%.lp
 \item[\tb{\#version}]
-Print compile time options for this version of {\it NetHack}.
-%.lp
+Print compile time options for this version of GruntHack.
 \item[\tb{\#wipe}]
 Wipe off your face.
-%.lp
 \item[\tb{\#?}]
 Help menu:  get the list of available extended commands.
-\elist
 
 %.pg
-\nd If your keyboard has a meta key (which, when pressed in combination
+If your keyboard has a meta key (which, when pressed in combination
 with another key, modifies it by setting the `meta' [8th, or `high']
 bit), you can invoke many extended commands by meta-ing the first
 letter of the command.
-%- In {\it NT, OS/2, PC\/ {\rm and} ST NetHack},
-%- the `Alt' key can be used in this fashion;
-%- on the Amiga set the {\it altmeta\/} option to get this behavior.
-In {\it NT, OS/2, {\rm and} PC NetHack},
-the `Alt' key can be used in this fashion.
-\blist{}
-%.lp 
+% In {\it NT, OS/2, PC\/ {\rm and} ST GruntHack},
+% the `Alt' key can be used in this fashion;
+% on the Amiga set the {\it altmeta\/} option to get this behavior.
+In NT, OS/2, and PC GruntHack, the `Alt' key
+can be used in this fashion.
 \item[\tb{M-?}]
-{\tt\#?} (not supported by all platforms)
-%.lp
+\#? (not supported by all platforms)
 \item[\tb{M-2}]
-{\tt\#twoweapon} (unless the {\it number\_pad\/} option is enabled)
-%.lp
+\#twoweapon (unless the number\_pad option is enabled)
 \item[\tb{M-a}]
-{\tt\#adjust}
-%.lp
+\#adjust
 \item[\tb{M-c}]
-{\tt\#chat}
-%.lp
+\#chat
 \item[\tb{M-d}]
-{\tt\#dip}
-%.lp
+\#dip
 \item[\tb{M-e}]
-{\tt\#enhance}
-%.lp
+\#enhance
 \item[\tb{M-f}]
-{\tt\#force}
-%.lp
+\#force
 \item[\tb{M-i}]
-{\tt\#invoke}
-%.lp
+\#invoke
 \item[\tb{M-j}]
-{\tt\#jump}
-%.lp
+\#jump
 \item[\tb{M-l}]
-{\tt\#loot}
-%.lp
+\#loot
 \item[\tb{M-m}]
-{\tt\#monster}
-%.lp
+\#monster
 \item[\tb{M-n}]
-{\tt\#name}
-%.lp
+\#name
 \item[\tb{M-o}]
-{\tt\#offer}
-%.lp
+\#offer
 \item[\tb{M-p}]
-{\tt\#pray}
-%.Ip
+\#pray
 \item[\tb{M-q}]
-{\tt\#quit}
-%.lp
+\#quit
 \item[\tb{M-r}]
-{\tt\#rub}
-%.lp
+\#rub
 \item[\tb{M-s}]
-{\tt\#sit}
-%.lp
+\#sit
 \item[\tb{M-t}]
-{\tt\#turn}
-%.lp
+\#turn
 \item[\tb{M-u}]
-{\tt\#untrap}
-%.lp
+\#untrap
 \item[\tb{M-v}]
-{\tt\#version}
-%.lp
+\#version
 \item[\tb{M-w}]
-{\tt\#wipe}
-\elist
+\#wipe
 
 %.pg
-\nd If the {\it number\_pad\/} option is on, some additional letter commands
-are available:
-\blist{}
-%.lp 
+If the
+{\it number\_pad }
+option is on, some additional letter commands are available:
 \item[\tb{h}]
 Help menu:  display one of several help texts available, like ``{\tt ?}''.
-%.lp
 \item[\tb{j}]
-Jump to another location.  Same as ``{\tt \#jump}'' or ``{\tt M-j}''.
-%.lp
+Jump to another location.  Same as ``{\tt \#jump'' or ``M-j}''.
 \item[\tb{k}]
-Kick something (usually a door).  Same as `{\tt \^{}D}'.
-%.lp
+Kick something (usually a door).  Same as `\^{}D'.
 \item[\tb{l}]
 Loot a box or bag on the floor beneath you, or the saddle 
-from a horse standing next to you.  Same as ``{\tt \#loot}'' or ``{\tt M-l}''.
-%.lp
+from a horse standing next to you.  Same as ``{\tt \#loot'' or ``M-l}''.
 \item[\tb{N}]
-Name an object or type of object.  Same as ``{\tt \#name}'' or ``{\tt M-n}''.
-%.lp
+Name an item or type of object.  Same as ``{\tt \#name'' or ``M-n}''.
 \item[\tb{u}]
-Untrap a trap, door, or chest.  Same as ``{\tt \#untrap}'' or ``{\tt M-u}''.
+Untrap a trap, door, or chest.  Same as ``{\tt \#untrap'' or ``M-u}''.
 \elist
 
 %.hn 1
@@ -1072,27 +968,28 @@ Untrap a trap, door, or chest.  Same as ``{\tt \#untrap}'' or ``{\tt M-u}''.
 
 %.pg
 Rooms and corridors in the dungeon are either lit or dark.
-Any lit areas within your line of sight will be displayed;
-dark areas are only displayed if they are within one space of you. 
-Walls and corridors remain on the map as you explore them.
+Any lit areas within your line of sight will be displayed in
+brighter colors than the surrounding dungeon; dark areas will
+similarly be brightened if they are within one space of you.
+Areas you have explored remain on the map, and are darkened
+if you cannot currently see them.
 
 %.pg
-Secret corridors are hidden.  You can find them with the `{\tt s}' (search)
+Secret corridors are hidden.  You can find them with the `s' (search)
 command.
-
 %.hn 2
 \subsection*{Doorways}
 
 %.pg
 Doorways connect rooms and corridors.  Some doorways have no doors;
 you can walk right through.  Others have doors in them, which may be
-open, closed, or locked.  To open a closed door, use the `{\tt o}' (open)
-command; to close it again, use the `{\tt c}' (close) command.
+open, closed, or locked.  To open a closed door, use the `o' (open)
+command; to close it again, use the `c' (close) command.
 
 %.pg
 You can get through a locked door by using a tool to pick the lock
-with the `{\tt a}' (apply) command, or by kicking it open with the
-`{\tt \^{}D}' (kick) command.
+with the `a' (apply) command, or by kicking it open with the `\^{}D'
+(kick) command.
 
 %.pg
 Open doors cannot be entered diagonally; you must approach them
@@ -1101,13 +998,12 @@ not restricted in this fashion.
 
 %.pg
 Doors can be useful for shutting out monsters.  Most monsters cannot
-open doors, although a few don't need to (ex.\ ghosts can walk through
+open doors, although a few don't need to (ex. ghosts can walk through
 doors).
 
 %.pg
-Secret doors are hidden.  You can find them with the `{\tt s}' (search)
+Secret doors are hidden.  You can find them with the `s' (search)
 command.  Once found they are in all ways equivalent to normal doors.
-
 %.hn 2
 \subsection*{Traps (`{\tt \^{}}')}
 
@@ -1116,17 +1012,17 @@ There are traps throughout the dungeon to snare the unwary delver.
 For example, you may suddenly fall into a pit and be stuck for a few
 turns trying to climb out.  Traps don't appear on your map until you
 see one triggered by moving onto it, see something fall into it, or you
-discover it with the `{\tt s}' (search) command.  Monsters can fall prey to
+discover it with the `s' (search) command.  Monsters can fall prey to
 traps, too, which can be a very useful defensive strategy.
 
-%.pg
+.pg
 There is a special pre-mapped branch of the dungeon based on the
-classic computer game ``{\tt Sokoban}.''  The goal is to push the boulders
+classic computer game ``{\tt Sokoban.}''  The goal is to push the boulders
 into the pits or holes.  With careful foresight, it is possible to
 complete all of the levels according to the traditional rules of
 Sokoban.  Some allowances are permitted in case the player gets stuck;
 however, they will lower your luck.
-
+%.hn 2
 \subsection*{Stairs (`{\tt <}', `{\tt >}')}
 
 %.pg
@@ -1151,7 +1047,7 @@ some ``special'' levels, or loaded from the remains of an earlier game
 for a ``bones'' level as briefly described below).  Monsters are only
 active on the current level; those on other levels are essentially
 placed into stasis.
- 
+
 %.pg
 Ordinarily when you climb a set of stairs, you will arrive on the
 corresponding staircase at your destination.  However, pets (see below)
@@ -1159,20 +1055,19 @@ and some other monsters will follow along if they're close enough when
 you travel up or down stairs, and occasionally one of these creatures
 will displace you during the climb.  When that occurs, the pet or other
 monster will arrive on the staircase and you will end up nearby.
-
+%.hn 2
 \subsection*{Ladders (`{\tt <}', `{\tt >}')}
 
 %.pg
 Ladders serve the same purpose as staircases, and the two types of
 inter-level connections are nearly indistinguishable during game play.
-
 %.hn 2
 \subsection*{Shops and shopping}
 
 %.pg
 Occasionally you will run across a room with a shopkeeper near the door
 and many items lying on the floor.  You can buy items by picking them
-up and then using the `{\tt p}' command.  You can inquire about the price
+up and then using the `p' command.  You can inquire about the price
 of an item prior to picking it up by using the ``{\tt \#chat}'' command
 while standing on it.  Using an item prior to paying for it will incur a
 charge, and the shopkeeper won't allow you to leave the shop until you
@@ -1195,40 +1090,38 @@ Shopkeepers sometimes run out of money.  When that happens, you'll be
 offered credit instead of gold when you try to sell something.  Credit
 can be used to pay for purchases, but it is only good in the shop where
 it was obtained; other shopkeepers won't honor it.  (If you happen to
-find a ``credit card'' in the dungeon, don't bother trying to use it in
+find a "credit card" in the dungeon, don't bother trying to use it in
 shops; shopkeepers will not accept it.)
 
 %.pg
-The {\tt \$} command, which reports the amount of gold you are carrying
+The `{\tt \$}' command, which reports the amount of gold you are carrying
 (in inventory, not inside bags or boxes), will also show current shop
-debt or credit, if any.  The {\tt Iu} command lists unpaid items
+debt or credit, if any.  The `{\tt Iu}' command lists unpaid items
 (those which still belong to the shop) if you are carrying any.
-The {\tt Ix} command shows an inventory-like display of any unpaid
+The `{\tt Ix}' command shows an inventory-like display of any unpaid
 items which have been used up, along with other shop fees, if any.
-
 %.hn 3
 \subsubsection*{Shop idiosyncracies}
 
 %.pg
 Several aspects of shop behavior might be unexpected.
-
 \begin{itemize}
-% note: a bullet is the default item label so we could omit [$\bullet$] here
-%.lp \(bu 2
+% note: using * instead of \(bu is better for plain text output
+%.lp * 2
 \item[$\bullet$]
 The price of a given item can vary due to a variety of factors.
-%.lp \(bu 2
+%.lp * 2
 \item[$\bullet$]
 A shopkeeper treats the spot immediately inside the door as if it were
 outside the shop.
-%.lp \(bu 2
+%.lp * 2
 \item[$\bullet$]
 While the shopkeeper watches you like a hawk, he will generally ignore
 any other customers.
-%.lp \(bu 2
+%.lp * 2
 \item[$\bullet$]
-If a shop is ``closed for inventory'', it will not open of its own accord.
-%.lp \(bu 2
+If a shop is "closed for inventory", it will not open of its own accord.
+%.lp * 2
 \item[$\bullet$]
 Shops do not get restocked with new items, regardless of inventory depletion.
 \end{itemize}
@@ -1245,7 +1138,7 @@ very well).
 %.pg
 The commands `{\tt /}' and `{\tt ;}' may be used to obtain information
 about those
-monsters who are displayed on the screen.  The command `{\tt C}' allows you
+monsters who are displayed on the screen.  The command `C' allows you
 to assign a name to a monster, which may be useful to help distinguish
 one from another when multiple monsters are present.  Assigning a name
 which is just a space will remove any prior name.
@@ -1255,7 +1148,6 @@ The extended command ``{\tt \#chat}'' can be used to interact with an adjacent
 monster.  There is no actual dialog (in other words, you don't get to
 choose what you'll say), but chatting with some monsters such as a
 shopkeeper or the Oracle of Delphi can produce useful results.
-
 %.hn 2
 \subsection*{Fighting}
 
@@ -1274,18 +1166,17 @@ if the monster has moved, you will attack empty air.  If you guess
 that the monster has moved and you don't wish to fight, you can use the `m'
 command to move without fighting; likewise, if you don't remember a monster
 but want to try fighting anyway, you can use the `F' command.
-
 %.hn 2
 \subsection*{Your pet}
 
 %.pg
-You start the game with a little dog (`{\tt d}'), cat (`{\tt f}'),
-or pony (`{\tt u}'), which follows
-you about the dungeon and fights monsters with you.  Like you, your
+You start the game with a little dog (`d'), cat (`f'), or pony (`u'), which
+follows you about the dungeon and fights monsters with you.  Like you, your
 pet needs food to survive.  It usually feeds itself on fresh carrion
 and other meats.  If you're worried about it or want to train it, you
-can feed it, too, by throwing it food.  A properly trained pet can be
-very useful under certain circumstances.
+can feed it, too, by throwing it food - but be careful, as it is quite
+possible to overfeed your pet, killing it. Nevertheless, a properly trained
+pet can be very useful under certain circumstances.
 
 %.pg
 Your pet also gains experience from killing monsters, and can grow
@@ -1302,24 +1193,29 @@ dungeon level), any adjacent pet will accompany you and any non-adjacent
 pet will be left behind.  Your pet may trigger such traps itself; you
 will not be carried along with it even if adjacent at the time.
 
+%.pg
+Through certain means, it is occasionally possible to find yourself with
+another pet; some pets are even capable of using weapons and equipment
+that you could use yourself.  If you find yourself with such a pet, it
+will seek out better equipment to use on its own, and may even leave
+you equipment it feels would better be in your possession.
 %.hn 2
 \subsection*{Steeds}
 
 %.pg
 Some types of creatures in the dungeon can actually be ridden if you
 have the right equipment and skill.  Convincing a wild beast to let
-you saddle it up is difficult to say the least.  Many a dungeoneer
+you saddle it up is difficult to say the least.  Many a dungeoneer 
 has had to resort to magic and wizardry in order to forge the alliance.
-Once you do have the beast under your control however, you can
-easily climb in and out of the saddle with the `{\tt \#ride}' command.  Lead
-the beast around the dungeon when riding, in the same manner as
+Once you do have the beast under your control however, you can 
+easily climb in and out of the saddle with the `\#ride' command.  Lead
+the beast around the dungeon when riding, in the same manner as 
 you would move yourself.  It is the beast that you will see displayed
 on the map.
 
 %.pg
-Riding skill is managed by the `{\tt \#enhance}' command.  See the section
+Riding skill is managed by the `\#enhance' command.  See the section
 on Weapon proficiency for more information about that.
-
 %.hn 2
 \subsection*{Bones levels}
 
@@ -1337,14 +1233,18 @@ last victory.
 
 %.pg
 When you find something in the dungeon, it is common to want to pick
-it up.  In {\it NetHack}, this is accomplished automatically by walking over
-the object (unless you turn off the {\it autopickup\/}
+it up.  In GruntHack, this is accomplished automatically by walking over
+the object (unless you turn off the
+{\it autopickup }
 option (see below), or move with the `{\tt m}' prefix (see above)), or
-manually by using the `{\tt ,}' command.
+manually by using the `{\tt m,}' command.
+
 %.pg
-If you're carrying too many items, {\it NetHack\/} will tell you so and you
-won't be able to pick up anything more.  Otherwise, it will add the object(s)
-to your pack and tell you what you just picked up.
+If you're carrying too many items, GruntHack will tell you so and you won't 
+be able to pick
+up anything more.  Otherwise, it will add the object(s) to your pack and tell
+you what you just picked up.
+
 %.pg
 As you add items to your inventory, you also add the weight of that object
 to your load.  The amount that you can carry depends on your strength and
@@ -1355,15 +1255,16 @@ with you through the dungeon will encumber you.  Your reactions
 will get slower and you'll burn calories faster, requiring food more frequently
 to cope with it.  Eventually, you'll be so overloaded that you'll either have
 to discard some of what you're carrying or collapse under its weight.
+
 %.pg
-NetHack will tell you how badly you have loaded yourself.  The symbols
+GruntHack will tell you how badly you have loaded yourself.  The symbols
 `Burdened', `Stressed', `Strained', `Overtaxed' and `Overloaded' are
 displayed on the bottom line display to indicate your condition.
 
 %.pg
 When you pick up an object, it is assigned an inventory letter.  Many
 commands that operate on objects must ask you to find out which object
-you want to use.  When {\it NetHack\/} asks you to choose a particular object
+you want to use.  When GruntHack asks you to choose a particular object
 you are carrying, you are usually presented with a list of inventory
 letters to choose from (see Commands, above).
 
@@ -1374,7 +1275,7 @@ type.  During a game, any two objects with the same description are
 the same type.  However, the descriptions will vary from game to game.
 
 %.pg
-When you use one of these objects, if its effect is obvious, {\it NetHack\/}
+When you use one of these objects, if its effect is obvious, GruntHack
 will remember what it is for you.  If its effect isn't extremely
 obvious, you will be asked what you want to call this type of object
 so you will recognize it later.  You can also use the ``{\tt \#name}''
@@ -1383,7 +1284,6 @@ particular type or just an individual object.
 When you use ``{\tt \#name}'' on an object which has already been named,
 specifying a space as the value will remove the prior name instead
 of assigning a new one.
-
 %.hn 2
 \subsection*{Curses and Blessings}
 
@@ -1412,16 +1312,15 @@ cursed objects than other character roles.
 %.pg
 An item with unknown status will be reported in your inventory with no prefix.
 An item which you know the state of will be distinguished in your inventory
-by the presence of the word ``cursed'', ``uncursed'' or ``blessed'' in the
+by the presence of the word ``{\tt cursed'', ``uncursed'' or ``blessed}'' in the
 description of the item.
-
 %.hn 2
 \subsection*{Weapons (`{\tt )}')}
 
 %.pg
 Given a chance, most monsters in the Mazes of Menace will gratuitously try to
 kill you.  You need weapons for self-defense (killing them first).  Without a
-weapon, you do only 1--2 hit points of damage (plus bonuses, if any).
+weapon, you do only 1-2 hit points of damage (plus bonuses, if any).
 Monk characters are an exception; they normally do much more damage with
 bare hands than they do with weapons.
 
@@ -1446,8 +1345,8 @@ The chance that an attack will successfully hit a monster, and the amount
 of damage such a hit will do, depends upon many factors.  Among them are:
 type of weapon, quality of weapon (enchantment and/or erosion), experience
 level, strength, dexterity, encumbrance, and proficiency (see below).  The
-monster's armor class---a general defense rating, not necessarily due to
-wearing of armor---is a factor too; also, some monsters are particularly
+monster's armor class - a general defense rating, not necessarily due to
+wearing of armor - is a factor too; also, some monsters are particularly
 vulnerable to certain types of weapons.
 
 %.pg
@@ -1473,15 +1372,22 @@ other worn items.
 %.pg
 Those of you in the audience who are AD\&D players, be aware that each
 weapon which existed in AD\&D does roughly the same damage to monsters in
-{\it NetHack}.  Some of the more obscure weapons (such as the %
-{\it aklys}, {\it lucern hammer}, and {\it bec-de-corbin\/}) are defined
-in an appendix to {\it Unearthed Arcana}, an AD\&D supplement.
+GruntHack.  Some of the more obscure weapons (such as the %
+{\it  aklys}%
+,
+%
+{\it  lucern hammer}%
+, and %
+{\it  bec-de-corbin}%
+) are defined in an
+appendix to %
+{\it  Unearthed Arcana}%
+, an AD\&D supplement.
 
 %.pg
-The commands to use weapons are `{\tt w}' (wield), `{\tt t}' (throw),
-`{\tt f}' (fire, an alternative way of throwing), `{\tt Q}' (quiver),
-`{\tt x}' (exchange), `{\tt \#twoweapon}', and `{\tt \#enhance}' (see below).
-
+The commands to use weapons are `w' (wield), `t' (throw),
+`f' (fire, an alternative way of throwing), `Q' (quiver),
+`x' (exchange), `\#twoweapon', and `\#enhance' (see below).
 %.hn 3
 \subsection*{Throwing and shooting}
 
@@ -1502,14 +1408,14 @@ select your preferred ``missile'', then using the `{\tt f}' command to
 throw it.  You'll be prompted for a direction as above, but you don't
 have to specify which item to throw each time you use `{\tt f}'.  There is
 also an option,
-{\it autoquiver},
-which has {\it NetHack\/} choose another item to automatically fill your
+{\it autoquiver, }
+which has GruntHack choose another item to automatically fill your
 quiver when the inventory slot used for `{\tt Q}' runs out.
 
 %.pg
 Some characters have the ability to fire a volley of multiple items in a
 single turn.  Knowing how to load several rounds of ammunition at
-once---or hold several missiles in your hand---and still hit a
+once -- or hold several missiles in your hand -- and still hit a
 target is not an easy task.  Rangers are among those who are adept
 at this task, as are those with a high level of proficiency in the
 relevant weapon skill (in bow skill if you're wielding one to
@@ -1518,8 +1424,8 @@ or in sling skill if you're wielding one to shoot stones).
 The number of items that the character has a chance to fire varies from
 turn to turn.  You can explicitly limit the number of shots by using a
 numeric prefix before the `{\tt t}' or `{\tt f}' command.
-For example, ``{\tt 2f}'' (or ``{\tt n2f}'' if using
-{\it number\_pad\/}
+For example, ``{\tt 2f'' (or ``n2f}'' if using
+{\it number\_pad }
 mode) would ensure that at most 2 arrows are shot
 even if you could have fired 3.  If you specify
 a larger number than would have been shot (``{\tt 4f}'' in this example),
@@ -1527,7 +1433,6 @@ you'll just end up shooting the same number (3, here) as if no limit
 had been specified.  Once the volley is in motion, all of the items
 will travel in the same direction; if the first ones kill a monster,
 the others can still continue beyond that spot.
-
 %.hn 3
 \subsection*{Weapon proficiency}
 
@@ -1567,13 +1472,12 @@ higher.  A successful hit has a chance to boost your training towards
 the next skill level (unless you've already reached the limit for this
 skill).  Once such training reaches the threshold for that next level,
 you'll be told that you feel more confident in your skills.  At that
-point you can use `{\tt \#enhance}' to increase one or more skills.  Such skills
+point you can use `\#enhance' to increase one or more skills.  Such skills
 are not increased automatically because there is a limit to your total
 overall skills, so you need to actively choose which skills to enhance
 and which to ignore.
-
 %.hn 2
-\subsection*{Armor (`{\tt [}')}
+\subsection{Armor (`{\tt [}')}
 
 %.pg
 Lots of unfriendly things lurk about; you need armor to protect
@@ -1582,7 +1486,7 @@ protection than others.  Your armor class is a measure of this
 protection.  Armor class (AC) is measured as in AD\&D, with 10 being
 the equivalent of no armor, and lower numbers meaning better armor.
 Each suit of armor which exists in AD\&D gives the same protection in
-{\it NetHack}.  Here is an (incomplete) list of the armor classes provided by
+GruntHack.  Here is an (incomplete) list of the armor classes provided by
 various suits of armor:
 
 \begin{center}
@@ -1599,8 +1503,9 @@ no armor               & 10
 \end{tabular}
 \end{center}
 
+
 %.pg
-\nd You can also wear other pieces of armor (ex.\ helmets, boots,
+\nd You can also wear other pieces of armor (ex. helmets, boots,
 shields, cloaks)
 to lower your armor class even further, but you can only wear one item
 of each category (one suit of armor, one cloak, one helmet, one
@@ -1621,21 +1526,18 @@ Many types of armor are subject to some kind of damage like rust.  Such
 damage can be repaired.  Some types of armor may inhibit spell casting.
 
 %.pg
-The commands to use armor are `{\tt W}' (wear) and `{\tt T}' (take off).
-The `{\tt A}' command can also be used to take off armor as well as other
+The commands to use armor are `W' (wear) and `T' (take off).
+The `A' command can also be used to take off armor as well as other
 worn items.
-
 %.hn 2
-\subsection*{Food (`{\tt \%}')}
+\subsection{Food (`{\tt \%}')}
 
 %.pg
 Food is necessary to survive.  If you go too long without eating you
-will faint, and eventually die of starvation.
-Some types of food will spoil, and become unhealthy to eat,
-if not protected.
-Food stored in ice boxes or tins (``cans'')
-will usually stay fresh, but ice boxes are heavy, and tins
-take a while to open.
+will faint, and eventually die of starvation.  Some types of food will
+spoil, and become unhealthy to eat, if not protected.  Food stored in
+ice boxes or tins (``cans'') will usually stay fresh, but
+ice boxes are heavy, and tins take a while to open.
 
 %.pg
 When you kill monsters, they usually leave corpses which are also
@@ -1650,45 +1552,48 @@ but with some rather unpleasant side-effects.
 
 %.pg
 You can name one food item after something you like to eat with the
-{\it fruit\/} option.
+{\it fruit }
+option.
 
 %.pg
-The command to eat food is `{\tt e}'.
-
+The command to eat food is `e'.
 %.hn 2
 \subsection*{Scrolls (`{\tt ?}')}
 
 %.pg
 Scrolls are labeled with various titles, probably chosen by ancient wizards
-for their amusement value (ex.\ ``READ ME,'' or ``THANX MAUD'' backwards).
+for their amusement value (ex. ``READ ME,'' or ``THANX MAUD'' backwards).
 Scrolls disappear after you read them (except for blank ones, without
 magic spells on them).
 
 %.pg
 One of the most useful of these is the %
-{\it scroll of identify}, which
+{\it  scroll of identify}%
+, which
 can be used to determine what another object is, whether it is cursed or
 blessed, and how many uses it has left.  Some objects of subtle
 enchantment are difficult to identify without these.
 
 %.pg
-A mail daemon may run up and deliver mail to you as a %
-{\it scroll of mail} (on versions compiled with this feature).
-To use this feature on versions where {\it NetHack\/}
-mail delivery is triggered by electronic mail appearing in your system mailbox,
-you must let {\it NetHack\/} know where to look for new mail by setting the
-``MAIL'' environment variable to the file name of your mailbox.
-You may also want to set the ``MAILREADER'' environment variable to the
-file name of your favorite reader, so {\it NetHack\/} can shell to it when you
-read the scroll.
-On versions of {\it NetHack\/} where mail is randomly
-generated internal to the game, these environment variables are ignored.
+A mail daemon may run up and deliver mail to you as a
+%
+{\it scroll of mail}
+(on versions compiled with this feature).
+To use this feature on versions where GruntHack mail delivery is triggered
+by electronic mail appearing in your system mailbox,
+you must let GruntHack know where to look for new mail by setting
+the ``{\tt MAIL}'' environment variable to the file name of your mailbox.
+You may also want to set the ``{\tt MAILREADER}'' environment
+variable to the file name of your favorite reader, so GruntHack can shell to it
+when you read the scroll.
+On versions of GruntHack where mail is randomly generated internal to the game,
+these environment variables are ignored.
 You can disable the mail daemon by turning off the
-{\it mail\/} option.
+{\it mail }
+option.
 
 %.pg
 The command to read a scroll is `{\tt r}'.
-
 %.hn 2
 \subsection*{Potions (`{\tt !}')}
 
@@ -1697,15 +1602,13 @@ Potions are distinguished by the color of the liquid inside the flask.
 They disappear after you quaff them.
 
 %.pg
-Clear potions are potions of water.  Sometimes these are
-blessed or cursed, resulting in holy or unholy water.  Holy water is
-the bane of the undead, so potions of holy water are good things to
-throw (`{\tt t}') at them.  It is also sometimes very useful to dip
-(``{\tt \#dip}'') an object into a potion.
+Clear potions are potions of water.  Sometimes these are blessed or cursed,
+resulting in holy or unholy water.  Holy water is the bane of the undead, so
+potions of holy water are good things to throw (`{\tt t}') at them.  It is also
+sometimes very useful to dip (``{\tt \#dip}'') an object into a potion.
 
 %.pg
 The command to drink a potion is `{\tt q}' (quaff).
-
 %.hn 2
 \subsection*{Wands (`{\tt /}')}
 
@@ -1713,9 +1616,10 @@ The command to drink a potion is `{\tt q}' (quaff).
 Magic wands usually have multiple magical charges.  Some wands are
 directional---you must give a direction in which to zap them.  You can also
 zap them at yourself (just give a `{\tt .}' or `{\tt s}' for the direction).
-Be warned, however, for this is often unwise.  Other wands are
-nondirectional---they don't require a direction.  The number of charges in a
-wand is random and decreases by one whenever you use it.
+Be warned,
+however, for this is often unwise.  Other wands are nondirectional---they
+don't require a direction.  The number of charges in a wand is random and
+decreases by one whenever you use it.
 
 %.pg
 When the number of charges left in a wand becomes zero, attempts to use the
@@ -1736,13 +1640,13 @@ magical energies.
 When you have fully identified a particular wand, inventory display will
 include additional information in parentheses: the number of times it has
 been recharged followed by a colon and then by its current number of charges.
-A current charge count of {\tt -1} is a special case indicating that the wand
+A current charge count of -1 is a special case indicating that the wand
 has been cancelled.
 
 %.pg
 The command to use a wand is `{\tt z}' (zap).  To break one, use the `{\tt a}'
-(apply) command.
-
+(apply)
+command.
 %.hn 2
 \subsection*{Rings (`{\tt =}')}
 
@@ -1757,16 +1661,15 @@ rings, one on each ring finger.
 
 %.pg
 Most rings also cause you to grow hungry more rapidly, the rate
-varying with the type of ring.
+varying with the type of ring.  
 
 %.pg
 The commands to use rings are `{\tt P}' (put on) and `{\tt R}' (remove).
-
 %.hn 2
 \subsection*{Spellbooks (`{\tt +}')}
 
 %.pg
-Spellbooks are tomes of mighty magic.  When studied with the `{\tt r}' (read)
+Spellbooks are tomes of mighty magic.  When studied with the `r' (read)
 command, they transfer to the reader the knowledge of a spell (and
 therefore eventually become unreadable) --- unless the attempt backfires.
 Reading a cursed spellbook or one with mystic runes beyond
@@ -1791,8 +1694,9 @@ your memory of each spell will dim, and you will need to relearn it.
 Some spells are
 directional---you must give a direction in which to cast them.  You can also
 cast them at yourself (just give a `{\tt .}' or `{\tt s}' for the direction).
-Be warned, however, for this is often unwise.  Other spells are
-nondirectional---they don't require a direction.
+Be warned,
+however, for this is often unwise.  Other spells are nondirectional---they
+don't require a direction.
 
 %.pg
 Just as weapons are divided into groups in which a character can become
@@ -1800,7 +1704,7 @@ proficient (to varying degrees), spells are similarly grouped.
 Successfully casting a spell exercises the skill group; sufficient skill
 may increase the potency of the spell and reduce the risk of spell failure.
 Skill slots are shared with weapons skills.  (See also the section on
-``Weapon proficiency''.)
+``{\tt Weapon proficiency}''.)
 
 %.pg
 Casting a spell also requires flexible movement, and wearing various types
@@ -1809,9 +1713,8 @@ of armor may interfere with that.
 %.pg
 The command to read a spellbook is the same as for scrolls, `{\tt r}'
 (read).  The `{\tt +}' command lists your current spells, their levels,
-categories, and chances for failure.
-The `{\tt Z}' (cast) command casts a spell.
-
+categories, and chances for failure.  
+The `Z' (cast) command casts a spell.
 %.hn 2
 \subsection*{Tools (`{\tt (}')}
 
@@ -1823,9 +1726,8 @@ be placed into or taken out of.
 
 %.pg
 The command to use tools is `{\tt a}' (apply).
-
 %.hn 3
-\subsection*{Containers}
+\subsubsection*{Containers}
 
 %.pg
 You may encounter bags, boxes, and chests in your travels.  A tool of
@@ -1835,15 +1737,13 @@ or with the `{\tt a}' (apply) command when you are carrying it.  However,
 chests are often locked, and are in any case unwieldy objects.
 You must set one down before unlocking it by
 using a key or lock-picking tool with the `{\tt a}' (apply) command,
-by kicking it with the `{\tt \^{}D}' command,
-or by using a weapon to force the lock with the ``{\tt \#force}''
-extended command.
+by kicking it with the `{\tt \^D}' command,
+or by using a weapon to force the lock with the ``{\tt \#force}'' extended command.
 
 %.pg
 Some chests are trapped, causing nasty things to happen when you
 unlock or open them.  You can check for and try to deactivate traps
 with the ``{\tt \#untrap}'' extended command.
-
 %.hn 2
 \subsection*{Amulets (`{\tt "}')}
 
@@ -1858,7 +1758,6 @@ Only one amulet may be worn at a time, around your neck.
 %.pg
 The commands to use amulets are the same as for rings, `{\tt P}' (put on)
 and `{\tt R}' (remove).
-
 %.hn 2
 \subsection*{Gems (`{\tt *}')}
 
@@ -1872,9 +1771,9 @@ Other small rocks are also categorized as gems, but they are much less
 valuable.  All rocks, however, can be used as projectile weapons (if you
 have a sling).  In the most desperate of cases, you can still throw them
 by hand.
-
 %.hn 2
 \subsection*{Large rocks (`{\tt `}')}
+
 %.pg
 Statues and boulders are not particularly useful, and are generally
 heavy.  It is rumored that some statues are not what they seem.
@@ -1882,7 +1781,6 @@ heavy.  It is rumored that some statues are not what they seem.
 %.pg
 Very large humanoids (giants and their ilk) have been known to use boulders
 as weapons.
-
 %.hn 2
 \subsection*{Gold (`{\tt \$}')}
 
@@ -1896,7 +1794,7 @@ you are carrying (shopkeepers aside).
 \section{Conduct}
 
 %.pg
-As if winning {\it NetHack\/} were not difficult enough, certain players
+As if winning GruntHack were not difficult enough, certain players
 seek to challenge themselves by imposing restrictions on the
 way they play the game.  The game automatically tracks some of
 these challenges, which can be checked at any time with the {\tt \#conduct}
@@ -1962,8 +1860,8 @@ from ``cherries'' to ``pork chops'', are also assumed to be vegan.
 
 %.pg
 An atheist is one who rejects religion.  This means that you cannot
-{\tt \#pray}, {\tt \#offer} sacrifices to any god,
-{\tt \#turn} undead, or {\tt \#chat} with a priest.
+{\tt \#pray}, {\tt \#offer} sacrifices to any god, {\tt \#turn} undead,
+or {\tt \#chat} with a priest.
 Particularly selective readers may argue that playing Monk or Priest
 characters should violate this conduct; that is a choice left to the
 player.  Offering the Amulet of Yendor to your god is necessary to
@@ -1980,7 +1878,7 @@ fire, and kick weapons; use a wand, spell, or other type of item;
 or fight with your hands and feet.
 
 %.pg
-In {\it NetHack\/}, a pacifist refuses to cause the death of any other monster
+In GruntHack, a pacifist refuses to cause the death of any other monster
 (i.e. if you would get experience for the death).  This is a particularly
 difficult challenge, although it is still possible to gain experience
 by other means.
@@ -2017,21 +1915,19 @@ choose ``nothing'' if you want to decline.
 \section{Options}
 
 %.pg
-Due to variations in personal tastes and conceptions of how {\it NetHack\/}
-should do things, there are options you can set to change how {\it NetHack\/}
+Due to variations in personal tastes and conceptions of how GruntHack
+should do things, there are options you can set to change how GruntHack
 behaves.
-
 %.hn 2
 \subsection*{Setting the options}
 
 %.pg
-Options may be set in a number of ways.  Within the game, the `{\tt O}'
+Options may be set in a number of ways.  Within the game, the `O'
 command allows you to view all options and change most of them.
 You can also set options automatically by placing them in the
-``NETHACKOPTIONS'' environment variable or in a configuration file.
-Some versions of {\it NetHack\/} also have front-end programs that allow
+NETHACKOPTIONS environment variable or in a configuration file.
+Some versions of GruntHack also have front-end programs that allow
 you to set options before starting the game.
-
 %.hn 2
 \subsection*{Using the NETHACKOPTIONS environment variable}
 
@@ -2039,23 +1935,22 @@ you to set options before starting the game.
 The NETHACKOPTIONS variable is a comma-separated list of initial
 values for the various options.  Some can only be turned on or off.
 You turn one of these on by adding the name of the option to the list,
-and turn it off by typing a `{\tt !}' or ``{\tt no}'' before the name.
-Others take a
+and turn it off by typing a `!' or ``no'' before the name.  Others take a 
 character string as a value.  You can set string options by typing
 the option name, a colon or equals sign, and then the value of the string.
 The value is terminated by the next comma or the end of string.
 
 %.pg
-For example, to set up an environment variable so that {\it autoquiver\/}
-is on, {\it autopickup\/} is off, the {\it name\/} is set to ``Blue Meanie'',
-and the {\it fruit\/} is set to ``papaya'', you would enter the command
+For example, to set up an environment variable so that ``{\tt autoquiver}'' is on,
+``{\tt autopickup}'' is off, the name is set to ``Blue Meanie'', and the fruit
+is set to ``papaya'', you would enter the command
 %.sd
 \begin{verbatim}
     setenv NETHACKOPTIONS "autoquiver,\!autopickup,name:Blue Meanie,fruit:papaya"
 \end{verbatim}
 %.ed
-
-\nd in {\it csh}
+\nd in %
+{\it csh}
 (note the need to escape the ! since it's special to the shell), or
 %.sd
 \begin{verbatim}
@@ -2063,22 +1958,29 @@ and the {\it fruit\/} is set to ``papaya'', you would enter the command
     export NETHACKOPTIONS
 \end{verbatim}
 %.ed
-
-\nd in {\it sh\/} or {\it ksh}.
-
+\nd in %
+{\it sh}
+or %
+{\it  ksh}%
+.
 %.hn 2
 \subsection*{Using a configuration file}
 
 %.pg
-Any line in the configuration file starting with `{\tt \#}' is treated as a comment.
+Any line in the configuration file starting with `\#' is treated as a comment.
 Any line in the configuration file starting with ``{\tt OPTIONS=}'' may be
 filled out with options in the same syntax as in NETHACKOPTIONS.
 Any line starting with ``{\tt DUNGEON=}'', ``{\tt EFFECTS=}'',
-``{\tt MONSTERS=}'', ``{\tt OBJECTS=}'', ``{\tt TRAPS=}'', 
-or ``{\tt BOULDER=}''
-is taken as defining the corresponding {\it dungeon},
-{\it effects}, {\it monsters}, {\it objects}, {\it traps\/} or
-{\it boulder\/} option in a different syntax,
+``{\tt MONSTERS=}'', ``{\tt OBJECTS=}'', ``{\tt TRAPS=}'', or ``{\tt BOULDER=}''
+is taken as defining the corresponding
+{\it dungeon, }
+{\it effects, }
+{\it monsters, }
+{\it objects }
+{\it traps }
+or
+{\it boulder }
+option in a different syntax,
 a sequence of decimal numbers giving the character position
 in the current font to be used in displaying each entry.
 A zero in any entry in such a sequence leaves the display of that
@@ -2087,16 +1989,17 @@ Such a sequence can be continued to multiple lines by putting a
 `{\tt \verb+\+}' at the end of each line to be continued.
 
 %.pg
-If your copy of the game included the compile time AUTOPICKUP\_EXCEPTIONS 
-option, then any line starting with ``{\tt AUTOPICKUP\_EXCEPTION=}'' 
-is taken as defining an exception to the ``{\tt pickup\_types}'' option.
+If your copy of the game included the compile time AUTOPICKUP\_EXCEPTIONS
+option, then any line starting with ``{\tt AUTOPICKUP\_EXCEPTION=}'' is taken
+as defining an exception to the 
+{\it pickup\_types }
+option. 
 There is a section of this Guidebook that discusses that.
 
 %.pg
 The default name of the configuration file varies on different
 operating systems, but NETHACKOPTIONS can also be set to
-the full name of a file you want to use (possibly preceded by an `{\tt @}').
-
+the full name of a file you want to use (possibly preceded by an `@').
 %.hn 2
 \subsection*{Customization options}
 
@@ -2104,24 +2007,21 @@ the full name of a file you want to use (possibly preceded by an `{\tt @}').
 Here are explanations of what the various options do.
 Character strings that are too long may be truncated.
 Some of the options listed may be inactive in your dungeon.
-
 \blist{}
-%.lp
-\item[\ib{align}]
-Your starting alignment ({\tt align:lawful}, {\tt align:neutral},
-or {\tt align:chaotic}).  You may specify just the first letter.
+\item[\tb{align}]
+Your starting alignment (align:lawful, align:neutral,
+or align:chaotic).  You may specify just the first letter.
 The default is to randomly pick an appropriate alignment.
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{autodig}]
+Cannot be set with the `O' command.
+\item[\tb{autodig}]
 Automatically dig if you are wielding a digging tool and moving into a place
 that can be dug (default false).
-%.lp
-\item[\ib{autopickup}]
-Automatically pick up things onto which you move (default on).
-See ``{\it pickup\_types\/}'' to refine the behavior.
-%.lp
-\item[\ib{autoquiver}]
+\item[\tb{"autopickup  "}]
+Automatically pick up things onto which you move (default on). 
+See
+{\it pickup\_types }
+to refine the behavior.
+\item[\tb{"autoquiver  "}]
 This option controls what happens when you attempt the `f' (fire)
 command with an empty quiver.  When true, the computer will fill
 your quiver with some suitable weapon.  Note that it will not take
@@ -2129,91 +2029,90 @@ into account the blessed/cursed status, enchantment, damage, or
 quality of the weapon; you are free to manually fill your quiver with
 the `Q' command instead.  If no weapon is found or the option is
 false, the `t' (throw) command is executed instead.  (default false)
-%.lp
-\item[\ib{boulder}]
+\item[\tb{boulder}]
 Set the character used to display boulders (default is rock class symbol).
-%.lp
-\item[\ib{catname}]
-Name your starting cat (ex.\ ``{\tt catname:Morris}'').
-Cannot be set with the `{\tt O}' command.
-%.lp character
-\item[\ib{character}]
-Pick your type of character (ex.\ ``{\tt character:Monk}'');
-synonym for ``{\it role\/}''.  See ``{\it name\/}'' for an alternate method
+\item[\tb{catname}]
+Name your starting cat (ex. ``{\tt catname:Morris}'').
+Cannot be set with the `O' command.
+\item[\tb{character}]
+Pick your type of character (ex. ``{\tt character:Monk}'');
+synonym for ``{\tt role''.  See ``name}'' for an alternate method
 of specifying your role.  Normally only the first letter of
 the value is examined; the string ``{\tt random}'' is an exception.
-%.lp
-\item[\ib{checkpoint}]
+\item[\tb{checkpoint}]
 Save game state after each level change, for possible recovery after
 program crash (default on).
-%.lp
-\item[\ib{checkspace}]
+\item[\tb{checkspace}]
 Check free disk space before writing files to disk (default on).
 You may have to turn this off if you have more than 2 GB free space
 on the partition used for your save and level files.
 Only applies when MFLOPPY was defined during compilation.
-%.lp
-\item[\ib{cmdassist}]
-Have the game provide some additional command assistance for new 
-players if it detects some anticipated mistakes (default on).
-%.lp
-\item[\ib{confirm}]
+\item[\tb{cmdassist}]
+Have the game provide some additional command assistance for 
+new players if it detects some anticipated mistakes (default on).
+\item[\tb{"confirm "}]
 Have user confirm attacks on pets, shopkeepers, and other
 peaceable creatures (default on).
-%.lp
-\item[\ib{DECgraphics}]
+\item[\tb{DECgraphics}]
 Use a predefined selection of characters from the DEC VT-xxx/DEC
 Rainbow/ANSI line-drawing character set to display the dungeon/effects/traps
 instead of having to define a full graphics set yourself (default off).
 This option also sets up proper handling of graphics
 characters for such terminals, so you should specify it when appropriate
 even if you override the selections with your own graphics strings.
-%.lp
-\item[\ib{disclose}]
+\item[\tb{disclose}]
 Controls options for disclosing various information when the game ends (defaults
 to all possibilities being disclosed).
 The possibilities are:
-
 %.sd
 %.si
-{\tt i} --- disclose your inventory.\\
-{\tt a} --- disclose your attributes.\\
-{\tt v} --- summarize monsters that have been vanquished.\\
-{\tt g} --- list monster species that have been genocided.\\
-{\tt c} --- display your conduct.
+i - disclose your inventory.
+a - disclose your attributes.
+v - summarize monsters that have been vanquished.
+g - list monster species that have been genocided.
+c - display your conduct.
 %.ei
 %.ed
-
 Each disclosure possibility can optionally be preceded by a prefix which
 let you refine how it behaves. Here are the valid prefixes:
-
 %.sd
 %.si
-{\tt y} --- prompt you and default to yes on the prompt.\\
-{\tt n} --- prompt you and default to no on the prompt.\\
-{\tt +} --- disclose it without prompting.\\
-{\tt -} --- do not disclose it and do not prompt.
+y - prompt you and default to yes on the prompt.
+n - prompt you and default to no on the prompt.
++ - disclose it without prompting.
+- - do not disclose it and do not prompt.
 %.ei
 %.ed
-
-(ex.\ ``{\tt disclose:yi na +v -g -c}'')
-The example sets {\it inventory\/} to {\it prompt\/} and default to {\it yes\/}, 
-{\it attributes\/} to {\it prompt\/} and default to {\it no\/}, 
-{\it vanquished\/} to {\it disclose without prompting\/}, 
-{\it genocided\/} to {\it not disclose\/} and not to {\it prompt\/}, and 
-{\it conduct\/} to {\it not disclose\/} and not to {\it prompt\/}.
+(ex. ``{\tt disclose:yi na +v -g -c}'')
+The example sets 
+{\it inventory }
+to prompt and default to yes,
+{\it attributes }
+to prompt and default to no,
+{\it vanquished }
+to disclose without prompting,
+{\it genocided }
+to not disclose and not to prompt,
+{\it conduct }
+to not disclose and not to prompt.
 Note that the vanquished monsters list includes all monsters killed by
-traps and each other as well as by you. 
-%.lp
-\item[\ib{dogname}]
-Name your starting dog (ex.\ ``{\tt dogname:Fang}'').
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{dungeon}]
-Set the graphics symbols for displaying the dungeon (default
+traps and each other as well as by you.
+\item[\tb{dogname}]
+Name your starting dog (ex. ``{\tt dogname:Fang}'').
+Cannot be set with the `O' command.
+\item[\tb{dumpfile}]
+The name of a file where the disclosure information is written when the
+game ends. You may use the macro \%n that will be replaced with the name
+of your player character. The game must have write permissions to the
+directory where the file is written. Normally /tmp may be used for unix
+systems.
+\item[\tb{dungeon}]
+Set the graphics symbols for displaying the dungeon
+(default
 ``\verb& |--------||.-|++##& \verb&.##<><>_|\\#{}.}..## #}&'').
-The {\it dungeon\/} option should be
-followed by a string of 1--41
+The
+{\it dungeon }
+option should be followed by a string of 1-41
 characters to be used instead of the default map-drawing characters.
 The dungeon map will use the characters you specify instead of the
 default symbols, and default symbols for any you do not specify.
@@ -2239,19 +2138,21 @@ ice, lava, vertical lowered drawbridge, horizontal lowered drawbridge,
 vertical raised drawbridge, horizontal raised drawbridge, air, cloud,
 under water.
 
-You might want to use `{\tt +}' for the corners and T walls for a more
+You might want to use `+' for the corners and T walls for a more
 aesthetic, boxier display.  Note that in the next release, new symbols
 may be added, or the present ones rearranged.
 
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{effects}]
-Set the graphics symbols for displaying special effects (default
-``\verb&|-\\/*!)(0#@*/-\\& \verb&||\\-//-\\| |\\-/&'').
-The {\it effects\/} option should be
-followed by a string of 1--29
+Cannot be set with the `O' command.
+\item[\tb{effects}]
+Set the graphics symbols for displaying special effects
+(default ``\verb&|-\\/*!)(0#@*/-\\& \verb&||\\-//-\\| |\\-/&'').
+The
+{\it effects }
+option should be followed by a string of 1-29
 characters to be used instead of the default special-effects characters.
-This string is subjected to the same processing as the {\it dungeon\/} option.
+This string is subjected to the same processing as the
+{\it dungeon }
+option.
 
 The order of the symbols is:  vertical beam, horizontal beam, left slant,
 right slant, digging beam, camera flash beam, left boomerang, right boomerang,
@@ -2259,84 +2160,69 @@ four glyphs giving the sequence for magic resistance displays,
 the eight surrounding glyphs for swallowed display,
 nine glyphs for explosions.
 An explosion consists of three rows (top, middle, and bottom) of three
-characters.  The explosion is centered in the center of this $3 \times 3$
+characters.  The explosion is centered in the center of this 3 by 3
 array.
 
 Note that in the next release, new symbols may be added,
 or the present ones rearranged.
 
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{extmenu}]
-Changes the extended commands interface to pop-up a menu of available commands.
+Cannot be set with the `O' command.
+\item[\tb{extmenu}]
+Changes the extended commands interface to pop-up a menu of available commands.  
 It is keystroke compatible with the traditional interface except that it does
-not require that you hit Enter.  It is implemented only by the tty port 
+not require that you hit Enter. It is implemented only by the tty port 
 (default off), when the game has been compiled to support tty graphics.
-%.lp
-\item[\ib{female}]
-An obsolete synonym for ``{\tt gender:female}''.  Cannot be set with the
-`{\tt O}' command.
-%.lp
-\item[\ib{fixinv}]
+\item[\tb{female}]
+An obsolete synonym for ``{\tt gender:female}''.
+Cannot be set with the `O' command.
+\item[\tb{fixinv}]
 An object's inventory letter sticks to it when it's dropped (default on).
 If this is off, dropping an object shifts all the remaining inventory letters.
-%.lp
-\item[\ib{fruit}]
-Name a fruit after something you enjoy eating (ex.\ ``{\tt fruit:mango}'')
-(default ``{\tt slime mold}''). Basically a nostalgic whimsy that
-{\it NetHack\/} uses from time to time.  You should set this to something you
-find more appetizing than slime mold.  Apples, oranges, pears, bananas, and
-melons already exist in {\it NetHack}, so don't use those.
-%.Ip
-\item[\ib{gender}]
-Your starting gender ({\tt gender:male} or {\tt gender:female}).
+\item[\tb{"fruit   "}]
+Name a fruit after something you enjoy eating (ex. ``{\tt fruit:mango}'')
+(default ``{\tt slime mold}'').  Basically a nostalgic whimsy that GruntHack uses
+from time to time.  You should set this to something you find more
+appetizing than slime mold.  Apples, oranges, pears, bananas, and melons
+already exist in GruntHack, so don't use those.
+\item[\tb{gender}]
+Your starting gender (gender:male or gender:female).
 You may specify just the first letter.  Although you can
-still denote your gender using the ``{\tt male}'' and ``{\tt female}''
+still denote your gender using the ``{\tt male'' and ``female}''
 options, the ``{\tt gender}'' option will take precedence.
 The default is to randomly pick an appropriate gender.
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{help}]
+Cannot be set with the `O' command.
+\item[\tb{help}]
 If more information is available for an object looked at
-with the `{\tt /}' command, ask if you want to see it (default on).
-Turning help off makes just looking at things faster, since you aren't
-interrupted with the ``{\tt More info?}'' prompt, but it also means that you
-might miss some interesting and/or important information.
-%.lp
-\item[\ib{horsename}]
-Name your starting horse (ex.\ ``{\tt horsename:Trigger}'').
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{IBMgraphics}]
+with the `/' command, ask if you want to see it (default on). Turning help
+off makes just looking at things faster, since you aren't interrupted with the
+``{\tt More info?}'' prompt, but it also means that you might miss some
+interesting and/or important information.
+\item[\tb{horsename}]
+Name your starting horse (ex. ``{\tt horsename:Trigger}'').
+Cannot be set with the `O' command.
+\item[\tb{IBMgraphics}]
 Use a predefined selection of IBM extended ASCII characters to display the
 dungeon/effects/traps instead of having to define a full graphics set
 yourself (default off).
 This option also sets up proper handling of graphics
 characters for such terminals, so you should specify it when appropriate
 even if you override the selections with your own graphics strings.
-%.lp
-\item[\ib{ignintr}]
+\item[\tb{ignintr}]
 Ignore interrupt signals, including breaks (default off).
-%.lp
-\item[\ib{legacy}]
+\item[\tb{legacy}]
 Display an introductory message when starting the game (default on).
-%.lp
-\item[\ib{lit\_corridor}]
+\item[\tb{lit\_corridor}]
 Show corridor squares seen by night vision or a light source held by your
 character as lit (default off).
-%.lp
-\item[\ib{lootabc}]
-Use the old `{\tt a}', `{\tt b}', and `{\tt c}' keyboard shortcuts when
-looting, rather than the mnemonics `{\tt o}', `{\tt i}', and `{\tt b}' (default off).
-%.lp
-\item[\ib{mail}]
+\item[\tb{lootabc}]
+Use the old `a', `b', and `c' keyboard shortcuts when
+looting, rather than the mnemonics `o', `i', and `b' (default off).
+\item[\tb{"mail    "}]
 Enable mail delivery during the game (default on).
-%.lp
-\item[\ib{male}]
-An obsolete synonym for ``{\tt gender:male}''.  Cannot be set with the
-`{\tt O}' command.
-%.lp
-\item[\ib{menustyle}]
+\item[\tb{"male    "}]
+An obsolete synonym for ``{\tt gender:male}''.
+Cannot be set with the `O' command.
+\item[\tb{menustyle}]
 Controls the interface used when you need to choose various objects (in
 response to the Drop command, for instance).  The value specified should
 be the first letter of one of the following:  traditional, combination,
@@ -2349,11 +2235,10 @@ prompting one-by-one.  Partial skips the object class filtering and
 immediately displays a menu of all objects.  Full displays a menu of
 object classes rather than a character prompt, and then a menu of matching
 objects for selection.
-\item[\ib{menu\_deselect\_all}]
+\item[\tb{menu\_deselect\_all}]
 Menu character accelerator to deselect all items in a menu.
 Implemented by the Amiga, Gem, X11 and tty ports.
-Default `-'.
-\item[\ib{menu\_deselect\_page}]
+tem[\ib{menu\_deselect\_page}]
 Menu character accelerator to deselect all items on this page of a menu.
 Implemented by the Amiga, Gem and tty ports.
 Default `\verb+\+'.
@@ -2367,7 +2252,7 @@ Values are ``{\tt bold}'', ``{\tt inverse}'', or ``{\tt underline}''.
 Not all ports can actually display all three types.
 \item[\ib{menu\_invert\_all}]
 Menu character accelerator to invert all items in a menu.
-Implemented by the Amiga, Gem, X11 and tty ports.
+Implemented by the Amiga, Gem, X11 and tty ports. 
 Default `@'.
 \item[\ib{menu\_invert\_page}]
 Menu character accelerator to invert all items on this page of a menu.
@@ -2397,12 +2282,13 @@ Default `.'.
 Menu character accelerator to select all items on this page of a menu.
 Implemented by the Amiga, Gem and tty ports.
 Default `,'.
-%.lp
-\item[\ib{monsters}]
+\item[\tb{monsters}]
 Set the characters used to display monster classes (default
 ``\verb+abcdefghijklmnopqrstuv+
 \verb+wxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@ '&;:~]+'').
-This string is subjected to the same processing as the {\it dungeon\/} option.
+This string is subjected to the same processing as the
+{\it dungeon }
+option.
 The order of the symbols is
 ant or other insect, blob, cockatrice,
 dog or other canine, eye or sphere, feline,
@@ -2425,223 +2311,206 @@ apelike creature, zombie,
 human, ghost, golem,
 demon, sea monster, lizard,
 long worm tail, and mimic.
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{msghistory}]
-The number of top line messages to save (and recall with `{\tt \^{}P}')
-(default 20). Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{msg\_window}]
+Cannot be set with the `O' command.
+\item[\tb{msghistory}]
+The number of top line messages to save (and recall with \^{}P) (default 20).
+Cannot be set with the `O' command.
+\item[\tb{msg\_window}]
 Allows you to change the way recalled messages are displayed.
-(It is currently implemented for tty only.) The possible values are:
-
+(It is currently implemented for tty only.)
+The possible values are:
 %.sd
 %.si
-{\tt s} --- single message (default, this was the behavior before 3.4.0).\\
-{\tt c} --- combination, two messages as {\it single\/}, then as {\it full\/}.\\
-{\tt f} --- full window, oldest message first.\\
-{\tt r} --- full window, newest message first.
+{\tt s} - single message (default, this was the behavior before 3.4.0).
+{\tt c} - combination, two messages as `single', then as `full'.
+{\tt f} - full window, oldest message first.
+{\tt r} - full window, newest message first.
 %.ei
 %.ed
-
 For backward compatibility, no value needs to be specified (which
-defaults to {\it full\/}), or it can be negated (which defaults
-to {\it single\/}). 
-%.lp
-\item[\ib{name}]
+defaults to `full'), or it can be negated (which defaults to `single').
+\item[\tb{"name    "}]
 Set your character's name (defaults to your user name).  You can also
 set your character's role by appending a dash and one or more letters of
 the role (that is, by suffixing one of
-``{\tt -A -B -C -H -K -M -P -Ra -Ro -S -T -V -W}'').
-If ``{\tt -@}'' is used for the role, then a random one will be
-automatically chosen.
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{news}]
-Read the {\it NetHack\/} news file, if present (default on).
+``{\tt "-A -B -C -H -K -M -P -Ra -Ro -S -T -V -W" }'' ).
+If
+{\it "-@" }
+is used for the role, then a random one will be automatically chosen.
+Cannot be set with the `O' command.
+\item[\tb{"news    "}]
+Read the GruntHack news file, if present (default on).
 Since the news is shown at the beginning of the game, there's no point
-in setting this with the `{\tt O}' command.
-%.lp
-\item[\ib{null}]
+in setting this with the `O' command.
+\item[\tb{"null    "}]
 Send padding nulls to the terminal (default off).
-%.lp
-\item[\ib{number\_pad}]
-Use the number keys to move instead of {\tt [yuhjklbn]} (default 0 or off).
-(number\_pad:2 invokes the old DOS behavior where `{\tt 5}' means `{\tt g}', 
-meta-`{\tt 5}' means `{\tt G}',  and meta-`{\tt 0}' means `{\tt I}'.)
-%.lp
-\item[\ib{objects}]
-Set the characters used to display object classes (default
+\item[\tb{number\_pad}]
+Use the number keys to move instead of [yuhjklbn] (default 0 or off).
+(number\_pad:2 invokes the old DOS behavior where `5' means `g', meta-`5'
+means `G',  and meta-`0' means `I'.)
+\item[\tb{objects}]
+Set the characters used to display object classes
+ (default
 ``\verb&])[="(%!?+/$*`0_.&'').
-This string is subjected to the same processing as the {\it dungeon\/} option.
+This string is subjected to the same processing as the
+{\it dungeon }
+option.
 The order of the symbols is
 illegal-object (should never be seen), weapon, armor, ring, amulet, tool,
 food, potion, scroll, spellbook, wand, gold, gem or rock, boulder or statue,
 iron ball, chain, and venom.
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{packorder}]
+Cannot be set with the `O' command.
+\item[\tb{packorder}]
 Specify the order to list object types in (default
 ``\verb&")[%?+!=/(*`0_&''). The value of this option should be a string
 containing the symbols for the various object types.  Any omitted types
 are filled in at the end from the previous order.
-%.lp
-\item[\ib{perm\_invent}]
+\item[\tb{perm\_invent}]
 If true, always display your current inventory in a window.  This only
 makes sense for windowing system interfaces that implement this feature.
-%.lp
-\item[\ib{pettype}]
+\item[\tb{pettype}]
 Specify the type of your initial pet, if you are playing a character class
 that uses multiple types of pets; or choose to have no initial pet at all.
-Possible values are ``{\tt cat}'', ``{\tt dog}'' and ``{\tt none}''.
-Cannot be set with the `{\tt O}' command.
-%.Ip
-\item[\ib{pickup\_burden}]
+Possible values are ``{\tt cat'', ``dog'' and ``none}''.
+Cannot be set with the `O' command.
+\item[\tb{pickup\_burden}]
 When you pick up an item that would exceed this encumbrance
 level (Unburdened, Burdened, streSsed, straiNed, overTaxed,
 or overLoaded), you will be asked if you want to continue.
 (Default `S').
-%.lp
-\item[\ib{pickup\_types}]
-Specify the object types to be picked up when ``{\it autopickup\/}'' 
-is on.  Default is all types.  If your copy of the game has the
-experimental compile time option AUTOPICKUP\_EXCEPTIONS included,
-you may be able to use ``{\it autopickup\_exception\/}'' configuration
-file lines to further refine ``{\it autopickup\/}'' behavior.
-%.lp
-\item[\ib{prayconfirm}]
+\item[\tb{pickup\_types}]
+Specify the object types to be picked up when
+{\it autopickup }
+is on.  Default is all types.  If your copy of the game has the experimental
+compile time option AUTOPICKUP\_EXCEPTIONS included, you may be able to use 
+{\it autopickup\_exception }
+configuration file lines to further refine
+{\it autopickup }
+behavior.
+\item[\tb{prayconfirm}]
 Prompt for confirmation before praying (default on).
-%.lp
-\item[\ib{pushweapon}]
+\item[\tb{pushweapon}]
 Using the `w' (wield) command when already wielding
 something pushes the old item into your alternate weapon slot (default off).
-%.Ip
-\item[\ib{race}]
+\item[\tb{race}]
 Selects your race (for example, ``{\tt race:human}'').  Default is random.
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{rest\_on\_space}]
-Make the space bar a synonym for the `{\tt .}' (rest) command (default off).
-%.lp
-\item[\ib{role}]
-Pick your type of character (ex.\ ``{\tt role:Samurai}'');
-synonym for ``{\it character\/}''.  See ``{\it name\/}'' for an alternate method
+Cannot be set with the `O' command.
+\item[\tb{rest\_on\_space}]
+Make the space bar a synonym for the `.' (rest) command (default off).
+\item[\tb{"role    "}]
+Pick your type of character (ex. ``{\tt role:Samurai}'');
+synonym for ``{\tt character''.  See ``name}'' for an alternate method
 of specifying your role.  Normally only the first letter of the
-value is examined; `r' is an exception with ``{\tt Rogue}'', {\tt Ranger}'',
+value is examined; `r' is an exception with ``{\tt Rogue'', ``Ranger}'',
 and ``{\tt random}'' values.
-%.lp
-\item[\ib{runmode}]
+\item[\tb{runmode}]
 Controls the amount of screen updating for the map window when engaged
-in multi-turn movement (running via {\tt shift}+direction
-or {\tt control}+direction
+in multi-turn movement (running via shift+direction or control+direction
 and so forth, or via the travel command or mouse click).
 The possible values are:
-
 %.sd
 %.si
-{\tt teleport} --- update the map after movement has finished;\\
-{\tt run} --- update the map after every seven or so steps;\\
-{\tt walk} --- update the map after each step;\\
-{\tt crawl} --- like {\it walk\/}, but pause briefly after each step.
+teleport - update the map after movement has finished;
+run - update the map after every seven or so steps;
+walk - update the map after each step;
+crawl - like walk, but pause briefly after each step.
 %.ei
 %.ed
-
 This option only affects the game's screen display, not the actual
-results of moving.  The default is {\it run\/}; versions prior to 3.4.1 
-used {\it teleport\/} only.  Whether or not the effect is noticeable will
+results of moving.  The default is `run'; versions prior to 3.4.1 
+used `teleport' only.  Whether or not the effect is noticeable will
 depend upon the window port used or on the type of terminal.
-%.lp
-\item[\ib{safe\_pet}]
+\item[\tb{safe\_pet}]
 Prevent you from (knowingly) attacking your pets (default on).
-%.lp
-\item[\ib{scores}]
-Control what parts of the score list you are shown at the end (ex.\
-``{\tt scores:5top scores/4around my score/own scores}'').  Only the first
-letter of each category (`{\tt t}', `{\tt a}' or `{\tt o}') is necessary.
-%.lp
-\item[\ib{showexp}]
+\item[\tb{scores}]
+Control what parts of the score list you are shown at the end (ex.
+``{\tt scores:5 top scores/4 around my score/own scores}'').  Only the first
+letter of each category (`t', `a', or `o') is necessary.
+\item[\tb{showexp}]
 Show your accumulated experience points on bottom line (default off).
-%.lp
-\item[\ib{showrace}]
+\item[\tb{showrace}]
 Display yourself as the glyph for your race, rather than the glyph
-for your role (default off).  Note that this setting affects only
-the appearance of the display, not the way the game treats you.
-%.lp
-\item[\ib{showscore}]
+for your role; similarly display monsters as the glyph for their race
+(default off).  Note that this setting affects only the appearance of
+the display, not the way the game treats you.
+\item[\tb{showscore}]
 Show your approximate accumulated score on bottom line (default off).
-%.lp
-\item[\ib{silent}]
+\item[\tb{"silent  "}]
 Suppress terminal beeps (default on).
-%.lp
-\item[\ib{sortpack}]
+\item[\tb{sortloot}]
+Controls the behavior of the sortloot patch that sorts pickup lists for
+inventory and \#loot commands and some others.
+The possible values are:
+%.sd
+%.si
+full - always sort the lists;
+loot - only sort the lists that don't use inventory
+       letters, like with the \#loot and pickup commands;
+none - show lists the traditional way without sorting.
+%.ei
+%.ed
+\item[\tb{sortpack}]
 Sort the pack contents by type when displaying inventory (default on).
-%.lp
-\item[\ib{sound}]
+\item[\tb{sound}]
 Enable messages about what your character hears (default on).
 Note that this has nothing to do with your computer's audio capabilities.
 This option is only partly under player control.  The game toggles it
 off and on during and after sleep, for example.
-%.lp
-\item[\ib{standout}]
-Boldface monsters and ``{\tt --More--}'' (default off).
-%.lp
-\item[\ib{sparkle}]
+\item[\tb{sparkle}]
 Display a sparkly effect when a monster (including yourself) is hit by an
 attack to which it is resistant (default on).
-%.lp
-\item[\ib{suppress\_alert}]
-This option may be set to a NetHack version level to suppress
+\item[\tb{standout}]
+Boldface monsters and ``%
+\bf --More--\rm%
+'' (default off).
+\item[\tb{suppress\_alert}]
+This option may be set to a GruntHack version level to suppress
 alert notification messages about feature changes for that 
-and prior versions (ex.\ ``{\tt suppress\_alert:3.3.1}'')
-%.lp
-\item[\ib{time}]
+and prior versions (ex. ``{\tt suppress\_alert:3.3.1}'').
+\item[\tb{"time    "}]
 Show the elapsed game time in turns on bottom line (default off).
-%.lp
-\item[\ib{timed\_delay}]
+\item[\tb{timed\_delay}]
 When pausing momentarily for display effect, such as with explosions and
 moving objects, use a timer rather than sending extra characters to the
 screen.  (Applies to ``tty'' interface only; ``X11'' interface always
 uses a timer based delay.  The default is on if configured into the
 program.)
-%.lp
-\item[\ib{tombstone}]
+\item[\tb{tombstone}]
 Draw a tombstone graphic upon your death (default on).
-%.lp
-\item[\ib{toptenwin}]
-Put the ending display in a NetHack window instead of on stdout (default off).
+\item[\tb{toptenwin}]
+Put the ending display in a GruntHack window instead of on stdout (default off).
 Setting this option makes the score list visible when a windowing version
-of NetHack is started without a parent window, but it no longer leaves
+of GruntHack is started without a parent window, but it no longer leaves
 the score list around after game end on a terminal or emulating window.
-%.lp
-\item[\ib{traps}]
+\item[\tb{traps}]
 Set the graphics symbols for displaying traps (default
 ``\verb&^^^^^^^^^^^^^^^^^"^^^^&'').
-The {\it traps\/} option should be followed by a string of 1--22
+The
+{\it traps }
+option should be followed by a string of 1-22
 characters to be used instead of the default traps characters.
-This string is subjected to the same processing as the {\it dungeon\/} option.
+This string is subjected to the same processing as the
+{\it dungeon }
+option.
 
-The order of the symbols is:
+The order of the symbols is: 
 arrow trap, dart trap, falling rock trap, squeaky board, bear trap,
 land mine, rolling boulder trap, sleeping gas trap, rust trap, fire trap,
 pit, spiked pit, hole, trap door, teleportation trap, level teleporter,
 magic portal, web, statue trap, magic trap, anti-magic field, polymorph trap.
 
 Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{travel}]
+\item[\tb{travel}]
 Allow the travel command (default on).  Turning this option off will
 prevent the game from attempting unintended moves if you make inadvertent
 mouse clicks on the map window.
-%.lp
-\item[\ib{verbose}]
+\item[\tb{verbose}]
 Provide more commentary during the game (default on).
-%.lp
-\item[\ib{windowtype}]
-Select which windowing system to use, such as ``{\tt tty}'' or ``{\tt X11}''
+\item[\tb{windowtype}]
+Select which windowing system to use, such as ``{\tt tty'' or ``X11}''
 (default depends on version).
 Cannot be set with the `{\tt O}' command.
 \elist
-
 %.hn 2
 \subsection*{Window Port Customization options}
 
@@ -2651,274 +2520,230 @@ used to customize and change the characteristics of the
 windowtype that you have chosen.
 Character strings that are too long may be truncated.
 Not all window ports will adjust for all settings listed
-here.  You can safely add any of these options to your 
-config file, and if the window port is capable of adjusting 
-to suit your preferences, it will attempt to do so. If it
-can't it will silently ignore it.  You can find out if an 
+here.  You can safely add any of these options to your config
+file, and if the window port is capable of adjusting to
+suit your preferences, it will attempt to do so. If it
+can't it will silently ignore it.  You can find out if an
 option is supported by the window port that you are currently
 using by checking to see if it shows up in the Options list.
 Some options are dynamic and can be specified during the game
-with the `{\tt O}' command.
-
+with the `O' command.
 \blist{}
-%.lp
-\item[\ib{align\_message}]
- Where to align or place the message window (top, bottom, left, or right)
-%.lp
-\item[\ib{align\_status}]
- Where to align or place the status window (top, bottom, left, or right).
-%.lp
-\item[\ib{ascii\_map}]
-NetHack should display an ascii map if it can.
-%.lp
-\item[\ib{color}]
-NetHack should display color if it can for different monsters, 
+\item[\tb{align\_message}]
+Where to align or place the message window (top, bottom, left, or right)
+\item[\tb{align\_status}]
+Where to align or place the status window (top, bottom, left, or right).
+\item[\tb{ascii\_map}]
+GruntHack should display an ascii character map if it can.
+\item[\tb{color		}]
+GruntHack should display color if it can for different monsters, 
 objects, and dungeon features
-%.lp
-\item[\ib{eight\_bit\_tty}]
-Pass eight-bit character values (for example, specified with the {\it
-traps \/} option) straight through to your terminal (default off).
-%.lp
-\item[\ib{font\_map}]
-NetHack should use a font by the chosen name for the map window.
-%.lp
-\item[\ib{font\_menu}]
-NetHack should use a font by the chosen name for menu windows.
-%.lp
-\item[\ib{font\_message}]
-NetHack should use a font by the chosen name for the message window.
-%.lp
-\item[\ib{font\_status}]
-NetHack should use a font by the chosen name for the status window.
-%.lp
-\item[\ib{font\_text}]
-NetHack should use a font by the chosen name for text windows.
-%.lp
-\item[\ib{font\_size\_map}]
-NetHack should use this size font for the map window.
-%.lp
-\item[\ib{font\_size\_menu}]
-NetHack should use this size font for menu windows.
-%.lp
-\item[\ib{font\_size\_message}]
-NetHack should use this size font for the message window.
-%.lp
-\item[\ib{font\_size\_status}]
-NetHack should use this size font for the status window.
-%.lp
-\item[\ib{font\_size\_text}]
-NetHack should use this size font for text windows.
-%.lp
-\item[\ib{fullscreen}]
-NetHack should try and display on the entire screen rather than in a window.
-%.lp
-\item[\ib{hilite\_pet}]
+\item[\tb{eight\_bit\_tty	}]
+GruntHack should pass eight-bit character values (for example, specified with
+the
+{\it traps }
+option) straight through to your terminal (default off).
+\item[\tb{font\_map	}]
+GruntHack should use a font by the chosen name for the map window.
+\item[\tb{font\_menu	}]
+GruntHack should use a font by the chosen name for menu windows.
+\item[\tb{font\_message	}]
+GruntHack should use a font by the chosen name for the message window.
+\item[\tb{font\_status	}]
+GruntHack should use a font by the chosen name for the status window.
+\item[\tb{font\_text	}]
+GruntHack should use a font by the chosen name for text windows.
+\item[\tb{font\_size\_map	}]
+GruntHack should use this size font for the map window.
+\item[\tb{font\_size\_menu	}]
+GruntHack should use this size font for menu windows.
+\item[\tb{font\_size\_message }]
+GruntHack should use this size font for the message window.
+\item[\tb{font\_size\_status}]
+GruntHack should use this size font for the status window.
+\item[\tb{font\_size\_text	}]
+GruntHack should use this size font for text windows.
+\item[\tb{fullscreen}]
+GruntHack should try and display on the entire screen rather than in a window.
+\item[\tb{hilite\_pet}]
 Visually distinguish pets from similar animals (default off).
 The behavior of this option depends on the type of windowing you use.
 In text windowing, text highlighting or inverse video is often used;
 with tiles, generally displays a heart symbol near pets.
-%.lp
-\item[\ib{large\_font}]
-NetHack should use a large font.
-%.lp
-\item[\ib{map\_mode}]
-NetHack should display the map in the manner specified.
-%.lp
-\item[\ib{mouse\_support}]
+\item[\tb{large\_font	}]
+GruntHack should use a large font.
+\item[\tb{map\_mode	}]
+GruntHack should display the map in the manner specified.
+\item[\tb{mouse\_support}]
 Allow use of the mouse for input and travel.
-%.lp
-\item[\ib{player\_selection}]
-NetHack should pop up dialog boxes or use prompts for character selection.
-%.lp
-\item[\ib{popup\_dialog}]
-NetHack should pop up dialog boxes for input.
-%.lp
-\item[\ib{preload\_tiles}]
-NetHack should preload tiles into memory.
+\item[\tb{player\_selection}]
+GruntHack should pop up dialog boxes, or use prompts for character selection.
+\item[\tb{popup\_dialog	}]
+GruntHack should pop up dialog boxes for input.
+\item[\tb{preload\_tiles}]
+GruntHack should preload tiles into memory.
 For example, in the protected mode MSDOS version, control whether tiles
 get pre-loaded into RAM at the start of the game.  Doing so
 enhances performance of the tile graphics, but uses more memory. (default on).
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{scroll\_amount}]
-NetHack should scroll the display by this number of cells
-when the hero reaches the scroll\_margin.
-%.lp
-\item[\ib{scroll\_margin}]
-NetHack should scroll the display when the hero or cursor
+Cannot be set with the `O' command.
+\item[\tb{scroll\_amount}]
+GruntHack should scroll the display by this number of cells
+when the hero reaches the scroll\\_margin.
+\item[\tb{scroll\_margin}]
+GruntHack should scroll the display when the hero or cursor
 is this number of cells away from the edge of the window.
-%.lp
-\item[\ib{softkeyboard}]
+\item[\tb{softkeyboard}]
 Display an onscreen keyboard.  Handhelds are most likely to support this option.
-%.lp
-\item[\ib{splash\_screen}]
-NetHack should display an opening splash screen when it starts up (default yes).
-%.lp
-\item[\ib{tiled\_map}]
-NetHack should display a tiled map if it can.
-%.lp
-\item[\ib{tile\_file}]
+\item[\tb{splash\_screen}]
+GruntHack should display an opening splash screen when it starts up (default yes).
+\item[\tb{tiled\_map	}]
+GruntHack should display a tiled map if it can.
+\item[\tb{tile\_file}]
 Specify the name of an alternative tile file to override the default.
-%.lp
-\item[\ib{tile\_height}]
+\item[\tb{tile\_height}]
 Specify the preferred height of each tile in a tile capable port.
-%.lp
-\item[\ib{tile\_width}]
+\item[\tb{tile\_width}]
 Specify the preferred width of each tile in a tile capable port
-%.lp
-\item[\ib{use\_inverse}]
-NetHack should display inverse when the game specifies it.
-%.lp
-\item[\ib{vary\_msgcount}]
-NetHack should display this number of messages at a time in the message window.
-%.lp
-\item[\ib{windowcolors}]
-NetHack should display windows with the specified foreground/background 
+\item[\tb{use\_inverse}]
+GruntHack should display inverse when the game specifies it.
+\item[\tb{vary\_msgcount}]
+GruntHack should display this number of messages at a time in
+the message window.
+\item[\tb{windowcolors}]
+GruntHack should display windows with the specified foreground/background
 colors if it can.
-%.lp
-\item[\ib{wraptext}]
-NetHack port should wrap long lines of text if they don't fit in 
+\item[\tb{wraptext}]
+GruntHack port should wrap long lines of text if they don't fit in 
 the visible area of the window.
 \elist
-
 %.hn 2
 \subsection*{Platform-specific Customization options}
 
 %.pg
-Here are explanations of options that are used by specific platforms 
-or ports to customize and change the port behavior.
-
+Here are explanations of options that are used by specific platforms or ports 
+to customize and change the port behavior.
 \blist{}
-%.lp
-\item[\ib{altkeyhandler}]
-Select an alternate keystroke handler dll to load ({\it Win32 tty\/ NetHack\/} only).
+\item[\tb{altkeyhandler}]
+Select an alternate keystroke handler dll to load (Win32 tty GruntHack only).
 The name of the handler is specified without the .dll extension and without any
 path information.
-Cannot be set with the `{\tt O}' command.
-%.lp 
-\item[\ib{altmeta}]
-(default on, {\it Amiga NetHack \/} only).
-%.lp
-\item[\ib{BIOS}]
-Use BIOS calls to update the screen display quickly and to read the keyboard
-(allowing the use of arrow keys to move) on machines with an IBM PC
-compatible BIOS ROM (default off, {\it OS/2, PC\/ {\rm and} ST NetHack\/} only).
-%.lp 
-\item[\ib{flush}]
-(default off, {\it Amiga NetHack \/} only).
-%.lp 
-\item[\ib{Macgraphics}]
-(default on, {\it Mac NetHack \/} only).
-%.lp 
-\item[\ib{page\_wait}]
-(default off, {\it Mac NetHack \/} only).
-%.lp
-\item[\ib{rawio}]
+Cannot be set with the `O' command.
+\item[\tb{altmeta}]
+(default on, AMIGA GruntHack only).
+\item[\tb{"BIOS    "}]
+Use BIOS calls to update the screen
+display quickly and to read the keyboard (allowing the use of arrow
+keys to move) on machines with an IBM PC compatible BIOS ROM (default off,
+OS/2, PC, and ST GruntHack only).
+\item[\tb{flush}]
+(default off, AMIGA GruntHack only).
+\item[\tb{"MACgraphics"}]
+(default on, Mac GruntHack only).
+\item[\tb{page\_wait}]
+(default on, Mac GruntHack only).
+\item[\tb{"rawio   "}]
 Force raw (non-cbreak) mode for faster output and more
-bulletproof input (MS-DOS sometimes treats `{\tt \^{}P}' as a printer toggle
-without it) (default off, {\it OS/2, PC\/ {\rm and} ST NetHack\/} only).  
+bulletproof input (MS-DOS sometimes treats `\^{}P' as a printer toggle
+without it) (default off, OS/2, PC, and ST GruntHack only).
 Note:  DEC Rainbows hang if this is turned on.
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{soundcard}]
-(default off, {\it PC NetHack \/} only).
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{subkeyvalue}]
-({\it Win32 tty NetHack \/} only).
+Cannot be set with the `O' command.
+\item[\tb{soundcard}]
+(default on, PC GruntHack only).
+Cannot be set with the `O' command.
+\item[\tb{subkeyvalue}]
+(Win32 tty GruntHack only).
 May be used to alter the value of keystrokes that the operating system
-returns to NetHack to help compensate for international keyboard issues.
+returns to GruntHack to help compensate for international keyboard issues.
 OPTIONS=subkeyvalue:171/92
-will return 92 to NetHack, if 171 was originally going to be returned.
+will return 92 to GruntHack, if 171 was originally going to be returned.
 You can use multiple subkeyvalue statements in the config file if needed.
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{video}]
-Set the video mode used ({\it PC\/ NetHack\/} only).
-Values are {\it autodetect\/}, {\it default\/}, or {\it vga\/}. 
-Setting {\it vga\/} (or {\it autodetect\/} with vga hardware present) will cause
+Cannot be set with the `O' command.
+\item[\tb{video}]
+Set the video mode used (PC GruntHack only).
+Values are `autodetect', `default', or `vga'.
+Setting `vga' (or `autodetect' with vga hardware present) will cause
 the game to display tiles. 
-Cannot be set with the `{\tt O}' command.
-%.lp
-\item[\ib{videocolors}]
-\begin{sloppypar}
+Cannot be set with the `O' command.
+\item[\tb{videocolors}]
 Set the color palette for PC systems using NO\_TERMS
-(default 4-2-6-1-5-3-15-12-10-14-9-13-11, {\it PC\/ NetHack\/} only).
+(default 4-2-6-1-5-3-15-12-10-14-9-13-11, (PC GruntHack only).
 The order of colors is red, green, brown, blue, magenta, cyan,
 bright.white, bright.red, bright.green, yellow, bright.blue,
 bright.magenta, and bright.cyan.
-Cannot be set with the `{\tt O}' command.
-\end{sloppypar}
-%.lp
-\item[\ib{videoshades}]
+Cannot be set with the `O' command.
+\item[\tb{videoshades}]
 Set the intensity level of the three gray scales available
-(default dark normal light, {\it PC\/ NetHack\/} only).
+(default dark normal light, PC GruntHack only).
 If the game display is difficult to read, try adjusting these scales;
-if this does not correct the problem, try {\tt !color}.
-Cannot be set with the `{\tt O}' command.
+if this does not correct the problem, try !color.
+Cannot be set with the `O' command.
 \elist
-
-%.lp
 %.hn 2
-\subsection*{Configuring autopickup exceptions}
+\subsection{Configuring autopickup exceptions}
 
 %.pg
-There is an experimental compile time option called AUTOPICKUP_EXCEPTIONS.  
+There is an experimental compile time option called AUTOPICKUP\_EXCEPTIONS.  
 If your copy of the game was built with that option defined, you can 
-further refine the behavior of the ``{\tt autopickup}'' option beyond 
-what is available through the ``{\tt pickup\_types}'' option.
+further refine the behavior of the
+{\it autopickup }
+option beyond what is available through the 
+{\it pickup\_types }
+option. 
 
 %.pg
-By placing ``{\tt autopickup\_exception}'' lines in your configuration
+By placing 
+{\it autopickup\_exception }
+lines in your configuration
 file, you can define patterns to be checked when the game is about to
 autopickup something.
-
-\blist{}
-%.lp
-\item[\ib{autopickup\_exception}]
-Sets an exception to the `{\it pickup\_types}' option.
-The {\it autopickup\_exception\/} option should be followed by a string of 1--80
-characters to be used as a pattern to match against the singular form
-of the description of an object at your location.
+%.lp autopickup_exception
+Sets an exception to the 
+{\it pickup\_types }
+option.
+The
+{\it autopickup\_exception }
+option should be followed by a string of 1-80 characters to be used as a 
+pattern to match against the singular form of the description of an 
+object at your location.
 
 %.pg
 You may use the following special characters in a pattern:
-
-\begin{verbatim}
-    *--- matches 0 or more characters.
-    ?--- matches any single character.
-\end{verbatim}
-
-In addition, some characters are treated specially if they occur as the first 
-character in the specified string pattern, specifically:
-
 %.sd
 %.si
-{\tt <} --- always pickup an object that matches the pattern that follows.\\
-{\tt >} --- never pickup an object that matches the pattern that follows.
+  *--- matches 0 or more characters.
+  ?--- matches any single character.
 %.ei
 %.ed
 
-Can be set with the `{\tt O}' command, but the setting is not preserved
+%.pg
+In addition, some characters are treated specially if they occur as the first 
+character in the string pattern, specifically:
+%.sd
+%.si
+$<$ - always pickup an object that matches the pattern that follows.
+$>$ - never pickup an object that matches the pattern that follows.
+%.ei
+%.ed
+
+%.pg
+Can be set with the `O' command, but the setting is not preserved
 across saves and restores.
-\elist
 
 %.pg
 Here's a couple of examples of autopickup\_exceptions:
-\begin{verbatim}
-    autopickup_exception="<*arrow"
-    autopickup_exception=">*corpse"
-    autopickup_exception=">* cursed*"
-\end{verbatim}
-
+%.sd
+%.si
+autopickup\_exception="$<$*arrow"
+autopickup\_exception="$>$*corpse"
+autopickup\_exception="$>$* cursed*"
+%.ei
+%.ed
 The first example above will result in autopickup of any type of arrow.
 The second example results in the exclusion of any corpse from autopickup.
 The last example results in the exclusion of items known to be cursed from autopickup.
 A `never pickup' rule takes precedence over an `always pickup' rule if both match.
-
-%.lp
 %.hn 2
-\subsection*{Configuring User Sounds}
+Configuring User Sounds
 
 %.pg
 Some platforms allow you to define sound files to be played when a message 
@@ -2929,62 +2754,56 @@ use of user sounds.
 %.pg
 The following config file entries are relevant to mapping user sounds
 to messages:
-
-\blist{}
-%.lp
-\item[\ib{SOUNDDIR}]
+%.lp SOUNDDIR
 The directory that houses the sound files to be played.
-%.lp
-\item[\ib{SOUND}]
+%.lp SOUND
 An entry that maps a sound file to a user-specified message pattern.
 Each SOUND entry is broken down into the following parts:
-
 %.sd
 %.si
-{\tt MESG      } --- message window mapping (the only one supported in 3.4).\\
-{\tt pattern   } --- the pattern to match.\\
-{\tt sound file} --- the sound file to play.\\
-{\tt volume    } --- the volume to be set while playing the sound file.
+MESG       - message window mapping (the only one supported in 3.4).
+pattern    - the pattern to match.
+sound file - the sound file to play.
+volume     - the volume to be set while playing the sound file.
 %.ei
 %.ed
-\elist
 
 %.pg
 The exact format for the pattern depends on whether the platform is
-built to use {\it regular expressions \/} or NetHack's own internal pattern 
-matching facility. The {\it regular expressions \/} matching can be much more 
-sophisticated than the internal NetHack pattern matching, but requires 
+built to use ``{\tt regular expressions}'' or GruntHack's own internal pattern 
+matching facility. The ``{\tt regular expressions}'' matching can be much more 
+sophisticated than the internal GruntHack pattern matching, but requires 
 3rd party libraries on some platforms.  There are plenty of references 
-available elsewhere for explaining {\it regular expressions \/}. You can verify 
-which pattern matching is used by your port with the 
-\#version command.  
+available elsewhere for explaining ``{\tt regular expressions}''. You can verify 
+which pattern matching is used by your port with the \#version command.  
 
 %.pg
-NetHack's internal pattern matching routine uses the following
+GruntHack's internal pattern matching routine uses the following
 special characters in its pattern matching:
-
-\begin{verbatim}
-    *--- matches 0 or more characters.
-    ?--- matches any single character.
-\end{verbatim}
+%.sd
+%.si
+  *--- matches 0 or more characters.
+  ?--- matches any single character.
+%.ei
+%.ed
 
 %.pg
-Here's an example of a sound mapping using NetHack's internal
+Here's an example of a sound mapping using GruntHack's internal
 pattern matching facility:
-\begin{verbatim}
+%.sd
     SOUND=MESG "*chime of a cash register*" "gong.wav" 50
-\end{verbatim}
+%.ed
 specifies that any message with "chime of a cash register" contained
 in it will trigger the playing of "gong.wav".  You can have multiple
 SOUND entries in your config file.
 
-%.lp
+%.pg
 %.hn 2
-\subsection*{Configuring NetHack for Play by the Blind}
+Configuring GruntHack for Play by the Blind
 
 %.pg
-NetHack can be set up to use only standard ASCII characters for making
-maps of the dungeons. This makes the MS-DOS versions of NetHack completely
+GruntHack can be set up to use only standard ASCII characters for making
+maps of the dungeons. This makes the MS-DOS versions of GruntHack completely
 accessible to the blind who use speech and/or Braille access technologies.
 Players will require a good working knowledge of their screen-reader's
 review features, and will have to know how to navigate horizontally and
@@ -2998,56 +2817,64 @@ by the same sign. Your screen-reader should also have a function which
 gives you the row and column of your review cursor and the PC cursor.
 These co-ordinates are often useful in giving players a better sense of the
 overall location of items on the screen.
+
 %.pg
-While it is not difficult for experienced users to edit the {\it defaults.nh\/}
+While it is not difficult for experienced users to edit the %
+\bf defaults.gh \rm%
 file to accomplish this, novices may find this task somewhat daunting.
-Included in all official distributions of NetHack is a file called
-{\it NHAccess.nh\/}.  Replacing {\it defaults.nh\/} with this file will cause
+Included in all official distributions of GruntHack is a file called
+%
+\bf GHAccess.gh\rm%
+.  Replacing %
+\bf defaults.gh \rm%
+with this file will cause
 the game to run in a manner accessible to the blind. After you have gained
 some experience with the game and with editing files, you may want to alter
 settings to better suit your preferences. Instructions on how to do this
-are included in the {\it NHAccess.nh\/} file itself. The most crucial
-settings to make the game accessible are:
+are included in the %
+\bf GHAccess.gh \rm%
+file itself. The most crucial settings to
+make the game accessible are:
+
 %.pg
 \blist{}
-%.lp
-\item[\ib{IBMgraphics}]
+\item[\tb {IBMgraphics}]
 Disable IBMgraphics by commenting out this option.
-%.lp
-\item[\ib{menustyle:traditional}]
+\item[\tb {menustyle:traditional}]
 This will assist in the interface to speech synthesizers.
-%.lp
-\item[\ib{number\_pad}]
+\item[\tb {number\_pad}]
 A lot of speech access programs use the number-pad to review the screen.
 If this is the case, disable the number\_pad option and use the traditional
 Rogue-like commands.
-%.lp
-\item[\ib{Character graphics}]
+\item[\tb {"Character graphics"}]
 Comment out all character graphics sets found near the bottom of the
-{\it defaults.nh\/} file.  Most of these replace {\it NetHack\/}'s
+%
+\bf defaults.gh \rm%
+file.  Most of these replace %
+\bf GruntHack\rm%
+'s
 default representation of the dungeon using standard ASCII characters
 with fancier characters from extended character sets, and these fancier
 characters can annoy screen-readers.
 \elist
-
 %.hn 1
 \section{Scoring}
 
 %.pg
-{\it NetHack\/} maintains a list of the top scores or scorers on your machine,
+GruntHack maintains a list of the top scores or scorers on your machine,
 depending on how it is set up.  In the latter case, each account on
 the machine can post only one non-winning score on this list.  If
 you score higher than someone else on this list, or better your
 previous score, you will be inserted in the proper place under your
 current name.  How many scores are kept can also be set up when
-{\it NetHack\/} is compiled.
+GruntHack is compiled.
 
 %.pg
 Your score is chiefly based upon how much experience you gained, how
 much loot you accumulated, how deep you explored, and how the game
 ended.  If you quit the game, you escape with all of your gold intact.
 If, however, you get killed in the Mazes of Menace, the guild will
-only hear about 90\,\% of your gold when your corpse is discovered
+only hear about 90\% of your gold when your corpse is discovered
 (adventurers have been known to collect finder's fees).  So, consider
 whether you want to take one last hit at that monster and possibly
 live, or quit and stop with whatever you have.  If you quit, you keep
@@ -3055,17 +2882,15 @@ all your gold, but if you swing and live, you might find more.
 
 %.pg
 If you just want to see what the current top players/games list is, you
-can type
-\begin{verbatim}
-    nethack -s all
-\end{verbatim}
+can type %
+\bf grunthack -s all \rm%
 on most versions.
 
 %.hn 1
 \section{Explore mode}
 
 %.pg
-{\it NetHack\/} is an intricate and difficult game.  Novices might falter
+GrutHack is an intricate and difficult game.  Novices might falter
 in fear, aware of their ignorance of the means to survive.  Well, fear
 not.  Your dungeon may come equipped with an ``explore'' or ``discovery''
 mode that enables you to keep old save files and cheat death, at the
@@ -3073,191 +2898,396 @@ paltry cost of not getting on the high score list.
 
 %.pg
 There are two ways of enabling explore mode.  One is to start the game
-with the {\tt -X}
-switch.  The other is to issue the `{\tt X}' command while already playing
+with the
+{\it -X }
+switch.  The other is to issue the `X' command while already playing
 the game.  The other benefits of explore mode are left for the trepid
 reader to discover.
 
 %.hn
 \section{Credits}
+
 %.pg
 The original %
-{\it hack\/} game was modeled on the Berkeley
+{\it hack}
+game was modeled on the Berkeley 
 %.ux
-UNIX
-{\it rogue\/} game.  Large portions of this paper were shamelessly
+%
+{\it rogue}
+game.  Large portions of this paper were shamelessly
 cribbed from %
-{\it A Guide to the Dungeons of Doom}, by Michael C. Toy
+{\it  A Guide to the Dungeons of Doom}%
+, by Michael C. Toy
 and Kenneth C. R. C. Arnold.  Small portions were adapted from
-{\it Further Exploration of the Dungeons of Doom}, by Ken Arromdee.
+%
+{\it  Further Exploration of the Dungeons of Doom}%
+, by Ken Arromdee.
 
 %.pg
-{\it NetHack\/} is the product of literally dozens of people's work.
+NetHack is the product of literally dozens of people's work.
 Main events in the course of the game development are described below:
 
-%.pg
-\bigskip
-\nd {\it Jay Fenlason\/} wrote the original {\it Hack\/} with help from {\it
-Kenny Woodland}, {\it Mike Thome}, and {\it Jon Payne}.
 
 %.pg
-\medskip
-\nd {\it Andries Brouwer\/} did a major re-write, transforming {\it Hack\/}
-into a very different game, and published (at least) three versions (1.0.1,
-1.0.2, and 1.0.3) for UNIX machines to the Usenet.
+%
+{\it Jay Fenlason}%
+wrote the original Hack, with help from
+%
+{\it Kenny Woodland}%
+, %
+{\it Mike Thome}%
+and %
+{\it Jon Payne}%
+.
 
 %.pg
-\medskip
-\nd {\it Don G. Kneller\/} ported {\it Hack\/} 1.0.3 to Microsoft C and MS-DOS,
-producing {\it PC Hack\/} 1.01e, added support for DEC Rainbow graphics in
-version 1.03g, and went on to produce at least four more versions (3.0, 3.2,
-3.51, and 3.6).
+%
+{\it Andries Brouwer}%
+did a major re-write, transforming Hack into a
+very different game, and published (at least) three versions (1.0.1,
+1.0.2, and 1.0.3) for
+%.ux
+machines to the Usenet.
 
 %.pg
-\medskip
-\nd {\it R. Black\/} ported {\it PC Hack\/} 3.51 to Lattice C and the Atari
-520/1040ST, producing {\it ST Hack\/} 1.03.
+%
+{\it Don G. Kneller}%
+ported Hack 1.0.3 to Microsoft C and MS-DOS, producing PC
+HACK 1.01e, added support for DEC Rainbow graphics in version 1.03g, and went
+on to produce at least four more versions (3.0, 3.2, 3.51, and 3.6).
 
 %.pg
-\medskip
-\nd {\it Mike Stephenson\/} merged these various versions back together,
-incorporating many of the added features, and produced {\it NetHack\/} version
-1.4.  He then coordinated a cast of thousands in enhancing and debugging
-{\it NetHack\/} 1.4 and released {\it NetHack\/} versions 2.2 and 2.3.
+%
+{\it R. Black}%
+ported PC HACK 3.51 to Lattice C and the Atari 520/1040ST,
+producing ST Hack 1.03.
 
 %.pg
-\medskip
-\nd Later, Mike coordinated a major rewrite of the game, heading a team which
-included {\it Ken Arromdee}, {\it Jean-Christophe Collet}, {\it Steve Creps},
-{\it Eric Hendrickson}, {\it Izchak Miller}, {\it Eric S. Raymond}, {\it John
-Rupley}, {\it Mike Threepoint}, and {\it Janet Walz}, to produce {\it
-NetHack\/} 3.0c.
+%
+{\it Mike Stephenson}%
+merged these various versions back together,
+incorporating many of the added features, and produced NetHack 1.4.
+He then coordinated a cast of thousands in enhancing and debugging
+NetHack 1.4 and released NetHack versions 2.2 and 2.3.
 
 %.pg
-\medskip
-\nd {\it NetHack\/} 3.0 was ported to the Atari by {\it Eric R. Smith}, to OS/2 by
-{\it Timo Hakulinen}, and to VMS by {\it David Gentzel}.  The three of them
-and {\it Kevin Darcy\/} later joined the main development team to produce
+Later, Mike coordinated a major rewrite of the game, heading a
+team which included %
+{\it Ken Arromdee}%
+, %
+{\it Jean-Christophe Collet}%
+, %
+\bf Steve
+Creps\rm%
+, %
+{\it Eric Hendrickson}%
+, %
+{\it Izchak Miller}%
+, %
+{\it John Rupley}%
+,
+%
+{\it Mike Threepoint}%
+, and %
+{\it Janet Walz}%
+, to produce NetHack 3.0c.
+
+%.pg
+NetHack 3.0 was ported to the Atari by %
+{\it Eric R. Smith}%
+, to OS/2 by
+%
+{\it Timo Hakulinen}%
+, and to VMS by %
+{\it David Gentzel}%
+.  The three of them
+and %
+{\it Kevin Darcy}%
+later joined the main development team to produce
 subsequent revisions of 3.0.
 
 %.pg
-\medskip
-\nd {\it Olaf Seibert\/} ported {\it NetHack\/} 2.3 and 3.0 to the Amiga.  {\it
-Norm Meluch}, {\it Stephen Spackman\/} and {\it Pierre Martineau\/} designed
-overlay code for {\it PC NetHack\/} 3.0.  {\it Johnny Lee\/} ported {\it
-NetHack\/} 3.0 to the Macintosh.  Along with various other Dungeoneers, they
+%
+{\it Olaf Seibert}%
+ported NetHack 2.3 and 3.0 to the Amiga.
+%
+{\it Norm Meluch}%
+, %
+{\it Stephen Spackman}%
+and %
+{\it Pierre Martineau}%
+designed
+overlay code for PC NetHack 3.0.  %
+{\it Johnny Lee}%
+ported
+NetHack 3.0 to the Macintosh.  Along with various other Dungeoneers, they
 continued to enhance the PC, Macintosh, and Amiga ports through the later
 revisions of 3.0.
 
 %.pg
-\medskip
-\nd Headed by {\it Mike Stephenson\/} and coordinated by {\it Izchak Miller\/} and
-{\it Janet Walz}, the development team which now included {\it Ken Arromdee},
-{\it David Cohrs}, {\it Jean-Christophe Collet}, {\it Kevin Darcy},
-{\it Matt Day}, {\it Timo Hakulinen}, {\it Steve Linhart}, {\it Dean Luick},
-{\it Pat Rankin}, {\it Eric Raymond}, and {\it Eric Smith\/} undertook a radical
+Headed by %
+{\it Mike Stephenson}%
+and coordinated by %
+{\it Izchak Miller}%
+and
+%
+{\it Janet Walz}%
+, the development team which now included %
+{\it Ken Arromdee}%
+,
+%
+{\it David Cohrs}%
+, %
+{\it Jean-Christophe Collet}%
+, %
+{\it Kevin Darcy}%
+,
+%
+{\it Matt Day}%
+, %
+{\it Timo Hakulinen}%
+, %
+{\it Steve Linhart}%
+, %
+{\it Dean Luick}%
+,
+%
+{\it Pat Rankin}%
+, %
+{\it Eric Raymond}%
+, and %
+{\it Eric Smith}%
+undertook a radical
 revision of 3.0.  They re-structured the game's design, and re-wrote major
 parts of the code.  They added multiple dungeons, a new display, special
 individual character quests, a new endgame and many other new features, and
-produced {\it NetHack\/} 3.1.
+produced NetHack 3.1.
 
 %.pg
-\medskip
-\nd {\it Ken Lorber}, {\it Gregg Wonderly\/} and {\it Greg Olson}, with help
-from {\it Richard Addison}, {\it Mike Passaretti}, and {\it Olaf Seibert},
-developed {\it NetHack\/} 3.1 for the Amiga.
+%
+{\it Ken Lorber}%
+, %
+{\it Gregg Wonderly}%
+and %
+{\it Greg Olson}%
+, with help
+from %
+{\it Richard Addison}%
+, %
+{\it Mike Passaretti}%
+, and %
+{\it Olaf Seibert}%
+,
+developed NetHack 3.1 for the Amiga.
 
 %.pg
-\medskip
-\nd {\it Norm Meluch\/} and {\it Kevin Smolkowski}, with help from
-{\it Carl Schelin}, {\it Stephen Spackman}, {\it Steve VanDevender},
-and {\it Paul Winner}, ported {\it NetHack\/} 3.1 to the PC.
+%
+{\it Norm Meluch}%
+and %
+{\it Kevin Smolkowski}%
+, with help from
+%
+{\it Carl Schelin}%
+, %
+{\it Stephen Spackman}%
+, %
+{\it Steve VanDevender}%
+,
+and %
+{\it Paul Winner}%
+, ported NetHack 3.1 to the PC.
 
 %.pg
-\medskip
-\nd {\it Jon W\{tte} and {\it Hao-yang Wang},
-with help from {\it Ross Brown}, {\it Mike Engber}, {\it David Hairston},
-{\it Michael Hamel}, {\it Jonathan Handler}, {\it Johnny Lee},
-{\it Tim Lennan}, {\it Rob Menke}, and {\it Andy Swanson},
-developed {\it NetHack\/} 3.1 for the Macintosh, porting it for MPW.
-Building on their development, {\it Barton House} added a Think C port.
+%
+{\it Jon W\{tte}%
+and %
+{\it Hao-yang Wang}%
+, with help from %
+{\it Ross Brown}%
+,
+%
+{\it Mike Engber}%
+, %
+{\it David Hairston}%
+, %
+{\it Michael Hamel}%
+,
+%
+{\it Jonathan Handler}%
+, %
+{\it Johnny Lee}%
+, %
+{\it Tim Lennan}%
+, %
+{\it Rob Menke}%
+,
+and %
+{\it Andy Swanson}%
+, developed NetHack 3.1 for the Macintosh,
+porting it for MPW.  Building on their development, %
+{\it Barton House}%
+added a Think C port.
 
 %.pg
-\medskip
-\nd {\it Timo Hakulinen\/} ported {\it NetHack\/} 3.1 to OS/2.
-{\it Eric Smith\/} ported {\it NetHack\/} 3.1 to the Atari.
-{\it Pat Rankin}, with help from {\it Joshua Delahunty},
-was responsible for the VMS version of {\it NetHack\/} 3.1.
-{\it Michael Allison} ported {\it NetHack\/} 3.1 to Windows NT.
+%
+{\it Timo Hakulinen}%
+ported NetHack 3.1 to OS/2.  %
+{\it Eric Smith}%
+ported NetHack 3.1 to the Atari.  %
+{\it Pat Rankin}%
+, with help from
+%
+{\it Joshua Delahunty}%
+, was responsible for the VMS version of NetHack 3.1.
+%
+{\it Michael Allison}%
+ported NetHack 3.1 to Windows NT.
 
 %.pg
-\medskip
-\nd {\it Dean Luick}, with help from {\it David Cohrs}, developed {\it NetHack\/}
+%
+{\it Dean Luick}%
+, with help from %
+{\it David Cohrs}%
+, developed NetHack
 3.1 for X11.
-{\it Warwick Allison} wrote a tiled version of NetHack for the Atari;
+%
+{\it Warwick Allison}%
+wrote a tiled version of NetHack for the Atari;
 he later contributed the tiles to the DevTeam and tile support was
 then added to other platforms.
 
 %.pg
-\medskip
-\nd The 3.2 development team, comprised of {\it Michael Allison}, {\it Ken
-Arromdee}, {\it David Cohrs}, {\it Jessie Collet}, {\it Steve Creps}, {\it
-Kevin Darcy}, {\it Timo Hakulinen}, {\it Steve Linhart}, {\it Dean Luick},
-{\it Pat Rankin}, {\it Eric Smith}, {\it Mike Stephenson}, {\it Janet Walz},
-and {\it Paul Winner}, released version 3.2 in April of 1996.
+The 3.2 development team, comprised of %
+{\it Michael Allison}%
+, %
+\bf Ken
+Arromdee\rm%
+, %
+{\it David Cohrs}%
+, %
+{\it Jessie Collet}%
+, %
+{\it Steve Creps}%
+,
+%
+{\it Kevin Darcy}%
+, %
+{\it Timo Hakulinen}%
+, %
+{\it Steve Linhart}%
+, %
+\bf Dean
+Luick\rm%
+, %
+{\it Pat Rankin}%
+, %
+{\it Eric Smith}%
+, %
+{\it Mike Stephenson}%
+,
+%
+{\it Janet Walz}%
+, and %
+{\it Paul Winner}%
+, released version 3.2 in April of
+1996.
 
 %.pg
-\medskip
-\nd Version 3.2 marked the tenth anniversary of the formation of the development
+Version 3.2 marked the tenth anniversary of the formation of the development
 team.  In a testament to their dedication to the game, all thirteen members
-of the original development team remained on the team at the start of work on
-that release.  During the interval between the release of 3.1.3 and 3.2,
-one of the founding members of the development team, {\it Dr. Izchak Miller},
-was diagnosed with cancer and passed away.  That release of the game was
-dedicated to him by the development and porting teams.
+of the original development team remained on the team at the start of work
+on that release.  During the interval between the release of 3.1.3
+and 3.2, one of the founding members of the development team, %
+\bf Dr. Izchak
+Miller\rm%
+, was diagnosed with cancer and passed away.  That release of the
+game was dedicated to him by the development and porting teams.
 
 %.pg
-\medskip
-During the lifespan of {\it NetHack\/} 3.1 and 3.2, several enthusiasts
+During the lifespan of NetHack 3.1 and 3.2, several enthusiasts
 of the game added
-their own modifications to the game and made these ``variants'' publicly
+their own modifications to the game and made these ``{\tt variants}'' publicly
 available:
 
 %.pg
-\medskip
-{\it Tom Proudfoot} and {\it Yuval Oren} created {\it NetHack++},
-which was quickly renamed {\it NetHack$--$}.
-Working independently, {\it Stephen White} wrote {\it NetHack Plus}.
-{\it Tom Proudfoot} later merged {\it NetHack Plus}
-and his own {\it NetHack$--$} to produce {\it SLASH}.
-{\it Larry Stewart-Zerba} and {\it Warwick Allison} improved the spell
+%
+{\it Tom Proudfoot}%
+and %
+{\it Yuval Oren}%
+created NetHack++,
+which was quickly renamed NetHack--.
+Working independently, %
+{\it Stephen White}%
+wrote NetHack Plus.
+%
+{\it Tom Proudfoot}%
+later merged NetHack Plus
+and his own NetHack-- to produce SLASH.
+%
+{\it Larry Stewart-Zerba}%
+and %
+{\it Warwick Allison}%
+improved the spell
 casting system with the Wizard Patch.
-{\it Warwick Allison} also ported NetHack to use the Qt interface.
+%
+{\it Warwick Allison}%
+also ported NetHack to use the Qt interface.
 
 %.pg
-\medskip
-{\it Warren Cheung} combined {\it SLASH} with the Wizard Patch
-to produce {\it Slash'em\/}, and
-with the help of {\it Kevin Hugo}, added more features.
+%
+{\it Warren Cheung}%
+combined SLASH with the Wizard Patch to produce Slash'em,
+and with the help of %
+{\it Kevin Hugo}%
+, added more features.
 Kevin later joined the
-DevTeam and incorporated the best of these ideas into NetHack 3.3.
+DevTeam and incorporated the best of these ideas in NetHack 3.3.
 
 %.pg
-\medskip
 The final update to 3.2 was the bug fix release 3.2.3, which was released
 simultaneously with 3.3.0 in December 1999 just in time for the Year 2000.
 
 %.pg
-\medskip
-The 3.3 development team, consisting of {\it Michael Allison}, {\it Ken Arromdee}, 
-{\it David Cohrs}, {\it Jessie Collet}, {\it Steve Creps}, {\it Kevin Darcy}, 
-{\it Timo Hakulinen}, {\it Kevin Hugo}, {\it Steve Linhart}, {\it Ken Lorber}, 
-{\it Dean Luick}, {\it Pat Rankin}, {\it Eric Smith}, {\it Mike Stephenson}, 
-{\it Janet Walz}, and {\it Paul Winner}, released 3.3.0 in 
+The 3.3 development team, consisting of %
+{\it Michael Allison}%
+, %
+{\it Ken Arromdee}%
+, 
+%
+{\it David Cohrs}%
+, %
+{\it Jessie Collet}%
+, %
+{\it Steve Creps}%
+, %
+{\it Kevin Darcy}%
+, 
+%
+{\it Timo Hakulinen}%
+, %
+{\it Kevin Hugo}%
+, %
+{\it Steve Linhart}%
+, %
+{\it Ken Lorber}%
+, 
+%
+{\it Dean Luick}%
+, %
+{\it Pat Rankin}%
+, %
+{\it Eric Smith}%
+, %
+{\it Mike Stephenson}%
+, 
+%
+{\it Janet Walz}%
+, and %
+{\it Paul Winner}%
+, released 3.3.0 in 
 December 1999 and 3.3.1 in August of 2000.
 
 %.pg
-\medskip
 Version 3.3 offered many firsts. It was the first version to separate race 
 and profession. The Elf class was removed in preference to an elf race, 
 and the races of dwarves, gnomes, and orcs made their first appearance in 
@@ -3270,76 +3300,126 @@ that constantly growing bug list, 3.3 proved stable enough to last for
 more than a year and a half.
 
 %.pg
-\medskip
-The 3.4 development team initially consisted of 
-{\it Michael Allison}, {\it Ken Arromdee},
-{\it David Cohrs}, {\it Jessie Collet}, {\it Kevin Hugo}, {\it Ken Lorber},
-{\it Dean Luick}, {\it Pat Rankin}, {\it Mike Stephenson}, 
-{\it Janet Walz}, and {\it Paul Winner}, with {\it  Warwick Allison} joining 
+The 3.4 development team initially consisted of
+%
+{\it Michael Allison}%
+, %
+{\it Ken Arromdee}%
+,
+%
+{\it David Cohrs}%
+, %
+{\it Jessie Collet}%
+, %
+{\it Kevin Hugo}%
+, %
+{\it Ken Lorber}%
+,
+%
+{\it Dean Luick}%
+, %
+{\it Pat Rankin}%
+, %
+{\it Mike Stephenson}%
+, 
+%
+{\it Janet Walz}%
+, and %
+{\it Paul Winner}%
+, with  %
+{\it Warwick Allison}%
+joining 
 just before the release of NetHack 3.4.0 in March 2002.
 
 %.pg
-\medskip
 As with version 3.3, various people contributed to the game as a whole as
-well as supporting ports on the different platforms that {\it NetHack\/}
-runs on:
+well as supporting ports on the different platforms that NetHack runs on:
 
 %.pg
-\medskip
-\nd{\it Pat Rankin} maintained 3.4 for VMS.
+%
+{\it Pat Rankin}%
+maintained 3.4 for VMS.
 
 %.pg
-\medskip
-\nd {\it Michael Allison} maintained NetHack 3.4 for the MS-DOS platform.
-{\it Paul Winner} and {\it Yitzhak Sapir} provided encouragement.
+%
+{\it Michael Allison}%
+maintained NetHack 3.4 for the MS-DOS platform.  %
+{\it Paul Winner}%
+and %
+{\it Yitzhak Sapir}%
+provided encouragement.
 
 %.pg
-\medskip
-\nd {\it Dean Luick}, {\it Mark Modrall}, and {\it Kevin Hugo} maintained and
-enhanced the Macintosh port of 3.4.
+%
+{\it Dean Luick}%
+, %
+{\it Mark Modrall}%
+, and %
+{\it Kevin Hugo}%
+maintained and enhanced the
+Macintosh port of 3.4.
 
 %.pg
-\medskip
-\nd {\it Michael Allison}, {\it David Cohrs}, {\it Alex Kompel}, {\it Dion Nicolaas}, and 
-{\it Yitzhak Sapir} maintained and enhanced 3.4 for the Microsoft Windows platform.
-{\it Alex Kompel} contributed a new graphical interface for the Windows port. 
-{\it Alex Kompel} also contributed a Windows CE port for 3.4.1.
+%
+{\it Michael Allison}%
+, %
+{\it David Cohrs}%
+, %
+{\it Alex Kompel}%
+, %
+{\it Dion Nicolaas}%
+, and 
+%
+{\it Yitzhak Sapir}%
+maintained and enhanced 3.4 for the Microsoft Windows platform.
+%
+{\it Alex Kompel}%
+contributed a new graphical interface for the Windows port. 
+%
+{\it Alex Kompel}%
+also contributed a Windows CE port for 3.4.1.
 
 %.pg
-\medskip
-\nd {\it Ron Van Iwaarden} maintained 3.4 for OS/2.
+%
+{\it Ron Van Iwaarden}%
+maintained 3.4 for OS/2.
 
 %.pg
-\medskip
-\nd {\it Janne Salmij\"{a}rvi} and {\it Teemu Suikki} maintained
-and enhanced the Amiga port of 3.4 after {\it Janne Salmij\"{a}rvi} resurrected
+%
+{\it Janne Salmijarvi}%
+and %
+{\it Teemu Suikki}%
+maintained and 
+enhanced the Amiga port of 3.4 after %
+{\it Janne Salmijarvi}%
+resurrected 
 it for 3.3.1.
 
 %.pg
-\medskip
-\nd {\it Christian ``Marvin'' Bressler} maintained 3.4 for the Atari after he
+%
+{\it Christian ``{\tt Marvin}'' Bressler}%
+maintained 3.4 for the Atari after he 
 resurrected it for 3.3.1.
 
 %.pg
-\medskip
-\nd There is a NetHack web site maintained by {\it Ken Lorber} at 
-http:{\tt /}{\tt /}www.nethack.org{\tt /}.
+There is a NetHack web site maintained by %
+{\it Ken Lorber}%
+at http://www.nethack.org/.
 
 %.pg
-\bigskip
-\nd From time to time, some depraved individual out there in netland sends a
-particularly intriguing modification to help out with the game.  The Gods of
+From time to time, some depraved individual out there in netland sends a
+particularly intriguing modification to help out with NetHack.  The Gods of
 the Dungeon sometimes make note of the names of the worst of these miscreants
 in this, the list of Dungeoneers:
 
 %.sd
 \begin{center}
-\begin{tabular}{lll}
+\begin{tabular}{ccc}
 %TABLE_START
 Adam Aronow & Izchak Miller & Mike Stephenson\\
 Alex Kompel & J. Ali Harlow & Norm Meluch\\
 Andreas Dorn & Janet Walz & Olaf Seibert\\
-Andy Church & Janne Salmij\"{a}rvi & Pasi Kallinen\\
+Andy Church & Janne Salmijarvi & Pasi Kallinen\\
 Andy Swanson & Jean-Christophe Collet & Pat Rankin\\
 Ari Huttunen & Jochen Erwied & Paul Winner\\
 Barton House & John Kallen & Pierre Martineau\\
@@ -3371,25 +3451,17 @@ Greg Laskin & Michael Feir & Tom West\\
 Greg Olson & Michael Hamel & Warren Cheung\\
 Gregg Wonderly & Michael Sokolov & Warwick Allison\\
 Hao-yang Wang & Mike Engber & Yitzhak Sapir\\
-Helge Hafting & Mike Gallop\\
-Irina Rempt-Drijfhout & Mike Passaretti
+Helge Hafting & Mike Gallop
+Irina Rempt-Drijfhout & Mike Passaretti\\
 %TABLE_END  Do not delete this line.
 \end{tabular}
 \end{center}
+
 %.ed
 
-%\vfill
-%\begin{flushleft}
-%\small
-%Microsoft and MS-DOS are registered trademarks of Microsoft Corporation.\\
-%%%Don't need next line if a UNIX macro automatically inserts footnotes.
-%UNIX is a registered trademark of AT\&T.\\
-%Lattice is a trademark of Lattice, Inc.\\
-%Atari and 1040ST are trademarks of Atari, Inc.\\
-%AMIGA is a trademark of Commodore-Amiga, Inc.\\
-%%.sm
-%Brand and product names are trademarks or registered trademarks
-%of their respective holders.
-%\end{flushleft}
-
+%Microsoft and MS-DOS are registered trademarks of Microsoft Corporation.
+%Lattice is a trademark of Lattice, Inc.
+%Atari and 1040ST are trademarks of Atari, Inc.
+%AMIGA is a trademark of Commod & re-Amiga, Inc.
+%.sm "Brand and product names are trademarks or registered trademarks \ of their respective holders."
 \end{document}

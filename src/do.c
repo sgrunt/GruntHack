@@ -553,7 +553,8 @@ register struct obj *obj;
 	    boolean could_heal = FALSE;
 
 	    if (obj != uball) {		/* mon doesn't pick up ball */
-		if (obj->otyp == CORPSE) {
+		if (obj->otyp == CORPSE ||
+		    (obj->otyp == ROCK && obj->corpsenm != 0)) {
 		    could_petrify = touch_petrifies(&mons[obj->corpsenm]);
 		    could_poly = polyfodder(obj);
 		    could_slime = (obj->corpsenm == PM_GREEN_SLIME);

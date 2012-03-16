@@ -329,8 +329,11 @@ struct obj {
 #define ITEM_STEALTH      0x00008000L // grants stealth 
 #define ITEM_FUMBLING     0x00010000L // fumbling
 #define ITEM_CLAIRVOYANCE 0x00020000L // clairvoyance
+#define ITEM_DETONATIONS  0x00040000L // projectile weapon goes boom 
 
-#define ITEM_PROP_MASK    0x0003FFFFL // all current properties
-#define MAX_ITEM_PROPS    17
+#define ITEM_MAGICAL      0x80000000L // known to have magical properties
+
+#define ITEM_PROP_MASK    0x0007FFFFL // all current properties
+#define MAX_ITEM_PROPS    18
 
 #endif /* OBJ_H */

@@ -333,7 +333,7 @@ boolean devour;
 	if (cansee(x, y) || cansee(mtmp->mx, mtmp->my))
 	    pline("%s %s %s.", mon_visible(mtmp) ? noit_Monnam(mtmp) : "It",
 		  devour ? "devours" : "eats",
-		  (obj->oclass == FOOD_CLASS) ?
+		  (obj->oclass == FOOD_CLASS || obj->otyp == ROCK) ?
 			singular(obj, doname) : doname(obj));
 	/* It's a reward if it's DOGFOOD and the player dropped/threw it. */
 	/* We know the player had it if invlet is set -dlc */
@@ -357,7 +357,8 @@ boolean devour;
 	    delobj(obj);
 	} else if (obj == uchain)
 	    unpunish();
-	else if (obj->quan > 1L && obj->oclass == FOOD_CLASS) {
+	else if (obj->quan > 1L && 
+	         (obj->oclass == FOOD_CLASS || obj->otyp == ROCK)) {
 	    obj->quan--;
 	    obj->owt = weight(obj);
 	} else

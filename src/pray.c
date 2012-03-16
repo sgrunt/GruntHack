@@ -1286,6 +1286,7 @@ dosacrifice()
 		pline("Fortunately, %s permits you to live...", a_gname());
 		pline("A cloud of %s smoke surrounds you...",
 		      hcolor((const char *)"orange"));
+		killer_format = KILLED_BY; // sign for celestial disgrace
 		done(ESCAPED);
 	    } else { /* super big win */
 		adjalign(10);
@@ -1473,13 +1474,39 @@ verbalize("In return for thy service, I grant thee the gift of Immortality!");
 	    /* The chance goes down as the number of artifacts goes up */
 	    if (u.ulevel > 2 && u.uluck >= 0) {
 	        if (!rn2(100 + (2 * u.ugifts * nartifacts)))
-		otmp = mk_artifact((struct obj *)0, a_align(u.ux,u.uy));
+		    otmp = mk_artifact((struct obj *)0, a_align(u.ux,u.uy));
 		else if (!rn2(10 + (2 * u.ugifts)))
-		    otmp = create_oprop((struct obj *)0);
+		{
+		    if (Role_if(PM_WIZARD) && rn2(3))
+		    {
+	                int sp_no, trycnt = u.ulevel + 1;
+                	otmp = mkobj(SPBOOK_CLASS, TRUE);
+                	while (--trycnt > 0) {
+                	    if (otmp->otyp != SPE_BLANK_PAPER) {
+                	        for (sp_no = 0; sp_no < MAXSPELL; sp_no++)
+                	  	    if (spl_book[sp_no].sp_id == otmp->otyp)
+				        break;
+                		    if (sp_no == MAXSPELL &&
+                			!P_RESTRICTED(spell_skilltype(
+					                    otmp->otyp)))
+                			break;	/* usable, but not yet known */
+                	    } else {
+                	        if (!objects[SPE_BLANK_PAPER].oc_name_known ||
+                	  	        carrying(MAGIC_MARKER)) break;
+                 	    }
+                	    otmp->otyp = rnd_class(bases[SPBOOK_CLASS],
+			                           SPE_BLANK_PAPER);
+                	}
+                	bless(otmp);
+                    }
+		    else otmp = create_oprop((struct obj *)0);
+		}
+		else goto luck_change;
 		if (otmp) {
 		    if (otmp->spe < 0) otmp->spe = 0;
 		    if (otmp->cursed) uncurse(otmp);
-		    otmp->oerodeproof = TRUE;
+		    if (otmp->otyp != SPBOOK_CLASS)
+		        otmp->oerodeproof = TRUE;
 		    dropy(otmp);
 		    at_your_feet("An object");
 		    godvoice(u.ualign.type, "Use my gift wisely!");
@@ -1487,11 +1514,15 @@ verbalize("In return for thy service, I grant thee the gift of Immortality!");
 		    u.ublesscnt = rnz(300 + (50 * nartifacts));
 		    exercise(A_WIS, TRUE);
 		    /* make sure we can use this weapon */
-		    unrestrict_weapon_skill(weapon_type(otmp));
-		    discover_artifact(otmp->oartifact);
+		    if (otmp->otyp != SPBOOK_CLASS)
+		    {
+		        unrestrict_weapon_skill(weapon_type(otmp));
+		        discover_artifact(otmp->oartifact);
+		    }
 		    return(1);
 		}
 	    }
+luck_change:
 	    change_luck((value * LUCKMAX) / (MAXVALUE * 2));
 	    if ((int)u.uluck < 0) u.uluck = 0;
 	    if (u.uluck != saved_luck) {

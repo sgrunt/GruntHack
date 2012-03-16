@@ -186,7 +186,20 @@ register struct obj *obj;
     if (!otmp)
     {
         // This probably is only ever done for weapons, y'know?
-	otmp = mksobj(WEAPON_CLASS, TRUE, FALSE);
+	//otmp = mksobj(WEAPON_CLASS, TRUE, FALSE);
+	otmp = mkobj(WEAPON_CLASS, FALSE);
+    }
+
+    // Regardless if it's special or not, fix it up as necessary
+    if (otmp->cursed) uncurse(otmp);
+    else bless(otmp);
+    
+    if (otmp->oclass == WEAPON_CLASS ||
+        otmp->oclass == ARMOR_CLASS ||
+	(otmp->oclass == RING_CLASS && objects[otmp->otyp].oc_charged))
+    {
+        if (otmp->spe < 0) otmp->spe = 0;
+        else if (otmp->spe == 0) otmp->spe = rn1(2, 1);
     }
 
     // Don't spruce up artifacts
@@ -211,6 +224,10 @@ register struct obj *obj;
 	if (!((otmp->oclass == WEAPON_CLASS || is_weptool(otmp)) &&
 	      is_blade(otmp)) &&
 	    (j & ITEM_VORPAL))
+	    continue;
+
+        if (!is_ammo(otmp) && !is_missile(otmp) && !is_launcher(otmp) &&
+	    (j & ITEM_DETONATIONS))
 	    continue;
 
 	if ((is_boots(otmp) || is_gloves(otmp) || is_helmet(otmp)) &&
@@ -412,6 +429,15 @@ register struct obj *otmp;
 	        (otmp->oprops & ITEM_FROST)) return TRUE;
 	    if (adtyp == AD_DRLI &&
 	        (otmp->oprops & ITEM_DRLI)) return TRUE;
+	}
+
+	if (otmp->oclass == WEAPON_CLASS || is_weptool(otmp))
+	{
+	    register struct obj *otmp2 = NULL;
+	    if (curmonst == &youmonst) otmp2 = uwep;
+	    else if (curmonst) otmp2 = MON_WEP(curmonst);
+	    if (ammo_and_launcher(otmp, otmp2))
+	        return attacks(adtyp, otmp2); 
 	}
 
 	return FALSE;
@@ -1075,6 +1101,11 @@ char *hittee;			/* target's name: "you" or mon_nam(mdef) */
 
     return result;
 }
+		
+const char * const behead_msg[2] = {
+     "%s beheads %s!",
+     "%s decapitates %s!"
+};
   
 /* Function used when someone attacks someone else with an artifact
  * weapon.  Only adds the special (artifact) damage, and returns a 1 if it
@@ -1100,6 +1131,11 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	const char *wepdesc;
 	static const char you[] = "you";
 	char hittee[BUFSZ];
+        char tmpbuf[BUFSZ];
+
+        Sprintf(tmpbuf, "%s%s", (youattack) ? "Your " : "The ",
+		                 distant_name(otmp, xname));
+	wepdesc = tmpbuf;
 
 	Strcpy(hittee, youdefend ? you : mon_nam(mdef));
 
@@ -1123,7 +1159,11 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	if (attacks(AD_FIRE, otmp)) {
 	    if (realizes_damage)
 	    {
-		pline_The("fiery blade %s %s%c",
+                if (otmp->oartifact &&
+		    otmp->oartifact == ART_FIRE_BRAND)
+		    wepdesc = "The fiery blade";
+		pline("%s %s %s%c",
+		        wepdesc,
 			!spec_dbon_applies ? "hits" :
 			(mdef->data == &mons[PM_WATER_ELEMENTAL]) ?
 			"vaporizes part of" : "burns",
@@ -1140,7 +1180,11 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	if (attacks(AD_COLD, otmp)) {
 	    if (realizes_damage)
 	    {
-		pline_The("ice-cold blade %s %s%c",
+                if (otmp->oartifact &&
+		    otmp->oartifact == ART_FIRE_BRAND)
+		    wepdesc = "The ice-cold blade";
+		pline("%s %s %s%c",
+		        wepdesc,
 			!spec_dbon_applies ? "hits" : "freezes",
 			hittee, !spec_dbon_applies ? '.' : '!');
 		if (otmp->oprops & ITEM_FROST)
@@ -1168,72 +1212,14 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	}
 
 	if (attacks(AD_STUN, otmp) && dieroll <= MB_MAX_DIEROLL) {
+	    if (dieroll <= MB_MAX_DIEROLL)
 	    /* Magicbane's special attacks (possibly modifies hittee[]) */
-	    realizes_damage = 
-	        Mb_hit(magr, mdef, otmp, dmgptr, dieroll, vis, hittee);
-	
+	        return 
+	            Mb_hit(magr, mdef, otmp, dmgptr, dieroll, vis, hittee);
+            else
+	        return FALSE;
 	}
 
-        /* foobane */
-	if (otmp->oartifact &&
-	    otmp->oartifact != ART_MAGICBANE &&
-	    ((get_artifact(otmp)->spfx) & 
-	     (SPFX_DMONS|SPFX_DCLAS|SPFX_DFLAG2|SPFX_DALIGN)))
-	{
-            if (!spec_dbon_applies)
-	        pline("%s hits %s%s",
-	           artilist[otmp->oartifact].name, hittee,
-		   youdefend ? "!" : ".");
-	    else if (dieroll == 1)
-	    {
-	        if (realizes_damage)
-		    // we know it's an artifact by now, so...
-                    pline("%s slays %s!",
-		           artilist[otmp->oartifact].name, hittee);
-
-		*dmgptr = 2 * mdef->mhp + FATAL_DAMAGE_MODIFIER;
-	    }
-	    else if (dieroll == 2)
-	    {
-	        if (realizes_damage)
-                    pline("%s roars as it sears %s!",
-		           artilist[otmp->oartifact].name, hittee);
-
-	        (void) cancel_monst(mdef, otmp, youattack, FALSE, FALSE);
-	    }
-	    else if (dieroll == 3)
-	    {
-	        if (realizes_damage)
-                    pline("%s howls as it sears %s!",
-		           artilist[otmp->oartifact].name, hittee);
-	        if (youdefend)
-	            make_stunned((HStun + 3), FALSE);
-	        else if (realizes_damage)
-		{
-		    pline("%s staggers...", Monnam(mdef));
-                    mdef->mstun = 1;
-		}
-	    } else if (dieroll <= 10) {
-	        if (realizes_damage)
-                    pline("%s screams as it sears %s!",
-		           artilist[otmp->oartifact].name, hittee);
-        	if (youdefend) {
-        	    nomul2(-3, "scared");
-        	    nomovemsg = "";
-        	    if (magr && magr == u.ustuck && sticks(youmonst.data)) {
-        	        u.ustuck = (struct monst *)0;
-        	        You("release %s!", mon_nam(magr));
-        	    }
-        	} else {
-        	    monflee(mdef, 3, FALSE, (mdef->mhp > *dmgptr));
-        	}
-	    } else if (realizes_damage)
-                pline("%s sears %s!",
-	            artilist[otmp->oartifact].name, hittee);
-	    if (mdef->data->mlet == S_TROLL)
-	        mdef->mcan = 1; // trollsbane; prevent troll from reviving
-            return realizes_damage;
-	}
 
 	if (!spec_dbon_applies &&
 	    !(otmp->oprops & ITEM_VORPAL)) {
@@ -1251,14 +1237,6 @@ int dieroll; /* needed for Magicbane and vorpal blades */
                 if (otmp->oartifact &&
 		    otmp->oartifact == ART_TSURUGI_OF_MURAMASA)
 		wepdesc = "The razor-sharp blade";
-		else
-		{
-		    char tmpbuf[BUFSZ];
-		    Sprintf(tmpbuf, "%s%s",
-		            (youattack) ? "Your " : "The ",
-			    distant_name(otmp, xname));
-	            wepdesc = tmpbuf;
-	        }
 
 	        if (!otmp->oartifact)
 		    otmp->oprops_known |= ITEM_VORPAL;
@@ -1310,25 +1288,13 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 		}
 	    } else if (/*otmp->oartifact == ART_VORPAL_BLADE && */
 	               !bimanual(otmp) &&
-			(dieroll == 1 || mdef->data == &mons[PM_JABBERWOCK])) {
-		static const char * const behead_msg[2] = {
-		     "%s beheads %s!",
-		     "%s decapitates %s!"
-		};
+			(dieroll == 1 || mdef->data->mlet == S_JABBERWOCK)) {
 
 		if (youattack && u.uswallow && mdef == u.ustuck)
 			return FALSE;
 
                 if (otmp->oartifact && otmp->oartifact == ART_VORPAL_BLADE)
-		wepdesc = artilist[ART_VORPAL_BLADE].name;
-		else
-		{
-		    char tmpbuf[BUFSZ];
-		    Sprintf(tmpbuf, "%s%s",
-		            (youattack) ? "Your " : "The ",
-			    distant_name(otmp, xname));
-	            wepdesc = tmpbuf;
-	        }
+		    wepdesc = artilist[ART_VORPAL_BLADE].name;
 
 	        if (!otmp->oartifact)
 		    otmp->oprops_known |= ITEM_VORPAL;
@@ -1353,6 +1319,9 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 			*dmgptr = 2 * mdef->mhp + FATAL_DAMAGE_MODIFIER;
 			pline(behead_msg[rn2(SIZE(behead_msg))],
 			      wepdesc, mon_nam(mdef));
+			if (mdef->data == &mons[PM_ZOMBIE])
+			    mdef->mcan = 1; // prevent zombie from reviving
+			                    // if it suffers head damage
 			otmp->dknown = TRUE;
 			return TRUE;
 		} else {
@@ -1422,7 +1391,70 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 			return TRUE;
 		}
 	}
-	return realizes_damage;
+
+        /* foobane */
+	if (otmp->oartifact &&
+	    otmp->oartifact != ART_MAGICBANE &&
+	    ((get_artifact(otmp)->spfx) & 
+	     (SPFX_DMONS|SPFX_DCLAS|SPFX_DFLAG2|SPFX_DALIGN)))
+	{
+            if (!spec_dbon_applies)
+	        if (realizes_damage)
+	            pline("%s hits %s%s",
+	                  artilist[otmp->oartifact].name, hittee,
+		          youdefend ? "!" : ".");
+	    else if (dieroll == 1)
+	    {
+	        if (realizes_damage)
+		    // we know it's an artifact by now, so...
+                    pline("%s slays %s!",
+		           artilist[otmp->oartifact].name, hittee);
+
+		*dmgptr = 2 * mdef->mhp + FATAL_DAMAGE_MODIFIER;
+	    }
+	    else if (dieroll == 2)
+	    {
+	        if (realizes_damage)
+                    pline("%s roars as it sears %s!",
+		           artilist[otmp->oartifact].name, hittee);
+
+	        (void) cancel_monst(mdef, otmp, youattack, FALSE, FALSE);
+	    }
+	    else if (dieroll == 3)
+	    {
+	        if (realizes_damage)
+                    pline("%s howls as it sears %s!",
+		           artilist[otmp->oartifact].name, hittee);
+	        if (youdefend)
+	            make_stunned((HStun + 3), FALSE);
+	        else if (realizes_damage)
+		{
+		    pline("%s staggers...", Monnam(mdef));
+                    mdef->mstun = 1;
+		}
+	    } else if (dieroll <= 10) {
+	        if (realizes_damage)
+                    pline("%s screams as it sears %s!",
+		           artilist[otmp->oartifact].name, hittee);
+        	if (youdefend) {
+        	    nomul2(-3, "scared");
+        	    nomovemsg = "";
+        	    if (magr && magr == u.ustuck && sticks(youmonst.data)) {
+        	        u.ustuck = (struct monst *)0;
+        	        You("release %s!", mon_nam(magr));
+        	    }
+        	} else {
+        	    monflee(mdef, 3, FALSE, (mdef->mhp > *dmgptr));
+        	}
+	    } else if (realizes_damage)
+                pline("%s sears %s!",
+	            artilist[otmp->oartifact].name, hittee);
+	    if (mdef->data->mlet == S_TROLL)
+	        mdef->mcan = 1; // trollsbane; prevent troll from reviving
+            return vis;
+	}
+
+	return FALSE;
 }
 
 static NEARDATA const char recharge_type[] = { ALLOW_COUNT, ALL_CLASSES, 0 };

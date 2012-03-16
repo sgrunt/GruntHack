@@ -308,8 +308,25 @@ register struct monst *mtmp;
 		    !(is_undead(mtmp->data) && is_racial(mtmp->data))) 
 		    return (struct obj *)0;
 		else	/* preserve the unique traits of some creatures */
+		{
 		    obj = mkcorpstat(CORPSE, KEEPTRAITS(mtmp) ? mtmp : 0,
 				     &mons[mons_to_corpse(mtmp)], x, y, TRUE);
+
+		    if      (mndx == PM_ZOMBIE ||
+		             mndx == PM_MUMMY)
+		    {
+		        obj->spe = -2;
+		    }
+		    else if (mndx == PM_WERERAT ||
+		             mndx == PM_HUMAN_WERERAT)
+			     obj->spe = -3;
+		    else if (mndx == PM_WEREJACKAL ||
+		             mndx == PM_HUMAN_WEREJACKAL)
+			     obj->spe = -4;
+		    else if (mndx == PM_WEREWOLF ||
+		             mndx == PM_HUMAN_WEREWOLF)
+			     obj->spe = -5;
+		}
 		if (is_undead(mtmp->data))
 		    obj->age -= 100;
 		break;
@@ -815,7 +832,9 @@ meatobj(mtmp)		/* for gelatinous cubes */
 	    otmp2 = otmp->nexthere;
 	    if (is_organic(otmp) && !obj_resists(otmp, 5, 95) &&
 		    touch_artifact(otmp,mtmp)) {
-		if (otmp->otyp == CORPSE && touch_petrifies(&mons[otmp->corpsenm]) &&
+		if ((otmp->otyp == CORPSE ||
+		    (otmp->otyp == ROCK && otmp->corpsenm != 0))
+		    && touch_petrifies(&mons[otmp->corpsenm]) &&
 			!resists_ston(mtmp))
 		    continue;
 		if (otmp->otyp == AMULET_OF_STRANGULATION ||
@@ -838,7 +857,9 @@ meatobj(mtmp)		/* for gelatinous cubes */
 		       is arbitrary, but otherwise g.cubes are too powerful */
 		    while ((otmp3 = otmp->cobj) != 0) {
 			obj_extract_self(otmp3);
-			if (otmp->otyp == ICE_BOX && otmp3->otyp == CORPSE) {
+			if (otmp->otyp == ICE_BOX && 
+			    (otmp3->otyp == CORPSE ||
+			     (otmp->otyp == ROCK && otmp->corpsenm != 0))) {
 			    otmp3->age = monstermoves - otmp3->age;
 			    start_corpse_timeout(otmp3);
 			}
@@ -930,7 +951,9 @@ mpickstuff(mtmp, str)
 /*	Nymphs take everything.  Most monsters don't pick up corpses. */
 	    if (!str ? searches_for_item(mtmp,otmp) :
 		  !!(index(str, otmp->oclass))) {
-		if (otmp->otyp == CORPSE && mtmp->data->mlet != S_NYMPH &&
+		if ((otmp->otyp == CORPSE ||
+		    (otmp->otyp == ROCK && otmp->corpsenm != 0))
+		        && mtmp->data->mlet != S_NYMPH &&
 			/* let a handful of corpse types thru to can_carry() */
 			!touch_petrifies(&mons[otmp->corpsenm]) &&
 			otmp->corpsenm != PM_LIZARD &&
@@ -1017,7 +1040,9 @@ struct obj *otmp;
 
 	if (notake(mdat)) return FALSE;		/* can't carry anything */
 
-	if (otyp == CORPSE && touch_petrifies(&mons[otmp->corpsenm]) &&
+	if ((otyp == CORPSE ||
+	    (otyp == ROCK && otmp->corpsenm != 0))
+	    && touch_petrifies(&mons[otmp->corpsenm]) &&
 		!(mtmp->misc_worn_check & W_ARMG) && !resists_ston(mtmp))
 	    return FALSE;
 	if (otyp == CORPSE && is_rider(&mons[otmp->corpsenm]))
@@ -1287,6 +1312,14 @@ struct monst *magr,	/* monster that is currently deciding where to move */
 
         /* hostiles who want an artifact will kill anything to get it */
 	if ((ma->mflags3 & M3_COVETOUS) != 0)
+	    return ALLOW_M|ALLOW_TM;
+
+	/* Zombies are after the living */
+	if (ma == &mons[PM_ZOMBIE] && !is_undead(md))
+	    return ALLOW_M|ALLOW_TM;
+
+	/* and vice versa */
+	if (md == &mons[PM_ZOMBIE] && !is_undead(ma))
 	    return ALLOW_M|ALLOW_TM;
  
  	/* Since the quest guardians are under siege, it makes sense to have 
@@ -1673,6 +1706,7 @@ boolean was_swallowed;			/* digestion */
 		return FALSE;
 
 	if (bigmonst(mdat) || mdat == &mons[PM_LIZARD]
+		   || mdat == &mons[PM_ZOMBIE]
 		   || is_golem(mdat)
 		   || is_mplayer(mdat)
 		   || is_rider(mdat))
@@ -2233,6 +2267,22 @@ register struct monst *mtmp;
 
 	}
 	aggravate();
+    }
+    if(mtmp->data == &mons[PM_QUIVERING_BLOB] &&
+       canseemon(mtmp)) {
+	pline("%s quivers.", Monnam(mtmp));
+    }
+    if (mtmp->data == &mons[PM_ZOMBIE] && flags.soundok) {
+        if (canseemon(mtmp))
+	    pline("%s %s.", Monnam(mtmp),
+	                   !rn2(15) ? "says, \"BRAAAAAAAAAAINS...\"" :
+			   !rn2(3) ? "groans" :
+			   !rn2(2) ? "moans" : "shuffles in your direction");
+	else if (!rn2(4))
+	    You_hear("%s", !rn2(15) ? "a low voice say \"BRAAAAAAAAAAINS...\"."
+	                 : !rn2(3)  ? "a low groaning."
+			 : !rn2(2)  ? "a low moaning."
+			 :            "a shuffling noise.");
     }
     if(mtmp->data == &mons[PM_MEDUSA]) {
 	register int i;

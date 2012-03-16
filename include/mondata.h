@@ -19,6 +19,10 @@
 #define resists_acid(mon)	(((mon)->mintrinsics & MR_ACID) != 0)
 #define resists_ston(mon)	(((mon)->mintrinsics & MR_STONE) != 0)
 
+#define resists_sick(mon)       (((mon)->data->mlet == S_FUNGUS) || \
+                                 ((mon)->data == &mons[PM_ZOMBIE]) || \
+				 ((mon)->data == &mons[PM_GHOUL]))
+
 #define MR2_SEE_INVIS	0x0100	/* see invisible */
 #define MR2_LEVITATE	0x0200	/* levitation */
 #define MR2_WATERWALK	0x0400	/* water walking */
@@ -151,7 +155,8 @@
 #define is_longworm(ptr)	(((ptr) == &mons[PM_BABY_LONG_WORM]) || \
 				 ((ptr) == &mons[PM_LONG_WORM]) || \
 				 ((ptr) == &mons[PM_LONG_WORM_TAIL]))
-#define is_covetous(ptr)	((ptr->mflags3 & M3_COVETOUS))
+#define is_covetous(ptr)	((ptr->mflags3 & M3_COVETOUS) || \
+                                 is_mplayer(ptr))
 #define infravision(ptr)	((ptr->mflags3 & M3_INFRAVISION))
 #define infravisible(ptr)	((ptr->mflags3 & M3_INFRAVISIBLE))
 #define polyok(ptr)		(((ptr)->mflags3 & M3_NOPOLY) == 0L)
@@ -166,7 +171,8 @@
 				 (ptr) == &mons[PM_ELF] || \
 				 (ptr) == &mons[PM_HUMAN])
 /* return TRUE if the monster tends to revive */
-#define is_reviver(ptr)		(is_rider(ptr) || (ptr)->mlet == S_TROLL)
+#define is_reviver(ptr)		(is_rider(ptr) || (ptr)->mlet == S_TROLL || \
+                                 (ptr) == &mons[PM_ZOMBIE])
 
 /* this returns the light's range, or 0 if none; if we add more light emitting
    monsters, we'll likely have to add a new light range field to mons[] */
@@ -250,6 +256,7 @@
  (is_ogre(mtmp) && \
   !strstri(mtmp->data->mname, "ogre"))  ? "ogre "  : \
  (is_human(mtmp) && \
+  mtmp->data != &mons[PM_HUMAN] && \
   !mtmp->iswiz && \
   !(mtmp->data->geno & G_UNIQ))         ? "human "    : \
 			                   "" 

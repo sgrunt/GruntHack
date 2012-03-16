@@ -431,7 +431,9 @@ xchar x, y;
 		return(1);
 	}
 
-	if(kickobj->otyp == CORPSE && touch_petrifies(&mons[kickobj->corpsenm])
+	if((kickobj->otyp == CORPSE ||
+	    (kickobj->otyp == ROCK && kickobj->corpsenm != 0)) &&
+	    touch_petrifies(&mons[kickobj->corpsenm])
 			&& !Stone_resistance && !uarmf) {
 	    char kbuf[BUFSZ];
 

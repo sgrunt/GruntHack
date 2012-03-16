@@ -725,6 +725,8 @@ boolean artif;
 
 	/* Some things must get done (timers) even if init = 0 */
 	switch (otmp->otyp) {
+	    case ROCK:
+	        if (otmp->corpsenm == 0) break;
 	    case CORPSE:
 		start_corpse_timeout(otmp);
 		break;
@@ -766,7 +768,8 @@ start_corpse_timeout(body)
 		when = ROT_AGE - corpse_age;
 	when += (long)(rnz(rot_adjust) - rot_adjust);
 
-	if (is_rider(&mons[body->corpsenm])) {
+        if (body->otyp == ROCK) ;
+	else if (is_rider(&mons[body->corpsenm])) {
 		/*
 		 * Riders always revive.  They have a 1/3 chance per turn
 		 * of reviving after 12 turns.  Always revive by 500.
@@ -775,7 +778,8 @@ start_corpse_timeout(body)
 		for (when = 12L; when < 500L; when++)
 		    if (!rn2(3)) break;
 
-	} else if (mons[body->corpsenm].mlet == S_TROLL && !body->norevive) {
+	} else if ((mons[body->corpsenm].mlet == S_TROLL ||
+	            body->spe == -2) && !body->norevive) {
 		long age;
 		for (age = 2; age <= TAINT_AGE; age++)
 		    if (!rn2(TROLL_REVIVE_CHANCE)) {	/* troll revives */
@@ -1068,6 +1072,7 @@ int x, y;
 #define special_corpse(num)  (((num) == PM_LIZARD)		\
 				|| ((num) == PM_LICHEN)		\
 				|| (is_rider(&mons[num]))	\
+				|| ((num) == PM_ZOMBIE)         \
 				|| (mons[num].mlet == S_TROLL))
 
 /*
@@ -1114,11 +1119,16 @@ boolean init;
 		otmp->owt = weight(otmp);
 		if (otmp->otyp == CORPSE &&
 			(special_corpse(old_corpsenm) ||
-				special_corpse(otmp->corpsenm))) {
+				special_corpse(otmp->corpsenm) ||
+				(mtmp && mtmp->data == &mons[PM_ZOMBIE]))) {
 		    obj_stop_timers(otmp);
-		    if (mtmp && ptr->mlet == S_TROLL &&
+		    if (mtmp && 
+		        (ptr->mlet == S_TROLL ||
+			 mtmp->data == &mons[PM_ZOMBIE]) &&
 		        mtmp->mcan == 1)
 			otmp->norevive = 1;
+		    if (mtmp && mtmp->data == &mons[PM_ZOMBIE])
+		        otmp->spe = -2;
 		    start_corpse_timeout(otmp);
 		}
 	    }
@@ -1346,7 +1356,8 @@ struct obj *otmp;
 {
     long age, retval = otmp->age;
     
-    if (otmp->otyp == CORPSE && ON_ICE(otmp)) {
+    if ((otmp->otyp == CORPSE ||
+        (otmp->otyp == ROCK && otmp->corpsenm != 0)) && ON_ICE(otmp)) {
 	/* Adjust the age; must be same as obj_timer_checks() for off ice*/
 	age = monstermoves - otmp->age;
 	retval = otmp->age + (age / ROT_ICE_ADJUSTMENT);
@@ -1373,7 +1384,9 @@ int force;	/* 0 = no force so do checks, <0 = force off, >0 force on */
     boolean buried = (otmp->where == OBJ_BURIED);
 
     /* Check for corpses just placed on or in ice */
-    if (otmp->otyp == CORPSE && (on_floor || buried) && is_ice(x,y)) {
+    if ((otmp->otyp == CORPSE ||
+         (otmp->otyp == ROCK && otmp->corpsenm != 0))
+	 && (on_floor || buried) && is_ice(x,y)) {
 	tleft = stop_timer(action, (genericptr_t)otmp);
 	if (tleft == 0L) {
 		action = REVIVE_MON;
@@ -1398,7 +1411,8 @@ int force;	/* 0 = no force so do checks, <0 = force off, >0 force on */
     }
     /* Check for corpses coming off ice */
     else if ((force < 0) ||
-	     (otmp->otyp == CORPSE && ON_ICE(otmp) &&
+	     ((otmp->otyp == CORPSE ||
+	       (otmp->otyp == ROCK && otmp->corpsenm != 0)) && ON_ICE(otmp) &&
 	     ((on_floor && !is_ice(x,y)) || !on_floor))) {
 	tleft = stop_timer(action, (genericptr_t)otmp);
 	if (tleft == 0L) {

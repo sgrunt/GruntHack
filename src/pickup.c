@@ -1350,7 +1350,8 @@ boolean telekinesis;	/* not picking it up directly by hand */
 	    if (flags.run) nomul(0);
 	    return 1;
 #endif
-	} else if (obj->otyp == CORPSE) {
+	} else if (obj->otyp == CORPSE ||
+	           (obj->otyp == ROCK && obj->corpsenm != 0)) {
 	    if ( (touch_petrifies(&mons[obj->corpsenm])) && !uarmg
 				&& !Stone_resistance && !telekinesis) {
 		if (poly_when_stoned(youmonst.data) && polymon(PM_STONE_GOLEM))
@@ -1866,7 +1867,8 @@ register struct obj *obj;
 		if (uquiver) return 0;     /* unwielded, died, rewielded */
 	}
 
-	if (obj->otyp == CORPSE) {
+	if (obj->otyp == CORPSE ||
+	    (obj->otyp == ROCK && obj->corpsenm != 0)) {
 	    if ( (touch_petrifies(&mons[obj->corpsenm])) && !uarmg
 		 && !Stone_resistance) {
 		if (poly_when_stoned(youmonst.data) && polymon(PM_STONE_GOLEM))
@@ -1990,7 +1992,8 @@ register struct obj *obj;
 
 	if(obj->oartifact && !touch_artifact(obj,&youmonst)) return 0;
 
-	if (obj->otyp == CORPSE) {
+	if (obj->otyp == CORPSE ||
+	    (obj->otyp == ROCK && obj->corpsenm != 0)) {
 	    if ( (touch_petrifies(&mons[obj->corpsenm])) && !uarmg
 		 && !Stone_resistance) {
 		if (poly_when_stoned(youmonst.data) && polymon(PM_STONE_GOLEM))
@@ -2020,7 +2023,8 @@ register struct obj *obj;
 
 	if (Icebox && !age_is_relative(obj)) {
 		obj->age = monstermoves - obj->age; /* actual age */
-		if (obj->otyp == CORPSE)
+		if (obj->otyp == CORPSE ||
+		    (obj->otyp == ROCK && obj->corpsenm))
 			start_corpse_timeout(obj);
 	}
 	/* simulated point of time */

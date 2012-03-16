@@ -438,9 +438,10 @@ struct obj *obj;			/* only scatter this obj        */
 	    obj_extract_self(otmp);
 	    used_up = FALSE;
 
-	    /* 9 in 10 chance of fracturing boulders or statues */
+	    /* 9 in 10 chance of fracturing boulders or statues or bodies */
 	    if ((scflags & MAY_FRACTURE)
-			&& ((otmp->otyp == BOULDER) || (otmp->otyp == STATUE))
+			&& ((otmp->otyp == BOULDER) || (otmp->otyp == STATUE)
+			                            || (otmp->otyp == CORPSE))
 			&& rn2(10)) {
 		if (otmp->otyp == BOULDER) {
 		    pline("%s apart.", Tobjnam(otmp, "break"));
@@ -451,6 +452,9 @@ struct obj *obj;			/* only scatter this obj        */
 			obj_extract_self(otmp);
 			place_object(otmp, sx, sy);
 		    }
+		} else if (otmp->otyp == CORPSE) {
+		    fracture_rock(otmp);
+		    place_object(otmp, sx, sy);
 		} else {
 		    struct trap *trap;
 
@@ -581,7 +585,9 @@ splatter_burning_oil(x, y)
 {
 /* ZT_SPELL(ZT_FIRE) = ZT_SPELL(AD_FIRE-1) = 10+(2-1) = 11 */
 #define ZT_SPELL_O_FIRE 11 /* value kludge, see zap.c */
-    explode(x, y, ZT_SPELL_O_FIRE, d(4,4), BURNING_OIL, EXPL_FIERY);
+    int dmg = d(4, 4);
+    explode(x, y, ZT_SPELL_O_FIRE, dmg, BURNING_OIL, EXPL_FIERY);
+    scatter(x, y, dmg, VIS_EFFECTS|MAY_HIT|MAY_DESTROY|MAY_FRACTURE, NULL);
 }
 
 #endif /* OVL1 */

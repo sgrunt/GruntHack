@@ -473,6 +473,11 @@ mkmap(init_lev)
 	    int count = rn1(50, 25);
 	    int tile = In_hell(&u.uz) ? LAVAPOOL : POOL;
 	    
+	    int i = 0, dx, dy;
+
+	    int dirx[8] = {1, 1, 0, -1, -1, -1, 0, 1};
+	    int diry[8] = {0, 1, 1, 1, 0, -1, -1, -1};
+	    
 	    if (Inhell) count += rn1(50, 25);
 
 	    if (!rn2(In_hell(&u.uz) ? 5 : 15) || Invocation_lev(&u.uz))
@@ -505,9 +510,22 @@ mkmap(init_lev)
 	    while(count-- > 0)
 	    {
 	        int x = rnd(COLNO), y = rnd(ROWNO);
+		int tmpcount = 0;
 
-	        if (levl[x][y].typ != fg_typ ||
-	            !isok(x, y)) continue;
+	        if (!isok(x, y) ||
+		    levl[x][y].typ != fg_typ) continue;
+
+		for (i = 0; i < 8; i++)
+		{
+		    dx = x + dirx[i];
+		    dy = y + diry[i];
+		    if (!isok(dx, dy) ||
+		        levl[dx][dy].typ != fg_typ) continue;
+		    tmpcount++;
+		    if (tmpcount >= 3) break;
+		}
+
+		if (tmpcount < 3) continue;
 
 		levl[x][y].typ = tile;
 	        levl[x][y].lit = (tile == LAVAPOOL) ? TRUE : lit;

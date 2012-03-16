@@ -664,7 +664,8 @@ register struct obj *obj;
 
 	    /* Ghouls only eat old corpses... yum! */
 	    if (mon->data == &mons[PM_GHOUL])
-		return (obj->otyp == CORPSE &&
+		return ((obj->otyp == CORPSE || 
+		         (obj->otyp == ROCK && obj->corpsenm != 0))&&
 			peek_at_iced_corpse_age(obj) + 50L <= monstermoves) ?
 				DOGFOOD : TABU;
 
@@ -687,13 +688,16 @@ register struct obj *obj;
 			return POISON;
 		    return (carni ? CADAVER : MANFOOD);
 		case CORPSE:
+rock:
 		   if ((peek_at_iced_corpse_age(obj) + 50L <= monstermoves
 					    && obj->corpsenm != PM_LIZARD
 					    && obj->corpsenm != PM_LICHEN
 					    && mon->data->mlet != S_FUNGUS) ||
 			(acidic(&mons[obj->corpsenm]) && !resists_acid(mon)) ||
 			(poisonous(&mons[obj->corpsenm]) &&
-						!resists_poison(mon)))
+						!resists_poison(mon)) ||
+			 (touch_petrifies(&mons[obj->corpsenm]) &&
+			  !resists_ston(mon)))
 			return POISON;
 		    else if (vegan(fptr))
 			return (herbi ? CADAVER : MANFOOD);
@@ -729,6 +733,7 @@ register struct obj *obj;
 			    (herbi ? ACCFOOD : MANFOOD));
 	    }
 	default:
+	    if (obj->otyp == ROCK && obj->corpsenm != 0) goto rock;
 	    if (obj->otyp == AMULET_OF_STRANGULATION ||
 			obj->otyp == RIN_SLOW_DIGESTION)
 		return TABU;

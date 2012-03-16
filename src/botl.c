@@ -253,8 +253,8 @@ bot1()
 #endif //TEXTCOLOR
 
 #ifdef TEXTCOLOR
-	curs(WIN_STATUS, 1, 1);
-	putstr(WIN_STATUS, 0, newbot1);
+	curs(WIN_STATUS, 1, 0);
+	//putstr(WIN_STATUS, 0, newbot1);
         if ((changed = (oldstr < ACURR(A_STR))))
 	    _term_start_color(CLR_GREEN);
         else if ((changed = (oldstr > ACURR(A_STR))))
@@ -279,8 +279,8 @@ bot1()
 	    oldstr = ACURR(A_STR);
 
 #ifdef TEXTCOLOR
-	curs(WIN_STATUS, 1, 1);
-	putstr(WIN_STATUS, 0, newbot1);
+	curs(WIN_STATUS, 1, 0);
+	//putstr(WIN_STATUS, 0, newbot1);
         if ((changed = (olddex < ACURR(A_DEX))))
 	    _term_start_color(CLR_GREEN);
         else if ((changed = (olddex > ACURR(A_DEX))))
@@ -299,8 +299,8 @@ bot1()
 	    olddex = ACURR(A_DEX);
         
 #ifdef TEXTCOLOR
-	curs(WIN_STATUS, 1, 1);
-	putstr(WIN_STATUS, 0, newbot1);
+	curs(WIN_STATUS, 1, 0);
+	//putstr(WIN_STATUS, 0, newbot1);
 	if ((changed = (oldcon < ACURR(A_CON))))
 	    _term_start_color(CLR_GREEN);
         else if ((changed = (oldcon > ACURR(A_CON))))
@@ -319,8 +319,8 @@ bot1()
 	    oldcon = ACURR(A_CON);
         
 #ifdef TEXTCOLOR
-	curs(WIN_STATUS, 1, 1);
-	putstr(WIN_STATUS, 0, newbot1);
+	curs(WIN_STATUS, 1, 0);
+	//putstr(WIN_STATUS, 0, newbot1);
 	if ((changed = (oldint < ACURR(A_INT))))
 	    _term_start_color(CLR_GREEN);
         else if ((changed = (oldint > ACURR(A_INT))))
@@ -339,8 +339,8 @@ bot1()
 	    oldint = ACURR(A_INT);
         
 #ifdef TEXTCOLOR
-	curs(WIN_STATUS, 1, 1);
-	putstr(WIN_STATUS, 0, newbot1);
+	curs(WIN_STATUS, 1, 0);
+	//putstr(WIN_STATUS, 0, newbot1);
 	if ((changed = (oldwis < ACURR(A_WIS))))
 	    _term_start_color(CLR_GREEN);
         else if ((changed = (oldwis > ACURR(A_WIS))))
@@ -359,8 +359,8 @@ bot1()
 	   oldwis = ACURR(A_WIS);
         
 #ifdef TEXTCOLOR
-	curs(WIN_STATUS, 1, 1);
-	putstr(WIN_STATUS, 0, newbot1);
+	curs(WIN_STATUS, 1, 0);
+	//putstr(WIN_STATUS, 0, newbot1);
 	if ((changed = (oldcha < ACURR(A_CHA))))
 	    _term_start_color(CLR_GREEN);
         else if ((changed = (oldcha > ACURR(A_CHA))))
@@ -382,8 +382,8 @@ bot1()
 			(u.ualign.type == A_NEUTRAL) ? "  Neutral" : "  Lawful");
 #ifdef SCORE_ON_BOTL
 #ifdef TEXTCOLOR
-	curs(WIN_STATUS, 1, 1);
-	putstr(WIN_STATUS, 0, newbot1);
+	curs(WIN_STATUS, 1, 0);
+	//putstr(WIN_STATUS, 0, newbot1);
         if ((changed = (oldscore != botl_score())))
 	    _term_start_color(CLR_GREEN);
 #endif //TEXTCOLOR
