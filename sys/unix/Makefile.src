@@ -135,7 +135,7 @@ SYSOBJ = ioctl.o unixmain.o unixtty.o unixunix.o unixres.o
 #CC = mwcc
 #CFLAGS = -r -I../include
 #LINK = mwld
-#LFLAGS = -map nethack.xMAP
+#LFLAGS = -map grunthack.xMAP
 #   on Intel:
 #CFLAGS = -O -I../include
 #LINK = gcc
@@ -285,7 +285,7 @@ WINLIB = $(WINTTYLIB)
 LIBS =
 
 # make NetHack
-GAME     = nethack
+GAME     = grunthack
 # GAME     = nethack.prg
 
 # if you defined RANDOM in unixconf.h/tosconf.h since your system did not come
@@ -418,7 +418,7 @@ SysV-AT:	DUMB.Setup $(HOBJ) Makefile
 SysBe: $(HOBJ) Makefile
 	@echo "Loading ..."
 	@$(LINK) $(LFLAGS) -o $(GAME) $(HOBJ) $(WINLIB) $(LIBS)
-	@xres -o $(GAME) ../win/BeOS/nethack.rsrc
+	@xres -o $(GAME) ../win/BeOS/grunthack.rsrc
 	@mimeset -f $(GAME)
 	@touch SysBe
 

@@ -591,7 +591,7 @@ register int x, y;
 		if (mtmp->m_ap_type == M_AP_OBJECT) goto objhere;
 		pline("%s stands in the way!", !canspotmon(mtmp) ?
 			"Some creature" : Monnam(mtmp));
-		if (!canspotmon(mtmp))
+		if (!canspotmon(mtmp) || displaced_image(mtmp))
 		    map_invisible(mtmp->mx, mtmp->my);
 		return(TRUE);
 	}
@@ -897,7 +897,7 @@ struct obj *otmp;
 	Blinded = 1;
 	thing = singular(otmp, xname);
 	Blinded = save_Blinded;
-	switch (objects[otmp->otyp].oc_material) {
+	switch (otmp->omaterial) {
 	case PAPER:	disposition = "is torn to shreds";
 		break;
 	case WAX:	disposition = "is crushed";

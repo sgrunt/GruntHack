@@ -179,7 +179,7 @@ magic_map_background(x, y, show)
     if (!cansee(x,y) && !lev->waslit) {
 	/* Floor spaces are dark if unlit.  Corridors are dark if unlit. */
 	if (lev->typ == ROOM && glyph == cmap_to_glyph(S_room))
-	    glyph = cmap_to_glyph(S_stone);
+	    glyph = cmap_to_glyph(S_darkroom);
 	else if (lev->typ == CORR && glyph == cmap_to_glyph(S_litcorr))
 	    glyph = cmap_to_glyph(S_corr);
     }
@@ -306,7 +306,7 @@ unmap_object(x, y)
 	/* turn remembered dark room squares dark */
 	if (!lev->waslit && lev->glyph == cmap_to_glyph(S_room) &&
 							    lev->typ == ROOM)
-	    lev->glyph = cmap_to_glyph(S_stone);
+	    lev->glyph = cmap_to_glyph(S_darkroom);
     } else
 	levl[x][y].glyph = cmap_to_glyph(S_stone);	/* default val */
 }
@@ -342,7 +342,7 @@ map_location(x,y,show)
 
 #define DETECTED 	2
 #define PHYSICALLY_SEEN 1
-#define is_worm_tail(mon)	((mon) && ((x != (mon)->mx)  || (y != (mon)->my)))
+#define is_worm_tail(mon)	((mon) && ((x != (mon)->mx)  || (y != (mon)->my)) && (x != (mon)->mix) && (y != (mon)->miy))
 
 /*
  * display_monster()
@@ -560,15 +560,14 @@ feel_location(x, y)
 		if (lev->typ != ROOM && lev->seenv) {
 		    map_background(x, y, 1);
 		} else {
-		    lev->glyph = lev->waslit ? cmap_to_glyph(S_room) :
-					       cmap_to_glyph(S_stone);
+		    lev->glyph = (!lev->waslit) ? cmap_to_glyph(S_darkroom) : cmap_to_glyph(S_room);
 		    show_glyph(x,y,lev->glyph);
 		}
 	    } else if ((lev->glyph >= cmap_to_glyph(S_stone) &&
-			lev->glyph < cmap_to_glyph(S_room)) ||
+			lev->glyph < cmap_to_glyph(S_darkroom)) ||
 		       glyph_is_invisible(levl[x][y].glyph)) {
-		lev->glyph = lev->waslit ? cmap_to_glyph(S_room) :
-					   cmap_to_glyph(S_stone);
+		lev->glyph = (!cansee(x,y) && !lev->waslit) ? cmap_to_glyph(S_darkroom) :
+					   cmap_to_glyph(S_room);
 		show_glyph(x,y,lev->glyph);
 	    }
 	} else {
@@ -608,7 +607,7 @@ feel_location(x, y)
 	/* Floor spaces are dark if unlit.  Corridors are dark if unlit. */
 	if (lev->typ == ROOM &&
 		    lev->glyph == cmap_to_glyph(S_room) && !lev->waslit)
-	    show_glyph(x,y, lev->glyph = cmap_to_glyph(S_stone));
+	    show_glyph(x,y, lev->glyph = cmap_to_glyph(S_darkroom));
 	else if (lev->typ == CORR &&
 		    lev->glyph == cmap_to_glyph(S_litcorr) && !lev->waslit)
 	    show_glyph(x,y, lev->glyph = cmap_to_glyph(S_corr));
@@ -680,11 +679,17 @@ newsym(x,y)
 		_map_location(x,y,1);
 	}
 	else {
+	    boolean image = FALSE;
 	    mon = m_at(x,y);
+	    if (!mon) image = TRUE, mon = m_img_at(x, y);
 	    worm_tail = is_worm_tail(mon);
 	    see_it = mon && (worm_tail
 		? (!mon->minvis || See_invisible)
-		: (mon_visible(mon)) || tp_sensemon(mon) || MATCH_WARN_OF_MON(mon));
+		: (mon_visible(mon) && (image || !displaced(mon))) || 
+		   (!image && (
+		   (u.xray_range > 0 &&
+		    dist2(u.ux, u.uy, x, y) <= u.xray_range*u.xray_range) || 
+		   tp_sensemon(mon) || MATCH_WARN_OF_MON(mon))));
 	    if (mon && (see_it || (!worm_tail && Detect_monsters))) {
 		if (mon->mtrapped) {
 		    struct trap *trap = t_at(x, y);
@@ -698,9 +703,10 @@ newsym(x,y)
 		}
 		_map_location(x,y,0);	/* map under the monster */
 		/* also gets rid of any invisibility glyph */
-		display_monster(x, y, mon, see_it ? PHYSICALLY_SEEN : DETECTED, worm_tail);
+		display_monster(x, y, mon, see_it ? PHYSICALLY_SEEN : DETECTED,
+		                worm_tail);
 	    }
-	    else if (mon && mon_warning(mon) && !is_worm_tail(mon))
+	    else if (mon && !image && mon_warning(mon) && !is_worm_tail(mon))
 	        display_warning(mon);
 	    else if (glyph_is_invisible(levl[x][y].glyph))
 		map_invisible(x, y);
@@ -756,7 +762,7 @@ newsym(x,y)
 	    if (lev->glyph == cmap_to_glyph(S_litcorr) && lev->typ == CORR)
 		show_glyph(x, y, lev->glyph = cmap_to_glyph(S_corr));
 	    else if (lev->glyph == cmap_to_glyph(S_room) && lev->typ == ROOM)
-		show_glyph(x, y, lev->glyph = cmap_to_glyph(S_stone));
+		show_glyph(x, y, lev->glyph = cmap_to_glyph(S_darkroom));
 	    else
 		goto show_mem;
 	} else {
@@ -1069,6 +1075,7 @@ see_monsters()
     for (mon = fmon; mon; mon = mon->nmon) {
 	if (DEADMONSTER(mon)) continue;
 	newsym(mon->mx,mon->my);
+	newsym(mon->mix,mon->miy);
 	if (mon->wormno) see_wsegs(mon);
     }
 #ifdef STEED
@@ -1266,7 +1273,10 @@ show_glyph(x,y,glyph)
 	return;
     }
 
-    if (gbuf[y][x].glyph != glyph) {
+    if (gbuf[y][x].glyph != glyph ||
+        (iflags.use_color &&
+         should_darken_glyph(glyph)))
+    {
 	gbuf[y][x].glyph = glyph;
 	gbuf[y][x].new   = 1;
 	if (gbuf_start[y] > x) gbuf_start[y] = x;
@@ -1370,6 +1380,106 @@ flush_screen(cursor_on_u)
 
 /* ========================================================================= */
 
+#ifdef DUMP_LOG
+/* D: Added to dump screen to output file */
+STATIC_PTR uchar get_glyph_char(glyph)
+int glyph;
+{
+    uchar   ch;
+    register int offset;
+
+    if (glyph >= NO_GLYPH)
+        return ' ';
+
+    /*
+     *  Map the glyph back to a character.
+     *
+     *  Warning:  For speed, this makes an assumption on the order of
+     *		  offsets.  The order is set in display.h.
+     */
+    if ((offset = (glyph - GLYPH_WARNING_OFF)) >= 0) {	/* a warning flash */
+	ch = def_warnsyms[offset].sym;
+    } else if ((offset = (glyph - GLYPH_SWALLOW_OFF)) >= 0) {	/* swallow */
+	/* see swallow_to_glyph() in display.c */
+	ch = (uchar) defsyms[S_sw_tl + (offset & 0x7)].sym;
+    } else if ((offset = (glyph - GLYPH_ZAP_OFF)) >= 0) {	/* zap beam */
+	/* see zapdir_to_glyph() in display.c */
+	ch = defsyms[S_vbeam + (offset & 0x3)].sym;
+    } else if ((offset = (glyph - GLYPH_CMAP_OFF)) >= 0) {	/* cmap */
+	ch = defsyms[offset].sym;
+    } else if ((offset = (glyph - GLYPH_OBJ_OFF)) >= 0) {	/* object */
+	ch = def_oc_syms[(int)objects[offset].oc_class];
+    } else if ((offset = (glyph - GLYPH_RIDDEN_OFF)) >= 0) { /* mon ridden */
+	ch = def_monsyms[(int)mons[offset].mlet];
+    } else if ((offset = (glyph - GLYPH_BODY_OFF)) >= 0) {	/* a corpse */
+	ch = def_oc_syms[(int)objects[CORPSE].oc_class];
+    } else if ((offset = (glyph - GLYPH_DETECT_OFF)) >= 0) { /* mon detect */
+	ch = def_monsyms[(int)mons[offset].mlet];
+    } else if ((offset = (glyph - GLYPH_INVIS_OFF)) >= 0) {  /* invisible */
+	ch = DEF_INVISIBLE;
+    } else if ((offset = (glyph - GLYPH_PET_OFF)) >= 0) {	/* a pet */
+	ch = def_monsyms[(int)mons[offset].mlet];
+    } else {						    /* a monster */
+	ch = monsyms[(int)mons[glyph].mlet];
+    }
+    return ch;
+}
+
+#ifdef TTY_GRAPHICS
+extern const char * FDECL(compress_str, (const char *));
+#else
+const char*
+compress_str(str) /* copied from win/tty/wintty.c */
+const char *str;
+{
+	static char cbuf[BUFSZ];
+	/* compress in case line too long */
+	if((int)strlen(str) >= 80) {
+		register const char *bp0 = str;
+		register char *bp1 = cbuf;
+
+		do {
+			if(*bp0 != ' ' || bp0[1] != ' ')
+				*bp1++ = *bp0;
+		} while(*bp0++);
+	} else
+	    return str;
+	return cbuf;
+}
+#endif /* TTY_GRAPHICS */
+
+/* Take a screen dump */
+void dump_screen()
+{
+    register int x,y;
+    int lastc;
+    /* D: botl.c has a closer approximation to the size, but we'll go with
+     *    this */
+    char buf[300], *ptr;
+    
+    for (y = 0; y < ROWNO; y++) {
+	lastc = 0;
+	ptr = buf;
+	for (x = 1; x < COLNO; x++) {
+	    uchar c = get_glyph_char(gbuf[y][x].glyph);
+	    *ptr++ = c;
+	    if (c != ' ')
+		lastc = x;
+	}
+	buf[lastc] = '\0';
+	dump("", buf);
+    }
+    dump("", "");
+    bot1str(buf);
+    ptr = (char *) compress_str((const char *) buf);
+    dump("", ptr);
+    bot2str(buf);
+    dump("", buf);
+    dump("", "");
+    dump("", "");
+}
+#endif /* DUMP_LOG */
+
 /*
  * back_to_glyph()
  *
@@ -1397,7 +1507,9 @@ back_to_glyph(x,y)
 	case STONE:
 	    idx = level.flags.arboreal ? S_tree : S_stone;
 	    break;
-	case ROOM:		idx = S_room;	  break;
+	case ROOM:
+	    idx = (!cansee(x,y) && !ptr->waslit) ? S_darkroom : S_room;
+	    break;
 	case CORR:
 	    idx = (ptr->waslit || flags.lit_corridor) ? S_litcorr : S_corr;
 	    break;
@@ -1454,11 +1566,11 @@ back_to_glyph(x,y)
 	    case DB_MOAT:  idx = S_pool; break;
 	    case DB_LAVA:  idx = S_lava; break;
 	    case DB_ICE:   idx = S_ice;  break;
-	    case DB_FLOOR: idx = S_room; break;
+	    case DB_FLOOR: idx = (!cansee(x,y) && !ptr->waslit) ? S_darkroom : S_room; break;
 	    default:
 		impossible("Strange db-under: %d",
 			   ptr->drawbridgemask & DB_UNDER);
-		idx = S_room; /* something is better than nothing */
+		idx = (!cansee(x,y) && !ptr->waslit) ? S_darkroom : S_room; /* something is better than nothing */
 		break;
 	    }
 	    break;
@@ -1467,7 +1579,7 @@ back_to_glyph(x,y)
 	    break;
 	default:
 	    impossible("back_to_glyph:  unknown level type [ = %d ]",ptr->typ);
-	    idx = S_room;
+	    idx = (!cansee(x,y) && !ptr->waslit) ? S_darkroom : S_room;
 	    break;
     }
 

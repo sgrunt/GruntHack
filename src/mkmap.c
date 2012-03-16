@@ -467,6 +467,53 @@ mkmap(init_lev)
 	if(join)
 	    join_map(bg_typ, fg_typ);
 
+	if (!Is_sanctum(&u.uz) &&
+	    bg_typ != POOL && bg_typ != MOAT)
+	{
+	    int count = rn1(50, 25);
+	    int tile = In_hell(&u.uz) ? LAVAPOOL : POOL;
+	    
+	    if (Inhell) count += rn1(50, 25);
+
+	    if (!rn2(In_hell(&u.uz) ? 5 : 15) || Invocation_lev(&u.uz))
+	    {
+	        // Let's put a river across the map...
+		int y = (ROWNO / 2) + rn1(3, -1), x = 0;
+		while (!rn2(2) && y > 0 && y < ROWNO)
+		    y += rn1(3, -1);
+		for(; x < COLNO; x++)
+		{
+		    int y1 = y - rn2(3), y2 = y + rn2(3);
+		    int i = y1;
+		    for(; i <= y2; i++)
+		    {
+		        if (levl[x][i].typ != fg_typ ||
+		            !isok(x, i)) continue;
+
+		        levl[x][i].typ = (tile == POOL) ? MOAT : tile; 
+	                levl[x][y].lit = (tile == LAVAPOOL) ? TRUE : lit;
+                    }
+
+		    if (!rn2(2)) y += rn1(3, -1);
+		    if (y < 1) y = 1;
+		    if (y >= ROWNO) y = ROWNO - 1;
+		}
+		count -= 50;
+	    }
+
+	    // Scatter some random pools of lava around.
+	    while(count-- > 0)
+	    {
+	        int x = rnd(COLNO), y = rnd(ROWNO);
+
+	        if (levl[x][y].typ != fg_typ ||
+	            !isok(x, y)) continue;
+
+		levl[x][y].typ = tile;
+	        levl[x][y].lit = (tile == LAVAPOOL) ? TRUE : lit;
+	    }
+	}
+
 	finish_map(fg_typ, bg_typ, (boolean)lit, (boolean)walled);
 	/* a walled, joined level is cavernous, not mazelike -dlc */
 	if (walled && join) {

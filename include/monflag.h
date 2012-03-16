@@ -109,20 +109,28 @@
 #define M1_METALLIVORE	0x80000000L	/* eats metal */
 #endif
 
-#define M2_NOPOLY	0x00000001L	/* players mayn't poly into one */
-#define M2_UNDEAD	0x00000002L	/* is walking dead */
-#define M2_WERE		0x00000004L	/* is a lycanthrope */
+#define M2_UNDEAD	0x00000001L	/* is walking dead */
+#define M2_WERE		0x00000002L	/* is a lycanthrope */
+#define M2_DEMON	0x00000004L	/* is a demon */
+
 #define M2_HUMAN	0x00000008L	/* is a human */
 #define M2_ELF		0x00000010L	/* is an elf */
 #define M2_DWARF	0x00000020L	/* is a dwarf */
 #define M2_GNOME	0x00000040L	/* is a gnome */
 #define M2_ORC		0x00000080L	/* is an orc */
-#define M2_DEMON	0x00000100L	/* is a demon */
-#define M2_MERC		0x00000200L	/* is a guard or soldier */
-#define M2_LORD		0x00000400L	/* is a lord to its kind */
-#define M2_PRINCE	0x00000800L	/* is an overlord to its kind */
-#define M2_MINION	0x00001000L	/* is a minion of a deity */
-#define M2_GIANT	0x00002000L	/* is a giant */
+#define M2_GIANT	0x00000100L	/* is a giant */
+#define M2_KOBOLD       0x00000200L     /* is a kobold */
+#define M2_ETTIN        0x00000400L     /* is an ettin */
+#define M2_OGRE         0x00000800L     /* is an ogre */
+
+#define M2_RACEMASK     0x00000FF8L     /* mask for monster races */
+#define MINMRACE        M2_HUMAN
+#define MAXMRACE        M2_OGRE
+
+#define M2_MERC		0x00001000L	/* is a guard or soldier */
+#define M2_LORD		0x00002000L	/* is a lord to its kind */
+#define M2_PRINCE	0x00004000L	/* is an overlord to its kind */
+#define M2_MINION	0x00008000L	/* is a minion of a deity */
 #define M2_MALE		0x00010000L	/* always male */
 #define M2_FEMALE	0x00020000L	/* always female */
 #define M2_NEUTER	0x00040000L	/* neither male nor female */
@@ -160,6 +168,9 @@
 #define M3_INFRAVISION	0x0100		/* has infravision */
 #define M3_INFRAVISIBLE 0x0200		/* visible by infravision */
 
+#define M3_DISPLACED    0x0400          /* displaces */
+#define M3_NOPOLY	0x0800	        /* players mayn't poly into one */
+
 #define MZ_TINY		0		/* < 2' */
 #define MZ_SMALL	1		/* 2-4' */
 #define MZ_MEDIUM	2		/* 4-7' */
@@ -176,6 +187,10 @@
 #define MH_DWARF	M2_DWARF
 #define MH_GNOME	M2_GNOME
 #define MH_ORC		M2_ORC
+#define MH_GIANT        M2_GIANT	
+#define MH_KOBOLD       M2_KOBOLD 
+#define MH_ETTIN        M2_ETTIN 
+#define MH_OGRE         M2_OGRE 
 
 
 /* for mons[].geno (constant during game) */

@@ -248,13 +248,13 @@ MONSTER:'S',random,random
 MONSTER:'S',random,random
 MONSTER:'S',random,random
 MONSTER:'M',random,random
-MONSTER:'M',"human mummy",random
-MONSTER:'M',"human mummy",random
-MONSTER:'M',"human mummy",random
-MONSTER:'M',"human mummy",random
-MONSTER:'M',"human mummy",random
-MONSTER:'M',"human mummy",random
-MONSTER:'M',"human mummy",random
+MONSTER:'M',"mummy",random
+MONSTER:'M',"mummy",random
+MONSTER:'M',"mummy",random
+MONSTER:'M',"mummy",random
+MONSTER:'M',"mummy",random
+MONSTER:'M',"mummy",random
+MONSTER:'M',"mummy",random
 MONSTER:'M',random,random
 
 #
@@ -364,14 +364,14 @@ MONSTER:'S',random,random
 MONSTER:'S',random,random
 MONSTER:'S',random,random
 MONSTER:'S',random,random
-MONSTER:'M',"human mummy",random
-MONSTER:'M',"human mummy",random
-MONSTER:'M',"human mummy",random
-MONSTER:'M',"human mummy",random
-MONSTER:'M',"human mummy",random
-MONSTER:'M',"human mummy",random
-MONSTER:'M',"human mummy",random
-MONSTER:'M',"human mummy",random
+MONSTER:'M',"mummy",random
+MONSTER:'M',"mummy",random
+MONSTER:'M',"mummy",random
+MONSTER:'M',"mummy",random
+MONSTER:'M',"mummy",random
+MONSTER:'M',"mummy",random
+MONSTER:'M',"mummy",random
+MONSTER:'M',"mummy",random
 MONSTER:'M',random,random
 
 #
@@ -406,7 +406,7 @@ STAIR: random, down
 OBJECT: random, random, random
 TRAP: random, random
 MONSTER: 'S', random, random
-MONSTER: 'M', "human mummy", random
+MONSTER: 'M', "mummy", random
 
 ROOM: "ordinary" , random, random, random, random
 OBJECT: random, random, random
@@ -444,7 +444,7 @@ STAIR: random, down
 OBJECT: random, random, random
 TRAP: random, random
 MONSTER: 'S', random, random
-MONSTER: 'M', "human mummy", random
+MONSTER: 'M', "mummy", random
 
 ROOM: "ordinary" , random, random, random, random
 OBJECT: random, random, random

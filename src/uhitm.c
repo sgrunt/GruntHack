@@ -11,7 +11,7 @@ STATIC_DCL boolean FDECL(hmon_hitmon, (struct monst *,struct obj *,int));
 #ifdef STEED
 STATIC_DCL int FDECL(joust, (struct monst *,struct obj *));
 #endif
-STATIC_DCL void NDECL(demonpet);
+void NDECL(demonpet);
 STATIC_DCL boolean FDECL(m_slips_free, (struct monst *mtmp,struct attack *mattk));
 STATIC_DCL int FDECL(explum, (struct monst *,struct attack *));
 STATIC_DCL void FDECL(start_engulf, (struct monst *));
@@ -26,6 +26,8 @@ extern boolean notonhead;	/* for long worms */
 static int dieroll;
 /* Used to flag attacks caused by Stormbringer's maliciousness. */
 static boolean override_confirmation = FALSE;
+
+extern const char *flash_types[]; /* from zap.c */
 
 #define PROJECTILE(obj)	((obj) && is_ammo(obj))
 
@@ -128,10 +130,16 @@ struct obj *wep;	/* uwep for attack(), null for kick_monster() */
 	 * happening two turns in a row.  The latter shows a glyph on
 	 * the screen, so you know something is there.
 	 */
-	if (!canspotmon(mtmp) &&
+	if ((!canspotmon(mtmp) ||
+	     (displaced(mtmp) && m_img_at(u.ux+u.dx, u.uy+u.dy) != mtmp &&
+	      !tp_sensemon(mtmp))) &&
 		    !glyph_is_warning(glyph_at(u.ux+u.dx,u.uy+u.dy)) &&
 		    !glyph_is_invisible(levl[u.ux+u.dx][u.uy+u.dy].glyph) &&
 		    !(!Blind && mtmp->mundetected && hides_under(mtmp->data))) {
+		if (canspotmon(mtmp))
+		    pline("Wait!  That's where %s actually is!",
+		          mon_nam(mtmp));
+		else
 		pline("Wait!  There's %s there you can't see!",
 			something);
 		map_invisible(u.ux+u.dx, u.uy+u.dy);
@@ -261,7 +269,7 @@ register struct monst *mtmp;
 			mtmp->mfrozen = 0;
 		}
 	}
-	if (is_orc(mtmp->data) && maybe_polyd(is_elf(youmonst.data),
+	if (is_orc(mtmp) && maybe_polyd(is_elf(&youmonst),
 			Race_if(PM_ELF)))
 	    tmp++;
 	if(Role_if(PM_MONK) && !Upolyd) {
@@ -400,7 +408,10 @@ atk_done:
 	 * and it returned 0 (it's okay to attack), and the monster didn't
 	 * evade.
 	 */
-	if (flags.forcefight && mtmp->mhp > 0 && !canspotmon(mtmp) &&
+	if (flags.forcefight && mtmp->mhp > 0 && 
+	    (!canspotmon(mtmp) || 
+	     (displaced(mtmp) && m_img_at(u.ux+u.dx,u.uy+u.dy) != mtmp &&
+	      !tp_sensemon(mtmp))) &&
 	    !glyph_is_invisible(levl[u.ux+u.dx][u.uy+u.dy].glyph) &&
 	    !(u.uswallow && mtmp == u.ustuck))
 		map_invisible(u.ux+u.dx, u.uy+u.dy);
@@ -551,9 +562,9 @@ int thrown;
 	     * don't get both bonuses.
 	     */
 	    if (!uarmg) {
-		if (uleft && objects[uleft->otyp].oc_material == SILVER)
+		if (uleft && uleft->omaterial == SILVER)
 		    barehand_silver_rings++;
-		if (uright && objects[uright->otyp].oc_material == SILVER)
+		if (uright && uright->omaterial == SILVER)
 		    barehand_silver_rings++;
 		if (barehand_silver_rings && hates_silver(mdat)) {
 		    tmp += rnd(20);
@@ -638,14 +649,15 @@ int thrown;
 			hittxt = TRUE;
 		    }
 
-		    if (obj->oartifact &&
+		    if (((obj->oclass == WEAPON_CLASS &&
+		          obj->oprops) || obj->oartifact) &&
 			artifact_hit(&youmonst, mon, obj, &tmp, dieroll)) {
 			if(mon->mhp <= 0) /* artifact killed monster */
 			    return FALSE;
 			if (tmp == 0) return TRUE;
 			hittxt = TRUE;
 		    }
-		    if (objects[obj->otyp].oc_material == SILVER
+		    if (obj->omaterial == SILVER
 				&& hates_silver(mdat)) {
 			silvermsg = TRUE; silverobj = TRUE;
 		    }
@@ -670,10 +682,40 @@ int thrown;
 				     uwep->otyp == ELVEN_BOW)
 				tmp++;
 			}
-			if(obj->opoisoned && is_poisonable(obj))
-			    ispoisoned = TRUE;
+		    }
+		    if(obj->opoisoned && is_poisonable(obj))
+		        ispoisoned = TRUE;
+		}
+	    } else if(obj->oclass == WAND_CLASS) {
+	        You("jab %s with the %s.", mon_nam(mon),
+		                           xname(obj));
+	        if (zappable(obj))
+		{
+		    struct obj *otmp;
+		    pline_The("%s %s!", xname(obj),
+		                        Blind ? "vibrates" : "glows");
+	            if (obj->otyp >= WAN_MAGIC_MISSILE && 
+		        obj->otyp <= WAN_LIGHTNING)
+		    {
+		        makeknown(obj->otyp);
+		        pline("It emits a %s!", flash_types[obj->otyp -
+			                                    WAN_MAGIC_MISSILE]);
+	                (void) zhitm(mon, obj->otyp - WAN_MAGIC_MISSILE + 
+			                              AD_MAGM - 1,
+			             u.ulevel / 2 + 1, &otmp);
+	                if (mon->mhp < 1)
+	                    killed(mon);
+		    }
+		    else
+		    {
+	                bhitm(mon, obj);
 		    }
 		}
+		if (mon->mhp <= 0) return FALSE;	/* killed */
+		hittxt = TRUE;
+		/* in case potion effect causes transformation */
+		mdat = mon->data;
+		tmp = (mdat == &mons[PM_SHADE]) ? 0 : 1;
 	    } else if(obj->oclass == POTION_CLASS) {
 		if (obj->quan > 1L)
 		    obj = splitobj(obj, 1L);
@@ -681,6 +723,15 @@ int thrown;
 		    setuwep((struct obj *)0);
 		freeinv(obj);
 		potionhit(mon, obj, TRUE);
+		if (mon->mhp <= 0) return FALSE;	/* killed */
+		hittxt = TRUE;
+		/* in case potion effect causes transformation */
+		mdat = mon->data;
+		tmp = (mdat == &mons[PM_SHADE]) ? 0 : 1;
+	    } else if(obj->oclass == SCROLL_CLASS) {
+		//scrollhit will handle this if necessary    
+		//freeinv(obj);
+		scrollhit(mon, obj, TRUE, TRUE);
 		if (mon->mhp <= 0) return FALSE;	/* killed */
 		hittxt = TRUE;
 		/* in case potion effect causes transformation */
@@ -874,7 +925,7 @@ int thrown;
 			 * Things like silver wands can arrive here so
 			 * so we need another silver check.
 			 */
-			if (objects[obj->otyp].oc_material == SILVER
+			if (obj->omaterial == SILVER
 						&& hates_silver(mdat)) {
 				tmp += rnd(20);
 				silvermsg = TRUE; silverobj = TRUE;
@@ -998,11 +1049,18 @@ int thrown;
 	}
 	if((mdat == &mons[PM_BLACK_PUDDING] || mdat == &mons[PM_BROWN_PUDDING])
 		   && obj && obj == uwep
-		   && objects[obj->otyp].oc_material == IRON
+		   && objects[obj->otyp].oc_skill != WHACK 
 		   && mon->mhp > 1 && !thrown && !mon->mcan
 		   /* && !destroyed  -- guaranteed by mhp > 1 */ ) {
-		if (clone_mon(mon, 0, 0)) {
+		struct monst *mtmp2;
+		if (mtmp2 = clone_mon(mon, 0, 0)) {
 			pline("%s divides as you hit it!", Monnam(mon));
+			mon->mhpmax >>= 1;
+			if (mon->mhp > mon->mhpmax)
+			    mon->mhp = mon->mhpmax;
+			mtmp2->mhpmax >>= 1;
+			if (mtmp2->mhp > mtmp2->mhpmax)
+			    mtmp2->mhp = mtmp2->mhpmax;
 			hittxt = TRUE;
 		}
 	}
@@ -1081,7 +1139,7 @@ struct obj *obj;
 	    || obj->otyp == IRON_CHAIN		/* dmgval handles those first three */
 	    || obj->otyp == MIRROR		/* silver in the reflective surface */
 	    || obj->otyp == CLOVE_OF_GARLIC	/* causes shades to flee */
-	    || objects[obj->otyp].oc_material == SILVER)
+	    || obj->omaterial == SILVER)
 		return TRUE;
 	return FALSE;
 }
@@ -1109,7 +1167,9 @@ struct attack *mattk;
 
 	/* if your cloak/armor is greased, monster slips off; this
 	   protection might fail (33% chance) when the armor is cursed */
-	if (obj && (obj->greased || obj->otyp == OILSKIN_CLOAK) &&
+	if (obj && (obj->greased || 
+	            obj->otyp == OILSKIN_CLOAK ||
+		    (obj->oprops & ITEM_OILSKIN)) &&
 		(!obj->cursed || rn2(3))) {
 	    You("%s %s %s %s!",
 		mattk->adtyp == AD_WRAP ?
@@ -1138,7 +1198,7 @@ struct obj *obj;	/* weapon */
 {
     int skill_rating, joust_dieroll;
 
-    if (Fumbling || Stunned) return 0;
+    if (FUMBLED || Stunned) return 0;
     /* sanity check; lance must be wielded in order to joust */
     if (obj != uwep && (obj != uswapwep || !u.twoweap)) return 0;
 
@@ -1165,7 +1225,7 @@ struct obj *obj;	/* weapon */
  * (DR4 and DR4.5) screws up with an internal error 5 "Expression Too Complex."
  * Pulling it out makes it work.
  */
-STATIC_OVL void
+void
 demonpet()
 {
 	int i;
@@ -1173,7 +1233,8 @@ demonpet()
 	struct monst *dtmp;
 
 	pline("Some hell-p has arrived!");
-	i = !rn2(6) ? ndemon(u.ualign.type) : NON_PM;
+	i = (!is_demon(youmonst.data) || !rn2(6)) 
+	     ? ndemon(u.ualign.type) : NON_PM;
 	pm = i != NON_PM ? &mons[i] : youmonst.data;
 	if ((dtmp = makemon(pm, u.ux, u.uy, NO_MM_FLAGS)) != 0)
 	    (void)tamedog(dtmp, (struct obj *)0);
@@ -1576,7 +1637,7 @@ register struct attack *mattk;
 		    } else if(u.ustuck == mdef) {
 			/* Monsters don't wear amulets of magical breathing */
 			if (is_pool(u.ux,u.uy) && !is_swimmer(mdef->data) &&
-			    !amphibious(mdef->data)) {
+			    !amphibious(mdef->data) && !mbreathing(mdef)) {
 			    You("drown %s...", mon_nam(mdef));
 			    tmp = mdef->mhp;
 			} else if(mattk->aatyp == AT_HUGS)
@@ -1796,7 +1857,7 @@ register struct attack *mattk;
 			    You("hurriedly regurgitate the sizzling in your %s.",
 				body_part(STOMACH));
 			} else {
-			    tmp = 1 + (mdef->data->cwt >> 8);
+			    tmp = 1 + (mons[mons_to_corpse(mdef)].cwt >> 8);
 			    if (corpse_chance(mdef, &youmonst, TRUE) &&
 				!(mvitals[monsndx(mdef->data)].mvflags &
 				  G_NOCORPSE)) {
@@ -1813,7 +1874,7 @@ register struct attack *mattk;
 				 */
 				You("digest %s.", mon_nam(mdef));
 				if (Slow_digestion) tmp *= 2;
-				nomul(-tmp);
+				nomul2(-tmp, "digesting a monster");
 				nomovemsg = msgbuf;
 			    } else pline("%s", msgbuf);
 			    if (mdef->data == &mons[PM_GREEN_SLIME]) {
@@ -1832,7 +1893,8 @@ register struct attack *mattk;
 			if (youmonst.data == &mons[PM_FOG_CLOUD]) {
 			    pline("%s is laden with your moisture.",
 				  Monnam(mdef));
-			    if (amphibious(mdef->data) &&
+			    if ((amphibious(mdef->data) ||
+			         mbreathing(mdef)) &&
 				!flaming(mdef->data)) {
 				dam = 0;
 				pline("%s seems unharmed.", Monnam(mdef));
@@ -2084,14 +2146,20 @@ use_weapon:
 				missum(mon, mattk);
 			break;
 
+#ifdef YOUMONST_SPELL
 		case AT_MAGC:
 			/* No check for uwep; if wielding nothing we want to
 			 * do the normal 1-2 points bare hand damage...
 			 */
+			/*
 			if (i==0 && (youmonst.data->mlet==S_KOBOLD
 				|| youmonst.data->mlet==S_ORC
 				|| youmonst.data->mlet==S_GNOME
 				)) goto use_weapon;
+			*/
+			sum[i] = castum(mon, mattk);
+			continue;
+#endif //YOUMONST_SPELL
 
 		case AT_NONE:
 		case AT_BOOM:
@@ -2110,7 +2178,8 @@ use_weapon:
 	    }
 	    if (dhit == -1) {
 		u.mh = -1;	/* dead in the current form */
-		rehumanize();
+		killer_format = KILLED_BY_AN;
+		rehumanize("suicidal attack");
 	    }
 	    if (sum[i] == 2)
 		return((boolean)passive(mon, 1, 0, mattk->aatyp));
@@ -2267,7 +2336,8 @@ uchar aatyp;
 			else {
 			    You("are frozen by %s gaze!",
 				  s_suffix(mon_nam(mon)));
-			    nomul((ACURR(A_WIS) > 12 || rn2(4)) ? -tmp : -127);
+			    nomul2((ACURR(A_WIS) > 12 || rn2(4)) ? -tmp : -127,
+			           "paralyzed");
 			}
 		    } else {
 			pline("%s cannot defend itself.",
@@ -2279,7 +2349,7 @@ uchar aatyp;
 		} else { /* gelatinous cube */
 		    You("are frozen by %s!", mon_nam(mon));
 	    	    nomovemsg = 0;	/* default: "you can move again" */
-		    nomul(-tmp);
+		    nomul2(-tmp, "paralyzed");
 		    exercise(A_DEX, FALSE);
 		}
 		break;

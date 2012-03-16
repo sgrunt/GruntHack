@@ -13,7 +13,7 @@ register struct monst *mon;
 	if (!is_were(mon->data))
 	    return;
 
-	if (is_human(mon->data)) {
+	if (mon->mrace != 0) {
 	    if (!Protection_from_shape_changers &&
 		!rn2(night() ? (flags.moonphase == FULL_MOON ?  3 : 30)
 			     : (flags.moonphase == FULL_MOON ? 10 : 50))) {
@@ -60,6 +60,7 @@ new_were(mon)
 register struct monst *mon;
 {
 	register int pm;
+	register boolean seen = (canseemon(mon) && !Hallucination);
 
 	pm = counter_were(monsndx(mon->data));
 	if(!pm) {
@@ -67,12 +68,14 @@ register struct monst *mon;
 	    return;
 	}
 
-	if(canseemon(mon) && !Hallucination)
-	    pline("%s changes into a %s.", Monnam(mon),
-			is_human(&mons[pm]) ? "human" :
-			mons[pm].mname+4);
-
 	set_mon_data(mon, &mons[pm], 0);
+
+        if (seen)
+	    pline("%s changes into %s.", Monnam(mon),
+			an(is_racial(&mons[pm]) ? 
+			mons[mons_to_corpse(mon)].mname :
+			mons[pm].mname+4));
+
 	if (mon->msleeping || !mon->mcanmove) {
 	    /* transformation wakens and/or revitalizes */
 	    mon->msleeping = 0;
@@ -157,7 +160,7 @@ boolean purify;
 	}
 	if (!Unchanging && is_were(youmonst.data) &&
 		(!Polymorph_control || yn("Remain in beast form?") == 'n'))
-	    rehumanize();
+	    rehumanize(0);
 }
 
 #endif /* OVLB */

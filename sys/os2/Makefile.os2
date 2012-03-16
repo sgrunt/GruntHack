@@ -147,7 +147,7 @@ LEXYYC	= lexyy.c
 #	Source tree base directory.
 #
 
-NHSRC	= \nethack
+NHSRC	= \grnthack
 
 #
 #	Source directories.  Makedefs hardcodes these, don't change them.
@@ -184,8 +184,8 @@ RLIBP	= c:\emx\lib		# Possible real mode C libraries
 #	The game name and description.
 #
 
-GAME	= nethack
-GAMEDES = "NetHack 3.4.3"
+GAME	= grnthack
+GAMEDES = "GruntHack 0.0.1"
 
 #
 #	The uppermost two lines for MSC, the middle two for GCC, and
@@ -445,7 +445,7 @@ do_icon : icon_msg	# show message if changed
 #
 
 #do_cmd : cmd_msg	# show message
-do_cmd : cmd_act	# generate nethack.cmd
+do_cmd : cmd_act	# generate grnthack.cmd
 
 #
 #	If you want to try the data librarian scheme to reduce
@@ -1246,7 +1246,7 @@ $(OBJ)\wintty.o  : $(WIN)\$(CB) $(HACK_H) $(INCL)\tcap.h
 
 dat :	spec_lev help_fil $(GAMEDIR)\dungeon $(GAMEDIR)\data $(GAMEDIR)\rumors \
 	$(GAMEDIR)\oracles $(GAMEDIR)\quest.dat	$(GAMEDIR)\$(GAME).ico \
-	$(GAMEDIR)\$(GAME).cmd $(GAMEDIR)\nethack.cnf $(GAMEDIR)\nhdat \
+	$(GAMEDIR)\$(GAME).cmd $(GAMEDIR)\grnthack.cnf $(GAMEDIR)\nhdat \
 	$(WINX11VARDAT)
 
 help_fil : $(GAMEDIR)\cmdhelp $(GAMEDIR)\help $(GAMEDIR)\hh $(GAMEDIR)\history \
@@ -1429,8 +1429,8 @@ icon_msg :
 
 icon_act :
 	$(UUDECODE) $(SYS)\nhpmico.uu
-	$(CP) nethack.ico $(GAMEDIR)\$(GAME).ico
-	$(RM) nethack.ico
+	$(CP) grnthack.ico $(GAMEDIR)\$(GAME).ico
+	$(RM) grnthack.ico
 
 #
 #	NetHack command file to use with Presentation Manager.
@@ -1444,7 +1444,7 @@ cmd_msg :
 
 cmd_act :
 	$(ECHO) @echo off> $(CMDF)
-	$(ECHO) REM Command file for starting nethack.exe from PM/WPS Desktop>> $(CMDF)
+	$(ECHO) REM Command file for starting grnthack.exe from PM/WPS Desktop>> $(CMDF)
 	$(ECHO) $(GAME).exe $(P)1 $(P)2 $(P)3 $(P)4 $(P)5 $(P)6 $(P)7>> $(CMDF)
 	$(ECHO) pause>> $(CMDF)
 
@@ -1452,8 +1452,8 @@ cmd_act :
 #	NetHack configuration file.  Will not overwrite an existing file.
 #
 
-$(GAMEDIR)\nethack.cnf :
-	$(CP) $(SSYS)\nethack.cnf $(GAMEDIR)
+$(GAMEDIR)\grnthack.cnf :
+	$(CP) $(SSYS)\grnthack.cnf $(GAMEDIR)
 
 #
 #	Documentation.
@@ -1483,7 +1483,7 @@ spotless : clean
 	-$(RM) vis_tab.c
 	-$(RM) monstr.c
 	-$(RM) *.lev
-	-$(RM) nethack.ico
+	-$(RM) grnthack.ico
 	-$(RM) $(TEMP)\makedefs.exe
 	-$(RM) $(TEMP)\lev_comp.exe
 	-$(RM) $(TEMP)\dgn_comp.exe

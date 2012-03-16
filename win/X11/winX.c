@@ -63,18 +63,18 @@
 /*
  * Icons.
  */
-#include "../win/X11/nh72icon"
-#include "../win/X11/nh56icon"
-#include "../win/X11/nh32icon"
+#include "../win/X11/gh72icon"
+#include "../win/X11/gh56icon"
+#include "../win/X11/gh32icon"
 
 static struct icon_info {
 	const char *name;
 	unsigned char *bits;
 	unsigned width, height;
 } icon_data[] = {
-	{ "nh72", nh72icon_bits, nh72icon_width, nh72icon_height },
-	{ "nh56", nh56icon_bits, nh56icon_width, nh56icon_height },
-	{ "nh32", nh32icon_bits, nh32icon_width, nh32icon_height },
+	{ "gh72", gh72icon_bits, gh72icon_width, gh72icon_height },
+	{ "gh56", gh56icon_bits, gh56icon_width, gh56icon_height },
+	{ "gh32", gh32icon_bits, gh32icon_width, gh32icon_height },
 	{ (const char *)0, (unsigned char *)0, 0, 0 }
 };
 
@@ -915,7 +915,7 @@ static XtResource resources[] = {
     { "tile_file", "Tile_file", XtRString, sizeof(String),
       XtOffset(AppResources *,tile_file), XtRString, "" },
     { "icon", "Icon", XtRString, sizeof(String),
-      XtOffset(AppResources *,icon), XtRString, "nh72" },
+      XtOffset(AppResources *,icon), XtRString, "gh72" },
     { "message_lines", "Message_lines", XtRInt, sizeof(int),
       XtOffset(AppResources *,message_lines), XtRString, "12" },
     { "pet_mark_bitmap", "Pet_mark_bitmap", XtRString, sizeof(String),
@@ -975,7 +975,7 @@ char** argv;
     XtSetArg(args[num_args], XtNallowShellResize, True);	num_args++;
     toplevel = XtAppInitialize(
 		    &app_context,
-		    "NetHack",			/* application class */
+		    "GruntHack",		/* application class */
 		    (XrmOptionDescList)0, 0,	/* options list */
 		    argcp, (String *)argv,	/* command line args */
 		    (String *)0,		/* fallback resources */

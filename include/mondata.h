@@ -19,6 +19,27 @@
 #define resists_acid(mon)	(((mon)->mintrinsics & MR_ACID) != 0)
 #define resists_ston(mon)	(((mon)->mintrinsics & MR_STONE) != 0)
 
+#define MR2_SEE_INVIS	0x0100	/* see invisible */
+#define MR2_LEVITATE	0x0200	/* levitation */
+#define MR2_WATERWALK	0x0400	/* water walking */
+#define MR2_MAGBREATH	0x0800	/* magical breathing */
+#define MR2_DISPLACED	0x1000	/* displaced */
+#define MR2_STRENGTH	0x2000	/* gauntlets of power */
+#define MR2_FUMBLING	0x4000	/* clumsy */
+
+#define sees_invis(mon)         (((mon)->mintrinsics & MR2_SEE_INVIS) != 0 || \
+                                 perceives(mon->data))
+#define levitating(mon)         (((mon)->mintrinsics & MR2_LEVITATE) != 0 || \
+                                 is_floater(mon->data))
+#define waterwalking(mon)       (((mon)->mintrinsics & MR2_WATERWALK) != 0)
+#define mbreathing(mon)         (((mon)->mintrinsics & MR2_MAGBREATH) != 0) || \
+                                 breathless(mon->data)
+#define displaced(mon)		(((mon)->mintrinsics & MR2_DISPLACED) != 0 || \
+                                 is_displaced(mon->data))
+#define is_strong(mon)          (((mon)->mintrinsics & MR2_STRENGTH) != 0 || \
+                                 strongmonst(mon->data))
+#define fumbles(mon)            (((mon)->mintrinsics & MR2_FUMBLING) != 0)
+
 #define is_lminion(mon)		(is_minion((mon)->data) && \
 				 (mon)->data->maligntyp >= A_COALIGNED && \
 				 ((mon)->data != &mons[PM_ANGEL] || \
@@ -74,20 +95,24 @@
 #define carnivorous(ptr)	(((ptr)->mflags1 & M1_CARNIVORE) != 0L)
 #define herbivorous(ptr)	(((ptr)->mflags1 & M1_HERBIVORE) != 0L)
 #define metallivorous(ptr)	(((ptr)->mflags1 & M1_METALLIVORE) != 0L)
-#define polyok(ptr)		(((ptr)->mflags2 & M2_NOPOLY) == 0L)
 #define is_undead(ptr)		(((ptr)->mflags2 & M2_UNDEAD) != 0L)
 #define is_were(ptr)		(((ptr)->mflags2 & M2_WERE) != 0L)
-#define is_elf(ptr)		(((ptr)->mflags2 & M2_ELF) != 0L)
-#define is_dwarf(ptr)		(((ptr)->mflags2 & M2_DWARF) != 0L)
-#define is_gnome(ptr)		(((ptr)->mflags2 & M2_GNOME) != 0L)
-#define is_orc(ptr)		(((ptr)->mflags2 & M2_ORC) != 0L)
-#define is_human(ptr)		(((ptr)->mflags2 & M2_HUMAN) != 0L)
-#define your_race(ptr)		(((ptr)->mflags2 & urace.selfmask) != 0L)
+#define is_elf(ptr)		(((ptr)->mrace & M2_ELF) != 0L)
+#define is_dwarf(ptr)		(((ptr)->mrace & M2_DWARF) != 0L)
+#define is_gnome(ptr)		(((ptr)->mrace & M2_GNOME) != 0L)
+#define is_orc(ptr)		(((ptr)->mrace & M2_ORC) != 0L)
+#define is_human(ptr)		(((ptr)->mrace & M2_HUMAN) != 0L)
+#define is_giant(ptr)		(((ptr)->mrace & M2_GIANT) != 0L)
+#define is_kobold(ptr)		(((ptr)->mrace & M2_KOBOLD) != 0L)
+#define is_ettin(ptr)		(((ptr)->mrace & M2_ETTIN) != 0L)
+#define is_ogre(ptr)		(((ptr)->mrace & M2_OGRE) != 0L)
+#define your_race(ptr)		(((ptr)->mrace & urace.selfmask) != 0L)
+#define your_race_mdat(ptr)	(((ptr)->mflags2 & urace.selfmask) != 0L)
+#define is_racial(ptr)          (((ptr)->mflags2 & M2_RACEMASK) != 0L)
 #define is_bat(ptr)		((ptr) == &mons[PM_BAT] || \
 				 (ptr) == &mons[PM_GIANT_BAT] || \
 				 (ptr) == &mons[PM_VAMPIRE_BAT])
 #define is_bird(ptr)		((ptr)->mlet == S_BAT && !is_bat(ptr))
-#define is_giant(ptr)		(((ptr)->mflags2 & M2_GIANT) != 0L)
 #define is_golem(ptr)		((ptr)->mlet == S_GOLEM)
 #define is_domestic(ptr)	(((ptr)->mflags2 & M2_DOMESTIC) != 0L)
 #define is_demon(ptr)		(((ptr)->mflags2 & M2_DEMON) != 0L)
@@ -129,6 +154,8 @@
 #define is_covetous(ptr)	((ptr->mflags3 & M3_COVETOUS))
 #define infravision(ptr)	((ptr->mflags3 & M3_INFRAVISION))
 #define infravisible(ptr)	((ptr->mflags3 & M3_INFRAVISIBLE))
+#define polyok(ptr)		(((ptr)->mflags3 & M3_NOPOLY) == 0L)
+#define is_displaced(ptr)	(((ptr)->mflags3 & M3_DISPLACED) != 0L)
 #define is_mplayer(ptr)		(((ptr) >= &mons[PM_ARCHEOLOGIST]) && \
 				 ((ptr) <= &mons[PM_WIZARD]))
 #define is_rider(ptr)		((ptr) == &mons[PM_DEATH] || \
@@ -189,5 +216,42 @@
 
 #define befriend_with_obj(ptr, obj) ((obj)->oclass == FOOD_CLASS && \
 				     is_domestic(ptr))
+
+#define mons_to_corpse(mtmp)  (mtmp->mrace ? (is_elf(mtmp)    ? PM_ELF    \
+                                            : is_orc(mtmp)    ? PM_ORC    \
+                                            : is_dwarf(mtmp)  ? PM_DWARF  \
+                                            : is_gnome(mtmp)  ? PM_GNOME  \
+					    : is_giant(mtmp)  ? PM_GIANT  \
+					    : is_kobold(mtmp) ? PM_KOBOLD \
+					    : is_ettin(mtmp)  ? PM_ETTIN  \
+					    : is_ogre(mtmp)   ? PM_OGRE   \
+					    :                   PM_HUMAN) \
+                                            : monsndx(mtmp->data))
+
+#define racial_prefix(mtmp) \
+ (Hallucination) ? "" : \
+ (is_elf(mtmp) && \
+  !strstri(mtmp->data->mname, "elf") && \
+  !strstri(mtmp->data->mname, "elven")) ? "elven "    : \
+ (is_orc(mtmp) && \
+  !strstri(mtmp->data->mname, "orc") && \
+  mtmp->data->mlet != S_ORC)            ? "orcish "   : \
+ (is_giant(mtmp) && \
+  !strstri(mtmp->data->mname, "giant") && \
+  mtmp->data->mlet != S_GIANT)          ? "giant "   : \
+ (is_ettin(mtmp) && \
+  !strstri(mtmp->data->mname, "ettin")) ? "ettin " : \
+ (is_kobold(mtmp) && \
+  !strstri(mtmp->data->mname, "kobold"))? "kobold " : \
+ (is_dwarf(mtmp) && \
+  !strstri(mtmp->data->mname, "dwar"))  ? "dwarvish " : \
+ (is_gnome(mtmp) && \
+  !strstri(mtmp->data->mname, "gnom"))  ? "gnomish "  : \
+ (is_ogre(mtmp) && \
+  !strstri(mtmp->data->mname, "ogre"))  ? "ogre "  : \
+ (is_human(mtmp) && \
+  !mtmp->iswiz && \
+  !(mtmp->data->geno & G_UNIQ))         ? "human "    : \
+			                   "" 
 
 #endif /* MONDATA_H */

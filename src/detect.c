@@ -49,11 +49,11 @@ unsigned material;
     register struct obj* otmp;
     struct obj *temp;
 
-    if (objects[obj->otyp].oc_material == material) return obj;
+    if (obj->omaterial == material) return obj;
 
     if (Has_contents(obj)) {
 	for (otmp = obj->cobj; otmp; otmp = otmp->nobj)
-	    if (objects[otmp->otyp].oc_material == material) return otmp;
+	    if (otmp->omaterial == material) return otmp;
 	    else if (Has_contents(otmp) && (temp = o_material(otmp, material)))
 		return temp;
     }
@@ -861,7 +861,7 @@ struct obj *obj;
 	return;
     }
     You("peer into %s...", the(xname(obj)));
-    nomul(-rnd(10));
+    nomul2(-rnd(10), "crystal-gazing");
     nomovemsg = "";
     if (obj->spe <= 0)
 	pline_The("vision is unclear.");
@@ -1034,7 +1034,7 @@ genericptr_t num;
 			newsym(zx, zy);
 			(*(int*)num)++;
 		}
-		if (!canspotmon(mtmp) &&
+		if ((!canspotmon(mtmp) || displaced_image(mtmp)) &&
 				    !glyph_is_invisible(levl[zx][zy].glyph))
 			map_invisible(zx, zy);
 	} else if (glyph_is_invisible(levl[zx][zy].glyph)) {
@@ -1209,7 +1209,8 @@ register int aflag;
 			    if(mtmp->m_ap_type) {
 				seemimic(mtmp);
 		find:		exercise(A_WIS, TRUE);
-				if (!canspotmon(mtmp)) {
+				if (!canspotmon(mtmp) || 
+				    displaced_image(mtmp)) {
 				    if (glyph_is_invisible(levl[x][y].glyph)) {
 					/* found invisible monster in a square
 					 * which already has an 'I' in it.
@@ -1220,6 +1221,9 @@ register int aflag;
 					 */
 					continue;
 				    } else {
+				        if (canspotmon(mtmp))
+					    You_feel("%s!", mon_nam(mtmp));
+					else
 					You_feel("an unseen monster!");
 					map_invisible(x, y);
 				    }
@@ -1227,7 +1231,7 @@ register int aflag;
 				    You("find %s.", a_monnam(mtmp));
 				return(1);
 			    }
-			    if(!canspotmon(mtmp)) {
+			    if(!canspotmon(mtmp) || displaced_image(mtmp)) {
 				if (mtmp->mundetected &&
 				   (is_hider(mtmp->data) || mtmp->data->mlet == S_EEL))
 					mtmp->mundetected = 0;

@@ -58,7 +58,12 @@ char msgbuf[BUFSZ];
 #define STARVED		6
 
 /* also used to see if you're allowed to eat cats and dogs */
+#ifdef NEWRACES
+#define CANNIBAL_ALLOWED() (Role_if(PM_CAVEMAN) || Race_if(PM_ORC) || \
+                            Race_if(PM_OGRE))
+#else
 #define CANNIBAL_ALLOWED() (Role_if(PM_CAVEMAN) || Race_if(PM_ORC))
+#endif
 
 #ifndef OVLB
 
@@ -69,6 +74,10 @@ STATIC_DCL boolean force_save_hs;
 #else
 
 STATIC_OVL NEARDATA const char comestibles[] = { FOOD_CLASS, 0 };
+
+#ifdef ASTR_ESC
+STATIC_OVL NEARDATA const char sacrifice_types[] = { AMULET_CLASS, FOOD_CLASS, 0 };
+#endif
 
 /* Gold must come first for getobj(). */
 STATIC_OVL NEARDATA const char allobj[] = {
@@ -116,7 +125,8 @@ register struct obj *obj;
 		return TRUE;
 
      /* return((boolean)(!!index(comestibles, obj->oclass))); */
-	return (boolean)(obj->oclass == FOOD_CLASS);
+	return (boolean)(obj->oclass == FOOD_CLASS ||
+	                 obj->omaterial == FLESH);
 }
 
 #endif /* OVL1 */
@@ -443,7 +453,7 @@ maybe_cannibal(pm, allowmsg)
 int pm;
 boolean allowmsg;
 {
-	if (!CANNIBAL_ALLOWED() && your_race(&mons[pm])) {
+	if (!CANNIBAL_ALLOWED() && your_race_mdat(&mons[pm])) {
 		if (allowmsg) {
 			if (Upolyd)
 				You("have a bad feeling deep inside.");
@@ -862,7 +872,7 @@ register int pm;
                     /* A pile of gold can't ride. */
 		    if (u.usteed) dismount_steed(DISMOUNT_FELL);
 #endif
-		    nomul(-tmp);
+		    nomul2(-tmp, "stuck in mimic form");
 		    Sprintf(buf, Hallucination ?
 			"You suddenly dread being peeled and mimic %s again!" :
 			"You now prefer mimicking %s again.",
@@ -923,7 +933,7 @@ register int pm;
 			pline ("Oh wow!  Great stuff!");
 			make_hallucinated(HHallucination + 200,FALSE,0L);
 		}
-		if(is_giant(ptr)) gainstr((struct obj *)0, 0);
+		if(ptr->mflags2 & M2_GIANT) gainstr((struct obj *)0, 0);
 
 		/* Check the monster for all of the intrinsics.  If this
 		 * monster can give more than one, pick one to try to give
@@ -1224,7 +1234,7 @@ struct obj *obj;
 			   surface(u.ux,u.uy);
 		pline_The("world spins and %s %s.", what, where);
 		flags.soundok = 0;
-		nomul(-rnd(10));
+		nomul2(-rnd(10), "unconscious from rotten food");
 		nomovemsg = "You are conscious again.";
 		afternmv = Hear_again;
 		return(1);
@@ -1256,11 +1266,10 @@ eatcorpse(otmp)		/* called when a corpse is selected as food */
 	}
 
 	if (mnum != PM_ACID_BLOB && !stoneable && rotted > 5L) {
-		boolean cannibal = maybe_cannibal(mnum, FALSE);
-		pline("Ulch - that %s was tainted%s!",
+		maybe_cannibal(mnum, TRUE);
+		pline("Ulch - that %s was tainted!",
 		      mons[mnum].mlet == S_FUNGUS ? "fungoid vegetation" :
-		      !vegetarian(&mons[mnum]) ? "meat" : "protoplasm",
-		      cannibal ? " cannibal" : "");
+		      !vegetarian(&mons[mnum]) ? "meat" : "protoplasm");
 		if (Sick_resistance) {
 			pline("It doesn't seem at all sickening, though...");
 		} else {
@@ -1388,7 +1397,11 @@ struct obj *otmp;
 	    case TRIPE_RATION:
 		if (carnivorous(youmonst.data) && !humanoid(youmonst.data))
 		    pline("That tripe ration was surprisingly good!");
-		else if (maybe_polyd(is_orc(youmonst.data), Race_if(PM_ORC)))
+		else if (maybe_polyd(is_orc(&youmonst), Race_if(PM_ORC))
+#ifdef NEWRACES
+                      || maybe_polyd(is_ogre(&youmonst), Race_if(PM_OGRE)) 
+#endif
+		)
 		    pline(Hallucination ? "Tastes great! Less filling!" :
 			  "Mmm, tripe... not bad!");
 		else {
@@ -1572,7 +1585,7 @@ struct obj *otmp;
 		if (!Unchanging && Upolyd) {
 		    accessory_has_effect(otmp);
 		    makeknown(typ);
-		    rehumanize();
+		    rehumanize(0);
 		}
 		break;
 	    case AMULET_OF_STRANGULATION: /* bad idea! */
@@ -1665,10 +1678,10 @@ register struct obj *otmp;
 {
 	if (otmp->oclass == FOOD_CLASS) return "food";
 	if (otmp->oclass == GEM_CLASS &&
-	    objects[otmp->otyp].oc_material == GLASS &&
+	    otmp->omaterial == GLASS &&
 	    otmp->dknown)
 		makeknown(otmp->otyp);
-	return foodwords[objects[otmp->otyp].oc_material];
+	return foodwords[otmp->omaterial];
 }
 
 STATIC_OVL void
@@ -1696,7 +1709,8 @@ register struct obj *otmp;
 			if (!rn2(17)) u.mhmax++;
 			u.mh = u.mhmax;
 		    } else if (u.mh <= 0) {
-			rehumanize();
+			killer_format = KILLED_BY_AN;
+			rehumanize("rotten lump of royal jelly");
 		    }
 		} else {
 		    u.uhp += otmp->cursed ? -rnd(20) : rnd(20);
@@ -1749,7 +1763,7 @@ struct obj *otmp;
 	     it_or_they[QBUFSZ], eat_it_anyway[QBUFSZ];
 	boolean cadaver = (otmp->otyp == CORPSE),
 		stoneorslime = FALSE;
-	int material = objects[otmp->otyp].oc_material,
+	int material = otmp->omaterial,
 	    mnum = otmp->corpsenm;
 	long rotted = 0L;
 
@@ -1914,7 +1928,7 @@ doeat()		/* generic "eat" command funtion (see cmd.c) */
 		    else
 			otmp = splitobj(otmp, 1L);
 		}
-		pline("Ulch - That %s was rustproofed!", xname(otmp));
+		pline("Ulch - that %s was rustproofed!", xname(otmp));
 		/* The regurgitated object's rustproofing is gone now */
 		otmp->oerodeproof = 0;
 		make_stunned(HStun + rn2(10), TRUE);
@@ -1955,7 +1969,7 @@ doeat()		/* generic "eat" command funtion (see cmd.c) */
 	    victual.nmod = basenutrit;
 	    victual.eating = TRUE; /* needed for lesshungry() */
 
-	    material = objects[otmp->otyp].oc_material;
+	    material = otmp->omaterial;
 	    if (material == LEATHER ||
 		material == BONE || material == DRAGON_HIDE) {
 		u.uconduct.unvegan++;
@@ -2028,7 +2042,7 @@ doeat()		/* generic "eat" command funtion (see cmd.c) */
 	} else {
 	    /* No checks for WAX, LEATHER, BONE, DRAGON_HIDE.  These are
 	     * all handled in the != FOOD_CLASS case, above */
-	    switch (objects[otmp->otyp].oc_material) {
+	    switch (otmp->omaterial) {
 	    case FLESH:
 		u.uconduct.unvegan++;
 		if (otmp->otyp != EGG) {
@@ -2255,7 +2269,7 @@ sync_hunger()
 	if(is_fainted()) {
 
 		flags.soundok = 0;
-		nomul(-10+(u.uhunger/10));
+		nomul2(-10+(u.uhunger/10), "fainted");
 		nomovemsg = "You regain consciousness.";
 		afternmv = unfaint;
 	}
@@ -2320,7 +2334,7 @@ boolean incr;
 				stop_occupation();
 				You("faint from lack of food.");
 				flags.soundok = 0;
-				nomul(-10+(u.uhunger/10));
+				nomul2(-10+(u.uhunger/10), "fainted");
 				nomovemsg = "You regain consciousness.";
 				afternmv = unfaint;
 				newhs = FAINTED;
@@ -2406,6 +2420,7 @@ floorfood(verb,corpsecheck)	/* get food from floor or pack */
 	char qbuf[QBUFSZ];
 	char c;
 	boolean feeding = (!strcmp(verb, "eat"));
+	boolean sacrificing = (!strcmp(verb, "sacrifice"));
 
 	/* if we can't touch floor objects then use invent food only */
 	if (!can_reach_floor() ||
@@ -2451,6 +2466,22 @@ floorfood(verb,corpsecheck)	/* get food from floor or pack */
 		}
 	    }
 	}
+#ifdef ASTR_ESC
+	if (sacrificing) {
+		for (otmp = level.objects[u.ux][u.uy]; otmp; otmp = otmp->nexthere) {
+			if(otmp->otyp == AMULET_OF_YENDOR || otmp->otyp == FAKE_AMULET_OF_YENDOR) {
+				Sprintf(qbuf, "There %s %s here; %s %s?",
+					otense(otmp, "are"),
+					doname(otmp), verb,
+					 "it");
+				if((c = yn_function(qbuf,ynqchars,'n')) == 'y')
+					return(otmp);
+				else if(c == 'q')
+					return((struct obj *) 0);
+				}
+			}
+		}
+#endif
 
 	/* Is there some food (probably a heavy corpse) here on the ground? */
 	for (otmp = level.objects[u.ux][u.uy]; otmp; otmp = otmp->nexthere) {
@@ -2473,9 +2504,17 @@ floorfood(verb,corpsecheck)	/* get food from floor or pack */
 	/* We cannot use ALL_CLASSES since that causes getobj() to skip its
 	 * "ugly checks" and we need to check for inedible items.
 	 */
+#ifdef ASTR_ESC
+	otmp = getobj(sacrificing ? (const char *)sacrifice_types : 
+					feeding ? (const char *)allobj :
+					(const char *)comestibles, verb);
+#else
 	otmp = getobj(feeding ? (const char *)allobj :
 				(const char *)comestibles, verb);
+#endif
 	if (corpsecheck && otmp)
+		/* Kludge to allow Amulet of Yendor to be sacrificed on non-High altars */
+		if (otmp->otyp != AMULET_OF_YENDOR && otmp->otyp != FAKE_AMULET_OF_YENDOR) 
 	    if (otmp->otyp != CORPSE || (corpsecheck == 2 && !tinnable(otmp))) {
 		You_cant("%s that!", verb);
 		return (struct obj *)0;
@@ -2489,7 +2528,7 @@ void
 vomit()		/* A good idea from David Neves */
 {
 	make_sick(0L, (char *) 0, TRUE, SICK_VOMITABLE);
-	nomul(-2);
+	nomul2(-2, "vomiting");
 }
 
 int

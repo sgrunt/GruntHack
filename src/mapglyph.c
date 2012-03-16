@@ -116,22 +116,16 @@ unsigned *ospecial;
 		color = CLR_MAGENTA;
 	    else if (offset == S_corr || offset == S_litcorr)
 		color = CLR_GRAY;
-	    else if (offset >= S_room && offset <= S_water)
+	    else if (offset >= S_room && offset <= S_water && offset != S_darkroom)
 		color = CLR_GREEN;
 	    else
 		color = NO_COLOR;
 	} else
 #endif
-#ifdef TEXTCOLOR
-	    /* provide a visible difference if normal and lit corridor
-	     * use the same symbol */
-	    if (iflags.use_color &&
-		offset == S_litcorr && ch == showsyms[S_corr])
-		color = CLR_WHITE;
-	    else
-#endif
+        // corridor darkening deferred elsewhere
 	    cmap_color(offset);
     } else if ((offset = (glyph - GLYPH_OBJ_OFF)) >= 0) {	/* object */
+        struct obj *otmp = vobj_at(x, y);
 	if (offset == BOULDER && iflags.bouldersym) ch = iflags.bouldersym;
 	else ch = oc_syms[(int)objects[offset].oc_class];
 #ifdef ROGUE_COLOR
@@ -141,6 +135,12 @@ unsigned *ospecial;
 		case FOOD_CLASS: color = CLR_RED; break;
 		default: color = CLR_BRIGHT_BLUE; break;
 	    }
+	} else
+#endif
+#ifdef TEXTCOLOR
+        if (otmp &&
+	    otmp->omaterial != objects[offset].oc_material) {
+	    color = materialclr[otmp->omaterial];
 	} else
 #endif
 	    obj_color(offset);
@@ -166,6 +166,7 @@ unsigned *ospecial;
 	    mon_color(offset);
 	    special |= MG_CORPSE;
     } else if ((offset = (glyph - GLYPH_DETECT_OFF)) >= 0) {	/* mon detect */
+	register struct monst *mtmp = m_at(x, y);
 	ch = monsyms[(int)mons[offset].mlet];
 #ifdef ROGUE_COLOR
 	if (HAS_ROGUE_IBM_GRAPHICS)
@@ -173,6 +174,11 @@ unsigned *ospecial;
 	else
 #endif
 	    mon_color(offset);
+#ifdef TEXTCOLOR
+        if (iflags.use_color && iflags.showrace &&
+	     mtmp && mtmp->mrace)
+	    color = mtmp->data->mcolor;
+#endif
 	/* Disabled for now; anyone want to get reverse video to work? */
 	/* is_reverse = TRUE; */
 	    special |= MG_DETECT;
@@ -186,6 +192,9 @@ unsigned *ospecial;
 	    invis_color(offset);
 	    special |= MG_INVIS;
     } else if ((offset = (glyph - GLYPH_PET_OFF)) >= 0) {	/* a pet */
+#ifdef TEXTCOLOR
+        register struct monst *mtmp = m_at(x, y);
+#endif
 	ch = monsyms[(int)mons[offset].mlet];
 #ifdef ROGUE_COLOR
 	if (HAS_ROGUE_IBM_GRAPHICS)
@@ -194,6 +203,11 @@ unsigned *ospecial;
 #endif
 	    pet_color(offset);
 	    special |= MG_PET;
+#ifdef TEXTCOLOR
+        if (iflags.use_color && iflags.showrace &&
+	     mtmp && mtmp->mrace)
+	    color = mtmp->data->mcolor;
+#endif
     } else {							/* a monster */
 	ch = monsyms[(int)mons[glyph].mlet];
 #ifdef ROGUE_COLOR
@@ -206,16 +220,38 @@ unsigned *ospecial;
 	} else
 #endif
 	{
+#ifdef TEXTCOLOR
+	    register struct monst *mtmp = m_at(x, y);
+#endif
+
 	    mon_color(glyph);
 	    /* special case the hero for `showrace' option */
 #ifdef TEXTCOLOR
 	    if (iflags.use_color && x == u.ux && y == u.uy &&
 		    iflags.showrace && !Upolyd)
 		color = HI_DOMESTIC;
+	    else if (iflags.use_color && iflags.showrace &&
+	             mtmp && mtmp->mrace)
+		color = mtmp->data->mcolor;
 #endif
 	}
     }
+    
+    if (iflags.use_color && Hallucination)
+        do {
+	    color = rn2(CLR_WHITE+1);
+	} while (color == NO_COLOR);
 
+    if (iflags.use_color &&
+        should_darken_glyph(glyph) &&
+        !cansee(x, y))
+    {
+        if (color >= NO_COLOR && color != CLR_BLACK)
+            color -= NO_COLOR;
+        else if (color == CLR_GRAY)
+            color = CLR_BLACK;
+    }
+    
 #ifdef TEXTCOLOR
     /* Turn off color if no color defined, or rogue level w/o PC graphics. */
 # ifdef REINCARNATION

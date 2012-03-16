@@ -690,9 +690,15 @@ menu_item **pick_list;		/* return list of items picked */
 int how;			/* type of query */
 boolean FDECL((*allow), (OBJ_P));/* allow function */
 {
+#ifdef SORTLOOT
+	int i, j;
+#endif
 	int n;
 	winid win;
 	struct obj *curr, *last;
+#ifdef SORTLOOT
+	struct obj **oarray;
+#endif
 	char *pack;
 	anything any;
 	boolean printed_type_name;
@@ -717,6 +723,33 @@ boolean FDECL((*allow), (OBJ_P));/* allow function */
 	    return 1;
 	}
 
+#ifdef SORTLOOT
+	/* Make a temporary array to store the objects sorted */
+	oarray = (struct obj **)alloc(n*sizeof(struct obj*));
+
+	/* Add objects to the array */
+	i = 0;
+	for (curr = olist; curr; curr = FOLLOW(curr, qflags)) {
+	  if ((*allow)(curr)) {
+	    if (iflags.sortloot == 'f' ||
+		(iflags.sortloot == 'l' && !(qflags & USE_INVLET)))
+	      {
+		/* Insert object at correct index */
+		for (j = i; j; j--)
+		  {
+		    if (strcmpi(cxname2(curr), cxname2(oarray[j-1]))>0) break;
+		    oarray[j] = oarray[j-1];
+		  }
+		oarray[j] = curr;
+		i++;
+	      } else {
+		/* Just add it to the array */
+		oarray[i++] = curr;
+	      }
+	  }
+	}
+#endif /* SORTLOOT */
+
 	win = create_nhwindow(NHW_MENU);
 	start_menu(win);
 	any.a_obj = (struct obj *) 0;
@@ -729,8 +762,13 @@ boolean FDECL((*allow), (OBJ_P));/* allow function */
 	 */
 	pack = flags.inv_order;
 	do {
-	    printed_type_name = FALSE;
+	    printed_type_name = Hallucination ? TRUE : FALSE;
+#ifdef SORTLOOT
+	    for (i = 0; i < n; i++) {
+		curr = oarray[i];
+#else /* SORTLOOT */
 	    for (curr = olist; curr; curr = FOLLOW(curr, qflags)) {
+#endif /* SORTLOOT */
 		if ((qflags & FEEL_COCKATRICE) && curr->otyp == CORPSE &&
 		     will_feel_cockatrice(curr, FALSE)) {
 			destroy_nhwindow(win);	/* stop the menu and revert */
@@ -758,6 +796,9 @@ boolean FDECL((*allow), (OBJ_P));/* allow function */
 	    pack++;
 	} while (qflags & INVORDER_SORT && *pack);
 
+#ifdef SORTLOOT
+	free(oarray);
+#endif
 	end_menu(win, qstr);
 	n = select_menu(win, how, pick_list);
 	destroy_nhwindow(win);
@@ -1152,7 +1193,9 @@ boolean telekinesis;
 	return -1;
     }
     if (obj->otyp == LOADSTONE ||
-	    (obj->otyp == BOULDER && throws_rocks(youmonst.data)))
+	    (obj->otyp == BOULDER && 
+	    maybe_polyd(throws_rocks(youmonst.data),
+	                Race_if(PM_GIANT))))
 	return 1;		/* lift regardless of current situation */
 
     *cnt_p = carry_count(obj, container, *cnt_p, telekinesis, &old_wt, &new_wt);
@@ -1280,18 +1323,21 @@ boolean telekinesis;	/* not picking it up directly by hand */
 		You("can only %s %s of the %ld gold pieces lying %s.",
 		    telekinesis ? "acquire" : "carry",
 		    gold_capacity == 1L ? "one" : "some", obj->quan, where);
-		pline("%s %ld gold piece%s.",
-		    nearloadmsg, gold_capacity, plur(gold_capacity));
+		pline("%s %ld %s%s.",
+		    nearloadmsg, gold_capacity, 
+		    Hallucination ? xname(obj) : "gold piece",
+		    plur(gold_capacity));
 		u.ugold += gold_capacity;
 		obj->quan -= gold_capacity;
 		costly_gold(obj->ox, obj->oy, gold_capacity);
 	    } else {
 		u.ugold += count;
 		if ((nearload = near_capacity()) != 0)
-		    pline("%s %ld gold piece%s.",
+		    pline("%s %ld %s%s.",
 			  nearload < MOD_ENCUMBER ?
-			  moderateloadmsg : nearloadmsg,
-			  count, plur(count));
+			  moderateloadmsg : nearloadmsg, count, 
+		          Hallucination ? xname(obj) : "gold piece",
+			  plur(count));
 		else
 		    prinv((char *) 0, obj, count);
 		costly_gold(obj->ox, obj->oy, count);
@@ -1313,7 +1359,8 @@ boolean telekinesis;	/* not picking it up directly by hand */
 			char kbuf[BUFSZ];
 
 			Strcpy(kbuf, an(corpse_xname(obj, TRUE)));
-			pline("Touching %s is a fatal mistake.", kbuf);
+			pline("Touching %s is a fatal mistake.", 
+			    an(corpse_xname(obj, TRUE)));
 			instapetrify(kbuf);
 		    return -1;
 		}
@@ -1791,6 +1838,7 @@ register struct obj *obj;
 	      pline_The("stone%s won't leave your person.", plur(obj->quan));
 		return 0;
 	} else if (obj->otyp == AMULET_OF_YENDOR ||
+	           (obj->otyp == FAKE_AMULET_OF_YENDOR && !obj->known) ||
 		   obj->otyp == CANDELABRUM_OF_INVOCATION ||
 		   obj->otyp == BELL_OF_OPENING ||
 		   obj->otyp == SPE_BOOK_OF_THE_DEAD) {
@@ -1827,7 +1875,8 @@ register struct obj *obj;
 		    char kbuf[BUFSZ];
 
 		    Strcpy(kbuf, an(corpse_xname(obj, TRUE)));
-		    pline("Touching %s is a fatal mistake.", kbuf);
+		    pline("Touching %s is a fatal mistake.", 
+			   an(corpse_xname(obj, TRUE)));
 		    instapetrify(kbuf);
 		    return -1;
 		}
@@ -1950,7 +1999,8 @@ register struct obj *obj;
 		    char kbuf[BUFSZ];
 
 		    Strcpy(kbuf, an(corpse_xname(obj, TRUE)));
-		    pline("Touching %s is a fatal mistake.", kbuf);
+		    pline("Touching %s is a fatal mistake.", 
+		        an(corpse_xname(obj, TRUE)));
 		    instapetrify(kbuf);
 		    return -1;
 		}
@@ -2101,7 +2151,7 @@ register int held;
 	    (void) chest_trap(obj, HAND, FALSE);
 	    /* even if the trap fails, you've used up this turn */
 	    if (multi >= 0) {	/* in case we didn't become paralyzed */
-		nomul(-1);
+		nomul2(-1, "dealing with a trapped container");
 		nomovemsg = "";
 	    }
 	    return 1;

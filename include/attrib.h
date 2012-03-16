@@ -41,4 +41,7 @@ struct	attribs {
 #define ATTRMAX(x) ((x == A_STR && Upolyd && strongmonst(youmonst.data)) ? STR18(100) : urace.attrmax[x])
 #define ATTRMIN(x) (urace.attrmin[x])
 
+// I'm not sure this belongs here.  However...
+#define FUMBLED ((HFumbling & FROMOUTSIDE) || ((rn2(7) + 3) >= ACURR(A_DEX)))
+
 #endif /* ATTRIB_H */

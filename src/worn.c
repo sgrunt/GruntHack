@@ -6,7 +6,8 @@
 
 STATIC_DCL void FDECL(m_lose_armor, (struct monst *,struct obj *));
 STATIC_DCL void FDECL(m_dowear_type, (struct monst *,long, BOOLEAN_P, BOOLEAN_P));
-STATIC_DCL int FDECL(extra_pref, (struct monst *, struct obj *));
+//STATIC_DCL
+int FDECL(extra_pref, (struct monst *, struct obj *));
 
 const struct worn {
 	long w_mask;
@@ -73,7 +74,8 @@ long mask;
 					u.uprops[p].extrinsic & ~wp->w_mask;
 			if ((p = w_blocks(oobj,mask)) != 0)
 			    u.uprops[p].blocked &= ~wp->w_mask;
-			if (oobj->oartifact)
+			if (oobj->oartifact ||
+			    oobj->oprops)
 			    set_artifact_intrinsic(oobj, 0, mask);
 		    }
 		}
@@ -94,7 +96,7 @@ long mask;
 			    if ((p = w_blocks(obj, mask)) != 0)
 				u.uprops[p].blocked |= wp->w_mask;
 			}
-			if (obj->oartifact)
+			if (obj->oartifact || obj->oprops)
 			    set_artifact_intrinsic(obj, 1, mask);
 		    }
 		}
@@ -120,7 +122,7 @@ register struct obj *obj;
 		p = objects[obj->otyp].oc_oprop;
 		u.uprops[p].extrinsic = u.uprops[p].extrinsic & ~wp->w_mask;
 		obj->owornmask &= ~wp->w_mask;
-		if (obj->oartifact)
+		if (obj->oartifact || obj->oprops)
 		    set_artifact_intrinsic(obj, 0, wp->w_mask);
 		if ((p = w_blocks(obj,wp->w_mask)) != 0)
 		    u.uprops[p].blocked &= ~wp->w_mask;
@@ -206,6 +208,43 @@ struct obj *obj;	/* item to make known if effect can be seen */
     }
 }
 
+// kludge to grant monsters intrinsic strength from e.g. ]oP
+#define _STRENGTH 127
+
+boolean
+obj_has_prop(obj, which)
+register struct obj *obj;
+register int which;
+{
+    if (objects[obj->otyp].oc_oprop == which)
+        return TRUE;
+
+    if (!obj->oprops) return FALSE;
+
+    switch(which)
+    {
+        case FIRE_RES:    return !!(obj->oclass != WEAPON_CLASS &&
+	                            !is_weptool(obj) &&
+				    obj->oprops & ITEM_FIRE);
+        case COLD_RES:    return !!(obj->oclass != WEAPON_CLASS &&
+	                            !is_weptool(obj) &&
+				    obj->oprops & ITEM_FROST);
+        case DRAIN_RES:   return !!(obj->oclass != WEAPON_CLASS &&
+	                            !is_weptool(obj) &&
+				    obj->oprops & ITEM_DRLI);
+	case REFLECTING:  return (obj->oprops & ITEM_REFLECTION);
+	case FAST:        return (obj->oprops & ITEM_SPEED);
+	case TELEPAT:     return (obj->oprops & ITEM_ESP);
+	case DISPLACED:   return (obj->oprops & ITEM_DISPLACEMENT);
+	case FUMBLING:    return (obj->oprops & ITEM_FUMBLING);
+
+	case _STRENGTH:   return (obj->oprops & ITEM_POWER);
+    }
+
+    return FALSE;
+}
+
+
 /* armor put on or taken off; might be magical variety */
 void
 update_mon_intrinsics(mon, obj, on, silently)
@@ -214,12 +253,21 @@ struct obj *obj;
 boolean on, silently;
 {
     int unseen;
-    uchar mask;
+    int mask;
     struct obj *otmp;
     int which = (int) objects[obj->otyp].oc_oprop;
 
+    long props = obj->oprops;
+    int i = 0;
+
     unseen = !canseemon(mon);
-    if (!which) goto maybe_blocks;
+    if (!which) {
+        if (obj->otyp == GAUNTLETS_OF_POWER)
+	    which = _STRENGTH;
+        else goto maybe_blocks;
+    }
+
+new_property:
 
     if (on) {
 	switch (which) {
@@ -227,13 +275,51 @@ boolean on, silently;
 	    mon->minvis = !mon->invis_blkd;
 	    break;
 	 case FAST:
-	  {
+	 {
 	    boolean save_in_mklev = in_mklev;
 	    if (silently) in_mklev = TRUE;
 	    mon_adjust_speed(mon, 0, obj);
 	    in_mklev = save_in_mklev;
 	    break;
-	  }
+	 }
+	/* newly handled properties */
+	 case LEVITATION:
+	    if (!silently && canseemon(mon) &&
+	        !(mon->mintrinsics & MR2_LEVITATE))
+	    {
+                makeknown(obj->otyp);
+	        pline("%s begins to float in the air!", Monnam(mon));
+            }
+	    mon->mintrinsics |= MR2_LEVITATE;
+	    break;
+	 case WWALKING:
+	    mon->mintrinsics |= MR2_WATERWALK;
+	    break;
+	 case DISPLACED:
+	    if (!silently && canseemon(mon) &&
+	        !(mon->mintrinsics & MR2_DISPLACED))
+	    {
+	        if (objects[obj->otyp].oc_oprop == DISPLACED)
+                    makeknown(obj->otyp);
+		else
+		    obj->oprops_known |= ITEM_DISPLACEMENT;
+	        pline("%s image distorts...", s_suffix(Monnam(mon)));
+	    }
+	    mon->mintrinsics |= MR2_DISPLACED;
+	    displace_mon(mon);
+	    break;
+	 case FUMBLING:
+	    mon->mintrinsics |= MR2_FUMBLING;
+	    break;
+	 case SEE_INVIS:
+	    mon->mintrinsics |= MR2_SEE_INVIS;
+	    break;
+	 case MAGICAL_BREATHING:
+	    mon->mintrinsics |= MR2_MAGBREATH;
+	    break;
+	 case _STRENGTH:
+	    mon->mintrinsics |= MR2_STRENGTH;
+	    break;
 	/* properties handled elsewhere */
 	 case ANTIMAGIC:
 	 case REFLECTING:
@@ -244,12 +330,7 @@ boolean on, silently;
 	 case TELEPAT:
 	    break;
 	/* properties which should have an effect but aren't implemented */
-	 case LEVITATION:
-	 case WWALKING:
-	    break;
 	/* properties which maybe should have an effect but don't */
-	 case DISPLACED:
-	 case FUMBLING:
 	 case JUMPING:
 	 case PROTECTION:
 	    break;
@@ -262,6 +343,7 @@ boolean on, silently;
 	    break;
 	}
     } else {	    /* off */
+        mask = 0;
 	switch (which) {
 	 case INVIS:
 	    mon->minvis = mon->perminvis;
@@ -283,17 +365,53 @@ boolean on, silently;
 	 case ACID_RES:
 	 case STONE_RES:
 	    mask = (uchar) (1 << (which - 1));
+	 case LEVITATION:
+	    if (!mask) mask = MR2_LEVITATE;
+	 case WWALKING:
+	    if (!mask) mask = MR2_WATERWALK;
+	 case DISPLACED:
+	    if (!mask) mask = MR2_DISPLACED;
+	 case FUMBLING:
+	    if (!mask) mask = MR2_FUMBLING;
+	 case SEE_INVIS:
+	    if (!mask) mask = MR2_SEE_INVIS;
+	 case MAGICAL_BREATHING:
+	    if (!mask) mask = MR2_MAGBREATH;
+	 case _STRENGTH:
+	    if (!mask) mask = MR2_STRENGTH;
+
 	    /* If the monster doesn't have this resistance intrinsically,
 	       check whether any other worn item confers it.  Note that
 	       we don't currently check for anything conferred via simply
 	       carrying an object. */
-	    if (!(mon->data->mresists & mask)) {
+	    if (mask <= (1 << 8) &&
+	        !(mon->data->mresists & mask)) {
 		for (otmp = mon->minvent; otmp; otmp = otmp->nobj)
 		    if (otmp->owornmask &&
-			    (int) objects[otmp->otyp].oc_oprop == which)
+			    (obj_has_prop(otmp, which)))
 			break;
 		if (!otmp)
+		{
 		    mon->mintrinsics &= ~((unsigned short) mask);
+		    if (!silently && canseemon(mon))
+		    {
+                        if (mask & MR2_LEVITATE)
+			{
+                            makeknown(obj->otyp);
+			    pline("%s floats gently to the %s.",
+			          Monnam(mon), surface(mon->mx,mon->my));
+			}
+			if (mask & MR2_DISPLACED)
+			{
+	                    if (objects[obj->otyp].oc_oprop == DISPLACED)
+                                makeknown(obj->otyp);
+		            else
+		                obj->oprops_known |= ITEM_DISPLACEMENT;
+			    pline("%s image undistorts...", 
+			          Monnam(mon));
+			}
+		    }
+		}
 	    }
 	    break;
 	 default:
@@ -312,6 +430,42 @@ boolean on, silently;
 	break;
      default:
 	break;
+    }
+
+    while (props)
+    {
+        if (!i) i = 1;
+        else i <<= 1;
+
+	if (i > ITEM_PROP_MASK) break;
+
+	if (props & i)
+	{
+	    which = 0;
+	    props &= ~(i);
+	    switch(i)
+	    {
+	        case ITEM_FIRE:
+		    if (obj->oclass != WEAPON_CLASS && !is_weptool(obj))
+		        which = FIRE_RES;
+		    break;
+		case ITEM_FROST:
+		    if (obj->oclass != WEAPON_CLASS && !is_weptool(obj))
+		        which = COLD_RES;
+		    break;
+		case ITEM_DRLI:
+		    if (obj->oclass != WEAPON_CLASS && !is_weptool(obj))
+		        which = DRAIN_RES;
+		    break;
+		case ITEM_REFLECTION:   which = REFLECTING; break;
+		case ITEM_SPEED:        which = FAST; break;
+		case ITEM_ESP:          which = TELEPAT; break;
+		case ITEM_DISPLACEMENT: which = DISPLACED; break;
+		case ITEM_FUMBLING:     which = FUMBLING; break;
+		case ITEM_POWER:        which = _STRENGTH; break;
+	    }
+	    if (which) goto new_property;
+	}
     }
 
 #ifdef STEED
@@ -753,18 +907,28 @@ boolean polyspot;
 }
 
 /* bias a monster's preferences towards armor that has special benefits. */
-/* currently only does speed boots, but might be expanded if monsters get to
-   use more armor abilities */
-static int
+//static
+int
 extra_pref(mon, obj)
 struct monst *mon;
 struct obj *obj;
 {
+    int bias = 0;
     if (obj) {
-	if (obj->otyp == SPEED_BOOTS && mon->permspeed != MFAST)
-	    return 20;
+	if (obj_has_prop(obj, DISPLACED))
+	    bias += 30;  // greatly annoys the player!
+        if (obj_has_prop(obj, FAST) && mon->permspeed != MFAST) 
+	    bias += 20;
+	if (obj_has_prop(obj, _STRENGTH) && !strongmonst(mon->data))
+	    bias += 20;
+	if (obj_has_prop(obj, ANTIMAGIC))
+	    bias += 10;
+	if (obj_has_prop(obj, WWALKING))
+	    bias += 2;
+	if (obj_has_prop(obj, FUMBLING))
+	    bias -= 10;
     }
-    return 0;
+    return bias;
 }
 
 /*

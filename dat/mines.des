@@ -31,7 +31,7 @@ MONSTER: 'G', "gnome", random
 MONSTER: 'G', "gnome", random
 MONSTER: 'G', "gnome", random
 MONSTER: 'G', "gnome", random
-MONSTER: 'G', "gnome lord", random
+MONSTER: '@', "lord", random
 MONSTER: 'h', "dwarf", random
 MONSTER: 'h', "dwarf", random
 MONSTER: 'G', random, random
@@ -95,15 +95,15 @@ MONSTER: 'G', "gnome", random
 SUBROOM: "temple", lit, (15,9), (4,4), "town"
 DOOR: false, closed, north, random
 ALTAR:(02,02),align[0],shrine
-MONSTER: 'G', "gnomish wizard", random
-MONSTER: 'G', "gnomish wizard", random
+MONSTER: '@', "mage", random
+MONSTER: '@', "mage", random
 
 SUBROOM: "ordinary", lit, (22,10), (2,3), "town"
 DOOR: false, locked, west, random
 
 SUBROOM: "ordinary", lit, (26,2), (3,3), "town"
 DOOR: false, closed, south, random
-MONSTER: 'G', "gnome lord", random
+MONSTER: '@', "lord", random
 
 SUBROOM: "ordinary", unlit, (25,10), (4,3), "town"
 DOOR: false, closed, north, random
@@ -197,12 +197,12 @@ MONSTER: 'G', "gnome", random
 SUBROOM: "temple", lit, (19,5), (4,4), "town"
 DOOR: false, closed, north, random
 ALTAR:(02,02),align[0],shrine
-MONSTER: 'G', "gnomish wizard", random
-MONSTER: 'G', "gnomish wizard", random
+MONSTER: '@', "mage", random
+MONSTER: '@', "mage", random
 
 SUBROOM: "ordinary", lit, (18,10), (4,3), "town"
 DOOR: false, locked, west, random
-MONSTER: 'G', "gnome lord", random
+MONSTER: '@', "lord", random
 
 ROOM: "ordinary" , random, random, random, random
 STAIR: random, up
@@ -254,8 +254,8 @@ DOOR: false,closed,north,random
 SUBROOM:"temple",lit,(10,2),(3,4),"town"
 DOOR: false,closed,east,random
 ALTAR:(1,1),align[0],shrine
-MONSTER: 'G', "gnomish wizard", random
-MONSTER: 'G', "gnomish wizard", random
+MONSTER: '@', "mage", random
+MONSTER: '@', "mage", random
 
 SUBROOM:"ordinary",random,(11,7),(2,2),"town"
 DOOR: false,closed,west,random
@@ -337,8 +337,8 @@ DOOR: false,closed,south,random
 SUBROOM:"temple",lit,(11,3),(5,4),"town"
 DOOR: false,closed,south,random
 ALTAR:(2,1),align[0],shrine
-MONSTER: 'G', "gnomish wizard", random
-MONSTER: 'G', "gnomish wizard", random
+MONSTER: '@', "mage", random
+MONSTER: '@', "mage", random
 
 SUBROOM:"ordinary",random,(19,2),(2,2),"town"
 DOOR: false,closed,south,random
@@ -357,8 +357,8 @@ DOOR:false,closed,north,random
 
 SUBROOM:"ordinary",random,(8,11),(2,2),"town"
 DOOR:false,locked,south,random
-MONSTER: 'k',"kobold shaman",random
-MONSTER: 'k',"kobold shaman",random
+MONSTER: '@',"shaman",random
+MONSTER: '@',"shaman",random
 MONSTER: 'f',"kitten",random
 MONSTER: 'f',random,random
 
@@ -451,8 +451,8 @@ MONSTER: 'G', "gnome", random
 MONSTER: 'G', "gnome", random
 MONSTER: 'G', "gnome", random
 MONSTER: 'G', "gnome", random
-MONSTER: 'G', "gnome lord", random
-MONSTER: 'G', "gnome lord", random
+MONSTER: '@', "lord", random
+MONSTER: '@', "lord", random
 MONSTER: 'h', "dwarf", random
 MONSTER: 'h', "dwarf", random
 MONSTER: 'h', "dwarf", random
@@ -469,7 +469,7 @@ DOOR:closed,(07,11)
 # Gnome homes
 DOOR:closed,(04,14)
 DOOR:locked,(01,17)
-MONSTER: 'G', "gnomish wizard", (02,19)
+MONSTER: '@', "mage", (02,19)
 DOOR:locked,(20,16)
 MONSTER: 'G', random, (20,18)
 DOOR:random,(21,14)
@@ -485,10 +485,10 @@ DOOR:locked,(71,03)
 DOOR:locked,(71,06)
 DOOR:closed,(69,04)
 DOOR:closed,(67,16)
-MONSTER: 'G', "gnomish wizard", (67,14)
+MONSTER: '@', "mage", (67,14)
 OBJECT: '=', random, (70,14)
 DOOR:locked,(69,18)
-MONSTER: 'G', "gnome lord", (71,19)
+MONSTER: '@', "lord", (71,19)
 DOOR:locked,(73,18)
 OBJECT: '(', "chest", (73,19)
 DOOR:locked,(50,06)
@@ -562,10 +562,10 @@ MONSTER: 'G', "gnome", random
 MONSTER: 'G', "gnome", random
 MONSTER: 'G', "gnome", random
 MONSTER: 'G', "gnome", (14,6)
-MONSTER: 'G', "gnome lord", (14,5)
+MONSTER: '@', "lord", (14,5)
 MONSTER: 'G', "gnome", (27,8)
-MONSTER: 'G', "gnome lord", random
-MONSTER: 'G', "gnome lord", random
+MONSTER: '@', "lord", random
+MONSTER: '@', "lord", random
 MONSTER: 'h', "dwarf", random
 MONSTER: 'h', "dwarf", random
 MONSTER: 'h', "dwarf", random
@@ -592,7 +592,7 @@ MONSTER: '@', "watch captain", random, peaceful
 MONSTER:'G',"gnome",random
 MONSTER:'G',"gnome",random
 MONSTER:'G',"gnome",random
-MONSTER:'G',"gnome lord",random
+MONSTER:'@',"lord",random
 MONSTER:'Y',"monkey",random
 MONSTER:'Y',"monkey",random
 
@@ -621,7 +621,7 @@ DOOR: false, closed, south, random
 
 SUBROOM: "ordinary", unlit, (19,2), (2,2), "town"
 DOOR: false, locked, east, random
-MONSTER: 'G',"gnome king",random
+MONSTER: '@',"king",random
 
 SUBROOM: "food shop", lit, (19,5), (2,3), "town"
 CHANCE: 50
@@ -663,8 +663,8 @@ DOOR: false, closed, west, random
 SUBROOM: "temple", lit, (24,6), (4,4), "town"
 DOOR: false, closed, west, random
 ALTAR:(02,01),align[0],shrine
-MONSTER: 'G', "gnomish wizard", random
-MONSTER: 'G', "gnomish wizard", random
+MONSTER: '@', "mage", random
+MONSTER: '@', "mage", random
 
 ROOM: "ordinary" , random, random, random, random
 STAIR: random, up
@@ -774,12 +774,12 @@ TRAP:random,random
 TRAP:random,random
 TRAP:random,random
 # Random monsters
-MONSTER:'G',"gnome king",random
-MONSTER:'G',"gnome lord",random
-MONSTER:'G',"gnome lord",random
-MONSTER:'G',"gnome lord",random
-MONSTER:'G',"gnomish wizard",random
-MONSTER:'G',"gnomish wizard",random
+MONSTER:'@',"king",random
+MONSTER:'@',"lord",random
+MONSTER:'@',"lord",random
+MONSTER:'@',"lord",random
+MONSTER:'@',"mage",random
+MONSTER:'@',"mage",random
 MONSTER:'G',"gnome",random
 MONSTER:'G',"gnome",random
 MONSTER:'G',"gnome",random
@@ -895,12 +895,12 @@ TRAP:random,random
 TRAP:random,random
 TRAP:random,random
 # Random monsters.
-MONSTER:'G',"gnome king",random
-MONSTER:'G',"gnome lord",random
-MONSTER:'G',"gnome lord",random
-MONSTER:'G',"gnome lord",random
-MONSTER:'G',"gnomish wizard",random
-MONSTER:'G',"gnomish wizard",random
+MONSTER:'@',"king",random
+MONSTER:'@',"lord",random
+MONSTER:'@',"lord",random
+MONSTER:'@',"lord",random
+MONSTER:'@',"mage",random
+MONSTER:'@',"mage",random
 MONSTER:'G',"gnome",random
 MONSTER:'G',"gnome",random
 MONSTER:'G',"gnome",random
@@ -1004,7 +1004,7 @@ MONSTER:'M',random,random
 MONSTER:'M',random,random
 MONSTER:'M',random,random
 MONSTER:'M',random,random
-MONSTER:'M',"ettin mummy",random
+MONSTER:'M',"mummy",random
 MONSTER:'V',random,random
 MONSTER:'Z',random,random
 MONSTER:'Z',random,random

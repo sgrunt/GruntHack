@@ -78,4 +78,20 @@ extern NEARDATA struct permonst
 	/* mons[SPECIAL_PM] through mons[NUMMONS-1], inclusive, are
 	   never generated randomly and cannot be polymorphed into */
 
+#define race_lev_mod(racemask)  ((racemask & M2_KOBOLD)          ? -3 : \
+                                 (racemask & (M2_GNOME|M2_ORC))  ? -2 : \
+                                 (racemask & (M2_DWARF|M2_ELF))  ? -1 : \
+				 (racemask & M2_HUMAN)           ?  0 : \
+				 (racemask & M2_OGRE)            ?  1 : \
+                                 (racemask & M2_ETTIN)           ?  2 : \
+                                 (racemask & M2_GIANT)           ?  3 : 0)
+
+#define race_lev_mod2(racemask) ((racemask & M2_GIANT)          ?  3 : \
+                                 (racemask & M2_ETTIN)          ?  2 : \
+				 (racemask & M2_OGRE)           ?  1 : \
+				 (racemask & M2_HUMAN)          ?  0 : \
+                                 (racemask & (M2_DWARF|M2_ELF)) ? -1 : \
+                                 (racemask & (M2_GNOME|M2_ORC)) ? -2 : \
+                                 (racemask & M2_KOBOLD)         ? -3 : 0)
+
 #endif /* PERMONST_H */

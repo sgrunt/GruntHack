@@ -77,7 +77,10 @@ moveloop()
 		do {
 		    monscanmove = movemon();
 		    if (youmonst.movement > NORMAL_SPEED)
+		    {
+		        curmonst = &youmonst;
 			break;	/* it's now your turn */
+		    }
 		} while (monscanmove);
 		flags.mon_moving = FALSE;
 
@@ -154,15 +157,19 @@ moveloop()
 		    if (u.uinvulnerable) {
 			/* for the moment at least, you're in tiptop shape */
 			wtcap = UNENCUMBERED;
-		    } else if (Upolyd && youmonst.data->mlet == S_EEL && !is_pool(u.ux,u.uy) && !Is_waterlevel(&u.uz)) {
+		    } else if (Upolyd && youmonst.data->mlet == S_EEL &&
+		               !is_pool(u.ux,u.uy) && !Is_waterlevel(&u.uz) &&
+			       !(u.uswallow &&
+			         u.ustuck->data == &mons[PM_WATER_ELEMENTAL])) {
 			if (u.mh > 1) {
 			    u.mh--;
 			    flags.botl = 1;
 			} else if (u.mh < 1)
-			    rehumanize();
+			    killer_format = KILLED_BY_AN,
+			    rehumanize("inability to breathe air");
 		    } else if (Upolyd && u.mh < u.mhmax) {
 			if (u.mh < 1)
-			    rehumanize();
+			    rehumanize(0);
 			else if (Regeneration ||
 				    (wtcap < MOD_ENCUMBER && !(moves%20))) {
 			    flags.botl = 1;
@@ -293,7 +300,7 @@ moveloop()
 	    /******************************************/
 	    /* once-per-hero-took-time things go here */
 	    /******************************************/
-
+            curmonst = &youmonst;
 
 	} /* actual time passed */
 
@@ -304,11 +311,40 @@ moveloop()
 	find_ac();
 	if(!flags.mv || Blind) {
 	    /* redo monsters if hallu or wearing a helm of telepathy */
-	    if (Hallucination) {	/* update screen randomly */
+	    if (HHallucination &&
+	       !Halluc_resistance) {	/* update screen randomly */
+	    /*
 		see_monsters();
 		see_objects();
 		see_traps();
 		if (u.uswallow) swallowed(0);
+	    */
+                if (u.uswallow) {
+            	    swallowed(1);
+                } else if (Underwater && !Is_waterlevel(&u.uz)) {
+            	    under_water(1);
+                } else if (u.uburied) {
+            	    under_ground(1);
+                } else {
+		    register int x, y;
+		    register struct rm *lev;
+
+                    vision_recalc(2);
+
+                    //clear_nhwindow(WIN_MAP);
+                    clear_glyph_buffer();
+                
+                    for (x = 1; x < COLNO; x++) {
+                	lev = &levl[x][0];
+                	for (y = 0; y < ROWNO; y++, lev++)
+                	    if (lev->glyph != cmap_to_glyph(S_stone))
+                		show_glyph(x,y,lev->glyph);
+                    }
+                
+                    vision_recalc(0);
+                
+                    see_monsters();
+    		}
 	    } else if (Unblind_telepat) {
 		see_monsters();
 	    } else if (Warning || Warn_of_mon)
@@ -566,8 +602,8 @@ boolean new_game;	/* false => restoring an old game */
 	     currentgend != flags.initgend))
 	Sprintf(eos(buf), " %s", genders[currentgend].adj);
 
-    pline(new_game ? "%s %s, welcome to NetHack!  You are a%s %s %s."
-		   : "%s %s, the%s %s %s, welcome back to NetHack!",
+    pline(new_game ? "%s %s, welcome to GruntHack!  You are a%s %s %s."
+		   : "%s %s, the%s %s %s, welcome back to GruntHack!",
 	  Hello((struct monst *) 0), plname, buf, urace.adj,
 	  (currentgend && urole.name.f) ? urole.name.f : urole.name.m);
 }

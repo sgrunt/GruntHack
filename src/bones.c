@@ -263,8 +263,10 @@ struct obj *corpse;
 		 * on your location
 		 */
 		in_mklev = TRUE;
-		mtmp = makemon(&mons[PM_GHOST], u.ux, u.uy, MM_NONAME);
+		mtmp = makemon(&mons[Race_switch], u.ux, u.uy, MM_NONAME);
 		in_mklev = FALSE;
+		set_mon_data(mtmp, &mons[PM_GHOST], 0);
+		mtmp->mrace = urace.selfmask;
 		if (!mtmp) return;
 		mtmp = christen_monst(mtmp, plname);
 		if (corpse)
@@ -272,8 +274,10 @@ struct obj *corpse;
 	} else {
 		/* give your possessions to the monster you become */
 		in_mklev = TRUE;
-		mtmp = makemon(&mons[u.ugrave_arise], u.ux, u.uy, NO_MM_FLAGS);
+		mtmp = makemon(&mons[Race_switch], u.ux, u.uy, NO_MM_FLAGS);
 		in_mklev = FALSE;
+		mtmp->mrace = urace.selfmask;
+		set_mon_data(mtmp, &mons[u.ugrave_arise], 0);
 		if (!mtmp) {
 			drop_upon_death((struct monst *)0, (struct obj *)0);
 			return;

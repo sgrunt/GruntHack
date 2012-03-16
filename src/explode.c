@@ -167,7 +167,8 @@ int expltype;
 				break;
 		    }
 		}
-		if (mtmp && cansee(i+x-1,j+y-1) && !canspotmon(mtmp))
+		if (mtmp && cansee(i+x-1,j+y-1) && 
+		    (!canspotmon(mtmp) || displaced_image(mtmp)))
 		    map_invisible(i+x-1, j+y-1);
 		else if (!mtmp && glyph_is_invisible(levl[i+x-1][j+y-1].glyph)) {
 		    unmap_object(i+x-1, j+y-1);
@@ -335,29 +336,34 @@ int expltype;
 		}
 
 		if (u.uhp <= 0 || (Upolyd && u.mh <= 0)) {
-		    if (Upolyd) {
-			rehumanize();
-		    } else {
+		    char buf[BUFSZ];
+		    buf[0] = '\0';
+
 			if (olet == MON_EXPLODE) {
 			    /* killer handled by caller */
-			    if (str != killer_buf && !generic)
-				Strcpy(killer_buf, str);
+			    if (!generic)
+				Strcpy(buf, str);
 			    killer_format = KILLED_BY_AN;
 			} else if (type >= 0 && olet != SCROLL_CLASS) {
 			    killer_format = NO_KILLER_PREFIX;
-			    Sprintf(killer_buf, "caught %sself in %s own %s",
+			    Sprintf(buf, "caught %sself in %s own %s",
 				    uhim(), uhis(), str);
 			} else if (!strncmpi(str,"tower of flame", 8) ||
 				   !strncmpi(str,"fireball", 8)) {
 			    killer_format = KILLED_BY_AN;
-			    Strcpy(killer_buf, str);
+			    Strcpy(buf, str);
 			} else {
 			    killer_format = KILLED_BY;
-			    Strcpy(killer_buf, str);
+			    Strcpy(buf, str);
 			}
-			killer = killer_buf;
 			/* Known BUG: BURNING suppresses corpse in bones data,
 			   but done does not handle killer reason correctly */
+		    if (Upolyd) {
+		        u.mh = -1;
+			rehumanize(buf);
+		    } else {
+		        Strcpy(killer_buf, buf);
+			killer = killer_buf;
 			done((adtyp == AD_FIRE) ? BURNING : DIED);
 		    }
 		}
@@ -458,7 +464,7 @@ struct obj *obj;			/* only scatter this obj        */
 
 	    /* 1 in 10 chance of destruction of obj; glass, egg destruction */
 	    } else if ((scflags & MAY_DESTROY) && (!rn2(10)
-			|| (objects[otmp->otyp].oc_material == GLASS
+			|| (otmp->omaterial == GLASS
 			|| otmp->otyp == EGG))) {
 		if (breaks(otmp, (xchar)sx, (xchar)sy)) used_up = TRUE;
 	    }
@@ -515,7 +521,10 @@ struct obj *obj;			/* only scatter this obj        */
 
 				    if (multi) nomul(0);
 				    hitvalu = 8 + stmp->obj->spe;
-				    if (bigmonst(youmonst.data)) hitvalu++;
+				    if (maybe_polyd(
+				        bigmonst(youmonst.data),
+					Race_if(PM_OGRE) ||
+					Race_if(PM_GIANT))) hitvalu++;
 				    hitu = thitu(hitvalu,
 						 dmgval(stmp->obj, &youmonst),
 						 stmp->obj, (char *)0);

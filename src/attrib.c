@@ -115,6 +115,22 @@ adjattrib(ndx, incr, msgflg)
 		return FALSE;
 	}
 
+	if ((ndx == A_DEX)) {
+	     if (!(HFumbling & TIMEOUT)) HFumbling += rnd(20);
+	 
+	     if ((uarmg && uarmg->otyp == GAUNTLETS_OF_FUMBLING) || 
+	     (uarmf && uarmf->otyp == FUMBLE_BOOTS)) {
+	       if (msgflg == 0)
+	       {
+	           if ((uarmg && uarmg->otyp == GAUNTLETS_OF_FUMBLING)) 
+		       Your("gloves vibrate for a moment.");
+		   else //must be boots
+		       You("quake in your boots.");
+	       }
+	       return FALSE;
+	     }
+	}
+
 	if (incr > 0) {
 	    if ((AMAX(ndx) >= ATTRMAX(ndx)) && (ACURR(ndx) >= AMAX(ndx))) {
 		if (msgflg == 0 && flags.verbose)
@@ -359,7 +375,7 @@ exerper()
 #ifdef STEED
 		    && !u.usteed
 #endif
-			    ) || Fumbling || HStun)	exercise(A_DEX, FALSE);
+			    ) || FUMBLED || HStun)	exercise(A_DEX, FALSE);
 	}
 }
 
@@ -561,10 +577,17 @@ int oldlevel, newlevel;
 
 	switch (Race_switch) {
 	case PM_ELF:            rabil = elf_abil;	break;
+#ifdef NEWRACES
+	case PM_OGRE:
+	case PM_KOBOLD:
+#endif
 	case PM_ORC:            rabil = orc_abil;	break;
 	case PM_HUMAN:
 	case PM_DWARF:
 	case PM_GNOME:
+#ifdef NEWRACES
+	case PM_GIANT: 
+#endif
 	default:                rabil = 0;		break;
 	}
 
@@ -669,10 +692,24 @@ int x;
 
 	if (x == A_STR) {
 		if (uarmg && uarmg->otyp == GAUNTLETS_OF_POWER) return(125);
+
+#ifdef TOURIST
+		if (uarmu && (uarmu->oprops & ITEM_POWER)) return(125);
+#endif
+		if (uarm  && (uarm->oprops & ITEM_POWER)) return(125);
+		if (uarmc && (uarmc->oprops & ITEM_POWER)) return(125);
+		if (uarmg && (uarmg->oprops & ITEM_POWER)) return(125);
+		if (uarms && (uarms->oprops & ITEM_POWER)) return(125);
+		if (uarmh && (uarmh->oprops & ITEM_POWER)) return(125);
+		if (uarmf && (uarmf->oprops & ITEM_POWER)) return(125);
+		if (uleft && (uleft->oprops & ITEM_POWER)) return(125);
+		if (uright && (uright->oprops & ITEM_POWER)) return(125);
+		if (uamul && (uamul->oprops & ITEM_POWER)) return(125);
+
 #ifdef WIN32_BUG
-		else return(x=((tmp >= 125) ? 125 : (tmp <= 3) ? 3 : tmp));
+		return(x=((tmp >= 125) ? 125 : (tmp <= 3) ? 3 : tmp));
 #else
-		else return((schar)((tmp >= 125) ? 125 : (tmp <= 3) ? 3 : tmp));
+		return((schar)((tmp >= 125) ? 125 : (tmp <= 3) ? 3 : tmp));
 #endif
 	} else if (x == A_CHA) {
 		if (tmp < 18 && (youmonst.data->mlet == S_NYMPH ||
@@ -683,6 +720,9 @@ int x;
 		 * stupid.  there are lower levels of cognition than "dunce".
 		 */
 		if (uarmh && uarmh->otyp == DUNCE_CAP) return(6);
+	} else if (x == A_DEX) {
+		if (uarmg && uarmg->otyp == GAUNTLETS_OF_FUMBLING) return(6);
+		if (uarmf && uarmf->otyp == FUMBLE_BOOTS) return(6);
 	}
 #ifdef WIN32_BUG
 	return(x=((tmp >= 25) ? 25 : (tmp <= 3) ? 3 : tmp));

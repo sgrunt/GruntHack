@@ -66,7 +66,7 @@ struct monst *victim;
 	case 0:
 	    item = (victim == &youmonst) ? uarmh : which_armor(victim, W_ARMH);
 	    if (item) {
-		mat_idx = objects[item->otyp].oc_material;
+		mat_idx = item->omaterial;
 	    	Sprintf(buf,"%s helmet", materialnm[mat_idx] );
 	    }
 	    if (!burn_dmg(item, item ? buf : "helmet")) continue;
@@ -125,8 +125,17 @@ struct monst *victim;
 	boolean vulnerable = FALSE;
 	boolean grprot = FALSE;
 	boolean is_primary = TRUE;
-	boolean vismon = (victim != &youmonst) && canseemon(victim);
+	boolean vismon = (victim != &youmonst) && 
+	                 ((victim && canseemon(victim)) ||
+			  (otmp && otmp->where == OBJ_FLOOR && 
+			   cansee(otmp->ox, otmp->oy)));
 	int erosion;
+	char buf[BUFSZ];
+
+	if (victim)
+	    Sprintf(buf, s_suffix(mon_nam(victim)));
+	else
+	    Sprintf(buf, "the");
 
 	if (!otmp) return(FALSE);
 	switch(type) {
@@ -145,15 +154,16 @@ struct monst *victim;
 	}
 	erosion = is_primary ? otmp->oeroded : otmp->oeroded2;
 
-	if (!print && (!vulnerable || otmp->oerodeproof || erosion == MAX_ERODE))
+	if (!print && (!vulnerable || otmp->oerodeproof))
 		return FALSE;
 
 	if (!vulnerable) {
 	    if (flags.verbose) {
+	        buf[0] = highc(buf[0]);
 		if (victim == &youmonst)
 		    Your("%s %s not affected.", ostr, vtense(ostr, "are"));
 		else if (vismon)
-		    pline("%s's %s %s not affected.", Monnam(victim), ostr,
+		    pline("%s %s %s not affected.", buf, ostr,
 			  vtense(ostr, "are"));
 	    }
 	} else if (erosion < MAX_ERODE) {
@@ -165,19 +175,29 @@ struct monst *victim;
 			pline("Somehow, your %s %s not affected.",
 			      ostr, vtense(ostr, "are"));
 		    else if (vismon)
-			pline("Somehow, %s's %s %s not affected.",
-			      mon_nam(victim), ostr, vtense(ostr, "are"));
+			pline("Somehow, %s %s %s not affected.",
+			      buf, ostr, vtense(ostr, "are"));
 		}
+	    } else if (type == 0 && otmp->omaterial == PAPER) {
+	        buf[0] = highc(buf[0]);
+	        if (victim == &youmonst)
+	            Your("%s %s!", ostr, vtense(ostr, "ignite"));
+		else if (vismon)
+	            pline("%s %s %s!", buf,
+		                       ostr, vtense(ostr, "ignite"));
+		    
+		goto useup;
 	    } else {
+	        buf[0] = highc(buf[0]);
 		if (victim == &youmonst)
 		    Your("%s %s%s!", ostr,
 			 vtense(ostr, action[type]),
-			 erosion+1 == MAX_ERODE ? " completely" :
+			 //erosion+1 == MAX_ERODE ? " completely" :
 			    erosion ? " further" : "");
 		else if (vismon)
-		    pline("%s's %s %s%s!", Monnam(victim), ostr,
+		    pline("%s %s %s%s!", buf, ostr,
 			vtense(ostr, action[type]),
-			erosion+1 == MAX_ERODE ? " completely" :
+			//erosion+1 == MAX_ERODE ? " completely" :
 			  erosion ? " further" : "");
 		if (is_primary)
 		    otmp->oeroded++;
@@ -186,7 +206,7 @@ struct monst *victim;
 		update_inventory();
 	    }
 	} else {
-	    if (flags.verbose) {
+	    /*if (flags.verbose) {
 		if (victim == &youmonst)
 		    Your("%s %s completely %s.", ostr,
 			 vtense(ostr, Blind ? "feel" : "look"),
@@ -195,6 +215,46 @@ struct monst *victim;
 		    pline("%s's %s %s completely %s.",
 			  Monnam(victim), ostr,
 			  vtense(ostr, "look"), msg[type]);
+	    } */
+	    if (victim == &youmonst)
+	    {
+	        Your("%s %s away!", ostr, vtense(ostr, action[type]));
+useup:
+		{
+		    boolean paper = (otmp->omaterial == PAPER);
+		    if(otmp->owornmask) {
+		        if(otmp == uarm) (void) Armor_gone();
+		        else if(otmp == uarmc) (void) Cloak_off();
+		        else if(otmp == uarmh) (void) Helmet_off();
+		        else if(otmp == uarms) (void) Shield_off();
+		        else if(otmp == uarmg) (void) Gloves_off();
+		        else if(otmp == uarmf) (void) Boots_off();
+#ifdef TOURIST
+		        else if(otmp == uarmu) setnotworn(otmp);
+#endif
+		        else if(otmp == uleft) Ring_gone(otmp);
+		        else if(otmp == uright) Ring_gone(otmp);
+		        else if(otmp == ublindf) Blindf_off(otmp);
+		        else if(otmp == uamul) Amulet_off();
+		        else if(otmp == uwep) uwepgone();
+		        else if (otmp == uquiver) uqwepgone();
+		        else if (otmp == uswapwep) uswapwepgone();
+		    }
+		    useupall(otmp);
+		    if (paper)
+		    {
+		        char buf[BUFSZ];
+			Sprintf(buf, "burning %s", ostr);
+			losehp(rnd(6), buf, KILLED_BY_AN);
+	            }
+		}
+	    } else if (vismon) {
+	        buf[0] = highc(buf[0]);
+	        pline("%s %s %s away!", buf, ostr,
+		                          vtense(ostr, action[type]));
+                if (victim)
+                    update_mon_intrinsics(victim, otmp, FALSE, TRUE);
+		useup(otmp);
 	    }
 	}
 	return(TRUE);
@@ -222,6 +282,7 @@ struct monst *victim;
 		pline("%s's %s %s", Monnam(victim), aobjnam(otmp,"are"), txt);
 	}
 	if (!rn2(2)) {
+	    if (otmp == uarmg) Glib &= ~FROMOUTSIDE;
 	    otmp->greased = 0;
 	    if (carried(otmp)) {
 		pline_The("grease dissolves.");
@@ -353,7 +414,8 @@ boolean td;	/* td == TRUE : trap door or hole */
 					newlevel == dunlevs_in_dungeon(&u.uz))
 		) {
 	    dont_fall = "don't fall in.";
-	} else if (youmonst.data->msize >= MZ_HUGE) {
+	} else if (maybe_polyd(youmonst.data->msize >= MZ_HUGE,
+	                       Race_if(PM_GIANT))) {
 	    dont_fall = "don't fit through.";
 	} else if (!next_to_u()) {
 	    dont_fall = "are jerked back by your pet!";
@@ -616,7 +678,7 @@ unsigned trflags;
 		    defsyms[trap_to_defsym(ttype)].explanation);
 		return;
 	    }
-	    if(!Fumbling && ttype != MAGIC_PORTAL &&
+	    if(!FUMBLED && ttype != MAGIC_PORTAL &&
 		ttype != ANTI_MAGIC && !forcebungle &&
 		(!rn2(5) ||
 	    ((ttype == PIT || ttype == SPIKED_PIT) && is_clinger(youmonst.data)))) {
@@ -1026,7 +1088,7 @@ glovecheck:		(void) rust_dmg(uarmg, "gauntlets", 1, TRUE, &youmonst);
 			/* mintrap currently does not return 2(died) for webs */
 			if (mintrap(u.usteed)) {
 			    u.usteed->mtrapped = 0;
-			    if (strongmonst(u.usteed->data)) str = 17;
+			    if (is_strong(u.usteed)) str = 17;
 			} else {
 			    break;
 			}
@@ -1224,7 +1286,7 @@ struct obj *otmp;
 			steedhit = TRUE;
 			break;
 		case SLP_GAS_TRAP:
-		    if (!resists_sleep(mtmp) && !breathless(mptr) &&
+		    if (!resists_sleep(mtmp) && !mbreathing(mtmp) &&
 				!mtmp->msleeping && mtmp->mcanmove) {
 			    mtmp->mcanmove = 0;
 			    mtmp->mfrozen = rnd(25);
@@ -1940,7 +2002,7 @@ glovecheck:		    target = which_armor(mtmp, W_ARMG);
 		case PIT:
 		case SPIKED_PIT:
 			fallverb = "falls";
-			if (is_flyer(mptr) || is_floater(mptr) ||
+			if (is_flyer(mptr) || levitating(mtmp) ||
 				(mtmp->wormno && count_wsegs(mtmp) > 5) ||
 				is_clinger(mptr)) {
 			    if (!inescapable) break;	/* avoids trap */
@@ -1969,7 +2031,7 @@ glovecheck:		    target = which_armor(mtmp, W_ARMG);
 				    defsyms[trap_to_defsym(tt)].explanation);
 			    break;	/* don't activate it after all */
 			}
-			if (is_flyer(mptr) || is_floater(mptr) ||
+			if (is_flyer(mptr) || levitating(mtmp) ||
 				mptr == &mons[PM_WUMPUS] ||
 				(mtmp->wormno && count_wsegs(mtmp) > 5) ||
 				mptr->msize >= MZ_HUGE) {
@@ -2205,16 +2267,16 @@ const char *arg;
 
 	if(uwep && uwep->otyp == CORPSE && touch_petrifies(&mons[uwep->corpsenm])
 			&& !Stone_resistance) {
-		pline("%s touch the %s corpse.", arg,
-		        mons[uwep->corpsenm].mname);
+		pline("%s touch the %s.", arg,
+		        corpse_xname(uwep, FALSE));
 		Sprintf(kbuf, "%s corpse", an(mons[uwep->corpsenm].mname));
 		instapetrify(kbuf);
 	}
 	/* Or your secondary weapon, if wielded */
 	if(u.twoweap && uswapwep && uswapwep->otyp == CORPSE &&
 			touch_petrifies(&mons[uswapwep->corpsenm]) && !Stone_resistance){
-		pline("%s touch the %s corpse.", arg,
-		        mons[uswapwep->corpsenm].mname);
+		pline("%s touch the %s.", arg,
+		        xname(uwep));
 		Sprintf(kbuf, "%s corpse", an(mons[uswapwep->corpsenm].mname));
 		instapetrify(kbuf);
 	}
@@ -2230,9 +2292,9 @@ boolean byplayer;
 
 	if (mwep && mwep->otyp == CORPSE && touch_petrifies(&mons[mwep->corpsenm])) {
 		if (cansee(mon->mx, mon->my)) {
-			pline("%s%s touches the %s corpse.",
+			pline("%s%s touches the %s.",
 			    arg ? arg : "", arg ? mon_nam(mon) : Monnam(mon),
-			    mons[mwep->corpsenm].mname);
+			    corpse_xname(mwep, FALSE));
 		}
 		minstapetrify(mon, byplayer);
 	}
@@ -2273,7 +2335,7 @@ float_up()
 	else
 		You("start to float in the air!");
 #ifdef STEED
-	if (u.usteed && !is_floater(u.usteed->data) &&
+	if (u.usteed && !levitating(u.usteed) &&
 						!is_flyer(u.usteed->data)) {
 	    if (Lev_at_will)
 	    	pline("%s magically floats up!", Monnam(u.usteed));
@@ -2662,14 +2724,8 @@ xchar x, y;
 		      destroy_strings[dindx*3 + 1] : destroy_strings[dindx*3]);
 	    delobj(obj);
 	    retval++;
-	} else if (is_flammable(obj) && obj->oeroded < MAX_ERODE &&
-		   !(obj->oerodeproof || (obj->blessed && !rnl(4)))) {
-	    if (in_sight) {
-		pline("%s %s%s.", Yname2(obj), otense(obj, "burn"),
-		      obj->oeroded+1 == MAX_ERODE ? " completely" :
-		      obj->oeroded ? " further" : "");
-	    }
-	    obj->oeroded++;
+	} else if (is_flammable(obj)) {
+	    rust_dmg(obj, xname(obj), 0, FALSE, m_at(x, y));
 	}
     }
 
@@ -2697,7 +2753,9 @@ register boolean force, here;
 		} else if(obj->greased) {
 			if (force || !rn2(2)) obj->greased = 0;
 		} else if(Is_container(obj) && !Is_box(obj) &&
-			(obj->otyp != OILSKIN_SACK || (obj->cursed && !rn2(3)))) {
+			(!(obj->otyp == OILSKIN_SACK ||
+			   obj->oprops & ITEM_OILSKIN)
+			   || (obj->cursed && !rn2(3)))) {
 			water_damage(obj->cobj, force, FALSE);
 		} else if (!force && (Luck + 5) > rn2(20)) {
 			/*  chance per item of sustaining damage:
@@ -2736,7 +2794,9 @@ register boolean force, here;
 			/* all metal stuff and armor except (body armor
 			   protected by oilskin cloak) */
 			if(obj->oclass != ARMOR_CLASS || obj != uarm ||
-			   !uarmc || uarmc->otyp != OILSKIN_CLOAK ||
+			   !uarmc || 
+			   !(uarmc->otyp == OILSKIN_CLOAK ||
+			     (uarmc->oprops & ITEM_OILSKIN)) ||
 			   (uarmc->cursed && !rn2(3)))
 				obj->oeroded++;
 		}
@@ -3012,7 +3072,7 @@ struct trap *ttmp;
 	if (Confusion || Hallucination) chance++;
 	if (Blind) chance++;
 	if (Stunned) chance += 2;
-	if (Fumbling) chance *= 2;
+	if (FUMBLED) chance *= 2;
 	/* Your own traps are better known than others. */
 	if (ttmp && ttmp->madeby_u) chance--;
 	if (Role_if(PM_ROGUE)) {
@@ -3097,7 +3157,8 @@ boolean force_failure;
 	    bad_rock(youmonst.data,u.ux,ttmp->ty) &&
 	    bad_rock(youmonst.data,ttmp->tx,u.uy)) {
 	    if ((invent && (inv_weight() + weight_cap() > 600)) ||
-		bigmonst(youmonst.data)) {
+		maybe_polyd(bigmonst(youmonst.data),
+		            Race_if(PM_OGRE) || Race_if(PM_GIANT))) {
 		/* don't allow untrap if they can't get thru to it */
 		You("are unable to reach the %s!",
 		    defsyms[trap_to_defsym(ttype)].explanation);
@@ -3377,7 +3438,7 @@ struct trap *ttmp;
 	}
 
 	/* is the monster too heavy? */
-	wt = inv_weight() + mtmp->data->cwt;
+	wt = inv_weight() + mons[mons_to_corpse(mtmp)].cwt;
 	if (!try_lift(mtmp, ttmp, wt, FALSE)) return 1;
 
 	/* is the monster with inventory too heavy? */
@@ -3512,7 +3573,7 @@ boolean force;
 			    exercise(A_DEX, TRUE);
 			    ch = ACURR(A_DEX) + u.ulevel;
 			    if (Role_if(PM_ROGUE)) ch *= 2;
-			    if(!force && (confused || Fumbling ||
+			    if(!force && (confused || FUMBLED ||
 				rnd(75+level_difficulty()/2) > ch)) {
 				(void) chest_trap(otmp, FINGER, TRUE);
 			    } else {
@@ -3572,7 +3633,7 @@ boolean force;
 		if (levl[x][y].doormask & D_TRAPPED) {
 		    ch = 15 + (Role_if(PM_ROGUE) ? u.ulevel*3 : u.ulevel);
 		    exercise(A_DEX, TRUE);
-		    if(!force && (confused || Fumbling ||
+		    if(!force && (confused || FUMBLED ||
 				     rnd(75+level_difficulty()/2) > ch)) {
 			You("set it off!");
 			b_trapped("door", FINGER);
@@ -3741,7 +3802,7 @@ boolean disarm;
 		case 3:
 			if (!Free_action) {                        
 			pline("Suddenly you are frozen in place!");
-			nomul(-d(5, 6));
+			nomul2(-d(5, 6), "paralyzed");
 			exercise(A_DEX, FALSE);
 			nomovemsg = You_can_move_again;
 			} else You("momentarily stiffen.");

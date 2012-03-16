@@ -77,7 +77,9 @@ experience(mtmp, nk)	/* return # of exp points for mtmp after nk killed */
 		/* extra heavy damage bonus */
 	    if((int)(ptr->mattk[i].damd * ptr->mattk[i].damn) > 23)
 		tmp += mtmp->m_lev;
-	    if (tmp2 == AD_WRAP && ptr->mlet == S_EEL && !Amphibious)
+	    if (tmp2 == AD_WRAP &&
+	        (ptr->mlet == S_EEL ||
+		 ptr->mattk[i].aatyp == AT_ENGL) && !Amphibious)
 		tmp += 1000;
 	}
 

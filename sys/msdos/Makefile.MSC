@@ -16,7 +16,7 @@
 # Game Installation Variables
 # NOTE: Make sure GAMEDIR exists before make is started.
 
-GAME = nethack
+GAME = grnthack
 GAMEDIR =..\binary
 
 #

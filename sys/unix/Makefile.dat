@@ -41,8 +41,8 @@ nhtiles.bmp: ../util/tile2bmp ../win/share/monsters.txt ../win/share/objects.txt
 				../win/share/other.txt
 	../util/tile2bmp $@
 
-NetHack.ad: ../win/X11/NetHack.ad
-	cp ../win/X11/NetHack.ad NetHack.ad
+GruntHack.ad: ../win/X11/GruntHack.ad
+	cp ../win/X11/GruntHack.ad GruntHack.ad
 
 pet_mark.xbm: ../win/X11/pet_mark.xbm
 	cp ../win/X11/pet_mark.xbm pet_mark.xbm
@@ -53,11 +53,11 @@ rip.xpm: ../win/X11/rip.xpm
 mapbg.xpm: ../win/gnome/mapbg.xpm
 	cp ../win/gnome/mapbg.xpm mapbg.xpm
 
-nhsplash.xpm: ../win/Qt/nhsplash.xpm
+ghsplash.xpm: ../win/Qt/nhsplash.xpm
 	cp ../win/Qt/nhsplash.xpm nhsplash.xpm
 
-nethack.icns: ../win/Qt/nhicns.uu
-	$(UUDECODE) ../win/Qt/nhicns.uu
+grunthack.icns: ../win/Qt/ghicns.uu
+	$(UUDECODE) ../win/Qt/ghicns.uu
 
 Info.plist: ../win/Qt/Info.pli
 	cp ../win/Qt/Info.pli Info.plist

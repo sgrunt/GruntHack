@@ -8,6 +8,14 @@
 #include "edog.h"
 
 extern boolean notonhead;
+extern struct obj *propellor;
+
+int FDECL(extra_pref, (struct monst *, struct obj *));
+
+extern boolean FDECL(would_prefer_hwep,(struct monst *,struct obj *));
+extern boolean FDECL(would_prefer_rwep,(struct monst *,struct obj *));
+
+#define DOG_SATIATED 3000
 
 #ifdef OVL0
 
@@ -20,13 +28,161 @@ STATIC_DCL boolean FDECL(can_reach_location,(struct monst *,XCHAR_P,XCHAR_P,
     XCHAR_P,XCHAR_P));
 STATIC_DCL boolean FDECL(could_reach_item,(struct monst *, XCHAR_P,XCHAR_P));
 
+/*
+ * See if this armor is better than what we're wearing.
+ */
+boolean
+is_better_armor(mtmp, otmp)
+register struct monst *mtmp;
+register struct obj *otmp;
+{
+    register struct obj *obj;
+    register struct obj *best = (struct obj *)0;
+
+    if (otmp->oclass != ARMOR_CLASS) return FALSE;
+
+    if (cantweararm(mtmp->data) &&
+        !(is_cloak(otmp) && mtmp->data->msize == MZ_SMALL))
+	return FALSE;
+    
+    if (is_shirt(otmp) && (mtmp->misc_worn_check & W_ARM))
+        return FALSE;
+    
+    if (is_shield(otmp) &&
+        (mtmp == &youmonst) ? (uwep && bimanual(uwep)) 
+	                    : (MON_WEP(mtmp) && bimanual(MON_WEP(mtmp))))
+	return FALSE;
+    
+    if (is_gloves(otmp) && nohands(mtmp->data)) return FALSE;
+    
+    if (is_boots(otmp) &&
+        (slithy(mtmp->data) || mtmp->data->mlet == S_CENTAUR))
+	return FALSE;
+    
+    if (is_helmet(otmp) &&
+        !is_flimsy(otmp) &&
+	num_horns(mtmp->data) > 0)
+	return FALSE;
+
+    obj = (mtmp == &youmonst) ? invent : mtmp->minvent;
+
+    for(; obj; obj = obj->nobj)
+    {
+        if (is_cloak(otmp)  && !is_cloak(obj) ) continue;
+        if (is_suit(otmp)   && !is_suit(obj)  ) continue;
+#ifdef TOURIST
+        if (is_shirt(otmp)  && !is_shirt(obj) ) continue;
+#endif
+	if (is_boots(otmp)  && !is_boots(obj) ) continue;
+	if (is_shield(otmp) && !is_shield(obj)) continue;
+	if (is_helmet(otmp) && !is_helmet(obj)) continue;
+	if (is_gloves(otmp) && !is_gloves(obj)) continue;
+
+	if (!obj->owornmask) continue;
+
+	if (best &&
+	     (ARM_BONUS(obj) +  extra_pref(mtmp,obj) >=
+	      ARM_BONUS(best) + extra_pref(mtmp,best)))
+	     best = obj;
+    }
+    
+    return ((best == (struct obj *)0) ||
+	    (ARM_BONUS(otmp) + extra_pref(mtmp,otmp) >
+	     ARM_BONUS(best) + extra_pref(mtmp,best)));
+}
+
+/*
+ * See if a monst could use this item in an offensive or defensive capacity.
+ */
+boolean
+could_use_item(mtmp, otmp)
+register struct monst *mtmp;
+register struct obj *otmp;
+{
+    boolean can_use =
+            // make sure this is an intelligent monster
+            (mtmp && !is_animal(mtmp->data) && !mindless(mtmp->data) && 
+	      !nohands(mtmp->data) &&
+	     otmp &&
+	    // food
+            ((dogfood(mtmp, otmp) < APPORT) ||
+	    // better weapons
+	     (attacktype(mtmp->data, AT_WEAP) &&
+	      (otmp->oclass == WEAPON_CLASS || is_weptool(otmp)) && 
+	           //(MON_WEP(mtmp) &&
+	          //  ammo_and_launcher(otmp, MON_WEP(mtmp)))) &&
+		   (would_prefer_hwep(mtmp, otmp) ||
+		    would_prefer_rwep(mtmp, otmp))) ||
+	    // better armor
+	     (otmp->oclass == ARMOR_CLASS &&
+	      is_better_armor(mtmp, otmp)) ||
+	    // useful amulets
+	     otmp->otyp == AMULET_OF_LIFE_SAVING ||
+	     otmp->otyp == AMULET_OF_REFLECTION ||
+	    // misc magic items that muse can use
+	     otmp->otyp == SCR_TELEPORTATION ||
+             otmp->otyp == SCR_EARTH ||
+             otmp->otyp == SCR_REMOVE_CURSE ||
+	     otmp->otyp == WAN_DEATH ||
+	     otmp->otyp == WAN_DIGGING ||
+	     otmp->otyp == WAN_FIRE ||
+	     otmp->otyp == WAN_COLD ||
+	     otmp->otyp == WAN_LIGHTNING ||
+	     otmp->otyp == WAN_MAGIC_MISSILE ||
+	     otmp->otyp == WAN_STRIKING ||
+	     otmp->otyp == WAN_TELEPORTATION ||
+	     otmp->otyp == POT_HEALING ||
+	     otmp->otyp == POT_EXTRA_HEALING ||
+	     otmp->otyp == POT_FULL_HEALING ||
+	     otmp->otyp == POT_PARALYSIS ||
+	     otmp->otyp == POT_BLINDNESS ||
+	     otmp->otyp == POT_CONFUSION ||
+	     otmp->otyp == POT_ACID ||
+	     otmp->otyp == FROST_HORN ||
+	     otmp->otyp == FIRE_HORN ||
+	     otmp->otyp == UNICORN_HORN));
+
+    if (can_use)
+    {
+        //arbitrary - greedy monsters keep any item you can use
+        if (likes_gold(mtmp->data)) return TRUE;
+
+        if (otmp->oclass == ARMOR_CLASS)
+	{
+	    return !is_better_armor(&youmonst, otmp);
+	}
+	else if (otmp->oclass == WAND_CLASS &&
+	         otmp->spe <= 0)
+            return FALSE;  // used charges or was cancelled?
+	else
+	{
+	    // Check if you've got one.
+	    // If you don't, don't hoard it.
+            register struct obj *otmp2;
+	    for(otmp2 = invent; otmp2; otmp2 = otmp2->nobj)
+	        if (otmp->otyp == otmp2->otyp ||
+	            (otmp->otyp == FOOD_CLASS && otmp2->otyp == FOOD_CLASS))
+	            return TRUE;
+	}
+    }
+
+    return FALSE;
+}
+
 STATIC_OVL struct obj *
 DROPPABLES(mon)
 register struct monst *mon;
 {
 	register struct obj *obj;
-	struct obj *wep = MON_WEP(mon);
+	struct obj *wep  = MON_WEP(mon),
+                   *hwep = attacktype(mon->data, AT_WEAP)
+		           ? select_hwep(mon) : (struct obj *)0,
+		   *proj = attacktype(mon->data, AT_WEAP)
+		           ? select_rwep(mon) : (struct obj *)0,
+		   *rwep;
 	boolean item1 = FALSE, item2 = FALSE;
+
+	rwep = attacktype(mon->data, AT_WEAP) ? propellor : &zeroobj;
 
 	if (is_animal(mon->data) || mindless(mon->data))
 		item1 = item2 = TRUE;
@@ -42,7 +198,15 @@ register struct monst *mon;
 			item2 = TRUE;
 			continue;
 		}
-		if (!obj->owornmask && obj != wep) return obj;
+		if (!obj->owornmask && obj != wep && obj != rwep
+		    && obj != proj && obj != hwep
+		    && !would_prefer_hwep(mon, obj) //cursed item in hand?
+		    && !would_prefer_rwep(mon, obj)
+		    && ((rwep != &zeroobj) ||
+		        (!is_ammo(obj) && !is_launcher(obj)))
+		    && (rwep == &zeroobj || !ammo_and_launcher(obj, rwep))
+		    && !could_use_item(mon, obj))
+		    return obj;
 	}
 	return (struct obj *)0;
 }
@@ -130,8 +294,14 @@ boolean devour;
 	boolean poly = FALSE, grow = FALSE, heal = FALSE;
 	int nutrit;
 
+#ifdef PET_SATIATION
+	boolean can_choke = (edog->hungrytime >= monstermoves + DOG_SATIATED);
+#else
+        // disabled if pets can choke;
+	// if they're really hungry you should feed them big food!
 	if(edog->hungrytime < monstermoves)
 	    edog->hungrytime = monstermoves;
+#endif //PET_SATIATION
 	nutrit = dog_nutrition(mtmp, obj);
 	poly = polyfodder(obj);
 	grow = mlevelgain(obj);
@@ -193,6 +363,22 @@ boolean devour;
 	} else
 	    delobj(obj);
 
+#ifdef PET_SATIATION
+	if (can_choke && edog->hungrytime >= 2*DOG_SATIATED)
+	{
+	    if (canseemon(mtmp))
+	    {
+	        pline("%s chokes over %s food!", Monnam(mtmp), mhis(mtmp));
+		pline("%s dies!", Monnam(mtmp));
+	    } else {
+	        You("have a very sad feeling for a moment, then it passes.");
+	    }
+            mondied(mtmp);
+	    if (mtmp->mhp > 0) return 1;
+	    return 2;
+	}
+#endif //PET_SATIATION
+
 	if (poly) {
 	    (void) newcham(mtmp, (struct permonst *)0, FALSE,
 			   cansee(mtmp->mx, mtmp->my));
@@ -214,6 +400,34 @@ dog_hunger(mtmp, edog)
 register struct monst *mtmp;
 register struct edog *edog;
 {
+        if (monstermoves > edog->hungrytime)
+	{
+	    // We're hungry; check if we're carrying anything we can eat
+	    // Intelligent pets should be able to carry such food 
+	    register struct obj *otmp, *obest = (struct obj *)0;
+	    int cur_nutrit = -1, best_nutrit = -1;
+	    int cur_food = APPORT, best_food = APPORT;
+	    for (otmp = mtmp->minvent; otmp; otmp = otmp->nobj)
+	    {
+	        cur_nutrit = dog_nutrition(mtmp, otmp);
+		cur_food = dogfood(mtmp, otmp);
+	        if (cur_food < best_food &&
+		    cur_nutrit > best_nutrit)
+		{
+		    best_nutrit = cur_nutrit;
+		    best_food = cur_food;
+		    obest = otmp;
+		}
+	    }
+	    if (obest != (struct obj *)0)
+	    {
+	        obj_extract_self(obest);
+		place_object(obest, mtmp->mx, mtmp->my);
+	        if (dog_eat(mtmp, obest, mtmp->mx, mtmp->my, FALSE) == 2)
+	            return(TRUE);
+	        return(FALSE);
+	    }
+	}
 	if (monstermoves > edog->hungrytime + 500) {
 	    if (!carnivorous(mtmp->data) && !herbivorous(mtmp->data)) {
 		edog->hungrytime = monstermoves + 500;
@@ -266,6 +480,8 @@ int udist;
 	register int omx, omy;
 	struct obj *obj;
 
+	boolean droppables = FALSE;
+
 	if (mtmp->msleeping || !mtmp->mcanmove) return(0);
 
 	omx = mtmp->mx;
@@ -286,7 +502,9 @@ int udist;
 		    edog->dropdist = udist;		/* hpscdi!jon */
 		    edog->droptime = monstermoves;
 		}
-	} else {
+	    droppables = TRUE;
+	}
+
 	    if((obj=level.objects[omx][omy]) && !index(nofetch,obj->oclass)
 #ifdef MAIL
 			&& obj->otyp != SCR_MAIL
@@ -294,16 +512,24 @@ int udist;
 									){
 		int edible = dogfood(mtmp, obj);
 
-		if ((edible <= CADAVER ||
+	    if (!droppables && (edible <= CADAVER ||
 			/* starving pet is more aggressive about eating */
 			(edog->mhpmax_penalty && edible == ACCFOOD)) &&
 		    could_reach_item(mtmp, obj->ox, obj->oy))
+		{
+#ifdef PET_SATIATION
+		    // Don't eat if satiated.  (arbitrary) 
+		    if (edog->hungrytime < monstermoves + DOG_SATIATED) 
+#endif //PET_SATIATION
 		    return dog_eat(mtmp, obj, omx, omy, FALSE);
+		}
 
 		if(can_carry(mtmp, obj) && !obj->cursed &&
 			could_reach_item(mtmp, obj->ox, obj->oy)) {
-		    if(rn2(20) < edog->apport+3) {
-			if (rn2(udist) || !rn2(edog->apport)) {
+	        boolean can_use = could_use_item(mtmp, obj);
+	        if (can_use ||
+		        (!droppables && rn2(20) < edog->apport+3)) {
+		    if (can_use || rn2(udist) || !rn2(edog->apport)) {
 			    if (cansee(omx, omy) && flags.verbose)
 				pline("%s picks up %s.", Monnam(mtmp),
 				    distant_name(obj, doname));
@@ -320,7 +546,6 @@ int udist;
 		    }
 		}
 	    }
-	}
 	return 0;
 }
 
@@ -360,6 +585,7 @@ int after, udist, whappr;
 #define SQSRCHRADIUS 5
 	    int min_x, max_x, min_y, max_y;
 	    register int nx, ny;
+	    boolean can_use = FALSE;
 
 	    gtyp = UNDEF;	/* no goal as yet */
 	    gx = gy = 0;	/* suppress 'used before set' message */
@@ -393,10 +619,12 @@ int after, udist, whappr;
 			    gtyp = otyp;
 			}
 		    } else if(gtyp == UNDEF && in_masters_sight &&
-			      !dog_has_minvent &&
+			      ((can_use = could_use_item(mtmp, obj))
+			       || !dog_has_minvent) &&
 			      (!levl[omx][omy].lit || levl[u.ux][u.uy].lit) &&
 			      (otyp == MANFOOD || m_cansee(mtmp, nx, ny)) &&
-			      edog->apport > rn2(8) &&
+			      (can_use ||
+			       edog->apport > rn2(8)) &&
 			      can_carry(mtmp,obj)) {
 			gx = nx;
 			gy = ny;
@@ -573,11 +801,54 @@ register int after;	/* this is extra fast monster movement */
 	    unstuck(mtmp);	/* swallowed case handled above */
 	    You("get released!");
 	}
+
+/*
+ * We haven't moved yet, so search for monsters to attack from a
+ * distance and attack them if it's plausible.
+ */
+	if (find_offensive(mtmp))
+	{
+	    int ret = use_offensive(mtmp);
+	    if (ret == 1) return 2; // died
+	    if (ret == 2) return 1; // did something
+	}
+	else if (find_defensive(mtmp))
+	{
+	    int ret = use_defensive(mtmp);
+	    if (ret == 1) return 2; // died
+	    if (ret == 2) return 1; // did something
+	}
+	else if (find_misc(mtmp))
+	{
+	    int ret = use_misc(mtmp);
+	    if (ret == 1) return 2; // died
+	    if (ret == 2) return 1; // did something
+	}
+	else
+	if (( attacktype(mtmp->data, AT_BREA) ||
+	      attacktype(mtmp->data, AT_GAZE) ||
+	      attacktype(mtmp->data, AT_SPIT) ||
+	     (attacktype(mtmp->data, AT_WEAP) &&
+	      select_rwep(mtmp))) &&
+	    mtmp->mlstmv != monstermoves)
+	{
+	    struct monst *mon = mfind_target(mtmp);
+	    if (mon && mon != &youmonst)
+	    {
+	        int res = (mon == &youmonst) ? mattacku(mtmp)
+		                             : mattackm(mtmp, mon);
+	        if (res & MM_AGR_DIED)
+		    return 2; // died
+
+		return 1; // attacked
+	    }
+	}
+
 	if (!nohands(mtmp->data) && !verysmall(mtmp->data)) {
 		allowflags |= OPENDOOR;
 		if (m_carrying(mtmp, SKELETON_KEY)) allowflags |= BUSTDOOR;
 	}
-	if (is_giant(mtmp->data)) allowflags |= BUSTDOOR;
+	if (is_giant(mtmp)) allowflags |= BUSTDOOR;
 	if (tunnels(mtmp->data)) allowflags |= ALLOW_DIG;
 	cnt = mfndpos(mtmp, poss, info, allowflags);
 
@@ -609,14 +880,19 @@ register int after;	/* this is extra fast monster movement */
 		if (!has_edog &&
 		    (j = distu(nx, ny)) > 16 && j >= udist) continue;
 
-		if ((info[i] & ALLOW_M) && MON_AT(nx, ny)) {
+		if ((info[i] & ALLOW_M) && (MON_IMG_AT(nx, ny) ||
+		                            MON_AT(nx, ny))) {
 		    int mstatus;
-		    register struct monst *mtmp2 = m_at(nx,ny);
+		    register struct monst *mtmp2 = 
+		        (telepathic(mtmp->data)) ? m_at(nx, ny)
+			                         : m_img_at(nx,ny);
+
+		    if (!mtmp2) mtmp2 = m_at(nx, ny);
 
 		    if ((int)mtmp2->m_lev >= (int)mtmp->m_lev+2 ||
 			(mtmp2->data == &mons[PM_FLOATING_EYE] && rn2(10) &&
 			 mtmp->mcansee && haseyes(mtmp->data) && mtmp2->mcansee
-			 && (perceives(mtmp->data) || !mtmp2->minvis)) ||
+			 && (sees_invis(mtmp) || !mtmp2->minvis)) ||
 			(mtmp2->data==&mons[PM_GELATINOUS_CUBE] && rn2(10)) ||
 			(max_passive_dmg(mtmp2, mtmp) >= mtmp->mhp) ||
 			((mtmp->mhp*4 < mtmp->mhpmax
@@ -673,7 +949,12 @@ register int after;	/* this is extra fast monster movement */
 		for (obj = level.objects[nx][ny]; obj; obj = obj->nexthere) {
 		    if (obj->cursed) cursemsg[i] = TRUE;
 		    else if ((otyp = dogfood(mtmp, obj)) < MANFOOD &&
-			     (otyp < ACCFOOD || edog->hungrytime <= monstermoves)) {
+			     (otyp < ACCFOOD
+			     || edog->hungrytime <= monstermoves)
+#ifdef PET_SATIATION
+			     && edog->hungrytime < monstermoves + DOG_SATIATED
+#endif //PET_SATIATION
+			     ) {
 			/* Note: our dog likes the food so much that he
 			 * might eat it even when it conceals a cursed object */
 			nix = nx;
@@ -744,6 +1025,7 @@ newdogpos:
 		}
 		/* insert a worm_move() if worms ever begin to eat things */
 		remove_monster(omx, omy);
+		remove_monster_img(mtmp->mix, mtmp->miy);
 		place_monster(mtmp, nix, niy);
 		if (cursemsg[chi] && (cansee(omx,omy) || cansee(nix,niy)))
 			pline("%s moves only reluctantly.", Monnam(mtmp));
@@ -784,6 +1066,7 @@ dognext:
 		if (!m_in_out_region(mtmp, nix, niy))
 		  return 1;
 		remove_monster(mtmp->mx, mtmp->my);
+		remove_monster_img(mtmp->mix, mtmp->miy);
 		place_monster(mtmp, cc.x, cc.y);
 		newsym(cc.x,cc.y);
 		set_apparxy(mtmp);

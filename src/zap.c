@@ -25,7 +25,6 @@ STATIC_DCL void FDECL(costly_cancel, (struct obj *));
 STATIC_DCL void FDECL(polyuse, (struct obj*, int, int));
 STATIC_DCL void FDECL(create_polymon, (struct obj *, int));
 STATIC_DCL boolean FDECL(zap_updown, (struct obj *));
-STATIC_DCL int FDECL(zhitm, (struct monst *,int,int,struct obj **));
 STATIC_DCL void FDECL(zhitu, (int,int,const char *,XCHAR_P,XCHAR_P));
 STATIC_DCL void FDECL(revive_egg, (struct obj *));
 #ifdef STEED
@@ -228,6 +227,7 @@ struct obj *otmp;
 		wake = FALSE;
 		break;
 	case WAN_PROBING:
+	case WAN_ENLIGHTENMENT: /* (jabbed with it) */
 		wake = FALSE;
 		reveal_invis = TRUE;
 		probe_monster(mtmp);
@@ -301,6 +301,18 @@ struct obj *otmp;
 		    slept_monst(mtmp);
 		if (!Blind) makeknown(WAN_SLEEP);
 		break;
+	case WAN_CREATE_MONSTER: /* (jabbed with it) */
+		if (create_critters(rn2(23) ? 1 : rn1(7,2),
+				(struct permonst *)0))
+		    makeknown(WAN_CREATE_MONSTER);
+		break;
+	case WAN_WISHING: /* (jabbed with it) */
+		if(Luck + rn2(5) < 0) {
+			break;
+		}
+		makeknown(WAN_WISHING);	
+		makewish();
+		break;
 	case SPE_STONE_TO_FLESH:
 		if (monsndx(mtmp->data) == PM_STONE_GOLEM) {
 		    char *name = Monnam(mtmp);
@@ -354,7 +366,7 @@ struct obj *otmp;
 	 */
 	if (reveal_invis) {
 	    if (mtmp->mhp > 0 && cansee(bhitpos.x, bhitpos.y) &&
-							!canspotmon(mtmp))
+		(!canspotmon(mtmp) || displaced_image(mtmp)))
 		map_invisible(bhitpos.x, bhitpos.y);
 	}
 	return 0;
@@ -1040,7 +1052,7 @@ polyuse(objhdr, mat, minwt)
 	if (otmp->otyp == SCR_MAIL) continue;
 #endif
 
-	if (((int) objects[otmp->otyp].oc_material == mat) ==
+	if (((int) otmp->omaterial == mat) ==
 		(rn2(minwt + 1) != 0)) {
 	    /* appropriately add damage to bill */
 	    if (costly_spot(otmp->ox, otmp->oy)) {
@@ -1161,7 +1173,7 @@ struct obj *obj;
 	    /* some may metamorphosize */
 	    for (i = obj->quan; i; i--)
 		if (! rn2(Luck + 45)) {
-		    poly_zapped = objects[obj->otyp].oc_material;
+		    poly_zapped = obj->omaterial;
 		    break;
 		}
 	}
@@ -1348,8 +1360,8 @@ poly_obj(obj, id)
 
 	case GEM_CLASS:
 	    if (otmp->quan > (long) rnd(4) &&
-		    objects[obj->otyp].oc_material == MINERAL &&
-		    objects[otmp->otyp].oc_material != MINERAL) {
+		    obj->omaterial == MINERAL &&
+		    otmp->omaterial != MINERAL) {
 		otmp->otyp = ROCK;	/* transmutation backfired */
 		otmp->quan /= 2L;	/* some material has been lost */
 	    }
@@ -1603,8 +1615,8 @@ struct obj *obj, *otmp;
 		break;
 	case SPE_STONE_TO_FLESH:
 		refresh_x = obj->ox; refresh_y = obj->oy;
-		if (objects[obj->otyp].oc_material != MINERAL &&
-			objects[obj->otyp].oc_material != GEMSTONE) {
+		if (obj->omaterial != MINERAL &&
+			obj->omaterial != GEMSTONE) {
 		    res = 0;
 		    break;
 		}
@@ -1654,7 +1666,9 @@ makecorpse:			if (mons[obj->corpsenm].geno &
 			xchar oox, ooy;
 
 			if (obj->otyp != FIGURINE) {
-			    res = 0;
+		            pline("%s to flesh!", Tobjnam(obj, "turn"));
+			    obj->omaterial = FLESH;
+			    obj->owt = weight(obj);
 			    break;
 			}
 			if (vegetarian(&mons[obj->corpsenm])) {
@@ -1694,7 +1708,9 @@ smell:
 		    case WEAPON_CLASS:	/* crysknife */
 		    	/* fall through */
 		    default:
-			res = 0;
+		        pline("%s to flesh!", Tobjnam(obj, "turn"));
+			obj->omaterial = FLESH;
+			obj->owt = weight(obj);
 			break;
 		}
 		newsym(refresh_x, refresh_y);
@@ -2258,7 +2274,7 @@ boolean			youattack, allow_cancel_kill, self_cancel;
 		if (Unchanging)
 		    Your("amulet grows hot for a moment, then cools.");
 		else
-		    rehumanize();
+		    rehumanize(0);
 	    }
 	} else {
 	    mdef->mcan = TRUE;
@@ -2704,7 +2720,8 @@ struct obj *obj;			/* object tossed/used */
 		if (weapon != FLASHED_LIGHT) {
 			if(weapon != ZAPPED_WAND) {
 			    if(weapon != INVIS_BEAM) tmp_at(DISP_END, 0);
-			    if (cansee(bhitpos.x,bhitpos.y) && !canspotmon(mtmp)) {
+			    if (cansee(bhitpos.x,bhitpos.y) && 
+			        (!canspotmon(mtmp) || displaced_image(mtmp))) {
 				if (weapon != INVIS_BEAM) {
 				    map_invisible(bhitpos.x, bhitpos.y);
 				    return(mtmp);
@@ -2871,7 +2888,7 @@ int dx, dy;
 			break;
 		}
 		if(bhitpos.x == u.ux && bhitpos.y == u.uy) { /* ct == 9 */
-			if(Fumbling || rn2(20) >= ACURR(A_DEX)) {
+			if(FUMBLED || rn2(20) >= ACURR(A_DEX)) {
 				/* we hit ourselves */
 				(void) thitu(10, rnd(10), (struct obj *)0,
 					"boomerang");
@@ -2894,7 +2911,7 @@ int dx, dy;
 	return (struct monst *)0;
 }
 
-STATIC_OVL int
+int
 zhitm(mon, type, nd, ootmp)			/* returns damage to mon */
 register struct monst *mon;
 register int type, nd;
@@ -3071,6 +3088,14 @@ const char *fltxt;
 xchar sx, sy;
 {
 	int dam = 0;
+        char knbuf[BUFSZ];
+	
+	if (curmonst == &youmonst)
+	    Sprintf(knbuf, "%s own %s", uhis(), fltxt);
+	else if (curmonst)
+	    Sprintf(knbuf, "%s %s", s_suffix(done_in_name(curmonst)), fltxt);
+	else
+	    Strcpy(knbuf, an(fltxt));
 
 	switch (abs(type) % 10) {
 	case ZT_MAGIC_MISSILE:
@@ -3145,8 +3170,8 @@ xchar sx, sy;
 		You("aren't affected.");
 		break;
 	    }
-	    killer_format = KILLED_BY_AN;
-	    killer = fltxt;
+	    killer_format = KILLED_BY;
+	    killer = knbuf;
 	    /* when killed by disintegration breath, don't leave corpse */
 	    u.ugrave_arise = (type == -ZT_BREATH(ZT_DEATH)) ? -3 : NON_PM;
 	    done(DIED);
@@ -3184,7 +3209,7 @@ xchar sx, sy;
 	if (Half_spell_damage && dam &&
 	   type < 0 && (type > -20 || type < -29)) /* !Breath */
 	    dam = (dam + 1) / 2;
-	losehp(dam, fltxt, KILLED_BY_AN);
+	losehp(dam, knbuf, KILLED_BY);
 	return;
 }
 
@@ -3208,9 +3233,10 @@ boolean u_caused;
 
 	for (obj = level.objects[x][y]; obj; obj = obj2) {
 	    obj2 = obj->nexthere;
-	    if (obj->oclass == SCROLL_CLASS || obj->oclass == SPBOOK_CLASS) {
+	    if (obj->oclass == SCROLL_CLASS || obj->oclass == SPBOOK_CLASS ||
+	        obj->omaterial == PAPER) {
 		if (obj->otyp == SCR_FIRE || obj->otyp == SPE_FIREBALL ||
-			obj_resists(obj, 2, 100))
+			  obj_resists(obj, 2, 100))
 		    continue;
 		scrquan = obj->quan;	/* number present */
 		delquan = 0;		/* number to destroy */
@@ -3317,7 +3343,7 @@ register int dx,dy;
 	    mon = m_at(sx, sy);
 	    if(cansee(sx,sy)) {
 		/* reveal/unreveal invisible monsters before tmp_at() */
-		if (mon && !canspotmon(mon))
+		if (mon && (!canspotmon(mon) || displaced_image(mon)))
 		    map_invisible(sx, sy);
 		else if (!mon && glyph_is_invisible(levl[sx][sy].glyph)) {
 		    unmap_object(sx, sy);

@@ -121,7 +121,7 @@ use_saddle(otmp)
 	case P_EXPERT:
 	    chance += 30;	break;
 	}
-	if (Confusion || Fumbling || Glib)
+	if (Confusion || FUMBLED || Glib)
 	    chance -= 20;
 	else if (uarmg &&
 		(s = OBJ_DESCR(objects[uarmg->otyp])) != (char *)0 &&
@@ -162,7 +162,10 @@ can_ride(mtmp)
 	struct monst *mtmp;
 {
 	return (mtmp->mtame && humanoid(youmonst.data) &&
-			!verysmall(youmonst.data) && !bigmonst(youmonst.data) &&
+			!verysmall(youmonst.data) && 
+			!maybe_polyd(bigmonst(youmonst.data),
+			             Race_if(PM_OGRE) ||
+				     Race_if(PM_GIANT))&&
 			(!Underwater || is_swimmer(mtmp->data)));
 }
 
@@ -228,7 +231,9 @@ mount_steed(mtmp, force)
 	}
 
 	if (Upolyd && (!humanoid(youmonst.data) || verysmall(youmonst.data) ||
-			bigmonst(youmonst.data) || slithy(youmonst.data))) {
+			maybe_polyd(bigmonst(youmonst.data),
+			            Race_if(PM_OGRE) || Race_if(PM_GIANT))
+		        || slithy(youmonst.data))) {
 	    You("won't fit on a saddle.");
 	    return (FALSE);
 	}
@@ -299,7 +304,7 @@ mount_steed(mtmp, force)
 	}
 
 	/* Is the player impaired? */
-	if (!force && !is_floater(ptr) && !is_flyer(ptr) &&
+	if (!force && !levitating(mtmp) && !is_flyer(ptr) &&
 			Levitation && !Lev_at_will) {
 	    You("cannot reach %s.", mon_nam(mtmp));
 	    return (FALSE);
@@ -311,7 +316,7 @@ mount_steed(mtmp, force)
 			mon_nam(mtmp));
 	    return (FALSE);
 	}
-	if (!force && (Confusion || Fumbling || Glib || Wounded_legs ||
+	if (!force && (Confusion || FUMBLED || Glib || Wounded_legs ||
 		otmp->cursed || (u.ulevel+mtmp->mtame < rnd(MAXULEV/2+5)))) {
 	    if (Levitation) {
 		pline("%s slips away from you.", Monnam(mtmp));
@@ -330,7 +335,7 @@ mount_steed(mtmp, force)
 
 	/* Success */
 	if (!force) {
-	    if (Levitation && !is_floater(ptr) && !is_flyer(ptr))
+	    if (Levitation && !levitating(mtmp) && !is_flyer(ptr))
 	    	/* Must have Lev_at_will at this point */
 	    	pline("%s magically floats up!", Monnam(mtmp));
 	    You("mount %s.", mon_nam(mtmp));
@@ -339,6 +344,7 @@ mount_steed(mtmp, force)
 	if (uwep && is_pole(uwep)) unweapon = FALSE;
 	u.usteed = mtmp;
 	remove_monster(mtmp->mx, mtmp->my);
+	remove_monster_img(mtmp->mix, mtmp->miy);
 	teleds(mtmp->mx, mtmp->my, TRUE);
 	return (TRUE);
 }
@@ -425,7 +431,7 @@ int forceit;
     struct trap *t;
 
     /* avoid known traps (i == 0) and boulders, but allow them as a backup */
-    if (reason != DISMOUNT_BYCHOICE || Stunned || Confusion || Fumbling) i = 1;
+    if (reason != DISMOUNT_BYCHOICE || Stunned || Confusion || FUMBLED) i = 1;
     for (; !found && i < 2; ++i) {
 	for (x = u.ux-1; x <= u.ux+1; x++)
 	    for (y = u.uy-1; y <= u.uy+1; y++) {
@@ -438,7 +444,9 @@ int forceit;
 			    (distance == min_distance && rn2(2))) {
 			if (i > 0 || (((t = t_at(x, y)) == 0 || !t->tseen) &&
 				      (!sobj_at(BOULDER, x, y) ||
-				       throws_rocks(youmonst.data)))) {
+				       maybe_polyd(
+				           throws_rocks(youmonst.data),
+					   Race_if(PM_GIANT))))) {
 			    spot->x = x;
 			    spot->y = y;
 			    min_distance = distance;
@@ -546,12 +554,13 @@ dismount_steed(reason)
 		struct permonst *mdat = mtmp->data;
 
 		/* The steed may drop into water/lava */
-		if (!is_flyer(mdat) && !is_floater(mdat) && !is_clinger(mdat)) {
-		    if (is_pool(u.ux, u.uy)) {
+		if (!is_flyer(mdat) && !levitating(mtmp) && !is_clinger(mdat)) {
+		    if (is_pool(u.ux, u.uy) && !waterwalking(mtmp)) {
 			if (!Underwater)
 			    pline("%s falls into the %s!", Monnam(mtmp),
 							surface(u.ux, u.uy));
-			if (!is_swimmer(mdat) && !amphibious(mdat)) {
+			if (!is_swimmer(mdat) && !amphibious(mdat) &&
+			                         !mbreathing(mtmp)) {
 			    killed(mtmp);
 			    adjalign(-1);
 			}
@@ -634,8 +643,67 @@ int x, y;
     }
     mon->mx = x, mon->my = y;
     level.monsters[x][y] = mon;
+
+    displace_mon(mon);
+}
+
+void
+place_monster_img(mon, x, y)
+struct monst *mon;
+int x, y;
+{
+    if (mon == u.usteed ||
+	    /* special case is for convoluted vault guard handling */
+	    (DEADMONSTER(mon) && !(mon->isgd && x == 0 && y == 0))) {
+	impossible("placing %s image onto map?",
+		   (mon == u.usteed) ? "steed" : "defunct monster");
+	return;
+    }
+    mon->mix = x, mon->miy = y;
+    level.monster_images[x][y] = mon;
 }
 
 #endif /* STEED */
+
+void
+displace_mon(mon)
+struct monst *mon;
+{
+    if (!mon->mx || !mon->my) return; // not on map yet
+
+    if (m_img_at(mon->mix, mon->miy) == mon)
+        remove_monster_img(mon->mix, mon->miy);
+        
+    if (!restoring)
+        newsym(mon->mix, mon->miy);
+
+    if (displaced(mon))
+    {
+        int trycount = 10;
+        do {
+            mon->mix = mon->mx + rn2(3) - 1;
+            mon->miy = mon->my + rn2(3) - 1; 
+	} while ((!isok(mon->mix, mon->miy) ||
+	          (mon->mix == u.ux && mon->miy == u.uy) ||
+	          (m_at(mon->mix, mon->miy) != 0 &&
+		   m_at(mon->mix, mon->miy) != mon) ||
+	          (m_img_at(mon->mix, mon->miy) != 0 &&
+		   m_img_at(mon->mix, mon->miy) != mon) ||
+		  (mon->mix == mon->mx && mon->miy == mon->my)) &&
+		  --trycount > 0);
+        if (trycount == 0)
+	    mon->mix = mon->mx, mon->mix = mon->my;
+    } else {
+        mon->mix = mon->mx;
+	mon->miy = mon->my;
+	if (m_img_at(mon->mix, mon->miy) &&
+	    m_img_at(mon->mix, mon->miy) != mon)
+	    displace_mon(m_img_at(mon->mix, mon->miy));
+    }
+
+    place_monster_img(mon, mon->mix, mon->miy);
+    if (!restoring)
+        newsym(mon->mix, mon->miy);
+}
 
 /*steed.c*/

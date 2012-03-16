@@ -1,31 +1,18 @@
-                NetHack 3.4.3 -- General information
+              GruntHack 0.1.0 -- General information
 
-NetHack 3.4 is an enhancement to the dungeon exploration game NetHack.
-It is a distant descendent of Rogue and Hack, and a direct descendent of
-NetHack 3.3.
-
-NetHack 3.4.3 is a bugfix release for NetHack 3.4.2.
- *  Several dozen general bug fixes including at least one fatal bug
- *  Correct several inconsistencies
- *  Handle level completely filled with monsters better
- *  win32tty performance enhancements when playing on Windows 98 and Windows Me
- *  win32gui player selection fixes
- *  X11 player selection fixes, one of which could be fatal
- *  Eliminated a gold-in-shop-container cheat
- *  Include bones file version compatibility info in options file
+GruntHack is a derivative of NetHack, the classic dungeon exploration game.
+Significant changes from the original game include
+* a substantially remodelled Gehennom
+* improved use of colour with the tty windowing system
+* more intelligent behaviour for intelligent pets and covetous monsters
+* more interactions with certain classes of items
 
 A fuller list of changes for this release can be found in the file 
-doc/fixes34.3 in the source distribution.  The text in there was written 
-for the development team's own use and is provided "as is", so please do 
-not ask us to further explain the entries in that file.
+doc/changes01.0 in the source distribution.
 
-The internal structure of bones and save files has not changed between 
-NetHack 3.4.0, 3.4.1, 3.4.2 and now 3.4.3. That means that if you use the 
-same compiler, the same compiler version and compiler switches, the same 
-NetHack compile-time options, and you have not incorporated any additional 
-source code patches that altered the save file format on your system, then 
-bones and save files from 3.4.0 through 3.4.3 should be compatible.
-
+The following HOWTO derives from NetHack's original information for
+compiling the code tree.  GruntHack is still in a very experimental stage,
+so some information contained hereafter may not necessarily apply.
 
                         - - - - - - - - - - -
 
@@ -88,7 +75,7 @@ Please read items (1), (2) and (3) BEFORE doing anything with your new code.
     to compile and run on your particular system.  It is worth mentioning
     that the default configuration is SysV/Sun/Solaris2.x (simply because
     the code was housed on such a system).  It is also worth mentioning
-    here that NetHack 3.4 is a huge program.  If you intend to run it on a
+    here that GruntHack is a huge program.  If you intend to run it on a
     small machine, you'll have to make hard choices among the options
     available in config.h.
 
@@ -98,7 +85,10 @@ Please read items (1), (2) and (3) BEFORE doing anything with your new code.
     for particular windowing environments.  Reading them, and the man pages,
     should answer most of your questions.
 
-    At the time of this release, NetHack 3.4 is known to run/compile on:
+    GruntHack was developed and tested on an x86-based Linux system, and
+    has not been thoroughly tested on other platforms.  However, NetHack
+    3.4 is known to run/compile on several platforms for which GruntHack
+    should technically work with some tinkering:
 
         Apple Macintosh running MacOS 7.5 or higher, LinuxPPC, BeOS 4.0
         Atari ST/TT/Falcon running TOS (or MultiTOS) with GCC
@@ -115,15 +105,14 @@ Please read items (1), (2) and (3) BEFORE doing anything with your new code.
         Intel Pentium or better (or clone) running BeOS 4.5
         Sun SPARC based machine running SunOS 4.x, Solaris 2.x, or Solaris 7
 
-    NetHack 3.4 will also run on the following, but a cross-compiler hosted
+    NetHack will also run on the following, but a cross-compiler hosted
     on another platform, such as win32, is required to build from source.
 
         Pocket PC devices running Windows CE 3.0 and higher
         H/PC Pro devices running Windows CE 2.11 and higher.
 	Palm Size PC 1.1 devices running Windows CE 2.11
 
-    Previous versions of NetHack were tested on the following systems,
-    and we expect that NetHack 3.4 will work on them as well:
+    Previous versions of NetHack were tested on the following systems:
 
         AT&T 3B1 running System V (3.51)
         AT&T 3B2/600 & 3B2/622 running System V R3.2.1
@@ -151,76 +140,11 @@ Please read items (1), (2) and (3) BEFORE doing anything with your new code.
         Sun-3s and -386is running SunOS 4.x
         Valid Logic Systems SCALD-System
 
-    Unless otherwise mentioned, the compiler used was the OS-vendor's
-    C compiler.
-
-    With the demise of Windows NT on the DEC Alpha, no attempt has been
-    made to build NetHack 3.4.3 on that platform.
-
-    Windows 98/Me have been the most problematic Windows platforms for
-    running NetHack so far. Patches for 3.4.2 (courtesy Michael Lehotay)
-    have been incorporated into 3.4.3 to help make them work better. Your
-    results may vary.
-
-    A build for Intel 80286 machines and DOS "real mode" overlaid versions 
-    has not been produced for 3.4.3.  Nobody on the porting team has
-    the time or the software to attempt the necessary tuning that will allow 
-    it to achieve the balance of having just the right amount of available 
-    memory, and still have acceptable performance.  The sources necessary 
-    to do so are still included in the source distribution, so if someone 
-    has access to a real-mode compiler and lots of spare time on their hands, 
-    you may be able to get things working. Of course you do so at your own risk.
-
                         - - - - - - - - - - -
 
-If you have problems building the game, or you find bugs in it, we recommend 
-filing a bug report from our "Contact Us" web page at:
-    http://www.nethack.org/ 
-
-When sending correspondence, please observe the following:
-o Please be sure to include your machine type, OS, and patchlevel.
-o Never send us binary files (e.g. save files or bones files). Whichever 
-  platform you are using, only a small minority of the development team has 
-  access to it, and you will rapidly annoy the others.  If you have found 
-  a bug and think that your save file would aid in solving the problem, 
-  send us a description in words of the problem, your machine type, your 
-  operating system, and the version of NetHack.  Tell us that you have a 
-  save file, but do not actually send it.
-  In the rare case that we think your save file would be helpful, you will
-  be contacted by a member of the development team with the address of a
-  specific person to send the save file to.
-o Though we make an effort to reply to each bug report, it may take some
-  time before you receive feedback.  This is especially true during the
-  period immediately after a new release, when we get the most bug reports.
-o We don't give hints for playing the game.
-o Don't bother to ask when the next version will be out.  You will not get
-  a reply.
-
-If you don't have access to the world wide web, or if you want to submit
-a patch for the NetHack source code via email directly, you can direct it 
-to this address:
-    nethack-bugs (at) nethack.org
-
-If you've changed something to get NetHack to run on your system, it's likely
-that others have done it by making slightly different modifications.  By routing 
-your patches through the development team, we should be able to avoid making 
-everyone else choose among variant patches claiming to do the same thing, to keep
-most of the copies of 3.4 synchronized by means of official patches, and to 
-maintain the painfully-created file organization.  (This process has been working
-since the time when everyone just posted their own patches to 2.3.  At that time,
-there were no archived bug-fixes to give to people who got 2.3 after its initial
-release, so the same bugs kept being discovered by new batches of people.)
-We have been successful in preventing this from happening since the 3.0
-release.  Please cooperate to keep this from happening to 3.4.
-
-It is inevitable that we will reject some proposed additions of new features
-either because they do not fit our conception of the game, or because they
-require more code than we consider they're worth.  If we reject your feature,
-you are free, of course, to post the patches to the net yourself and let the
-marketplace decide their worth.
-
-All of this amounts to the following:  If you decide to apply a free-lanced
-patch to your 3.4 code, you are on your own.  In our own patches, we will
-assume that your code is synchronized with ours.
+Bugs in GruntHack are probably innumerable.  If you happen to find one,
+please report it through the same channels by which you heard about and
+obtained the game; it will be heard of sooner or later and may or may
+not be fixed.
 
                   -- Good luck, and happy Hacking --

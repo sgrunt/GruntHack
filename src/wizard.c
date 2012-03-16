@@ -27,10 +27,10 @@ static NEARDATA const int nasties[] = {
 	PM_COCKATRICE, PM_ETTIN, PM_STALKER, PM_MINOTAUR, PM_RED_DRAGON,
 	PM_BLACK_DRAGON, PM_GREEN_DRAGON, PM_OWLBEAR, PM_PURPLE_WORM,
 	PM_ROCK_TROLL, PM_XAN, PM_GREMLIN, PM_UMBER_HULK, PM_VAMPIRE_LORD,
-	PM_XORN, PM_ZRUTY, PM_ELF_LORD, PM_ELVENKING, PM_YELLOW_DRAGON,
+	PM_XORN, PM_ZRUTY, PM_LORD, PM_KING, PM_YELLOW_DRAGON,
 	PM_LEOCROTTA, PM_BALUCHITHERIUM, PM_CARNIVOROUS_APE, PM_FIRE_GIANT,
 	PM_COUATL, PM_CAPTAIN, PM_WINGED_GARGOYLE, PM_MASTER_MIND_FLAYER,
-	PM_FIRE_ELEMENTAL, PM_JABBERWOCK, PM_ARCH_LICH, PM_OGRE_KING,
+	PM_FIRE_ELEMENTAL, PM_JABBERWOCK, PM_ARCH_LICH,
 	PM_OLOG_HAI, PM_IRON_GOLEM, PM_OCHRE_JELLY, PM_GREEN_SLIME,
 	PM_DISENCHANTER
 	};
@@ -233,8 +233,18 @@ target_on(mask, mtmp)
 		return(STRAT(STRAT_GROUND, otmp->ox, otmp->oy, mask));
 	    else if((mtmp2 = other_mon_has_arti(mtmp, otyp)))
 		return(STRAT(STRAT_MONSTR, mtmp2->mx, mtmp2->my, mask));
+	    else // can't find something, so harass the player instead
+	        return(STRAT(STRAT_NONE, u.ux, u.uy, mask));
 	}
-	return(STRAT_NONE);
+
+	// we have the thing; let's attempt to escape
+	if (In_W_tower(mtmp->mx, mtmp->my, &u.uz) ||
+	    In_quest(&u.uz) || // won't leave its fortress...
+	    !xupstair)
+	    // no stairs, so make the player miserable!
+	    return(STRAT(STRAT_NONE, u.ux, u.uy, mask));
+
+	return(STRAT(STRAT_NONE, xupstair, yupstair, mask));
 }
 
 STATIC_OVL long
@@ -311,21 +321,46 @@ tactics(mtmp)
 		mtmp->mavenge = 1; /* covetous monsters attack while fleeing */
 		if (In_W_tower(mtmp->mx, mtmp->my, &u.uz) ||
 			(mtmp->iswiz && !xupstair && !mon_has_amulet(mtmp))) {
-		    if (!rn2(3 + mtmp->mhp/10)) (void) rloc(mtmp, FALSE);
+		    if (!rn2(3 + mtmp->mhp/10) &&
+		        can_teleport(mtmp->data))
+		    {
+			(void) rloc(mtmp, FALSE);
+		        return(1);
+		    }
 		} else if (xupstair &&
 			 (mtmp->mx != xupstair || mtmp->my != yupstair)) {
-		    (void) mnearto(mtmp, xupstair, yupstair, TRUE);
+	            if (can_teleport(mtmp->data))
+		    {
+		        if (control_teleport(mtmp->data))
+		            (void) mnearto(mtmp, xupstair, yupstair, TRUE);
+			else
+			    (void) rloc(mtmp, FALSE);
+		        return(1);
+		    }
 		}
 		/* if you're not around, cast healing spells */
 		if (distu(mtmp->mx,mtmp->my) > (BOLT_LIM * BOLT_LIM))
 		    if(mtmp->mhp <= mtmp->mhpmax - 8) {
+		        if (canseemon(mtmp))
+			{
+			    pline("%s casts a spell!", Monnam(mtmp));
+			    pline("%s looks better.", Monnam(mtmp));
+			}
 			mtmp->mhp += rnd(8);
 			return(1);
 		    }
 		/* fall through :-) */
 
 	    case STRAT_NONE:	/* harrass */
-		if (!rn2(!mtmp->mflee ? 5 : 33)) mnexto(mtmp);
+		if (can_teleport(mtmp->data) &&
+		    control_teleport(mtmp->data))
+		{
+		    if(!rn2(!mtmp->mflee ? 5 : 33))
+		    {
+		        mnexto(mtmp);
+		        return(1);
+		    }
+		}
 		return(0);
 
 	    default:		/* kill, maim, pillage! */
@@ -341,17 +376,28 @@ tactics(mtmp)
 		}
 		if((u.ux == tx && u.uy == ty) || where == STRAT_PLAYER) {
 		    /* player is standing on it (or has it) */
-		    mnexto(mtmp);
+		    if (can_teleport(mtmp->data) &&
+		        control_teleport(mtmp->data) &&
+			dist2(mtmp->mx, mtmp->my, tx, ty) > 2)
+		    {
+		        mnexto(mtmp);
+			return(1);
+		    }
 		    return(0);
 		}
 		if(where == STRAT_GROUND) {
 		    if(!MON_AT(tx, ty) || (mtmp->mx == tx && mtmp->my == ty)) {
 			/* teleport to it and pick it up */
+		        if ((!can_teleport(mtmp->data) || 
+		             !control_teleport(mtmp->data)) &&
+			     (mtmp->mx != tx || mtmp->my != ty))
+			    return(0);
+
 			rloc_to(mtmp, tx, ty);	/* clean old pos */
 
 			if ((otmp = on_ground(which_arti(targ))) != 0) {
 			    if (cansee(mtmp->mx, mtmp->my))
-				pline("%s picks up %s.",
+				pline("%s picks up %s!",
 				    Monnam(mtmp),
 				    (distu(mtmp->mx, mtmp->my) <= 5) ?
 				     doname(otmp) : distant_name(otmp, doname));
@@ -361,12 +407,24 @@ tactics(mtmp)
 			} else return(0);
 		    } else {
 			/* a monster is standing on it - cause some trouble */
-			if (!rn2(5)) mnexto(mtmp);
+		        if (can_teleport(mtmp->data) && 
+		            control_teleport(mtmp->data) &&
+			    dist2(mtmp->mx, mtmp->my, tx, ty) > 2 &&
+			    !rn2(5))
+			{
+		            (void) mnearto(mtmp, tx, ty, FALSE);
+			    return(1);
+			}
 			return(0);
 		    }
 	        } else { /* a monster has it - 'port beside it. */
-		    (void) mnearto(mtmp, tx, ty, FALSE);
-		    return(0);
+		    if (can_teleport(mtmp->data) && 
+		        control_teleport(mtmp->data) &&
+			dist2(mtmp->mx, mtmp->my, tx, ty) > 2)
+	            {
+		        (void) mnearto(mtmp, tx, ty, FALSE);
+		        return(1);
+		    }
 		}
 	    }
 	}
@@ -547,6 +605,12 @@ wizdead()
 {
 	flags.no_of_wizards--;
 	if (!u.uevent.udemigod) {
+	        if (flags.verbose)
+		{
+		    You_feel("powerful!");
+		    You("also sense unwanted attention...");
+		    You_feel("vaguely nervous.");
+		}
 		u.uevent.udemigod = TRUE;
 		u.udg_cnt = rn1(250, 50);
 	}

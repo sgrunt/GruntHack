@@ -318,6 +318,7 @@ d_level *lev;
 	break;
     case LR_DOWNSTAIR:
     case LR_UPSTAIR:
+        if (Invocation_lev(&u.uz) && !rtype) break;
 	mkstairs(x, y, (char)rtype, (struct mkroom *)0);
 	break;
     case LR_BRANCH:
@@ -897,7 +898,11 @@ register xchar x, y, todnum, todlevel;
 		x, y, dungeons[todnum].dname, todlevel);
 #endif
 	ttmp->dst.dnum = todnum;
-	ttmp->dst.dlevel = todlevel;
+
+	if (In_endgame(&u.uz))
+	    ttmp->dst.dlevel = u.uz.dlevel - 1;
+	else
+	    ttmp->dst.dlevel = todlevel;
 	return;
 }
 
@@ -998,9 +1003,11 @@ movebubbles()
 			    if(mon->wormno)
 				remove_worm(mon);
 			    else
-				remove_monster(x, y);
+				remove_monster(x, y),
+				remove_monster_img(mon->mix, mon->miy);
 
 			    newsym(x,y);	/* clean up old position */
+			    newsym(mon->mix,mon->miy);
 			    mon->mx = mon->my = 0;
 			}
 			if (!u.uswallow && x == u.ux && y == u.uy) {

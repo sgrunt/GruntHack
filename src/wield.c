@@ -132,8 +132,8 @@ struct obj *wep;
 	    /* Prevent wielding cockatrice when not wearing gloves --KAA */
 	    char kbuf[BUFSZ];
 
-	    You("wield the %s corpse in your bare %s.",
-		mons[wep->corpsenm].mname, makeplural(body_part(HAND)));
+	    You("wield %s in your bare %s.",
+		the(corpse_xname(wep, FALSE)), makeplural(body_part(HAND)));
 	    Sprintf(kbuf, "%s corpse", an(mons[wep->corpsenm].mname));
 	    instapetrify(kbuf);
 	} else if (uarms && bimanual(wep))
@@ -182,7 +182,7 @@ struct obj *wep;
 #if 0
 	    /* we'll get back to this someday, but it's not balanced yet */
 	    if (Race_if(PM_ELF) && !wep->oartifact &&
-			    objects[wep->otyp].oc_material == IRON) {
+			    wep->omaterial == IRON) {
 		/* Elves are averse to wielding cold iron */
 		You("have an uneasy feeling about wielding cold iron.");
 		change_luck(-1);
@@ -339,10 +339,6 @@ dowieldquiver()
 	/* will_weld(), touch_petrifies(), etc. */
 	multi = 0;
 
-	/* Because 'Q' used to be quit... */
-	if (flags.suppress_alert < FEATURE_NOTICE_VER(3,3,0))
-		pline("Note: Please use #quit if you wish to exit the game.");
-
 	/* Prompt for a new quiver */
 	if (!(newquiver = getobj(quivee_types, "ready")))
 		/* Cancelled */
@@ -497,8 +493,8 @@ can_twoweapon()
 		    touch_petrifies(&mons[uswapwep->corpsenm]))) {
 		char kbuf[BUFSZ];
 
-		You("wield the %s corpse with your bare %s.",
-		    mons[uswapwep->corpsenm].mname, body_part(HAND));
+		You("wield %s with your bare %s.",
+		    the(corpse_xname(uswapwep, FALSE)), body_part(HAND));
 		Sprintf(kbuf, "%s corpse", an(mons[uswapwep->corpsenm].mname));
 		instapetrify(kbuf);
 	} else if (Glib || uswapwep->cursed) {
@@ -649,23 +645,24 @@ boolean fade_scrolls;
 	} else if (erosion < MAX_ERODE) {
 	    if (victim == &youmonst)
 		Your("%s%s!", aobjnam(target, acid_dmg ? "corrode" : "rust"),
-		    erosion+1 == MAX_ERODE ? " completely" :
+		    //erosion+1 == MAX_ERODE ? " completely" :
 		    erosion ? " further" : "");
 	    else if (vismon)
 		pline("%s's %s%s!", Monnam(victim),
 		    aobjnam(target, acid_dmg ? "corrode" : "rust"),
-		    erosion+1 == MAX_ERODE ? " completely" :
+		    //erosion+1 == MAX_ERODE ? " completely" :
 		    erosion ? " further" : "");
 	    else if (visobj)
 		pline_The("%s%s!",
 		    aobjnam(target, acid_dmg ? "corrode" : "rust"),
-		    erosion+1 == MAX_ERODE ? " completely" :
+		    //erosion+1 == MAX_ERODE ? " completely" :
 		    erosion ? " further" : "");
 	    if (acid_dmg)
 		target->oeroded2++;
 	    else
 		target->oeroded++;
 	} else {
+	/*
 	    if (flags.verbose) {
 		if (victim == &youmonst)
 		    Your("%s completely %s.",
@@ -679,7 +676,36 @@ boolean fade_scrolls;
 		    pline_The("%s completely %s.",
 			aobjnam(target, "look"),
 			acid_dmg ? "corroded" : "rusty");
+	    }*/
+	    if (victim == &youmonst)
+	    {
+	        Your("%s away!", aobjnam(target, acid_dmg ? "corrode" :
+						            "rust"));
+		if(target->owornmask) {
+		    if(target == uarm) (void) Armor_gone();
+		    else if(target == uarmc) (void) Cloak_off();
+		    else if(target == uarmh) (void) Helmet_off();
+		    else if(target == uarms) (void) Shield_off();
+		    else if(target == uarmg) (void) Gloves_off();
+		    else if(target == uarmf) (void) Boots_off();
+#ifdef TOURIST
+		    else if(target == uarmu) setnotworn(target);
+#endif
+		    else if(target == uleft) Ring_gone(target);
+		    else if(target == uright) Ring_gone(target);
+		    else if(target == ublindf) Blindf_off(target);
+		    else if(target == uamul) Amulet_off();
+		    else if(target == uwep) uwepgone();
+		    else if (target == uquiver) uqwepgone();
+		    else if (target == uswapwep) uswapwepgone();
+		}
+	    } else if (vismon) {
+	        pline("%s's %s away!", Monnam(victim),
+		                       aobjnam(target, acid_dmg ? "corrode"
+				                                : "rust"));
+                update_mon_intrinsics(victim, target, FALSE, TRUE);
 	    }
+	    useupall(target);
 	}
 }
 

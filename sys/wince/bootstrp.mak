@@ -232,7 +232,7 @@ all :	$(INCL)\date.h	$(INCL)\onames.h $(INCL)\pm.h \
 	$(U)dgn_comp.exe $(U)uudecode.exe \
 	$(DAT)\data	$(DAT)\rumors	 $(DAT)\dungeon \
 	$(DAT)\oracles	$(DAT)\quest.dat $(O)sp_lev.tag $(DLB) $(SRC)\tile.c \
-	$(SWINCE)\nethack.ico $(SWINCE)\tiles.bmp $(SWINCE)\mnsel.bmp \
+	$(SWINCE)\grunthack.ico $(SWINCE)\tiles.bmp $(SWINCE)\mnsel.bmp \
 	$(SWINCE)\mnunsel.bmp $(SWINCE)\petmark.bmp $(SWINCE)\mnselcnt.bmp \
 	$(SWINCE)\keypad.bmp $(SWINCE)\menubar.bmp
 	@echo Done!
@@ -275,7 +275,7 @@ $(O)sp_lev.tag:  $(DAT)\bigroom.des  $(DAT)\castle.des \
 
 #$(NHRES): $(TILEBMP16) $(WINCE)\winhack.rc $(WINCE)\mnsel.bmp \
 #	$(WINCE)\mnselcnt.bmp $(WINCE)\mnunsel.bmp \
-#	$(WINCE)\petmark.bmp $(WINCE)\NetHack.ico $(WINCE)\rip.bmp \
+#	$(WINCE)\petmark.bmp $(WINCE)\GruntHack.ico $(WINCE)\rip.bmp \
 #	$(WINCE)\splash.bmp
 #	$(rc) -r -fo$@ -i$(WINCE) -dNDEBUG $(WINCE)\winhack.rc
 
@@ -332,9 +332,9 @@ $(U)uudecode.exe: $(O)uudecode.o
 
 $(O)uudecode.o: $(SSYS)\uudecode.c
 
-$(SWINCE)\NetHack.ico : $(U)uudecode.exe $(SWINCE)\nhico.uu 
+$(SWINCE)\GruntHack.ico : $(U)uudecode.exe $(SWINCE)\ghico.uu 
 	chdir $(SWINCE)
-	..\util\uudecode.exe nhico.uu
+	..\util\uudecode.exe ghico.uu
 	chdir $(WINCE)
 
 $(SWINCE)\mnsel.bmp: $(U)uudecode.exe $(SWINCE)\mnsel.uu

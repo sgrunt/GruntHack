@@ -78,7 +78,7 @@
 #define BEOS_GRAPHICS /* (optional) */
 #define DEFAULT_WINDOW_SYS "BeOS"  /* "tty" */
 #ifndef HACKDIR	/* override the default hackdir below */
-# define HACKDIR "/boot/apps/NetHack"
+# define HACKDIR "/boot/apps/GruntHack"
 #endif
 #endif
 
@@ -110,7 +110,7 @@
 # ifndef DEFAULT_WINDOW_SYS
 #  define DEFAULT_WINDOW_SYS "mswin"
 # endif
-# define HACKDIR "\\nethack"
+# define HACKDIR "\\grunthack"
 #endif
 
 #ifndef DEFAULT_WINDOW_SYS
@@ -126,7 +126,7 @@
  * would allow:
  *  xpmtoppm <x11tiles.xpm | pnmscale 1.25 | ppmquant 90 >x11tiles_big.xpm
  */
-/* # define USE_XPM */		/* Disable if you do not have the XPM library */
+# define USE_XPM		/* Disable if you do not have the XPM library */
 # ifdef USE_XPM
 #  define GRAPHIC_TOMBSTONE	/* Use graphical tombstone (rip.xpm) */
 # endif
@@ -204,7 +204,7 @@
  * otherwise it will be the current directory.
  */
 # ifndef HACKDIR
-#  define HACKDIR "/usr/games/lib/nethackdir"
+#  define HACKDIR "/usr/games/lib/grunthackdir"
 # endif
 
 /*
@@ -338,7 +338,28 @@ typedef unsigned char	uchar;
 #endif
 
 #define EXP_ON_BOTL	/* Show experience on bottom line */
+#define ASTR_ESC /* Allow escape from Astral plane (with the Amulet) - CWC */
 /* #define SCORE_ON_BOTL */	/* added by Gary Erickson (erickson@ucivax) */
+
+#define TAME_RANGED_ATTACKS /* tame monsters use ranged attacks */
+#define ATTACK_PETS         /* monsters attack pets directly */
+//#define TAME_SUMMONING      /* tame spellcasters can summon tame monsters
+                              /* (including you) */
+#define YOUMONST_SPELL      /* you can cast monster spells in the form
+                               of a monster */
+#define PET_SATIATION       /* pets can become satiated and choke;
+                               they can also hoard food if intelligent */
+
+#define HPMON
+#define SORTLOOT
+
+#define NEWRACES
+
+//#define DGAMELAUNCH // compiled for dgamelaunch
+
+#ifdef DGAMELAUNCH
+#define SIMPLE_MAIL
+#endif
 
 /*
  * Section 5:  EXPERIMENTAL STUFF
@@ -348,8 +369,24 @@ typedef unsigned char	uchar;
  * bugs left here.
  */
 
+#if defined(TTY_GRAPHICS) || defined(MSWIN_GRAPHICS)
+# define MENU_COLOR
+# define MENU_COLOR_REGEX
+/*# define MENU_COLOR_REGEX_POSIX */
+/* if MENU_COLOR_REGEX is defined, use regular expressions (regex.h,
+ * GNU specific functions by default, POSIX functions with
+ * MENU_COLOR_REGEX_POSIX).
+ * otherwise use pmatch() to match menu color lines.
+ * pmatch() provides basic globbing: '*' and '?' wildcards.
+ */
+#endif
+
 /*#define GOLDOBJ */	/* Gold is kept on obj chains - Helge Hafting */
 /*#define AUTOPICKUP_EXCEPTIONS */ /* exceptions to autopickup */
+#define DUMP_LOG        /* Dump game end information to a file */
+/* #define DUMP_FN "/tmp/%n.nh" */      /* Fixed dumpfile name, if you want
+                                         * to prevent definition by users */
+#define DUMPMSGS 20     /* Number of latest messages in the dump file  */
 
 /* End of Section 5 */
 

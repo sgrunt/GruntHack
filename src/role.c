@@ -1,4 +1,4 @@
-/*	SCCS Id: @(#)role.c	3.4	2003/01/08	*/
+
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985-1999. */
 /* NetHack may be freely redistributed.  See license for details. */
 
@@ -39,7 +39,7 @@ const struct Role roles[] = {
 	"Arc", "the College of Archeology", "the Tomb of the Toltec Kings",
 	PM_ARCHEOLOGIST, NON_PM, NON_PM,
 	PM_LORD_CARNARVON, PM_STUDENT, PM_MINION_OF_HUHETOTL,
-	NON_PM, PM_HUMAN_MUMMY, S_SNAKE, S_MUMMY,
+	NON_PM, PM_MUMMY, S_SNAKE, S_MUMMY,
 	ART_ORB_OF_DETECTION,
 	MH_HUMAN|MH_DWARF|MH_GNOME | ROLE_MALE|ROLE_FEMALE |
 	  ROLE_LAWFUL|ROLE_NEUTRAL,
@@ -67,7 +67,11 @@ const struct Role roles[] = {
 	PM_PELIAS, PM_CHIEFTAIN, PM_THOTH_AMON,
 	PM_OGRE, PM_TROLL, S_OGRE, S_TROLL,
 	ART_HEART_OF_AHRIMAN,
-	MH_HUMAN|MH_ORC | ROLE_MALE|ROLE_FEMALE |
+	MH_HUMAN|MH_ORC |
+#ifdef NEWRACES
+	MH_OGRE|MH_GIANT | 
+#endif
+	  ROLE_MALE|ROLE_FEMALE |
 	  ROLE_NEUTRAL|ROLE_CHAOTIC,
 	/* Str Int Wis Dex Con Cha */
 	{  16,  7,  7, 15, 16,  6 },
@@ -93,8 +97,12 @@ const struct Role roles[] = {
 	PM_SHAMAN_KARNOV, PM_NEANDERTHAL, PM_CHROMATIC_DRAGON,
 	PM_BUGBEAR, PM_HILL_GIANT, S_HUMANOID, S_GIANT,
 	ART_SCEPTRE_OF_MIGHT,
-	MH_HUMAN|MH_DWARF|MH_GNOME | ROLE_MALE|ROLE_FEMALE |
-	  ROLE_LAWFUL|ROLE_NEUTRAL,
+	MH_HUMAN|MH_DWARF|MH_GNOME | 
+#ifdef NEWRACES
+	MH_OGRE|MH_GIANT | 
+#endif
+          ROLE_MALE|ROLE_FEMALE |
+	  ROLE_LAWFUL|ROLE_NEUTRAL|ROLE_CHAOTIC,
 	/* Str Int Wis Dex Con Cha */
 	{  10,  7,  7,  7,  8,  6 },
 	{  30,  6,  7, 20, 30,  7 },
@@ -119,7 +127,11 @@ const struct Role roles[] = {
 	PM_HIPPOCRATES, PM_ATTENDANT, PM_CYCLOPS,
 	PM_GIANT_RAT, PM_SNAKE, S_RODENT, S_YETI,
 	ART_STAFF_OF_AESCULAPIUS,
-	MH_HUMAN|MH_GNOME | ROLE_MALE|ROLE_FEMALE | ROLE_NEUTRAL,
+	MH_HUMAN|MH_ELF|MH_GNOME | 
+#ifdef NEWRACES
+	MH_GIANT | 
+#endif
+	ROLE_MALE|ROLE_FEMALE | ROLE_NEUTRAL,
 	/* Str Int Wis Dex Con Cha */
 	{   7,  7, 13,  7, 11, 16 },
 	{  15, 20, 20, 15, 25, 5 },
@@ -144,7 +156,7 @@ const struct Role roles[] = {
 	PM_KING_ARTHUR, PM_PAGE, PM_IXOTH,
 	PM_QUASIT, PM_OCHRE_JELLY, S_IMP, S_JELLY,
 	ART_MAGIC_MIRROR_OF_MERLIN,
-	MH_HUMAN | ROLE_MALE|ROLE_FEMALE | ROLE_LAWFUL,
+	MH_HUMAN|MH_ELF | ROLE_MALE|ROLE_FEMALE | ROLE_LAWFUL,
 	/* Str Int Wis Dex Con Cha */
 	{  13,  7, 14,  8, 10, 17 },
 	{  30, 15, 15, 10, 20, 10 },
@@ -170,7 +182,7 @@ const struct Role roles[] = {
 	PM_GRAND_MASTER, PM_ABBOT, PM_MASTER_KAEN,
 	PM_EARTH_ELEMENTAL, PM_XORN, S_ELEMENTAL, S_XORN,
 	ART_EYES_OF_THE_OVERWORLD,
-	MH_HUMAN | ROLE_MALE|ROLE_FEMALE |
+	MH_HUMAN|MH_ELF | ROLE_MALE|ROLE_FEMALE |
 	  ROLE_LAWFUL|ROLE_NEUTRAL|ROLE_CHAOTIC,
 	/* Str Int Wis Dex Con Cha */
 	{  10,  7,  8,  8,  7,  7 },
@@ -194,9 +206,10 @@ const struct Role roles[] = {
 	"Pri", "the Great Temple", "the Temple of Nalzok",
 	PM_PRIEST, PM_PRIESTESS, NON_PM,
 	PM_ARCH_PRIEST, PM_ACOLYTE, PM_NALZOK,
-	PM_HUMAN_ZOMBIE, PM_WRAITH, S_ZOMBIE, S_WRAITH,
+	PM_ZOMBIE, PM_WRAITH, S_ZOMBIE, S_WRAITH,
 	ART_MITRE_OF_HOLINESS,
-	MH_HUMAN|MH_ELF | ROLE_MALE|ROLE_FEMALE |
+	MH_HUMAN|MH_ELF|MH_GIANT |
+	ROLE_MALE|ROLE_FEMALE |
 	  ROLE_LAWFUL|ROLE_NEUTRAL|ROLE_CHAOTIC,
 	/* Str Int Wis Dex Con Cha */
 	{   7,  7, 10,  7,  7,  7 },
@@ -224,7 +237,11 @@ const struct Role roles[] = {
 	PM_MASTER_OF_THIEVES, PM_THUG, PM_MASTER_ASSASSIN,
 	PM_LEPRECHAUN, PM_GUARDIAN_NAGA, S_NYMPH, S_NAGA,
 	ART_MASTER_KEY_OF_THIEVERY,
-	MH_HUMAN|MH_ORC | ROLE_MALE|ROLE_FEMALE |
+	MH_HUMAN|MH_ORC |
+#ifdef NEWRACES
+	MH_KOBOLD|MH_OGRE | 
+#endif
+	  ROLE_MALE|ROLE_FEMALE |
 	  ROLE_CHAOTIC,
 	/* Str Int Wis Dex Con Cha */
 	{   7,  7,  7, 10,  7,  6 },
@@ -264,7 +281,11 @@ const struct Role roles[] = {
 	PM_ORION, PM_HUNTER, PM_SCORPIUS,
 	PM_FOREST_CENTAUR, PM_SCORPION, S_CENTAUR, S_SPIDER,
 	ART_LONGBOW_OF_DIANA,
-	MH_HUMAN|MH_ELF|MH_GNOME|MH_ORC | ROLE_MALE|ROLE_FEMALE |
+	MH_HUMAN|MH_ELF|MH_GNOME|MH_ORC |
+#ifdef NEWRACES
+          MH_KOBOLD |
+#endif
+	  ROLE_MALE|ROLE_FEMALE |
 	  ROLE_NEUTRAL|ROLE_CHAOTIC,
 	/* Str Int Wis Dex Con Cha */
 	{  13, 13, 13,  9, 13,  7 },
@@ -342,7 +363,11 @@ const struct Role roles[] = {
 	PM_NORN, PM_WARRIOR, PM_LORD_SURTUR,
 	PM_FIRE_ANT, PM_FIRE_GIANT, S_ANT, S_GIANT,
 	ART_ORB_OF_FATE,
-	MH_HUMAN|MH_DWARF | ROLE_FEMALE | ROLE_LAWFUL|ROLE_NEUTRAL,
+	MH_HUMAN|MH_ELF|MH_DWARF | 
+#ifdef NEWRACES
+        MH_GIANT |
+#endif
+	ROLE_FEMALE | ROLE_LAWFUL|ROLE_NEUTRAL,
 	/* Str Int Wis Dex Con Cha */
 	{  10,  7,  7,  7, 10,  7 },
 	{  30,  6,  7, 20, 30,  7 },
@@ -367,7 +392,11 @@ const struct Role roles[] = {
 	PM_NEFERET_THE_GREEN, PM_APPRENTICE, PM_DARK_ONE,
 	PM_VAMPIRE_BAT, PM_XORN, S_BAT, S_WRAITH,
 	ART_EYE_OF_THE_AETHIOPICA,
-	MH_HUMAN|MH_ELF|MH_GNOME|MH_ORC | ROLE_MALE|ROLE_FEMALE |
+	MH_HUMAN|MH_ELF|MH_GNOME|MH_ORC | 
+#ifdef NEWRACES
+        MH_KOBOLD|MH_GIANT|MH_OGRE |
+#endif
+	  ROLE_MALE|ROLE_FEMALE |
 	  ROLE_NEUTRAL|ROLE_CHAOTIC,
 	/* Str Int Wis Dex Con Cha */
 	{   7, 10,  7,  7,  7,  7 },
@@ -406,10 +435,10 @@ struct Role urole =
 const struct Race races[] = {
 {	"human", "human", "humanity", "Hum",
 	{"man", "woman"},
-	PM_HUMAN, NON_PM, PM_HUMAN_MUMMY, PM_HUMAN_ZOMBIE,
+	PM_HUMAN, NON_PM, PM_MUMMY, PM_ZOMBIE,
 	MH_HUMAN | ROLE_MALE|ROLE_FEMALE |
 	  ROLE_LAWFUL|ROLE_NEUTRAL|ROLE_CHAOTIC,
-	MH_HUMAN, 0, MH_GNOME|MH_ORC,
+	MH_HUMAN, 0, MH_GNOME|MH_ORC|MH_OGRE|MH_KOBOLD,
 	/*    Str     Int Wis Dex Con Cha */
 	{      3,      3,  3,  3,  3,  3 },
 	{ STR18(100), 18, 18, 18, 18, 18 },
@@ -419,9 +448,10 @@ const struct Race races[] = {
 },
 {	"elf", "elven", "elvenkind", "Elf",
 	{0, 0},
-	PM_ELF, NON_PM, PM_ELF_MUMMY, PM_ELF_ZOMBIE,
-	MH_ELF | ROLE_MALE|ROLE_FEMALE | ROLE_CHAOTIC,
-	MH_ELF, MH_ELF, MH_ORC,
+	PM_ELF, NON_PM, PM_MUMMY, PM_ZOMBIE,
+	MH_ELF | ROLE_MALE|ROLE_FEMALE | 
+	    ROLE_LAWFUL|ROLE_NEUTRAL|ROLE_CHAOTIC,
+	MH_ELF, MH_ELF, MH_ORC|MH_OGRE|MH_KOBOLD,
 	/*  Str    Int Wis Dex Con Cha */
 	{    3,     3,  3,  3,  3,  3 },
 	{   18,    20, 20, 18, 16, 18 },
@@ -431,9 +461,9 @@ const struct Race races[] = {
 },
 {	"dwarf", "dwarven", "dwarvenkind", "Dwa",
 	{0, 0},
-	PM_DWARF, NON_PM, PM_DWARF_MUMMY, PM_DWARF_ZOMBIE,
+	PM_DWARF, NON_PM, PM_MUMMY, PM_ZOMBIE,
 	MH_DWARF | ROLE_MALE|ROLE_FEMALE | ROLE_LAWFUL,
-	MH_DWARF, MH_DWARF|MH_GNOME, MH_ORC,
+	MH_DWARF, MH_DWARF|MH_GNOME, MH_ORC|MH_GIANT|MH_OGRE|MH_KOBOLD,
 	/*    Str     Int Wis Dex Con Cha */
 	{      3,      3,  3,  3,  3,  3 },
 	{ STR18(100), 16, 16, 20, 20, 16 },
@@ -443,9 +473,9 @@ const struct Race races[] = {
 },
 {	"gnome", "gnomish", "gnomehood", "Gno",
 	{0, 0},
-	PM_GNOME, NON_PM, PM_GNOME_MUMMY, PM_GNOME_ZOMBIE,
+	PM_GNOME, NON_PM, PM_MUMMY, PM_ZOMBIE,
 	MH_GNOME | ROLE_MALE|ROLE_FEMALE | ROLE_NEUTRAL,
-	MH_GNOME, MH_DWARF|MH_GNOME, MH_HUMAN,
+	MH_GNOME, MH_DWARF|MH_GNOME, MH_HUMAN|MH_GIANT|MH_OGRE|MH_KOBOLD,
 	/*  Str    Int Wis Dex Con Cha */
 	{    3,     3,  3,  3,  3,  3 },
 	{STR18(50),19, 18, 18, 18, 18 },
@@ -455,7 +485,7 @@ const struct Race races[] = {
 },
 {	"orc", "orcish", "orcdom", "Orc",
 	{0, 0},
-	PM_ORC, NON_PM, PM_ORC_MUMMY, PM_ORC_ZOMBIE,
+	PM_ORC, NON_PM, PM_MUMMY, PM_ZOMBIE,
 	MH_ORC | ROLE_MALE|ROLE_FEMALE | ROLE_CHAOTIC,
 	MH_ORC, 0, MH_HUMAN|MH_ELF|MH_DWARF,
 	/*  Str    Int Wis Dex Con Cha */
@@ -465,6 +495,45 @@ const struct Race races[] = {
 	{  1, 0,  0, 1,  0, 0 },	/* Hit points */
 	{  1, 0,  1, 0,  1, 0 }		/* Energy */
 },
+#ifdef NEWRACES
+{	"kobold", "kobold", "koboldkind", "Kob",
+	{0, 0},
+	PM_KOBOLD, NON_PM, PM_MUMMY, PM_ZOMBIE,
+	MH_KOBOLD | ROLE_MALE|ROLE_FEMALE | ROLE_CHAOTIC,
+	MH_KOBOLD, MH_KOBOLD, MH_HUMAN|MH_ELF|MH_DWARF|MH_GNOME,
+	/*  Str    Int Wis Dex Con Cha */
+	{    3,     3,  3,  3,  3,  3 },
+	{   18,    16, 16, 20, 16, 16 },
+	/* Init   Lower  Higher */
+	{  1, 0,  0, 1,  0, 0 },	/* Hit points */
+	{  1, 0,  0, 2,  0, 2 }		/* Energy */
+},
+{	"ogre", "ogre", "ogrekind", "Ogr",
+	{0, 0},
+	PM_OGRE, NON_PM, PM_MUMMY, PM_ZOMBIE,
+	MH_OGRE | ROLE_MALE|ROLE_FEMALE | ROLE_CHAOTIC,
+	MH_OGRE, MH_OGRE, MH_HUMAN|MH_ELF|MH_DWARF|MH_GNOME,
+	/*    Str     Int Wis Dex Con Cha */
+	{      5,      3,  3,  3,  4,  3 },
+	{ STR18(100), 14, 15, 14, 19, 15 },
+	/* Init   Lower  Higher */
+	{  4, 2,  0, 3,  0, 2 },	/* Hit points */
+	{  0, 0,  0, 1,  0, 1 }		/* Energy */
+},
+{	"giant", "giant", "giantkind", "Gia",
+	{0, 0},
+	PM_GIANT, NON_PM, PM_MUMMY, PM_ZOMBIE,
+	MH_GIANT | ROLE_MALE|ROLE_FEMALE | 
+	    ROLE_LAWFUL|ROLE_NEUTRAL|ROLE_CHAOTIC,
+	MH_GIANT, 0, MH_DWARF|MH_GNOME,
+	/*    Str     Int Wis Dex Con Cha */
+	{      5,      3,  3,  3,  5,  3 },
+	{ STR18(100), 18, 14, 12, 20, 18 },
+	/* Init   Lower  Higher */
+	{  4, 4,  0, 4,  0, 3 },	/* Hit points */
+	{  1, 1,  0, 2,  0, 2 }		/* Energy */
+},
+#endif //NEWRACES
 /* Array terminator */
 { 0, 0, 0, 0 }};
 

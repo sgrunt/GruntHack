@@ -416,7 +416,7 @@ register struct monst *mtmp;
     if (!is_silent(mtmp->data) && mtmp->data->msound <= MS_ANIMAL)
 	(void) domonnoise(mtmp);
     else if (mtmp->data->msound >= MS_HUMANOID) {
-	if (!canspotmon(mtmp))
+	if ((!canspotmon(mtmp) || displaced_image(mtmp)))
 	    map_invisible(mtmp->mx, mtmp->my);
 	verbalize("I'm hungry.");
     }
@@ -444,7 +444,7 @@ register struct monst *mtmp;
     /* be sure to do this before talking; the monster might teleport away, in
      * which case we want to check its pre-teleport position
      */
-    if (!canspotmon(mtmp))
+    if (!canspotmon(mtmp) || displaced_image(mtmp))
 	map_invisible(mtmp->mx, mtmp->my);
 
     switch (ptr->msound) {
@@ -627,7 +627,7 @@ register struct monst *mtmp;
 	case MS_BONES:
 	    pline("%s rattles noisily.", Monnam(mtmp));
 	    You("freeze for a moment.");
-	    nomul(-2);
+	    nomul2(-2, "paralyzed");
 	    break;
 	case MS_LAUGH:
 	    {
@@ -692,9 +692,9 @@ register struct monst *mtmp;
 						moves > EDOG(mtmp)->hungrytime)
 		verbl_msg = "I'm hungry.";
 	    /* Specific monsters' interests */
-	    else if (is_elf(ptr))
+	    else if (is_elf(mtmp))
 		pline_msg = "curses orcs.";
-	    else if (is_dwarf(ptr))
+	    else if (is_dwarf(mtmp))
 		pline_msg = "talks about mining.";
 	    else if (likes_magic(ptr))
 		pline_msg = "talks about spellcraft.";
@@ -917,7 +917,7 @@ dochat()
     mtmp->mstrategy &= ~STRAT_WAITMASK;
 
     if (mtmp->mtame && mtmp->meating) {
-	if (!canspotmon(mtmp))
+	if (!canspotmon(mtmp) || displaced_image(mtmp))
 	    map_invisible(mtmp->mx, mtmp->my);
 	pline("%s is eating noisily.", Monnam(mtmp));
 	return (0);

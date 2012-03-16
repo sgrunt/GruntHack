@@ -75,12 +75,11 @@
  *
  * This is the globally used canseemon().  It is not called within the display
  * routines.  Like mon_visible(), but it checks to see if the hero sees the
- * location instead of assuming it.  (And also considers worms.)
+ * location of its image instead of assuming it.  (And also considers worms.)
  */
 #define canseemon(mon) ((mon->wormno ? worm_known(mon) : \
-	    (cansee(mon->mx, mon->my) || see_with_infrared(mon))) \
+	    (cansee(mon->mix, mon->miy) || see_with_infrared(mon))) \
 	&& mon_visible(mon))
-
 
 /*
  * canspotmon(mon)
@@ -91,6 +90,15 @@
  */
 #define canspotmon(mon) \
 	(canseemon(mon) || sensemon(mon))
+
+/*
+ * displaced_image(mon)
+ *
+ * Checks whether the monster has a displaced image.
+ */
+#define displaced_image(mon) \
+	(displaced(mon) && m_img_at(mon->mx, mon->my) != mon && \
+	 !tp_sensemon(mon))
 
 /* knowninvisible(mon)
  * This one checks to see if you know a monster is both there and invisible.
@@ -274,15 +282,32 @@
 #define GLYPH_WARNING_OFF	((NUMMONS << 3) + GLYPH_SWALLOW_OFF)
 #define MAX_GLYPH		(WARNCOUNT      + GLYPH_WARNING_OFF)
 
+#define should_darken_glyph(glyph) ((glyph >= GLYPH_OBJ_OFF && \
+                                     glyph <  GLYPH_EXPLODE_OFF))
+
 #define NO_GLYPH MAX_GLYPH
 
 #define GLYPH_INVISIBLE GLYPH_INVIS_OFF
 
+#define racial_glyph(mon) (iflags.showrace && \
+                           (mon)->mrace && \
+			   is_racial((mon)->data) \
+			                 ? ((is_elf(mon))   ? PM_ELF    :  \
+			                   (is_dwarf(mon))  ? PM_DWARF  :  \
+					   (is_gnome(mon))  ? PM_GNOME  :  \
+					   (is_orc(mon))    ? PM_ORC    :  \
+					   (is_giant(mon))  ? PM_GIANT  :  \
+					   (is_ettin(mon))  ? PM_ETTIN  :  \
+					   (is_kobold(mon)) ? PM_KOBOLD :  \
+					   (is_ogre(mon))   ? PM_OGRE   :  \
+					                      PM_HUMAN)    \
+                                        : monsndx((mon)->data))
+
 #define warning_to_glyph(mwarnlev) ((mwarnlev)+GLYPH_WARNING_OFF)
-#define mon_to_glyph(mon) ((int) what_mon(monsndx((mon)->data))+GLYPH_MON_OFF)
-#define detected_mon_to_glyph(mon) ((int) what_mon(monsndx((mon)->data))+GLYPH_DETECT_OFF)
-#define ridden_mon_to_glyph(mon) ((int) what_mon(monsndx((mon)->data))+GLYPH_RIDDEN_OFF)
-#define pet_to_glyph(mon) ((int) what_mon(monsndx((mon)->data))+GLYPH_PET_OFF)
+#define mon_to_glyph(mon) ((int) what_mon(racial_glyph(mon))+GLYPH_MON_OFF)
+#define detected_mon_to_glyph(mon) ((int) what_mon(racial_glyph(mon))+GLYPH_DETECT_OFF)
+#define ridden_mon_to_glyph(mon) ((int) what_mon(racial_glyph(mon))+GLYPH_RIDDEN_OFF)
+#define pet_to_glyph(mon) ((int) what_mon(racial_glyph(mon))+GLYPH_PET_OFF)
 
 /* This has the unfortunate side effect of needing a global variable	*/
 /* to store a result. 'otg_temp' is defined and declared in decl.{ch}.	*/

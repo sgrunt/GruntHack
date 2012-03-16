@@ -238,7 +238,9 @@ dig()
 		return(0);
 	    }
 	}
-	if(Fumbling && !rn2(3)) {
+	// the fumble check is random enough to ensure the randomness is not
+	// needed here
+	if(FUMBLED/* && !rn2(3)*/) {
 	    switch(rn2(3)) {
 	    case 0:
 		if(!welded(uwep)) {
@@ -557,7 +559,7 @@ int ttyp;
 		if (oldobjs != newobjs)	/* something unearthed */
 			(void) pickup(1);	/* detects pit */
 	    } else if(mtmp) {
-		if(is_flyer(mtmp->data) || is_floater(mtmp->data)) {
+		if(is_flyer(mtmp->data) || levitating(mtmp)) {
 		    if(canseemon(mtmp))
 			pline("%s %s over the pit.", Monnam(mtmp),
 						     (is_flyer(mtmp->data)) ?
@@ -616,7 +618,7 @@ int ttyp;
 		    impact_drop((struct obj *)0, x, y, 0);
 		if (mtmp) {
 		     /*[don't we need special sokoban handling here?]*/
-		    if (is_flyer(mtmp->data) || is_floater(mtmp->data) ||
+		    if (is_flyer(mtmp->data) || levitating(mtmp) ||
 		        mtmp->data == &mons[PM_WUMPUS] ||
 			(mtmp->wormno && count_wsegs(mtmp) > 5) ||
 			mtmp->data->msize >= MZ_HUGE) return;
@@ -916,7 +918,8 @@ struct obj *obj;
 				aobjnam(obj, "become"));
 			    /* you ought to be able to let go; tough luck */
 			    /* (maybe `move_into_trap()' would be better) */
-			    nomul(-d(2,2));
+			    nomul2(-d(2,2),
+			           "attempting to dig through a web");
 			    nomovemsg = "You pull free.";
 			} else if (lev->typ == IRONBARS) {
 			    pline("Clang!");
@@ -1461,7 +1464,7 @@ struct monst *mtmp;
 	pline("bury_monst: %s", mon_nam(mtmp));
 #endif
 	if(canseemon(mtmp)) {
-	    if(is_flyer(mtmp->data) || is_floater(mtmp->data)) {
+	    if(is_flyer(mtmp->data) || levitating(mtmp)) {
 		pline_The("%s opens up, but %s is not swallowed!",
 			surface(mtmp->mx, mtmp->my), mon_nam(mtmp));
 		return;

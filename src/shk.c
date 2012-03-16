@@ -23,6 +23,9 @@ STATIC_DCL void FDECL(kops_gone, (BOOLEAN_P));
 
 #define IS_SHOP(x)	(rooms[x].rtype >= SHOPBASE)
 
+#define hates_race(shk)  (race_hostile(&mons[mons_to_corpse(shk)]) && \
+                          !(shk->isshk && !strcmp(shkname(shk), "Izchak")))
+
 extern const struct shclass shtypes[];	/* defined in shknam.c */
 extern struct obj *thrownobj;		/* defined in dothrow.c */
 
@@ -564,11 +567,12 @@ register char *enterstring;
 	} else if (eshkp->robbed) {
 	    pline("%s mutters imprecations against shoplifters.", shkname(shkp));
 	} else {
-	    verbalize("%s, %s!  Welcome%s to %s %s!",
-		      Hello(shkp), plname,
-		      eshkp->visitct++ ? " again" : "",
+	    const char *punct = (hates_race(shkp) ? "." : "!");
+	    verbalize("%s, %s%s  Welcome%s to %s %s%s",
+		      Hello(shkp), hates_race(shkp) ? "scum" : plname,
+		      punct, eshkp->visitct++ ? " again" : "",
 		      s_suffix(shkname(shkp)),
-		      shtypes[rt - SHOPBASE].name);
+		      shtypes[rt - SHOPBASE].name, punct);
 	}
 	/* can't do anything about blocking if teleported in */
 	if (!inside_shop(u.ux, u.uy)) {
@@ -595,14 +599,14 @@ register char *enterstring;
 		    /* [ALI] Shopkeeper identifies mattock(s) */
 		    if (!Blind) makeknown(DWARVISH_MATTOCK);
 		}
-		verbalize(NOTANGRY(shkp) ?
+		verbalize(NOTANGRY(shkp) && !hates_race(shkp) ?
 			  "Will you please leave your %s%s outside?" :
 			  "Leave the %s%s outside.",
 			  tool, plur(cnt));
 		should_block = TRUE;
 #ifdef STEED
 	    } else if (u.usteed) {
-		verbalize(NOTANGRY(shkp) ?
+		verbalize(NOTANGRY(shkp) && !hates_race(shkp) ?
 			  "Will you please leave %s outside?" :
 			  "Leave %s outside.", y_monnam(u.usteed));
 		should_block = TRUE;
@@ -1540,7 +1544,8 @@ boolean itemize;
 	    } else if (quan < bp->bquan && !consumed) { /* partly used goods */
 		obj->quan = bp->bquan - save_quan;	/* used up amount */
 		verbalize("%s for the other %s before buying %s.",
-			  ANGRY(shkp) ? "Pay" : "Please pay", xname(obj),
+			  ANGRY(shkp) || hates_race(shkp)
+			  ? "Pay" : "Please pay", xname(obj),
 			  save_quan > 1L ? "these" : "this one");
 		buy = PAY_SKIP;		/* shk won't sell */
 	    }
@@ -1668,8 +1673,11 @@ int croaked;
 	    !eshkp->billct && !eshkp->robbed && !eshkp->debit &&
 	     NOTANGRY(shkp) && !eshkp->following) {
 		if (invent)
-			pline("%s gratefully inherits all your possessions.",
-				shkname(shkp));
+			pline("%s %s inherits all your possessions.",
+				shkname(shkp),
+			        hates_race(shkp) ? "disapprovingly"
+				                 : "gratefully"
+				);
 		set_repo_loc(eshkp);
 		goto clear;
 	}
@@ -1841,6 +1849,32 @@ unsigned id;
 #endif /*OVLB*/
 #ifdef OVL3
 
+STATIC_DCL
+const int matprice[] = {
+     0,
+     1, // LIQUID
+     1, // WAX
+     1, // VEGGY
+     3, // FLESH
+     2, // PAPER
+     3, // CLOTH
+     5, // LEATHER
+     8, // WOOD
+    20, // BONE
+   200, // DRAGON_HIDE - DSM to scale mail
+    10, // IRON
+    10, // METAL
+    10, // COPPER
+    30, // SILVER
+    30, // GOLD
+    30, // PLATINUM
+    32, // MITHRIL - mithril-coat to regular chain mail
+    10, // PLASTIC
+    20, // GLASS
+   500, // GEMSTONE
+    10  // MINERAL
+};
+
 /* calculate the value that the shk will charge for [one of] an object */
 STATIC_OVL long
 get_cost(obj, shkp)
@@ -1854,7 +1888,7 @@ register struct monst *shkp;	/* if angry, impose a surcharge */
 	   especially when gem prices are concerned */
 	if (!obj->dknown || !objects[obj->otyp].oc_name_known) {
 		if (obj->oclass == GEM_CLASS &&
-			objects[obj->otyp].oc_material == GLASS) {
+			obj->omaterial == GLASS) {
 		    int i;
 		    /* get a value that's 'random' from game to game, but the
 		       same within the same game */
@@ -1898,6 +1932,11 @@ register struct monst *shkp;	/* if angry, impose a surcharge */
 		} else if (!(obj->o_id % 4)) /* arbitrarily impose surcharge */
 		    tmp += tmp / 3L;
 	}
+	if (obj->omaterial != objects[obj->otyp].oc_material)
+	    tmp = (tmp * matprice[obj->omaterial]) 
+	               / matprice[objects[obj->otyp].oc_material];
+	if (hates_race(shkp))
+	    tmp += tmp / 3L; /* hates your guts by race */
 #ifdef TOURIST
 	if ((Role_if(PM_TOURIST) && u.ulevel < (MAXULEV/2))
 	    || (uarmu && !uarm && !uarmc))	/* touristy shirt visible */
@@ -2023,6 +2062,12 @@ register struct obj *obj;
 register struct monst *shkp;
 {
 	long tmp = getprice(obj, TRUE) * obj->quan;
+	
+	if (obj->omaterial != objects[obj->otyp].oc_material)
+	    tmp = (tmp * matprice[obj->omaterial]) 
+	               / matprice[objects[obj->otyp].oc_material];
+	if (hates_race(shkp))
+	    tmp /= 3L; /* hates your guts by race */
 
 #ifdef TOURIST
 	if ((Role_if(PM_TOURIST) && u.ulevel < (MAXULEV/2))
@@ -2040,8 +2085,8 @@ register struct monst *shkp;
 	if (!obj->dknown || !objects[obj->otyp].oc_name_known) {
 		if (obj->oclass == GEM_CLASS) {
 			/* different shop keepers give different prices */
-			if (objects[obj->otyp].oc_material == GEMSTONE ||
-			    objects[obj->otyp].oc_material == GLASS) {
+			if (obj->omaterial == GEMSTONE ||
+			    obj->omaterial == GLASS) {
 				tmp = (obj->otyp % (6 - shkp->m_id % 3));
 				tmp = (tmp + 3) * obj->quan;
 			}
@@ -2265,14 +2310,15 @@ speak:
 		return;
 	    }
 	    Strcpy(buf, "\"For you, ");
-	    if (ANGRY(shkp)) Strcat(buf, "scum ");
+	    if (ANGRY(shkp) || hates_race(shkp)) Strcat(buf, "scum");
 	    else {
 		static const char *honored[5] = {
 		  "good", "honored", "most gracious", "esteemed",
 		  "most renowned and sacred"
 		};
 		Strcat(buf, honored[rn2(4) + u.uevent.udemigod]);
-		if (!is_human(youmonst.data)) Strcat(buf, " creature");
+		if (!(youmonst.data->mflags2 & M2_RACEMASK))
+		    Strcat(buf, " creature");
 		else
 		    Strcat(buf, (flags.female) ? " lady" : " sir");
 	    }
@@ -2853,6 +2899,16 @@ boolean shk_buying;
 	if (obj->oartifact) {
 	    tmp = arti_cost(obj);
 	    if (shk_buying) tmp /= 4;
+	} else if (obj->oprops) {
+	    int i, factor = 50, next = 2;
+	    for (i = 0;
+	         i < MAX_ITEM_PROPS; 
+		 i++)
+		 if (obj->oprops & (1 << i))
+		     factor *= next, next = (next == 2) ? 5 : 2;
+		         // 100, 500, 1000, 5000, 10000, 50000...
+			 // more than two is absurd, though, really
+            tmp += factor;
 	}
 	switch(obj->oclass) {
 	case FOOD_CLASS:
@@ -2903,7 +2959,7 @@ register xchar x, y;
 			  Monnam(shkp),
 			  (x == shkp->mx && y == shkp->my) ? "" : " reaches over and",
 			  the(xname(obj)));
-		    if (!canspotmon(shkp))
+		    if (!canspotmon(shkp) || displaced_image(shkp))
 			map_invisible(x, y);
 		    delay_output();
 		    mark_synch();
@@ -3656,7 +3712,7 @@ register struct obj *first_obj;
     for (otmp = first_obj; otmp; otmp = otmp->nexthere) {
 	if (otmp->oclass == COIN_CLASS) continue;
 	cost = (otmp->no_charge || otmp == uball || otmp == uchain) ? 0L :
-		get_cost(otmp, (struct monst *)0);
+		get_cost(otmp, shkp);
 	if (Has_contents(otmp))
 	    cost += contained_cost(otmp, shkp, 0L, FALSE, FALSE);
 	if (!cost) {
@@ -3675,7 +3731,7 @@ register struct obj *first_obj;
 	    pline("%s!", buf);	/* buf still contains the string */
 	} else {
 	    /* print cost in slightly different format, so can't reuse buf */
-	    cost = get_cost(first_obj, (struct monst *)0);
+	    cost = get_cost(first_obj, shkp);
 	    if (Has_contents(first_obj))
 		cost += contained_cost(first_obj, shkp, 0L, FALSE, FALSE);
 	    pline("%s, price %ld %s%s%s", doname(first_obj),
@@ -3755,7 +3811,8 @@ struct monst *shkp;
 	}
 
 	eshk = ESHK(shkp);
-	if (ANGRY(shkp))
+	if (ANGRY(shkp) ||
+	    (hates_race(shkp) && !eshk->billct))
 		pline("%s mentions how much %s dislikes %s customers.",
 			shkname(shkp), mhe(shkp),
 			eshk->robbed ? "non-paying" : "rude");

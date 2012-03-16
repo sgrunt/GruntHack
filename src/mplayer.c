@@ -131,7 +131,7 @@ register boolean special;
 	    short cloak = !rn2(8) ? STRANGE_OBJECT :
 	    		rnd_class(OILSKIN_CLOAK, CLOAK_OF_DISPLACEMENT);
 	    short helm = !rn2(8) ? STRANGE_OBJECT :
-	    		rnd_class(ELVEN_LEATHER_HELM, HELM_OF_TELEPATHY);
+	    		rnd_class(ELVEN_HELM, HELM_OF_TELEPATHY);
 	    short shield = !rn2(8) ? STRANGE_OBJECT :
 	    		rnd_class(ELVEN_SHIELD, SHIELD_OF_REFLECTION);
 	    int quan;
@@ -229,8 +229,13 @@ register boolean special;
 		otmp->spe = (special ? rn1(5,4) : rn2(4));
 		if (!rn2(3)) otmp->oerodeproof = 1;
 		else if (!rn2(2)) otmp->greased = 1;
-		if (special && rn2(2))
-		    otmp = mk_artifact(otmp, A_NONE);
+		if (special)
+		{
+		    if (!rn2(5))
+		        otmp = mk_artifact(otmp, A_NONE);
+		    else
+		        otmp = create_oprop(otmp);
+		}
 		/* mplayers knew better than to overenchant Magicbane */
 		if (otmp->oartifact == ART_MAGICBANE)
 		    otmp->spe = rnd(4);
@@ -245,7 +250,7 @@ register boolean special;
 		mk_mplayer_armor(mtmp, helm);
 		mk_mplayer_armor(mtmp, shield);
 		if (rn2(8))
-		    mk_mplayer_armor(mtmp, rnd_class(LEATHER_GLOVES,
+		    mk_mplayer_armor(mtmp, rnd_class(GLOVES,
 					       GAUNTLETS_OF_DEXTERITY));
 		if (rn2(8))
 		    mk_mplayer_armor(mtmp, rnd_class(LOW_BOOTS, LEVITATION_BOOTS));

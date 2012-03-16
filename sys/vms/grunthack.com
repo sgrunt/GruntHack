@@ -11,7 +11,7 @@ $!			!note: "-s" is ambiguous between "play as a samurai"
 $!			!   vs "show scoreboard", so use "-S" for the former
 $!	"-x" or "-X"	!play in 'explore' mode (practice for beginners)
 $!	"-D"		!play in 'wizard' mode (for debugging, available only
-$!			! to the username compiled into nethack.exe as WIZARD)
+$!			! to the username compiled into grunthack.exe as WIZARD)
 $!	"-dec"		!turn on DECgraphics mode (VT100 line drawing, done
 $!			! automatically below if appropriate term attribs set)
 $!	"-d" dir-path	!specify an alternate playground directory (not
@@ -29,11 +29,11 @@ $!
 $! termcap is a text file defining terminal capabilities and escape sequences
 $ if f$trnlnm("TERMCAP").eqs."" then  define termcap hackdir:termcap
 $!
-! [ obsolete:  now handled within nethack itself ]
+! [ obsolete:  now handled within grunthack itself ]
 ! $! prior to VMS v6, the C Run-Time Library doesn't understand vt420 :-(
 ! $	  TT$_VT400_Series = 113
 ! $ if f$getdvi("TT:","DEVTYPE").eq.TT$_VT400_Series -
-!  .and. f$trnlnm("NETHACK_TERM").eqs."" then  define nethack_term "vt400"
+!  .and. f$trnlnm("NETHACK_TERM").eqs."" then  define grunthack_term "vt400"
 $!
 $! use the VT100 line drawing character set if possible
 $ graphics = ""
@@ -46,8 +46,8 @@ $!
 $! get input from the terminal, not from this .com file
 $ deassign sys$input
 $!
-$	nethack := $hackdir:nethack
+$	grunthack := $hackdir:grunthack
 $	if p1.nes."-s" .and. p1.nes."-s all" then -
-		nethack = nethack + graphics
-$ nethack "''p1'" "''p2'" "''p3'" "''p4'" "''p5'" "''p6'" "''p7'" "''p8'"
+		grunthack = grunthack + graphics
+$ grunthack "''p1'" "''p2'" "''p3'" "''p4'" "''p5'" "''p6'" "''p7'" "''p8'"
 $!
