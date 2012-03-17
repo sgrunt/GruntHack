@@ -25,13 +25,22 @@ int flag;
     if (is_female(ptr)) mon->female = 1;
     else if (is_male(ptr)) mon->female = 0;
 
-    if (is_racial(ptr) && (mon == &youmonst))
+#if 0
+    if (is_racial(ptr) && (mon == &youmonst) &&
+        !!(ptr->mflags2 & u.urace.selfmask))
         mon->mrace = urace.selfmask;  /* just in case? */
-    else if (is_racial(ptr) && mon->isshk &&
+    else
+#endif
+    if (is_racial(ptr) && mon->isshk &&
              !strcmp(shkname(mon), "Izchak"))
     {
-        mon->mrace = M2_HUMAN;      /* special case :-) */
-	mon->morigdata = PM_ARCHON; /* and don't you dare kill him */
+        mon->mrace = mon->morigrace = M2_HUMAN; /* special case :-) */
+	mon->morigdata = PM_ARCHON;  /* and don't you dare kill him */
+    }
+    else if (mon->morigdata && (ptr == &mons[mon->morigdata]) &&
+             (mon->morigrace))
+    {
+	mon->mrace = mon->morigrace;
     }
     else if ((is_racial(ptr) && !(ptr->mflags2 & mon->mrace)) ||
              (is_were(ptr) && !mon->mrace))

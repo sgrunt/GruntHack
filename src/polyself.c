@@ -59,6 +59,7 @@ const char *fmt, *arg;
 	    youmonst.m_ap_type = M_AP_NOTHING;
 	}
 
+	show_glyph(u.ux, u.uy, objnum_to_glyph(STRANGE_OBJECT));
 	newsym(u.ux,u.uy);
 
 	You(fmt, arg);
@@ -333,7 +334,9 @@ boolean forcecontrol;
 	/* The below polyok() fails either if everything is genocided, or if
 	 * we deliberately chose something illegal to force newman().
 	 */
-	if (!polyok(&mons[mntmp]) || !rn2(5) || your_race_mdat(&mons[mntmp]))
+	if (!polyok(&mons[mntmp]) || !rn2(5) ||
+	    mntmp == race_flag_to_pm(urace.selfmask) ||
+	    (!(mons[mntmp].mflags2 & (M2_RACEMASK & ~urace.selfmask))))
 		newman();
 	else if(!polymon(mntmp)) return;
 
@@ -504,6 +507,7 @@ int	mntmp;
 	    Blinded = 1L;
 	    make_blinded(0L, TRUE);	/* remove blindness */
 	}
+	show_glyph(u.ux, u.uy, objnum_to_glyph(STRANGE_OBJECT));
 	newsym(u.ux,u.uy);		/* Change symbol */
 
 	if (!sticky && !u.uswallow && u.ustuck && sticks(youmonst.data)) u.ustuck = 0;

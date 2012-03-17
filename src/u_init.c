@@ -568,6 +568,9 @@ u_init()
 	u.umonnum = u.umonster = (flags.female &&
 			urole.femalenum != NON_PM) ? urole.femalenum :
 			urole.malenum;
+
+	youmonst.mrace = youmonst.morigrace = urace.selfmask;
+	youmonst.morigdata = u.umonnum;
 	set_uasmon();
 
 	u.ulevel = 0;	/* set up some of the initial attributes */

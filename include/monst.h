@@ -148,6 +148,7 @@ struct monst {
 	int  moriglev;          /* original monster level */
 
 	long mrace;             /* monster's race */
+	long morigrace;		/* original race (for polymorphs) */
 
 	uchar mnamelth;		/* length of name (following mxlth) */
 	short mxlth;		/* length of following data */

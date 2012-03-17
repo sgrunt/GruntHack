@@ -2062,7 +2062,7 @@ create_particular()
 		        mtmp = makemon(&mons[PM_LICHEN], u.ux, u.uy, MM_EDOG|NO_MINVENT);
 			if (mtmp)
 			{
-			    mtmp->mrace = racemask;
+			    mtmp->mrace = mtmp->morigrace = racemask;
 			    set_mon_data(mtmp, whichpm, 0);
 			    mtmp->morigdata = which;
 	                    mtmp->m_lev = adj_lev(whichpm);
@@ -2108,7 +2108,7 @@ create_particular()
 			               NO_MM_FLAGS);
 			if (mtmp)
 			{
-			    mtmp->mrace = racemask;
+			    mtmp->mrace = mtmp->morigrace = racemask;
 			    set_mon_data(mtmp, whichpm, 0);
 			    mtmp->mpeaceful = peace_minded(mtmp);
 			    mtmp->morigdata = which;
@@ -2141,7 +2141,7 @@ create_particular()
 			                   u.ux, u.uy, NO_MM_FLAGS);
 			    if (mtmp)
 			    {
-			        mtmp->mrace = racemask;
+			        mtmp->mrace = mtmp->morigrace = racemask;
 			        set_mon_data(mtmp, whichpm, 0);
 			        mtmp->morigdata = which;
 	                        mtmp->m_lev = adj_lev(whichpm);

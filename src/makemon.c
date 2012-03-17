@@ -1438,6 +1438,7 @@ register int	mmflags;
 	    mongone(mtmp);
 	    return (struct monst *)0;
 	}
+	mtmp->morigrace = mtmp->mrace;
 	if (mtmp->data->msound == MS_LEADER)
 	    quest_status.leader_m_id = mtmp->m_id;
 	mtmp->mxlth = xlth;

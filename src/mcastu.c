@@ -2232,7 +2232,6 @@ castum(mtmp, mattk)
 #endif
 
 	switch (mattk->adtyp) {
-
 	    case AD_FIRE:
 		pline("%s is enveloped in flames.", Monnam(mtmp));
 		if(resists_fire(mtmp)) {
@@ -2271,7 +2270,7 @@ castum(mtmp, mattk)
 	    }
 	}
 
-	if (dmg > 0 && mtmp->mhp > 0)
+	if (mtmp && dmg > 0 && mtmp->mhp > 0)
 	{
 	    mtmp->mhp -= dmg;
 	    if (mtmp->mhp < 1) killed(mtmp);

@@ -296,6 +296,7 @@ boolean actual;
 		in_mklev = FALSE;
 		if (mtmp) {
 			mtmp->mrace = urace.selfmask;
+			mtmp->morigrace = urace.selfmask;
 			mtmp = christen_monst(mtmp, plname);
 			if (corpse) 
 				corpse = obj_attach_mid(corpse, mtmp->m_id); 
@@ -316,6 +317,7 @@ boolean actual;
 				NO_MM_FLAGS|NO_MINVENT);
 		}
 		mtmp->morigdata = u.ugrave_arise;
+		mtmp->morigrace = urace.selfmask;
 		if (!mtmp) {
 			drop_upon_death((struct monst *)0, (struct obj *)0);
 		} else {

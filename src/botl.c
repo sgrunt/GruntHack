@@ -231,7 +231,7 @@ bot1()
 	} else {
 	    int newrank = xlev_to_rank(u.ulevel);
 #ifdef TEXTCOLOR
-            if (changed = (olddata != 0))
+            if (changed = (olddata != u.umonnum))
 	        _term_start_color(CLR_BRIGHT_BLUE);
 	    else if (changed = (oldrank < newrank))
 	        _term_start_color(CLR_GREEN);
@@ -241,7 +241,7 @@ bot1()
 	    Strcpy(mbot, rank());
 	    if (oldmoves != moves)
 	        oldrank = newrank,
-	        olddata = 0;
+	        olddata = u.umonnum;
 	}
 		
 	Sprintf(nb = eos(nb),  mbot);

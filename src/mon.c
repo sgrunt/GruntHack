@@ -694,7 +694,7 @@ mcalcdistress()
 	    if (!(mtmp->mtime))
 	    {
 	    	struct permonst *dat = mtmp->data;
-	    	int race = mtmp->mrace;
+	    	int race = mtmp->morigrace;
 
 		/* hack to get the message to display */
 		/* *before* any "breaks out of foo's stomach" message */
@@ -1833,7 +1833,7 @@ struct monst *mtmp;
 	    !stoned) {
 	    /* remonsterize? */
 	    struct permonst *dat = mtmp->data;
-	    int race = mtmp->mrace;
+	    int race = mtmp->morigrace;
 
 	    /* hack to get the message to display */
 	    /* *before* any "breaks out of foo's stomach" message */

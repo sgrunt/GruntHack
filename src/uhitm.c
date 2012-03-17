@@ -2341,7 +2341,7 @@ use_weapon:
 				)) goto use_weapon;
 			*/
 			sum[i] = castum(mon, mattk);
-			continue;
+			break;
 #endif /*YOUMONST_SPELL*/
 
 		case AT_NONE:
@@ -2371,6 +2371,8 @@ use_weapon:
 		(void) passive(mon, sum[i], 1, mattk->aatyp);
 		nsum |= sum[i];
 	    }
+	    if (sum[i] == 3)
+	        break;
 	    if (!Upolyd)
 		break; /* No extra attacks if no longer a monster */
 	    if (multi < 0)

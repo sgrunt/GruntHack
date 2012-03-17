@@ -286,7 +286,7 @@ const char * const *nlp;
 	    /* special-case minetown lighting shk */
 	    shname = "Izchak";
 	    shk->female = FALSE;
-            shk->mrace = M2_HUMAN;
+            shk->mrace = shk->morigrace = M2_HUMAN;
 	    shk->morigdata = PM_ARCHON;
 	} else {
 	    /* We want variation from game to game, without needing the save

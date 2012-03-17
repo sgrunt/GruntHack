@@ -843,7 +843,7 @@ struct mkroom	*croom;
 	if (mtmp) {
 	    if (racemask)
 	    {
-	        mtmp->mrace = racemask;
+	        mtmp->mrace = mtmp->morigrace = racemask;
 		set_mon_data(mtmp, pm, 0);
 		mtmp->morigdata = monsndx(pm);
 	        mtmp->m_lev = adj_lev(pm);
