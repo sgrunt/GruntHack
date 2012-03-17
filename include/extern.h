@@ -2392,7 +2392,7 @@ E int FDECL(mon_has_amulet, (struct monst *));
 E int FDECL(mon_has_special, (struct monst *));
 E int FDECL(tactics, (struct monst *));
 E void NDECL(aggravate);
-E void NDECL(clonewiz);
+E void FDECL(clonewiz, (struct monst *mdef));
 E int NDECL(pick_nasty);
 E int FDECL(nasty, (struct monst*));
 E void NDECL(resurrect);

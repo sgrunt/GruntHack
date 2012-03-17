@@ -607,7 +607,7 @@ int spellnum;
 #endif
 	if (mtmp->iswiz && flags.no_of_wizards == 1) {
 	    pline("Double Trouble...");
-	    clonewiz();
+	    clonewiz(&youmonst);
 	    dmg = 0;
 	} else
 	    impossible("bad wizard cloning?");
@@ -2361,6 +2361,19 @@ int spellnum;
             }
 	}
 	dmg = 0;
+	break;
+#ifdef COMBINED_SPELLS
+    case SPE_BOOK_OF_THE_DEAD:
+#else
+    case MGC_CLONE_WIZ:
+#endif
+	if (mattk->iswiz && flags.no_of_wizards == 1) {
+	    if (canspotmon(mattk))
+	    	pline("Double Trouble...");
+	    clonewiz(mtmp);
+	    dmg = 0;
+	} else
+	    impossible("bad wizard cloning?");
 	break;
 #ifndef COMBINED_SPELLS
     case MGC_SUMMON_MONS:

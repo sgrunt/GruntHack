@@ -475,13 +475,19 @@ aggravate()
 }
 
 void
-clonewiz()
+clonewiz(mdef)
+struct monst *mdef;
 {
 	register struct monst *mtmp2;
-
-	if ((mtmp2 = makemon(&mons[PM_WIZARD_OF_YENDOR],
-				u.ux, u.uy, NO_MM_FLAGS)) != 0) {
+	coord bypos;
+	
+	if ((enexto(&bypos, mdef == &youmonst ? u.ux : mdef->mx,
+			    mdef == &youmonst ? u.uy : mdef->my,
+	                    (struct permonst *)0)) &&
+	    (mtmp2 = makemon(&mons[PM_WIZARD_OF_YENDOR], bypos.x, bypos.y,
+			     NO_MM_FLAGS)) != 0) {
 	    mtmp2->msleeping = mtmp2->mtame = mtmp2->mpeaceful = 0;
+	    mtmp2->mstrategy &= ~STRAT_WAITMASK;
 	    if (!u.uhave.amulet && rn2(2)) {  /* give clone a fake */
 		(void) add_to_minv(mtmp2, mksobj(FAKE_AMULET_OF_YENDOR,
 					TRUE, FALSE));
