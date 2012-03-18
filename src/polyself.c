@@ -336,7 +336,8 @@ boolean forcecontrol;
 	 */
 	if (!polyok(&mons[mntmp]) || !rn2(5) ||
 	    mntmp == race_flag_to_pm(urace.selfmask) ||
-	    (!(mons[mntmp].mflags2 & (M2_RACEMASK & ~urace.selfmask))))
+	    ((!!(mons[mntmp].mflags2 & M2_RACEMASK)) &&
+	     (!(mons[mntmp].mflags2 & (M2_RACEMASK & ~urace.selfmask)))))
 		newman();
 	else if(!polymon(mntmp)) return;
 
