@@ -438,7 +438,9 @@ register struct obj *obj;
 	if (obj->oartifact) {
 		pline_The("artifact seems to resist the attempt.");
 		return;
-	} else if (restrict_name(obj, buf) || exist_artifact(obj->otyp, buf)) {
+	}
+#if 0
+	else if (restrict_name(obj, buf) || exist_artifact(obj->otyp, buf)) {
 		int n = rn2((int)strlen(buf));
 		register char c1, c2;
 
@@ -449,7 +451,8 @@ register struct obj *obj;
 		display_nhwindow(WIN_MESSAGE, FALSE);
 		You("engrave: \"%s\".",buf);
 	}
-	obj = oname(obj, buf);
+#endif
+	obj = oname(obj, buf, FALSE);
 }
 
 /*
@@ -526,9 +529,10 @@ const char *name;
 }
 
 struct obj *
-oname(obj, name)
+oname(obj, name, artifact)
 struct obj *obj;
 const char *name;
+boolean artifact;
 {
 	int lth;
 	char buf[PL_PSIZ];
@@ -543,7 +547,7 @@ const char *name;
 	 * Also trying to create an artifact shouldn't de-artifact
 	 * it (e.g. Excalibur from prayer). In this case the object
 	 * will retain its current name. */
-	if (obj->oartifact || (lth && exist_artifact(obj->otyp, name)))
+	if (obj->oartifact /* || (lth && exist_artifact(obj->otyp, name)) */ )
 		return obj;
 
 	if (lth == obj->onamelth) {
@@ -553,7 +557,7 @@ const char *name;
 		obj = realloc_obj(obj, obj->oxlth,
 			      (genericptr_t)obj->oextra, lth, name);
 	}
-	if (lth) artifact_exists(obj, name, TRUE);
+	if (lth) artifact_exists(obj, name, TRUE, !artifact);
 	if (obj->oartifact) {
 	    /* can't dual-wield with artifact as secondary weapon */
 	    if (obj == uswapwep) untwoweapon();

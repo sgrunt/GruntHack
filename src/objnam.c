@@ -2849,6 +2849,7 @@ boolean from_user;
 	register char *p;
 	register int i;
 	register struct obj *otmp;
+	boolean resetmat = TRUE;
 	int cnt, spe, spesgn, typ, very, rechrg;
 	int blessed, uncursed, iscursed, ispoisoned, isgreased;
 	int magical;
@@ -4093,20 +4094,22 @@ typfnd:
 		aname = artifact_name(name, &objtyp);
 		if (aname && objtyp == otmp->otyp) name = aname;
 
-		otmp = oname(otmp, name);
+		otmp = oname(otmp, name, TRUE);
 		if (otmp->oartifact) {
 			otmp->quan = 1L;
 			u.uconduct.wisharti++;	/* KMH, conduct */
-			if (otmp->oartifact == ART_GRAYSWANDIR ||
-			    otmp->oartifact == ART_WEREBANE)
-			    otmp->omaterial = SILVER;
-#ifdef INVISIBLE_OBJECTS
-			if (otmp->oartifact == ART_MAGICBANE)
-				otmp->oinvis = FALSE;
-			else if (otmp->oinvis)
-				otmp->opresenceknown = TRUE;
-#endif
 		}
+		if (!strcmp(aname, "Grayswandir") ||
+		    !strcmp(aname, "Werebane")) {
+		    otmp->omaterial = SILVER;
+		    resetmat = FALSE;
+		}
+#ifdef INVISIBLE_OBJECTS
+		if (!strcmp(aname, "Magicbane"))
+			otmp->oinvis = FALSE;
+		else if (otmp->oinvis)
+			otmp->opresenceknown = TRUE;
+#endif
 	}
 
 	/* more wishing abuse: don't allow wishing for certain artifacts */
@@ -4117,7 +4120,7 @@ typfnd:
 	    && !wizard
 #endif
 	    ) {
-	    artifact_exists(otmp, ONAME(otmp), FALSE);
+	    artifact_exists(otmp, ONAME(otmp), FALSE, FALSE);
 	    obfree(otmp, (struct obj *) 0);
 	    otmp = &zeroobj;
 	    pline("For a moment, you feel %s in your %s, but it disappears!",
@@ -4125,7 +4128,7 @@ typfnd:
 		  makeplural(body_part(HAND)));
 	}
 
-	if (!otmp->oartifact &&
+	if (!otmp->oartifact && resetmat &&
 	    objmaterial > LIQUID &&
 	  (((otmp->oclass == ROCK_CLASS) &&
 	    objmaterial > FLESH) ||
@@ -4155,7 +4158,7 @@ typfnd:
 	    /* TODO: implement material restrictions */
 	    otmp->omaterial = objmaterial;
 	}
-	else if (!otmp->oartifact)
+	else if (!otmp->oartifact && resetmat) 
 	    otmp->omaterial = objects[otmp->otyp].oc_material;
 
         if (otmp->oclass == WEAPON_CLASS || 

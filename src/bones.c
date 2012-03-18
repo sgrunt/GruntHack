@@ -73,7 +73,7 @@ boolean restore;
 			otmp->onamelth = 0;
 			*ONAME(otmp) = '\0';
 		} else if (otmp->oartifact && restore)
-			artifact_exists(otmp,ONAME(otmp),TRUE);
+			artifact_exists(otmp,ONAME(otmp),TRUE,FALSE);
 		if (!restore) {
 			/* do not zero out o_ids for ghost levels anymore */
 

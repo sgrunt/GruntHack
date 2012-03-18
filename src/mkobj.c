@@ -1268,7 +1268,7 @@ const char *nm;
 	otmp = mkcorpstat(objtype, (struct monst *)0, ptr,
 				x, y, (boolean)(objtype != STATUE));
 	if (nm)
-		otmp = oname(otmp, nm);
+		otmp = oname(otmp, nm, TRUE);
 	return(otmp);
 }
 

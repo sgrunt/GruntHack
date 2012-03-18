@@ -162,7 +162,7 @@ aligntyp alignment;	/* target alignment, or A_NONE */
 
 	    /* make an appropriate object if necessary, then christen it */
 make_artif: if (by_align) otmp = mksobj((int)a->otyp, TRUE, FALSE);
-	    otmp = oname(otmp, a->name);
+	    otmp = oname(otmp, a->name, TRUE);
 	    otmp->oartifact = m;
 #ifdef INVISIBLE_OBJECTS
             if (otmp->oartifact == ART_MAGICBANE && otmp->oinvis)
@@ -365,16 +365,20 @@ register const char *name;
 }
 
 void
-artifact_exists(otmp, name, mod)
+artifact_exists(otmp, name, mod, naming)
 register struct obj *otmp;
 register const char *name;
 register boolean mod;
+register boolean naming;
 {
 	register const struct artifact *a;
 
+
 	if (otmp && *name)
-	    for (a = artilist+1; a->otyp; a++)
-		if (a->otyp == otmp->otyp && !strcmp(a->name, name)) {
+	    for (a = artilist+1; a->otyp; a++) {
+		if (a->otyp == otmp->otyp && !strcmp(a->name, name) &&
+		    (!mod || !artiexist[(int)(a - artilist)]) &&
+		    (!mod || !naming || !restrict_name(otmp, name))) {
 		    register int m = a - artilist;
 		    otmp->oartifact = (char)(mod ? m : 0);
 		    otmp->age = 0;
@@ -383,6 +387,7 @@ register boolean mod;
 		    artiexist[m] = mod;
 		    break;
 		}
+	    }
 	return;
 }
 

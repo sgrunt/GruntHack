@@ -1220,7 +1220,7 @@ pickentry:
 		if (otmp->otyp == CORPSE) obj_stop_timers(otmp);
 		otmp->corpsenm = classmon(tt->plrole, (tt->plgend[0] == 'F'));
 		otmp->owt = weight(otmp);
-		otmp = oname(otmp, tt->name);
+		otmp = oname(otmp, tt->name, TRUE);
 		if (otmp->otyp == CORPSE) start_corpse_timeout(otmp);
 	}
 

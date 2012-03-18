@@ -181,7 +181,7 @@ struct obj **potmp, **pobj;
 		if (otmp->oclass == COIN_CLASS) otmp->owt = weight(otmp);
 		else otmp->owt += obj->owt;
 		if(!otmp->onamelth && obj->onamelth)
-			otmp = *potmp = oname(otmp, ONAME(obj));
+			otmp = *potmp = oname(otmp, ONAME(obj), FALSE);
 		obj_extract_self(obj);
 
 		/* really should merge the timeouts */

@@ -730,7 +730,7 @@ gcrownu()
 	    ;		/* already got bonus above */
 	} else if (obj && obj->otyp == LONG_SWORD && !obj->oartifact) {
 	    if (!Blind) Your("sword shines brightly for a moment.");
-	    obj = oname(obj, artiname(ART_EXCALIBUR));
+	    obj = oname(obj, artiname(ART_EXCALIBUR), TRUE);
 	    if (obj && obj->oartifact == ART_EXCALIBUR) u.ugifts++;
 	}
 	/* acquire Excalibur's skill regardless of weapon or gift */
@@ -749,7 +749,7 @@ gcrownu()
 	    obj->dknown = TRUE;
 	} else if (!already_exists) {
 	    obj = mksobj(LONG_SWORD, FALSE, FALSE);
-	    obj = oname(obj, artiname(ART_VORPAL_BLADE));
+	    obj = oname(obj, artiname(ART_VORPAL_BLADE), TRUE);
 	    obj->spe = 1;
 	    at_your_feet("A sword");
 	    dropy(obj);
@@ -775,7 +775,7 @@ gcrownu()
 	    obj->dknown = TRUE;
 	} else if (!already_exists) {
 	    obj = mksobj(RUNESWORD, FALSE, FALSE);
-	    obj = oname(obj, artiname(ART_STORMBRINGER));
+	    obj = oname(obj, artiname(ART_STORMBRINGER), TRUE);
 	    at_your_feet(An(swordbuf));
 	    obj->spe = 1;
 	    dropy(obj);

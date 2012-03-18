@@ -116,6 +116,8 @@ Object-related:
 * Dragging a ball and chain around while underwater now causes them to
   rust away (as would happen if the ball was being carried).
 * Two additional item properties have been added: hunger and aggravation.
+* Items can now bear the same name as an artifact (no more "While engraving
+  your [hand] slips"). This removes the ability to #name-test objects.
 
 There are some subtle changes that are not listed here.  You are encouraged
 to explore the game to find some of them.

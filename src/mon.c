@@ -394,7 +394,7 @@ register struct monst *mtmp;
 	if (flags.bypasses) bypass_obj(obj);
 
 	if (mtmp->mnamelth)
-	    obj = oname(obj, NAME(mtmp));
+	    obj = oname(obj, NAME(mtmp), FALSE);
 
 	/* Avoid "It was hidden under a green mold corpse!" 
 	 *  during Blind combat. An unseen monster referred to as "it"
@@ -2133,7 +2133,7 @@ register struct monst *mdef;
 		   item-conferred attributes */
 		otmp = mkcorpstat(STATUE, KEEPTRAITS(mdef) ? mdef : 0,
 				  &mons[mons_to_corpse(mdef)], x, y, FALSE);
-		if (mdef->mnamelth) otmp = oname(otmp, NAME(mdef));
+		if (mdef->mnamelth) otmp = oname(otmp, NAME(mdef), FALSE);
 		while ((obj = oldminvent) != 0) {
 		    oldminvent = obj->nobj;
 		    (void) add_to_container(otmp, obj);

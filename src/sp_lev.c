@@ -1031,7 +1031,7 @@ struct mkroom	*croom;
 	}
 
 	if (named)
-	    otmp = oname(otmp, o->name.str);
+	    otmp = oname(otmp, o->name.str, TRUE);
 
 	switch(o->containment) {
 	    static struct obj *container = 0;

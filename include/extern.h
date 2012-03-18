@@ -62,7 +62,7 @@ E struct obj *FDECL(mk_artifact, (struct obj *,ALIGNTYP_P));
 E struct obj *FDECL(create_oprop, (struct obj *,BOOLEAN_P));
 E const char *FDECL(artifact_name, (const char *,short *));
 E boolean FDECL(exist_artifact, (int,const char *));
-E void FDECL(artifact_exists, (struct obj *,const char *,BOOLEAN_P));
+E void FDECL(artifact_exists, (struct obj *,const char *,BOOLEAN_P,BOOLEAN_P));
 E int NDECL(nartifact_exist);
 E boolean FDECL(spec_ability, (struct obj *,unsigned long));
 E boolean FDECL(confers_luck, (struct obj *));
@@ -346,7 +346,7 @@ E int NDECL(do_mname);
 #ifdef NEW_CALL_MENU
 E int NDECL(do_mname2);
 #endif
-E struct obj *FDECL(oname, (struct obj *,const char *));
+E struct obj *FDECL(oname, (struct obj *,const char *,BOOLEAN_P));
 E int NDECL(ddocall);
 E void FDECL(docall, (struct obj *));
 E const char *NDECL(rndghostname);

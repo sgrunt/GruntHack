@@ -710,7 +710,7 @@ register struct monst *mtmp;
 		    if (!rn2(20) || is_lord(ptr))
 		    {
 			otmp = oname(otmp, artiname(
-				rn2(2) ? ART_DEMONBANE : ART_SUNSWORD));
+				rn2(2) ? ART_DEMONBANE : ART_SUNSWORD), TRUE);
 			if (!otmp->oartifact)
 			    create_oprop(otmp, FALSE);
 		    }

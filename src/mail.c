@@ -401,7 +401,7 @@ struct mail_info *info;
 	    verbalize("Catch!");
 	display_nhwindow(WIN_MESSAGE, FALSE);
 	if (info->object_nam) {
-	    obj = oname(obj, info->object_nam);
+	    obj = oname(obj, info->object_nam, FALSE);
 	    if (info->response_cmd) {	/*(hide extension of the obj name)*/
 		int namelth = info->response_cmd - info->object_nam - 1;
 		if ( namelth <= 0 || namelth >= (int) obj->onamelth )
