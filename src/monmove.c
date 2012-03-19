@@ -536,7 +536,10 @@ toofar:
 	    mtmp->mlstmv != monstermoves)
 	{
 	    register struct monst *mtmp2 = mfind_target(mtmp);
-	    if (mtmp2 && /*mtmp2 != &youmonst &&*/ mtmp2 != mtmp)
+	    if (mtmp2 && 
+	        (mtmp2 != &youmonst || 
+		 dist2(mtmp->mx, mtmp->my, mtmp->mux, mtmp->muy) > 2) &&
+		 (mtmp2 != mtmp))
 	    {
 	        int res;
 		res = (mtmp2 == &youmonst) ? mattacku(mtmp)
