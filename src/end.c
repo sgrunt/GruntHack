@@ -602,9 +602,10 @@ boolean taken;
 			if (c == 'y') dump_ID_on();
 			if (want_disp)
 			(void) display_pickinv((char *)0, TRUE, (long *)0,
-				FALSE, TRUE, c == 'y');
+				FALSE, TRUE, !!(c == 'y'));
+			if (c == 'y') dump_ID_on();
 			do_containerconts(invent, TRUE, TRUE, FALSE, want_disp,
-				c == 'y');
+				!!(c == 'y'));
 			if (c == 'y') dump_ID_off();
 #else
 			(void) dump_inventory((char *)0, TRUE, want_disp,
@@ -1413,13 +1414,7 @@ boolean identified, all_containers, want_dump, want_disp, dywypisi;
 		    for (obj = box->cobj; obj; obj = obj->nobj) {
 #endif
                       if (want_dump) {
-#ifdef DYWYPISI
-			dump_ID_on();
-#endif
 		      	dump("  ", doname(obj));
-#ifdef DYWYPISI
-			dump_ID_off();
-#endif
 		      }
 #ifdef DUMP_LOG
                       if (want_disp) {
