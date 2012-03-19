@@ -1247,11 +1247,11 @@ register int aflag;
 			/* see if an invisible monster has moved--if Blind,
 			 * feel_location() already did it
 			 */
-			/*if (!aflag && !mtmp && !Blind &&
+			if (!aflag && !mtmp && !Blind &&
 				    glyph_is_invisible(levl[x][y].glyph)) {
 			    unmap_object(x,y);
 			    newsym(x,y);
-			}*/
+			}
 
 			if ((trap = t_at(x,y)) && !trap->tseen && !rnl(8)) {
 			    nomul(0);
