@@ -666,7 +666,7 @@ int spellnum;
 	    if (Half_spell_damage) dmg = (dmg + 1) / 2;
 	    losestr(rnd(dmg));
 	    if (u.uhp < 1)
-		done_in_by(mtmp, NULL);
+		done_in_by(mtmp, attacktype_fordmg(mtmp->data, AT_MAGC, AD_SPEL));
 	}
 	dmg = 0;
 	break;

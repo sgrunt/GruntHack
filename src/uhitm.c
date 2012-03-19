@@ -2448,7 +2448,7 @@ uchar aatyp;
 			    !(poly_when_stoned(youmonst.data) &&
 				polymon(PM_STONE_GOLEM))) {
 			You("turn to stone...");
-			done_in_by(mon, NULL);
+			done_in_by(mon, &ptr->mattk[i]);
 			return 2;
 		    }
 		}
