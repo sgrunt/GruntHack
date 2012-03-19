@@ -581,10 +581,13 @@ boolean taken;
 	    			if (c == 'q')  done_stopprint++;
 			}
 #if defined(DUMP_LOG)
+			dump_ID_on();
 			(void) dump_inventory((char *)0, TRUE, FALSE,
 				TRUE);
+			dump_ID_on();
 			do_containerconts(invent, TRUE, TRUE, TRUE, FALSE,
 				TRUE);
+			dump_ID_off();
 #endif
 			if (c != 'y')
 #endif
