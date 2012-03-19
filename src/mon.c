@@ -51,7 +51,7 @@ STATIC_VAR short cham_to_pm[];
 #else
 STATIC_DCL struct obj *FDECL(make_corpse,(struct monst *));
 STATIC_DCL void FDECL(m_detach, (struct monst *, struct permonst *));
-STATIC_DCL void FDECL(lifesaved_monster, (struct monst *));
+STATIC_DCL void FDECL(lifesaved_monster, (struct monst *,int));
 
 /* convert the monster index of an undead to its living counterpart */
 #if 0
@@ -514,7 +514,7 @@ register struct monst *mtmp;
 	mtmp->mhp -= dam;
 	if (mtmp->mhpmax > dam) mtmp->mhpmax -= dam;
 	if (mtmp->mhp < 1) {
-	    mondead(mtmp);
+	    mondead(mtmp, AD_RUST);
 	    if (mtmp->mhp < 1) return (1);
 	}
 	water_damage(mtmp->minvent, FALSE, FALSE);
@@ -533,13 +533,13 @@ register struct monst *mtmp;
 		    pline("%s %s.", Monnam(mtmp),
 			  mtmp->data == &mons[PM_WATER_ELEMENTAL] ?
 			  "boils away" : "burns to a crisp");
-		mondead(mtmp);
+		mondead(mtmp, AD_FIRE);
 	    }
 	    else {
 		if (--mtmp->mhp < 1) {
 		    if (cansee(mtmp->mx,mtmp->my))
 			pline("%s surrenders to the fire.", Monnam(mtmp));
-		    mondead(mtmp);
+		    mondead(mtmp, AD_FIRE);
 		}
 		else if (cansee(mtmp->mx,mtmp->my))
 		    pline("%s burns slightly.", Monnam(mtmp));
@@ -569,7 +569,7 @@ register struct monst *mtmp;
 		pline("%s sinks as water rushes in and flushes you out.",
 			Monnam(mtmp));
 	    }
-	    mondead(mtmp);
+	    mondead(mtmp, AD_WRAP);
 	    if (mtmp->mhp > 0) {
 		(void) rloc(mtmp, FALSE);
 		water_damage(mtmp->minvent, FALSE, FALSE);
@@ -791,9 +791,9 @@ mcalcdistress()
 	        ((monstermoves - mtmp->mlstmv) >= 6)) {
 		/* suffocated */
 		if (mtmp->muburied)
-		    xkilled(mtmp, 0);
+		    xkilled(mtmp, 0, AD_WRAP);
 		else
-	    	    mondied(mtmp);
+	    	    mondied(mtmp, AD_WRAP);
 	    }
 	}
 
@@ -1821,8 +1821,9 @@ struct monst *mon;
 }
 
 STATIC_OVL void
-lifesaved_monster(mtmp)
+lifesaved_monster(mtmp, how)
 struct monst *mtmp;
+int how;
 {
 	struct obj *lifesave = mlifesaver(mtmp);
 
@@ -1830,7 +1831,10 @@ struct monst *mtmp;
 	/*TODO: check for unchanging*/
 	if (mtmp->morigdata &&
 	    mtmp->morigdata != monsndx(mtmp->data) &&
-	    !stoned) {
+	    !stoned &&
+	    !(how == AD_DISN || how == AD_DRLI || how == AD_STON ||
+	      how == AD_WRAP || how == AD_DRIN || how == AD_DISE ||
+	      how == -AD_RBRE) ) {
 	    /* remonsterize? */
 	    struct permonst *dat = mtmp->data;
 	    int race = mtmp->morigrace;
@@ -1882,6 +1886,10 @@ struct monst *mtmp;
 			if (cansee(mtmp->mx, mtmp->my))
 			    pline("Unfortunately %s is still genocided...",
 				mon_nam(mtmp));
+		} else if (how == AD_DRIN) {
+			pline("Unfortunately %s brain is still gone.",
+				s_suffix(mon_nam(mtmp)));
+
 		} else
 			return;
 	}
@@ -1889,8 +1897,9 @@ struct monst *mtmp;
 }
 
 void
-mondead(mtmp)
+mondead(mtmp, how)
 register struct monst *mtmp;
+register int how;
 {
 	struct permonst *mptr;
 	int tmp;
@@ -1900,7 +1909,7 @@ register struct monst *mtmp;
 		 * the m_detach or there will be relmon problems later */
 		if(!grddead(mtmp)) return;
 	}
-	lifesaved_monster(mtmp);
+	lifesaved_monster(mtmp, how);
 	if (mtmp->mhp > 0) return;
 
 #ifdef STEED
@@ -2013,7 +2022,7 @@ boolean was_swallowed;			/* digestion */
 		    } else {
 			if (flags.soundok) You_hear("an explosion.");
 			magr->mhp -= tmp;
-			if (magr->mhp < 1) mondied(magr);
+			if (magr->mhp < 1) mondied(magr, AD_PHYS);
 			if (magr->mhp < 1) { /* maybe lifesaved */
 			    if (canspotmon(magr))
 				pline("%s rips open!", Monnam(magr));
@@ -2051,10 +2060,11 @@ boolean was_swallowed;			/* digestion */
 
 /* drop (perhaps) a cadaver and remove monster */
 void
-mondied(mdef)
+mondied(mdef, how)
 register struct monst *mdef;
+int how;
 {
-	mondead(mdef);
+	mondead(mdef, how);
 	if (mdef->mhp > 0) return;	/* lifesaved */
 
 	if (corpse_chance(mdef, (struct monst *)0, FALSE) &&
@@ -2098,7 +2108,7 @@ register struct monst *mdef;
 	 * put inventory in it, and we have to check for lifesaving before
 	 * making the statue....
 	 */
-	lifesaved_monster(mdef);
+	lifesaved_monster(mdef, AD_STON);
 	if (mdef->mhp > 0) return;
 
 	mdef->mtrapped = 0;	/* (see m_detach) */
@@ -2163,7 +2173,7 @@ register struct monst *mdef;
 	if (cansee(mdef->mix, mdef->miy)) newsym(mdef->mix,mdef->miy);
 	/* We don't currently trap the hero in the statue in this case but we could */
 	if (u.uswallow && u.ustuck == mdef) wasinside = TRUE;
-	mondead(mdef);
+	mondead(mdef, AD_STON);
 	if (wasinside) {
 		if (is_animal(mdef->data))
 			You("%s through an opening in the new %s.",
@@ -2195,9 +2205,9 @@ int how;
 
 	/* no corpses if digested or disintegrated */
 	if(how == AD_DGST || how == -AD_RBRE)
-	    mondead(mdef);
+	    mondead(mdef, how);
 	else
-	    mondied(mdef);
+	    mondied(mdef, how);
 
 	if (be_sad && mdef->mhp <= 0)
 	    You("have a sad feeling for a moment, then it passes.");
@@ -2244,21 +2254,23 @@ register struct monst *mtmp;
 }
 
 void
-killed(mtmp)
+killed(mtmp, how)
 register struct monst *mtmp;
+register int how;
 {
-	xkilled(mtmp, 1);
+	xkilled(mtmp, 1, how);
 }
 
 /* the player has killed the monster mtmp */
 void
-xkilled(mtmp, dest)
+xkilled(mtmp, dest, how)
 	register struct monst *mtmp;
 /*
  * Dest=1, normal; dest=0, don't print message; dest=2, don't drop corpse
  * either; dest=3, message but no corpse
  */
 	int	dest;
+	int	how;
 {
 	register int tmp, x = mtmp->mx, y = mtmp->my;
 	register struct permonst *mdat;
@@ -2304,7 +2316,7 @@ xkilled(mtmp, dest)
 
 	/* dispose of monster and make cadaver */
 	if(stoned) monstone(mtmp);
-	else mondead(mtmp);
+	else mondead(mtmp, how);
 
 	if (mtmp->mhp > 0) { /* monster lifesaved */
 		/* Cannot put the non-visible lifesaving message in
@@ -3041,7 +3053,7 @@ boolean msg;		/* "The oldmon turns into a newmon!" */
 	set_mon_data(mtmp, mdat, 0);
 	
 	if (is_racial(mdat) && !mtmp->mrace) {
-	    mondied(mtmp);
+	    mondied(mtmp, AD_SPEL);
 	    return (1);
 	}
 
@@ -3267,7 +3279,7 @@ kill_genocided_monsters()
 		if (mtmp->cham && !kill_cham[mtmp->cham])
 		    (void) newcham(mtmp, (struct permonst *)0, FALSE, FALSE);
 		else
-		    mondead(mtmp);
+		    mondead(mtmp, AD_SPEL);
 	    }
 	    if (mtmp->minvent) kill_eggs(mtmp->minvent);
 	}

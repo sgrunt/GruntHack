@@ -134,7 +134,7 @@ struct obj *otmp;
 				struct obj *rocks = (struct obj *)0;
 				pline("%s crumbles!", Monnam(mtmp));
 				mtmp->mhp = -1;
-				xkilled(mtmp, 2); /* no corpse */
+				xkilled(mtmp, 2, AD_SPEL); /* no corpse */
 				if (mtmp->mhp < 1) /* i.e. didn't lifesave */
 					rocks = mksobj(ROCK, FALSE, FALSE);
 				if (rocks) {
@@ -222,7 +222,7 @@ struct obj *otmp;
 			    bypass_obj(obj);
 			/* flags.bypasses = TRUE; ## for make_corpse() */
 			/* no corpse after system shock */
-			xkilled(mtmp, 3);
+			xkilled(mtmp, 3, AD_SPEL);
 		    } else if (newcham(mtmp, (struct permonst *)0,
 				       (otyp != POT_POLYMORPH), FALSE)) {
 			if (!Hallucination && canspotmon(mtmp))
@@ -371,7 +371,7 @@ struct obj *otmp;
 		    mtmp->mhp -= dmg;
 		    mtmp->mhpmax -= dmg;
 		    if (mtmp->mhp <= 0 || mtmp->mhpmax <= 0 || mtmp->m_lev < 1)
-			xkilled(mtmp, 1);
+			xkilled(mtmp, 1, AD_DRLI);
 		    else {
 			mtmp->m_lev--;
 			if (canseemon(mtmp))
@@ -408,7 +408,7 @@ struct obj *otmp;
 			pline("That didn't seem to do very much.");
 		} else {
 		    mtmp->mhp = -1;
-		    xkilled(mtmp, 1);
+		    xkilled(mtmp, 1, AD_SPEL);
 		}
 		break;
 	case SPE_CAUSE_AGGRAVATION:
@@ -740,7 +740,7 @@ register struct obj *obj;
 		    		    if (canseemon(ghost))
 		    		  	pline("%s is suddenly drawn into its former body!",
 						Monnam(ghost));
-				    mondead(ghost);
+				    mondead(ghost, AD_SPEL);
 				    recorporealization = TRUE;
 				    newsym(x2, y2);
 			    }
@@ -2509,9 +2509,9 @@ boolean			youattack, allow_cancel_kill, self_cancel;
 
 		if (allow_cancel_kill) {
 		    if (youattack)
-			killed(mdef);
+			killed(mdef, AD_CNCL);
 		    else
-			monkilled(mdef, "", AD_SPEL);
+			monkilled(mdef, "", AD_CNCL);
 		}
 	    }
 	}
@@ -3579,7 +3579,7 @@ register int dx,dy;
 	if (tmp == MAGIC_COOKIE)
 	    u.ustuck->mhp = 0;
 	if (u.ustuck->mhp < 1)
-	    killed(u.ustuck);
+	    killed(u.ustuck,AD_RBRE);
 	return;
     }
     if(type < 0) newsym(u.ux,u.uy);
@@ -3690,12 +3690,12 @@ register int dx,dy;
 			if (type < 0)
 			    monkilled(mon, (char *)0, -AD_RBRE);
 			else
-			    xkilled(mon, 2);
+			    xkilled(mon, 2, -AD_RBRE);
 		    } else if(mon->mhp < 1) {
 			if(type < 0)
 			    monkilled(mon, fltxt, AD_RBRE);
 			else
-			    killed(mon);
+			    killed(mon, AD_RBRE);
 		    } else {
 			if (!otmp) {
 			    /* normal non-fatal hit */
@@ -4398,7 +4398,7 @@ int damage, tell;
 	    mtmp->mhp -= damage;
 	    if (mtmp->mhp < 1) {
 		if(m_using) monkilled(mtmp, "", AD_RBRE);
-		else killed(mtmp);
+		else killed(mtmp, AD_RBRE);
 	    }
 	}
 	return(resisted);

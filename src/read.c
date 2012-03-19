@@ -358,7 +358,7 @@ struct monst *mtmp;
 				if (canseemon(mtmp))
 					pline("%s is killed by the explosion!",
 						Monnam(mtmp));
-				mondied(mtmp);
+				mondied(mtmp, AD_SPEL);
 			}
 		}
 	    } else {
@@ -1350,7 +1350,7 @@ register struct obj	*sobj;
 				}
 	    	    	    	mtmp->mhp -= mdmg;
 	    	    	    	if (mtmp->mhp <= 0)
-	    	    	    	    xkilled(mtmp, 1);
+	    	    	    	    xkilled(mtmp, 1, AD_PHYS);
 	    	    	    }
 	    	    	    /* Drop the rock/boulder to the floor */
 	    	    	    if (!flooreffects(otmp2, x, y, "fall")) {
@@ -1459,7 +1459,7 @@ register struct obj *obj;
     if (mon->mhp <= 0) {
     	if (canseemon(mon)) 
 	    pline("%s is killed by the explosion!", Monnam(mon));
-	mondied(mon);
+	mondied(mon, AD_SPEL);
     }
 }
 
@@ -2456,7 +2456,7 @@ boolean your_inv;
 		    mon->mhp -= d(obj->blessed ? 2 : 1, 8);
 		    if (mon->mhp < 1) {
 			if (your_fault)
-			    killed(mon);
+			    killed(mon, AD_ACID);
 			else
 			    monkilled(mon, "", AD_ACID);
 	            }
@@ -2516,7 +2516,7 @@ boolean your_inv;
 		        mon->data == &mons[PM_PAPER_GOLEM]) {
 			pline("%s ignites!", Monnam(mon));
 			if (your_fault)
-			    killed(mon);
+			    killed(mon, AD_FIRE);
 			else
 			    monkilled(mon, "", AD_FIRE);
 		    } else {
@@ -2526,7 +2526,7 @@ boolean your_inv;
 		    mon->mhp -= d(obj->cursed ? 2 : 1, obj->blessed ? 2 : 4);
 		    if (mon->mhp < 1) {
 			if (your_fault)
-			    killed(mon);
+			    killed(mon, AD_FIRE);
 			else
 			    monkilled(mon, "", AD_FIRE);
 		    }
@@ -2547,7 +2547,7 @@ boolean your_inv;
 		    mon->mhp -= d(obj->cursed ? 2 : 1, obj->blessed ? 2 : 4);
 		    if (mon->mhp < 1) {
 			if (your_fault)
-			    killed(mon);
+			    killed(mon, AD_FIRE);
 			else
 			    monkilled(mon, "", AD_FIRE);
 	            }

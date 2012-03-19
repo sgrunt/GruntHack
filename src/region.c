@@ -936,7 +936,7 @@ genericptr_t p2;
 	    mtmp->mhp -= rnd(dam) + 5;
 	    if (mtmp->mhp <= 0) {
 		if (heros_fault(reg))
-		    killed(mtmp);
+		    killed(mtmp, AD_DRST);
 		else
 		    monkilled(mtmp, "gas cloud", AD_DRST);
 		if (mtmp->mhp <= 0) {	/* not lifesaved */

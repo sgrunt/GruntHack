@@ -561,13 +561,13 @@ dismount_steed(reason)
 							surface(u.ux, u.uy));
 			if ((!is_swimmer(mdat)) && (!amphibious(mdat)) &&
 			                           (!mbreathing(mtmp))) {
-			    killed(mtmp);
+			    killed(mtmp, AD_WRAP);
 			    adjalign(-1);
 			}
 		    } else if (is_lava(u.ux, u.uy)) {
 			pline("%s is pulled into the lava!", Monnam(mtmp));
 			if (!likes_lava(mdat)) {
-			    killed(mtmp);
+			    killed(mtmp, AD_FIRE);
 			    adjalign(-1);
 			}
 		    }
@@ -609,7 +609,7 @@ dismount_steed(reason)
 		/* Player stays put */
 	    /* Otherwise, kill the steed */
 	    } else {
-		killed(mtmp);
+		killed(mtmp, AD_PHYS);
 		adjalign(-1);
 	    }
 	}

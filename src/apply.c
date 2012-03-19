@@ -571,7 +571,7 @@ register xchar x, y;
 			   that's the result of his actions; gain experience,
 			   lose pacifism, take alignment and luck hit, make
 			   corpse less likely to remain tame after revival */
-			xkilled(mtmp, 0);	/* no "you kill it" message */
+			xkilled(mtmp, 0, AD_PHYS); /* no "you kill it" message */
 			/* life-saving doesn't ordinarily reset this */
 			if (mtmp->mhp > 0) u.uconduct.killer = save_pacifism;
 		    } else {
@@ -717,7 +717,7 @@ struct obj *obj;
 		if (vis)
 			pline("%s is turned to stone!", Monnam(mtmp));
 		stoned = TRUE;
-		killed(mtmp);
+		killed(mtmp, AD_STON);
 	} else if(!mtmp->mcan && !mtmp->minvis &&
 					mtmp->data == &mons[PM_FLOATING_EYE]) {
 		int tmp = d((int)mtmp->m_lev, (int)mtmp->data->mattk[0].damd);

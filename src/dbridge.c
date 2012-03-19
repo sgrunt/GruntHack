@@ -420,7 +420,7 @@ int dest, how;
 		if (flags.mon_moving)
 		    monkilled(etmp->emon, mk_message(dest), mk_corpse(dest));
 		else		/* you caused it */
-		    xkilled(etmp->emon, dest);
+		    xkilled(etmp->emon, dest, mk_corpse(dest));
 		etmp->edata = (struct permonst *)0;
 
 		/* dead long worm handling */

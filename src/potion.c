@@ -1132,7 +1132,7 @@ boolean your_fault;
 			      is_silent(mon->data) ? "writhes" : "shrieks");
 			mon->mhp -= d(2,6);
 			/* should only be by you */
-			if (mon->mhp < 1) killed(mon);
+			if (mon->mhp < 1) killed(mon, AD_CLRC);
 			else if (is_were(mon->data) &&
 			         !(mon->data->mflags2 & M2_HUMAN))
 			    new_were(mon);	/* revert to human */
@@ -1155,7 +1155,7 @@ boolean your_fault;
 			pline("%s rusts.", Monnam(mon));
 		    mon->mhp -= d(1,6);
 		    /* should only be by you */
-		    if (mon->mhp < 1) killed(mon);
+		    if (mon->mhp < 1) killed(mon, AD_RUST);
 		}
 		break;
 	case POT_OIL:
@@ -1169,7 +1169,7 @@ boolean your_fault;
 		    mon->mhp -= rnd(10); 
 		    if (mon->mhp < 1) {
 			if (your_fault)
-			    killed(mon);
+			    killed(mon, AD_ACID);
 			else
 			    monkilled(mon, "", AD_ACID);
 		    }
@@ -1181,7 +1181,7 @@ boolean your_fault;
 		    mon->mhp -= d(obj->cursed ? 2 : 1, obj->blessed ? 4 : 8);
 		    if (mon->mhp < 1) {
 			if (your_fault)
-			    killed(mon);
+			    killed(mon, AD_ACID);
 			else
 			    monkilled(mon, "", AD_ACID);
 		    }

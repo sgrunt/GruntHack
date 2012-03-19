@@ -42,7 +42,7 @@ register struct monst *mtmp;
 #if 0
 	mtmp->mhp -= rnd(15);
 	if(mtmp->mhp <= 0) {
-		mondied(mtmp);
+		mondied(mtmp, AD_FIRE);
 		if (mtmp->mhp > 0) /* lifesaved */
 			return(FALSE);
 		else
@@ -366,11 +366,14 @@ register struct monst *mtmp;
 	            pline("%s dies from %s illness.",
 		           Monnam(mtmp), mhis(mtmp));
 		if ((mtmp->msick & 2) &&
-		    is_racial(mtmp->data) && !nonliving(mtmp->data))
+		    (is_racial(mtmp->data) || is_were(mtmp->data)) &&
+		    !nonliving(mtmp->data))
 		{
 	            mtmp->msick = 0;
 		    mtmp->mtame = mtmp->mpeaceful = 0;
                     mtmp->morigdata = PM_ZOMBIE; /* it's permanent */
+		    if (is_were(mtmp->data))
+		    	mtmp->mrace = mtmp->morigrace;
 		    if (mtmp->isshk) shkgone(mtmp);
  	            (void) newcham(mtmp, &mons[PM_ZOMBIE], FALSE,
 		    		   canseemon(mtmp));
@@ -379,7 +382,7 @@ register struct monst *mtmp;
 		{
 		    mtmp->msick = 0;
  	            mtmp->mhp = -1;
-                    mondied(mtmp);
+                    mondied(mtmp, AD_DISE);
 		}
 
 	        return (mtmp->mhp > 0) ? 0 : 1; /* might lifesave */

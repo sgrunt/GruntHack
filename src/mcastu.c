@@ -2273,7 +2273,7 @@ castum(mtmp, mattk)
 	if (mtmp && dmg > 0 && mtmp->mhp > 0)
 	{
 	    mtmp->mhp -= dmg;
-	    if (mtmp->mhp < 1) killed(mtmp);
+	    if (mtmp->mhp < 1) killed(mtmp, mattk->adtyp);
 	}
 	if (mtmp && mtmp->mhp < 1) return 2;
 
@@ -2346,7 +2346,7 @@ int spellnum;
 	} else if (!(resisted = resist(mtmp, 0, 0, FALSE)) ||
 	           rn2(mons[u.umonnum].mlevel) > 12) {
             mtmp->mhp = -1;
-	    if (yours) killed(mtmp);
+	    if (yours) killed(mtmp, AD_SPEL);
 	    else monkilled(mtmp, "", AD_SPEL);
 	    return;
 	} else {
@@ -2518,7 +2518,7 @@ int spellnum;
             /* monsters don't have strength, so drain max hp instead */
 	    mtmp->mhpmax -= dmg;
 	    if ((mtmp->mhp -= dmg) <= 0) {
-	        if (yours) killed(mtmp);
+	        if (yours) killed(mtmp, AD_SPEL);
 		else monkilled(mtmp, "", AD_SPEL);
             }
 	}
@@ -2829,7 +2829,7 @@ int spellnum;
     {
         mtmp->mhp -= dmg;
         if (mtmp->mhp < 1) {
-	    if (yours) killed(mtmp);
+	    if (yours) killed(mtmp, AD_SPEL);
 	    else monkilled(mtmp, "", AD_SPEL);
 	}
     }
@@ -3075,7 +3075,7 @@ int spellnum;
     {
         mtmp->mhp -= dmg;
         if (mtmp->mhp < 1) {
-	    if (yours) killed(mtmp);
+	    if (yours) killed(mtmp, AD_CLRC);
 	    else monkilled(mtmp, "", AD_CLRC);
 	}
     }
