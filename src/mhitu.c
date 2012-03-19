@@ -1220,7 +1220,8 @@ dopois:
 
 		if (mtmp->data == &mons[PM_ZOMBIE] && rn2(5))
 		{
-                    diseasemu(mtmp);
+		    if (uncancelled)
+                        diseasemu(mtmp);
 		    break;
 		}
 
