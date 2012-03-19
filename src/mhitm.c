@@ -1247,10 +1247,12 @@ mdamagem(magr, mdef, mattk)
 		    break;
 		}
 		if (pa == &mons[PM_ZOMBIE]  && rn2(5)) {
-		    if (vis && !resists_sick(mdef))
-		        pline("%s looks %s.", Monnam(mdef),
-			    mdef->msick ? "much worse" : "rather ill");
-		    goto msickness;
+		    if (!cancelled) {
+		        if (vis && !resists_sick(mdef))
+		            pline("%s looks %s.", Monnam(mdef),
+			        mdef->msick ? "much worse" : "rather ill");
+		        goto msickness;
+		    } else break;
 		}
 		if ((mdef->misc_worn_check & W_ARMH) && rn2(8)) {
 		    if (vis) {
