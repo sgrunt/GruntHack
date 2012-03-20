@@ -2834,7 +2834,7 @@ boolean setinitial,setfromfile;
          * must correspond to disclosure_options in decl.h
          */
 	static const char *disclosure_names[] = {
-		"inventory", "attributes", "vanquished", "genocides", "conduct"
+		"inventory", "inv. ID state", "attributes", "vanquished", "genocides", "conduct"
 	};
 	int disc_cat[NUM_DISCLOSURE_OPTIONS];
 	const char *disclosure_name;
