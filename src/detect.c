@@ -1066,8 +1066,9 @@ genericptr_t num;
 		}
 		/* let it fall to the next cases. could be on trap. */
 	}
-	if(levl[zx][zy].typ == SDOOR || (levl[zx][zy].typ == DOOR &&
-		      (levl[zx][zy].doormask & (D_CLOSED|D_LOCKED)))) {
+	if((levl[zx][zy].typ == SDOOR || (levl[zx][zy].typ == DOOR &&
+		      (levl[zx][zy].doormask & (D_CLOSED|D_LOCKED)))) &&
+	    !(In_sokoban(&u.uz) && (levl[zx][zy].doormask & D_TRAPPED))) {
 		if(levl[zx][zy].typ == SDOOR)
 		    cvt_sdoor_to_door(&levl[zx][zy]);	/* .typ = DOOR */
 		if(levl[zx][zy].doormask & D_TRAPPED) {
