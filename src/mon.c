@@ -2458,6 +2458,7 @@ mon_to_stone(mtmp)
 	if(canseemon(mtmp))
 	    pline("%s solidifies...", Monnam(mtmp));
 	if (newcham(mtmp, &mons[PM_STONE_GOLEM], FALSE, FALSE)) {
+	    mtmp->morigdata = PM_STONE_GOLEM;
 	    if(canseemon(mtmp))
 		pline("Now it's %s.", an(mtmp->data->mname));
 	} else {
