@@ -2104,7 +2104,11 @@ struct obj *item;
     if (item->dknown)
 	pline("%s %s vanished!", Doname2(item), otense(item, "have"));
     else
-	You("%s %s disappear!", Blind ? "notice" : "see", doname(item));
+	You("%s %s disappear!", (Blind
+#ifdef INVISIBLE_OBJECTS
+	|| (item->oinvis && !See_invisible)
+#endif
+	) ? "notice" : "see", doname(item));
 
     if (*u.ushops && (shkp = shop_keeper(*u.ushops)) != 0) {
 	if (held ? (boolean) item->unpaid : costly_spot(u.ux, u.uy))
@@ -2426,11 +2430,14 @@ boolean put_in;
 
     if (loot_everything) {
 	for (otmp = container->cobj; otmp; otmp = otmp2) {
+	    otmp->opresenceknown = TRUE;
 	    otmp2 = otmp->nobj;
 	    res = out_container(otmp);
 	    if (res < 0) break;
 	}
     } else {
+	for (otmp = container->cobj; otmp; otmp = otmp2)
+	    otmp->opresenceknown = TRUE;
 	mflags = INVORDER_SORT;
 	if (put_in && flags.invlet_constant) mflags |= USE_INVLET;
 	Sprintf(buf,"%s what?", put_in ? putin : takeout);
