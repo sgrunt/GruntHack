@@ -140,8 +140,10 @@ long mask;
 	otmp->oprops_known |= (props & (ITEM_DEXTERITY|ITEM_BRILLIANCE)); 
     }
     
-    if (props & ITEM_ESP)
+    if (props & ITEM_ESP) {
         ETelepat |= mask;	
+	see_monsters();
+    }
     
     if (props & ITEM_DISPLACEMENT)
     {
@@ -152,8 +154,10 @@ long mask;
     if (props & ITEM_SEARCHING)
         ESearching |= mask;	
     
-    if (props & ITEM_WARNING)
+    if (props & ITEM_WARNING) {
         EWarning |= mask;	
+	see_monsters();
+    }
     
     if (props & ITEM_STEALTH)
     {
@@ -279,8 +283,10 @@ long mask;
 	otmp->oprops_known |= (props & (ITEM_DEXTERITY|ITEM_BRILLIANCE)); 
     }
 
-    if (props & ITEM_ESP)
+    if (props & ITEM_ESP) {
         ETelepat &= ~mask;
+	see_monsters();
+    }
     
     if (props & ITEM_DISPLACEMENT)
     {
@@ -291,8 +297,10 @@ long mask;
     if (props & ITEM_SEARCHING)
         ESearching &= ~mask;	
     
-    if (props & ITEM_WARNING)
+    if (props & ITEM_WARNING) {
         EWarning &= ~mask;	
+	see_monsters();
+    }
     
     if (props & ITEM_STEALTH)
     {
