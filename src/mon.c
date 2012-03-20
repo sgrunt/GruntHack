@@ -366,6 +366,10 @@ register struct monst *mtmp;
 		else	/* preserve the unique traits of some creatures */
 		{
 		    obj = mkcorpstat(CORPSE, KEEPTRAITS(mtmp) ? mtmp : 0,
+		                     (is_racial(mtmp->data) &&
+				      !((mtmp->data->mflags2 & M2_RACEMASK)
+				        & ~mtmp->mrace))
+				     ? mtmp->data :
 				     &mons[mons_to_corpse(mtmp)], x, y, TRUE);
 
 		    if      (mndx == PM_ZOMBIE ||
@@ -2146,6 +2150,10 @@ register struct monst *mdef;
 		   so that saved monster traits won't retain any stale
 		   item-conferred attributes */
 		otmp = mkcorpstat(STATUE, KEEPTRAITS(mdef) ? mdef : 0,
+		                  (is_racial(mdef->data) &&
+				   !((mdef->data->mflags2 & M2_RACEMASK)
+				     & ~mdef->mrace))
+				  ? mdef->data :
 				  &mons[mons_to_corpse(mdef)], x, y, FALSE);
 		if (mdef->mnamelth) otmp = oname(otmp, NAME(mdef), FALSE);
 		while ((obj = oldminvent) != 0) {
