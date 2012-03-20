@@ -1428,10 +1428,10 @@ nexttry:	/* eels prefer the water, but if there is no water nearby,
 	    /* KMH -- Added iron bars */
 	    if (ntyp == IRONBARS && !(flag & ALLOW_BARS)) continue;
 	    if(IS_DOOR(ntyp) && !amorphous(mdat) &&
-	       (((In_sokoban(&u.uz) && levl[nx][ny].doormask & D_TRAPPED)) ||
+	       (((In_sokoban(&u.uz) && !!(levl[nx][ny].doormask & D_TRAPPED))) ||
 	        ((levl[nx][ny].doormask & D_CLOSED && !(flag & OPENDOOR)) ||
-		 (levl[nx][ny].doormask & D_LOCKED && !(flag & UNLOCKDOOR)))) &&
-	       !thrudoor) continue;
+		 (levl[nx][ny].doormask & D_LOCKED && !(flag & UNLOCKDOOR)) &&
+		 !thrudoor))) continue;
 	    if(nx != x && ny != y && (nodiag ||
 #ifdef REINCARNATION
 	       ((IS_DOOR(nowtyp) &&
