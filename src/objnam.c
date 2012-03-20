@@ -692,7 +692,7 @@ boolean ignore_oquan;
 	register char *buf;
 	register int typ = (hallu) ?
 	                   (rn2(NUM_OBJECTS+SIZE(bogusobjs)) >= NUM_OBJECTS
-			   ? STRANGE_OBJECT : rn2(NUM_OBJECTS + 1) - 1)
+			   ? STRANGE_OBJECT : rn2(NUM_OBJECTS - 1) + 1)
 			    : obj->otyp;
 	register struct objclass *ocl = &objects[typ];
 	register int obclass = ocl->oc_class;
