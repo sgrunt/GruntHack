@@ -1430,7 +1430,8 @@ postmov:
 		    if (poly_when_stoned(ptr)) {
 		    	mon_to_stone(mtmp);
 		    } else {
-		        pline("%s turns to stone.", Monnam(mtmp));
+		    	if (canseemon(mtmp))
+		            pline("%s turns to stone.", Monnam(mtmp));
 			monstone(mtmp);
 		    	mmoved = 2;
 		    }
