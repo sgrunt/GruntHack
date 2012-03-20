@@ -108,12 +108,15 @@ picklock(VOID_ARGS)	/* try to open/close a lock */
 	You("succeed in %s.", lock_action());
 	if (xlock.door) {
 	    if(xlock.door->doormask & D_TRAPPED) {
+	    	    boolean retval = !!(xlock.usedtime == 0);
 		    b_trapped("door", FINGER);
-		    xlock.door->doormask = D_NODOOR;
+		    /*xlock.door->doormask = D_NODOOR;*/
 		    unblock_point(u.ux+u.dx, u.uy+u.dy);
 		    if (*in_rooms(u.ux+u.dx, u.uy+u.dy, SHOPBASE))
 			add_damage(u.ux+u.dx, u.uy+u.dy, 0L);
 		    newsym(u.ux+u.dx, u.uy+u.dy);
+		    exercise(A_DEX, TRUE);
+		    return retval;
 	    } else if (xlock.door->doormask & D_LOCKED)
 		xlock.door->doormask = D_CLOSED;
 	    else xlock.door->doormask = D_LOCKED;
