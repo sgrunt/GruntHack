@@ -753,7 +753,7 @@ boolean has_of;
 #endif
 		Strcat(buf, " ");
             Strcat(buf, of);
-            Strcat(buf, "detonation");
+            Strcat(buf, " detonation");
 	    Strcpy(of, "and");
 #ifdef DYWYPISI
 	    if (!(props_known & ITEM_DETONATIONS))
