@@ -59,6 +59,7 @@ Bug fixes:
   better (previously, they would frequently try to bash you with their
   ranged weapon).
 * Monster reading a non-blessed scroll of remove curse now behaves properly.
+* Zombification of shopkeepers, priests, etc. is handled better.
 
 Dungeon-related:
 * Some additional Sokoban levels are present.
