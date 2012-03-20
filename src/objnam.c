@@ -1512,6 +1512,7 @@ register struct obj *obj;
 		Strcpy(prefix, "a ");
 
 	if (obj->oinvis && !See_invisible && !obj->opresenceknown) {
+		Strcat(prefix, "invisible ");
 		goto end_descr;
 	}
 
