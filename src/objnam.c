@@ -80,7 +80,137 @@ STATIC_OVL const char *bogusobjs[] =
     "head of Morgoth", /* Angband, sort of */
 
     "hand of Vecna", "eye of the beholder", "key of Law",
-    "key of Neutrality", "key of Chaos" /* SLASH'EM */
+    "key of Neutrality", "key of Chaos", /* SLASH'EM */
+
+       "silly object of hilarity",
+# ifdef TOURIST
+       /* Modern */
+       "polo mallet",
+       "string vest",
+       "YAFM",                             /* rgrn */
+       "applied theology textbook",        /* AFutD */
+       "handbag",
+       "onion ring",
+       "tuxedo",
+       "breath mint",
+       "potion of antacid",
+       "traffic cone",
+       "chainsaw",
+       "pair of high-heeled stilettos",    /* the *other* stiletto */
+
+       /* Silly */
+       "left-handed iron chain",
+       "holy hand grenade",                /* Monty Python */
+       "decoder ring",
+       "amulet of huge gold chains",       /* Foo' */
+       "rubber Marduk"
+       "unicron horn",                     /* Transformers */
+       "holy grail",                       /* Monty Python */
+       "chainmail bikini",
+       "first class one-way ticket to Albuquerque", /* Weird Al */
+       "yellow spandex dragon scale mail", /* X-Men */
+
+       /* Musical Instruments */
+       "grand piano",
+       "two slightly sampled electric eels", /* Oldfield */
+       "kick drum",                        /* 303 */
+       "tooled airhorn",
+
+       /* Pop Culture */
+       "flux capacitor",                   /* BTTF */
+       "Walther PPK",                      /* Bond */
+       "hanging chad",                     /* US Election 2000 */
+       "red balloon",                      /* 80s */
+       "pincers of peril",                 /* Goonies */
+       "ring of schwartz",                 /* Spaceballs */
+       "signed copy of Diaspora",          /* Greg Egan */
+       "missing evidence in the Kelner case", /* Naked Gun */
+       "helm of Des Lynam",                /* Bottom */
+
+       /* compile with -DBRITHACK for British goodness */
+#  ifdef BRITHACK
+       "bum bag",
+       "blessed tin of marmite",
+       "tesco value potion",
+       "ringtone of drawbridge opening",
+       "burberry cap",
+       "potion of bitter",
+       "bargain plane ticket to Ibiza",
+       "black pudding corpse",
+#  endif
+# endif
+       /* Fantasy */
+       "Necronomicon",                     /* Lovecraft */
+       "pipe weed",                        /* LOTR */
+       "knife missile",                    /* Iain M. Banks */
+       "large gem",                        /* Valhalla */
+       "monster manual",                   /* D&D */
+       "spellbook called Octavo",          /* Discworld */
+       "ring of power",                    /* LOTR */
+       "lightsaber",
+       "no tea",                           /* HGttG game */
+       "pan-galactic gargle blaster",      /* HGttG */
+       "silmaril",                         /* LOTR */
+       "pentagram of protection",          /* Quake */
+
+       /* Geekery */
+       "AAA chipset",                      /* Amiga */
+       "copy of Nethack for Dummies",
+       "named pipe",                       /* UNIX */
+       "kernel trap",
+       "copy of NetHack 3.4.4",            /* recursion... */
+       "cursed smooth manifold",           /* Topology */
+       "vi clone",
+       "maximally subsentient emacs mode",
+       "bongard diagram",                  /* Intelligence test */
+
+       /* Historical */
+       "dead sea scroll",
+       "cat o'nine tails",
+       "pieces of eight",
+       "codpiece",
+       "straight-jacket",
+       "bayonet",
+       "iron maiden",
+       "oubliette",
+       "pestle and mortar"
+       "plowshare",
+
+       /* Mashups */
+       "potion of score doubling",
+       "scroll labelled ED AWK YACC",      /* the standard scroll */
+       "scroll labelled RTFM",
+       "scroll labelled KLAATU BARADA NIKTO", /* Evil Dead 3 */
+       "scroll of omniscience",
+       "scroll of mash keyboard",
+       "scroll of RNG taming",
+       "scroll of fungicide",
+       "helm of telemetry",
+       "blue suede boots of charisma",
+       "cubic zirconium",
+       "amulet of instadeath",
+       "amulet of bad luck",
+       "amulet of refraction",
+       "potion of rebigulation",           /* Simpsons */
+       "O-ring",
+       "wand of washing",
+       "ring named Frost Band",
+       "expensive exact replica of the Amulet of Yendor",
+       "giant beatle",
+       "lodestone",
+       "rubber chicken",                   /* c corpse */
+       "tin of Player meat",
+       "figurine of a god",
+       "tin of whoop ass",
+       "earring of adornment",
+       "wisdom boots",
+       "ornamental cape",
+       "acid blob skeleton",
+
+# ifdef MAIL
+       "brand new, all time lowest introductory rate special offer",
+# endif
+       "dirty rag"
 };
 
 

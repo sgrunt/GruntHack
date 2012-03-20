@@ -10,6 +10,8 @@ Additional third-party patches:
 * fcntl, by Drew Streib and Edoardo Spadolini
 * Generic item use menu, from AceHack via UnHetHack and nethack.alt.org
   (slightly modified and expanded)
+* Hallucination Objects, by James (only the object names; previously
+  implemented version of this is intact)
 * Message types, by Pasi Kallinen
 * Key Rebinding, by Jason Dorje Short (slightly modified)
 * Monster Targeting, by Pasi Kallinen
