@@ -1014,6 +1014,7 @@ E int FDECL(castum, (struct monst *,struct attack *));
 
 /* ### mhitm.c ### */
 
+E void FDECL(zombify, (struct monst *));
 E int FDECL(fightm, (struct monst *));
 E int FDECL(mattackm, (struct monst *,struct monst *));
 E int FDECL(noattacks, (struct permonst *));

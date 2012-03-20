@@ -727,6 +727,34 @@ explmm(magr, mdef, mattk)
 	return result;
 }
 
+void
+zombify(mtmp)
+register struct monst *mtmp;
+{
+    struct monst *mnew;
+    char namebuf[PL_NSIZ] = { 0 };
+    if (mtmp->isshk)
+        Strcpy(namebuf, shkname(mtmp));
+    if (is_were(mtmp->data))
+        mtmp->mrace = mtmp->morigrace;
+    mtmp->mtame = mtmp->mpeaceful = 0;
+    mtmp->morigdata = PM_ZOMBIE; /*it's permanent*/
+    mtmp->mhp = 1; /*so they don't try to remove it*/
+    if (mtmp->isshk) shkgone(mtmp);
+    (void) newcham(mtmp, &mons[PM_ZOMBIE], FALSE, vis);
+    mnew = newmonst(mtmp->isshk ? PL_NSIZ : mtmp->mnamelth);
+    *mnew = *mtmp;
+    if (namebuf[0] != 0)
+        mnew->mnamelth = PL_NSIZ;
+    mnew->mxlth = 0;
+    if (mnew->mnamelth) Strcpy(NAME(mnew), 
+        namebuf[0] != 0 ? namebuf : NAME(mtmp));
+    mnew->ispriest = mnew->isshk = mnew->isgd = mnew->isminion
+                   = 0;
+    replmon(mtmp, mnew);
+    set_malign(mnew);
+}
+
 /*
  *  See comment at top of mattackm(), for return values.
  */
@@ -1359,6 +1387,7 @@ msickness:
 				mdef->data != &mons[PM_GREEN_SLIME]) {
                     mdef->morigdata = PM_GREEN_SLIME; /*it's permanent*/
 		    (void) newcham(mdef, &mons[PM_GREEN_SLIME], FALSE, vis);
+		    set_malign(mdef);
 		    mdef->mstrategy &= ~STRAT_WAITFORU;
 		    tmp = 0;
 		}
@@ -1493,14 +1522,8 @@ msickness:
 	    if (pa == &mons[PM_ZOMBIE] && !nonliving(pd) &&
 	        (is_racial(pd) || is_were(pd)))
 	    {
-	        if (is_were(pd))
-		    mdef->mrace = mdef->morigrace;
-		mdef->mtame = mdef->mpeaceful = 0;
-                mdef->morigdata = PM_ZOMBIE; /*it's permanent*/
-		mdef->mhp = 1; /*so they don't try to remove it*/
-		if (mdef->isshk) shkgone(mdef);
-	        (void) newcham(mdef, &mons[PM_ZOMBIE], FALSE, vis);
-		return MM_HIT;
+	    	zombify(mdef);
+		return MM_HIT|MM_DEF_DIED;
 	    }
 	    monkilled(mdef, "", (int)mattk->adtyp);
 	    if (mdef->mhp > 0) return MM_MISS; /* mdef lifesaved */
@@ -1511,8 +1534,9 @@ msickness:
 		if (mdef->cham != CHAM_ORDINARY) {
 		    (void) newcham(magr, (struct permonst *)0, FALSE, vis);
 		} else if (mdef->data == &mons[PM_GREEN_SLIME]) {
-                    mdef->morigdata = PM_GREEN_SLIME; /* it's permanent */
+                    magr->morigdata = PM_GREEN_SLIME; /* it's permanent */
 		    (void) newcham(magr, &mons[PM_GREEN_SLIME], FALSE, vis);
+		    set_malign(magr);
 		} else if (mdef->data == &mons[PM_WRAITH]) {
 		    (void) grow_up(magr, (struct monst *)0);
 		    /* don't grow up twice */

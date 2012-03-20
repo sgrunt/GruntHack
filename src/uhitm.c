@@ -1753,7 +1753,9 @@ zombie:
 		if (!rn2(4) && !flaming(mdef->data) &&
 				mdef->data != &mons[PM_GREEN_SLIME]) {
 		    You("turn %s into slime.", mon_nam(mdef));
+		    mdef->morigdata = PM_GREEN_SLIME; /* permanent */
 		    (void) newcham(mdef, &mons[PM_GREEN_SLIME], FALSE, FALSE);
+		    set_malign(mdef);
 		    tmp = 0;
 		}
 		break;

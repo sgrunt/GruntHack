@@ -369,14 +369,8 @@ register struct monst *mtmp;
 		    (is_racial(mtmp->data) || is_were(mtmp->data)) &&
 		    !nonliving(mtmp->data))
 		{
-	            mtmp->msick = 0;
-		    mtmp->mtame = mtmp->mpeaceful = 0;
-                    mtmp->morigdata = PM_ZOMBIE; /* it's permanent */
-		    if (is_were(mtmp->data))
-		    	mtmp->mrace = mtmp->morigrace;
-		    if (mtmp->isshk) shkgone(mtmp);
- 	            (void) newcham(mtmp, &mons[PM_ZOMBIE], FALSE,
-		    		   canseemon(mtmp));
+		    zombify(mtmp);
+		    return 1;
 		}
 		else
 		{

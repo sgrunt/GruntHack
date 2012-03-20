@@ -1893,7 +1893,11 @@ int how;
 		} else
 			return;
 	}
-	mtmp->mhp = 0;
+	if ((mtmp->msick & 2) && !nonliving(mtmp->data) &&
+	    (is_racial(mtmp->data) || is_were(mtmp->data)))
+	    zombify(mtmp);
+	else
+	    mtmp->mhp = 0;
 }
 
 void
@@ -2169,7 +2173,7 @@ register struct monst *mdef;
 	/* mondead() already does this, but we must do it before the newsym */
 	if(glyph_is_invisible(levl[x][y].glyph))
 	    unmap_object(x, y);
-	if (cansee(x, y)) newsym(x,y);
+	if (cansee(x, y)) newsym(x,y); 
 	if (cansee(mdef->mix, mdef->miy)) newsym(mdef->mix,mdef->miy);
 	/* We don't currently trap the hero in the statue in this case but we could */
 	if (u.uswallow && u.ustuck == mdef) wasinside = TRUE;
@@ -3108,7 +3112,14 @@ boolean msg;		/* "The oldmon turns into a newmon!" */
 		place_worm_tail_randomly(mtmp, mtmp->mx, mtmp->my);
 	}
 
+	show_glyph(mtmp->mx,mtmp->my,objnum_to_glyph(STRANGE_OBJECT));
 	newsym(mtmp->mx,mtmp->my);
+	show_glyph(mtmp->mix,mtmp->miy,objnum_to_glyph(STRANGE_OBJECT));
+	newsym(mtmp->mix,mtmp->miy);
+
+	/* hack: don't display "priest" if we just turned into a zombie */
+	if (mtmp->morigdata == PM_ZOMBIE)
+	    mtmp->ispriest = mtmp->isshk = mtmp->isminion = mtmp->isgd = 0;
 
 	if (msg) {
 	    uchar save_mnamelth = mtmp->mnamelth;
