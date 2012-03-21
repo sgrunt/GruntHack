@@ -2097,10 +2097,10 @@ doeat()		/* generic "eat" command funtion (see cmd.c) */
 		pline("This %s %s!",
 		      otmp->oclass == COIN_CLASS ? foodword(otmp) :
 		      singular(otmp, xname),
-		      otmp->otyp == ROCK && (otmp->corpsenm == 0 ||
+		      (otmp->otyp != ROCK || (otmp->corpsenm == 0 ||
 		  (vegan(&mons[otmp->corpsenm]) ?
 		   (!carnivorous(youmonst.data) && herbivorous(youmonst.data)) :
-		   (carnivorous(youmonst.data) && !herbivorous(youmonst.data))))
+		   (carnivorous(youmonst.data) && !herbivorous(youmonst.data)))))
 		                         ? "is delicious"
 		                         : "tastes terrible");
 
