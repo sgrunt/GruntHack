@@ -681,8 +681,17 @@ struct monst *mtmp;
 			        : MUSE_SPE_TELEPORT_AWAY_SELF;
 			goto botm;
 		}
-		if (mtmp->m_lev >= 9 && rn2(3))
-		{
+		if (mtmp->m_lev >= 9 && rn2(3) && !stuck && !t
+		    && !mtmp->isshk && !mtmp->isgd && !mtmp->ispriest
+		    && !levitating(mtmp)
+		    /* monsters digging in Sokoban can ruin things */
+		    && !In_sokoban(&u.uz)
+		    /* digging wouldn't be effective; assume they know that */
+		    && !(levl[x][y].wall_info & W_NONDIGGABLE)
+		    && !(Is_botlevel(&u.uz) || In_endgame(&u.uz))
+		    && (fillholetyp(x, y) == ROOM)
+		    && !(mtmp->data == &mons[PM_VLAD_THE_IMPALER]
+			 && In_V_tower(&u.uz))) {
 			m.defensive = (struct obj *)0;
 			m.has_defense = MUSE_SPE_DIG;
 			goto botm;
@@ -728,7 +737,7 @@ struct obj *start;
 		    /* digging wouldn't be effective; assume they know that */
 		    && !(levl[x][y].wall_info & W_NONDIGGABLE)
 		    && !(Is_botlevel(&u.uz) || In_endgame(&u.uz))
-		    && !(is_ice(x,y) || is_pool(x,y) || is_lava(x,y))
+		    && (fillholetyp(mtmp->mx, mtmp->my) == ROOM)
 		    && !(mtmp->data == &mons[PM_VLAD_THE_IMPALER]
 			 && In_V_tower(&u.uz))) {
 			m.defensive = obj;
