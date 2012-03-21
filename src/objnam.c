@@ -2525,7 +2525,20 @@ const char *oldstr;
 				|| !strncmp(spot, " with", 5)	/* " with "? */
 				|| !strncmp(spot, " de ", 4)
 				|| !strncmp(spot, " d'", 3)
-				|| !strncmp(spot, " du ", 4)) {
+				|| !strncmp(spot, " du ", 4)
+		                || !strncmp(spot, " [of ", 5)
+				|| !strncmp(spot, " [labeled ", 10)
+				|| !strncmp(spot, " [called ", 9)
+				|| !strncmp(spot, " [named ", 8)
+				|| !strncmp(spot, " [versus ", 9)
+				|| !strncmp(spot, " [from ", 5)
+				|| !strncmp(spot, " [in ", 5)
+				|| !strncmp(spot, " [on ", 5)
+				|| !strncmp(spot, " [a la ", 7)
+				|| !strncmp(spot, " [with", 6)	/* " [with "? */
+				|| !strncmp(spot, " [de ", 5)
+				|| !strncmp(spot, " [d'", 4)
+				|| !strncmp(spot, " [du ", 5)) {
 			excess = oldstr + (int) (spot - str);
 			*spot = 0;
 			break;
