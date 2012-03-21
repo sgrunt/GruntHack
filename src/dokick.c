@@ -108,7 +108,7 @@ register boolean clumsy;
 	}
 
 	(void) passive(mon, TRUE, mon->mhp > 0, AT_KICK);
-	if (mon->mhp <= 0 && !trapkilled) mon = killed(mon, AD_PHYS);
+	if (mon->mhp <= 0 && !trapkilled) killed(mon, AD_PHYS);
 
 	/* may bring up a dialog, so put this after all messages */
 	if (kick_skill != P_NONE)	/* exercise proficiency */

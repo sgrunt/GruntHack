@@ -384,7 +384,7 @@ boolean devour;
 	    } else {
 	        You("have a very sad feeling for a moment, then it passes.");
 	    }
-            mtmp = mondied(mtmp, AD_WRAP);
+            mondied(mtmp, AD_WRAP);
 	    if (mtmp->mhp > 0) return 1;
 	    return 2;
 	}
@@ -472,7 +472,7 @@ register struct edog *edog;
 		else
 		    You_feel("%s for a moment.",
 			Hallucination ? "bummed" : "sad");
-		mtmp = mondied(mtmp, AD_ANY);
+		mondied(mtmp, AD_ANY);
 		return(TRUE);
 	    }
 	}

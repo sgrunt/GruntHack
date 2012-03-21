@@ -313,7 +313,7 @@ do_pit:		    chasm = maketrap(x,y,PIT);
 				mtmp->mnamelth ? SUPPRESS_SADDLE : 0, FALSE):
 					    mon_nam(mtmp));
 				    }
-				    mtmp = xkilled(mtmp,0,AD_PHYS);
+				    xkilled(mtmp,0,AD_PHYS);
 				}
 			}
 		    } else if (x == u.ux && y == u.uy) {

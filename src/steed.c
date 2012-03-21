@@ -561,13 +561,13 @@ dismount_steed(reason)
 							surface(u.ux, u.uy));
 			if ((!is_swimmer(mdat)) && (!amphibious(mdat)) &&
 			                           (!mbreathing(mtmp))) {
-			    mtmp = killed(mtmp, AD_WRAP);
+			    killed(mtmp, AD_WRAP);
 			    adjalign(-1);
 			}
 		    } else if (is_lava(u.ux, u.uy)) {
 			pline("%s is pulled into the lava!", Monnam(mtmp));
 			if (!likes_lava(mdat)) {
-			    mtmp = killed(mtmp, AD_FIRE);
+			    killed(mtmp, AD_FIRE);
 			    adjalign(-1);
 			}
 		    }

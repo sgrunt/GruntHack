@@ -1055,7 +1055,7 @@ dogaze()
 			if((int) u.ulevel > rn2(25))
 			    (void) destroy_mitem(mtmp, SPBOOK_CLASS, AD_FIRE);
 			if (dmg && !DEADMONSTER(mtmp)) mtmp->mhp -= dmg;
-			if (mtmp->mhp <= 0) mtmp = killed(mtmp, AD_FIRE);
+			if (mtmp->mhp <= 0) killed(mtmp, AD_FIRE);
 		    }
 		    /* For consistency with passive() in uhitm.c, this only
 		     * affects you if the monster is still alive.

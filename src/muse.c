@@ -1834,7 +1834,7 @@ register struct obj *otmp;
 				else if (mtmp->mtame)
 				    You("have an ominous feeling for a moment, then it passes.");
 				mtmp->mhp = -1;
-				mtmp = mondead(mtmp, AD_SPEL);
+				mondead(mtmp, AD_SPEL);
 				if (mtmp->mhp < 1) /* i.e. didn't lifesave */
 					rocks = mksobj(ROCK, FALSE, FALSE);
 				if (rocks) {
@@ -1923,7 +1923,7 @@ register struct obj *otmp;
 
 			if (canseemon(mtmp))
 				pline("%s is killed!", Monnam(mtmp));
-			mtmp = mondied(mtmp, AD_SPEL);
+			mondied(mtmp, AD_SPEL);
 		    } else if (newcham(mtmp, (struct permonst *)0, TRUE, FALSE)) {
 			if (!Hallucination && zap_oseen && otmp->otyp == WAN_POLYMORPH)
 			    makeknown(otmp->otyp);
@@ -1949,7 +1949,7 @@ register struct obj *otmp;
 		        if (mtmp->mhp <= 0 || mtmp->mhpmax <= 0 || mtmp->m_lev < 1)
 			{
 			    pline("%s is killed!", Monnam(mtmp));
-			    mtmp = mondied(mtmp, AD_DRLI);
+			    mondied(mtmp, AD_DRLI);
 			}
 		        else {
 			    mtmp->m_lev--;
@@ -2231,7 +2231,7 @@ struct monst *mtmp;
 	    	    	    	mtmp2->mhp -= mdmg;
 	    	    	    	if (mtmp2->mhp <= 0) {
 				    pline("%s is killed.", Monnam(mtmp2));
-	    	    	    	    mtmp2 = mondied(mtmp2, AD_PHYS);
+	    	    	    	    mondied(mtmp2, AD_PHYS);
 				}
 	    	    	    }
 	    	    	    /* Drop the rock/boulder to the floor */
@@ -2904,7 +2904,7 @@ skipmsg:
 				if (mtmp->mhp <= 0)
 				{
 				    pline("%s dies!", Monnam(mtmp));
-	    	    	    	    mtmp = mondied(mtmp, AD_PHYS);
+	    	    	    	    mondied(mtmp, AD_PHYS);
 				    return 2;
 				}
 			} else {
@@ -3296,8 +3296,8 @@ boolean stoning;
     }
     if (mon->mhp <= 0) {
 	pline("%s dies!", Monnam(mon));
-	if (by_you) mon = xkilled(mon, 0, AD_ACID);
-	else mon = mondead(mon, AD_ACID);
+	if (by_you) xkilled(mon, 0, AD_ACID);
+	else mondead(mon, AD_ACID);
 	return;
     }
     if (stoning && canseemon(mon)) {

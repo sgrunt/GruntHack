@@ -418,9 +418,9 @@ int dest, how;
 #define mk_corpse(dest)  ((dest & 2) ? AD_DGST : AD_PHYS)
 		/* if monsters are moving, one of them caused the destruction */
 		if (flags.mon_moving)
-		    etmp->emon = monkilled(etmp->emon, mk_message(dest), mk_corpse(dest));
+		    monkilled(etmp->emon, mk_message(dest), mk_corpse(dest));
 		else		/* you caused it */
-		    etmp->emon = xkilled(etmp->emon, dest, mk_corpse(dest));
+		    xkilled(etmp->emon, dest, mk_corpse(dest));
 		etmp->edata = (struct permonst *)0;
 
 		/* dead long worm handling */

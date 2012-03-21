@@ -304,8 +304,8 @@ boolean verbose;  /* give message(s) even when you can't see what happened */
 		/* don't blame hero for unknown rolling boulder trap */
 		if (!flags.mon_moving &&
 		    (otmp->otyp != BOULDER || range >= 0 || !otmp->otrapped))
-		    mtmp = xkilled(mtmp,0,AD_PHYS);
-		else mtmp = mondied(mtmp, AD_PHYS);
+		    xkilled(mtmp,0,AD_PHYS);
+		else mondied(mtmp, AD_PHYS);
 	    }
 
 	    if (can_blnd((struct monst*)0, mtmp,

@@ -486,7 +486,7 @@ aligntyp resp_god;
 		/* Yup, you get experience.  It takes guts to successfully
 		 * pull off this trick on your god, anyway.
 		 */
-		(void) xkilled(u.ustuck, 0, AD_ELEC);
+		xkilled(u.ustuck, 0, AD_ELEC);
 	    } else
 		pline("%s seems unaffected.", Monnam(u.ustuck));
 	} else {
@@ -510,7 +510,7 @@ aligntyp resp_god;
 			mon_nam(u.ustuck));
 	    if (!resists_disint(u.ustuck)) {
 		pline("%s crumbles to dust!", Monnam(u.ustuck));
-		(void) xkilled(u.ustuck, 2, AD_DISN); /* no corpse */
+		xkilled(u.ustuck, 2, AD_DISN); /* no corpse */
 	    } else
 		pline("%s seems unaffected.", Monnam(u.ustuck));
 	} else {
@@ -1819,7 +1819,7 @@ doturn()
 				    mtmp->mpeaceful = 1;
 				    set_malign(mtmp);
 				} else { /* damn them */
-				    mtmp = killed(mtmp, AD_CLRC);
+				    killed(mtmp, AD_CLRC);
 				}
 				break;
 			    } /* else flee */

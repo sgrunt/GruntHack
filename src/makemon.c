@@ -2073,13 +2073,13 @@ struct monst *mtmp, *victim;
 			nonliving(ptr) ? "expires" : "dies");
 		set_mon_data(mtmp, ptr, -1);	/* keep mvitals[] accurate */
 		mtmp->morigdata = newtype;
-		mtmp = mondied(mtmp, AD_SPEL);
+		mondied(mtmp, AD_SPEL);
 		return (struct permonst *)0;
 	    }
 	    set_mon_data(mtmp, ptr, 1);		/* preserve intrinsics */
 	    mtmp->morigdata = newtype;
 	    if (is_racial(ptr) && !mtmp->mrace) {
-	    	mtmp = mondied(mtmp, AD_SPEL);
+	    	mondied(mtmp, AD_SPEL);
 		return (struct permonst *)0;
 	    }
 	    newsym(mtmp->mx, mtmp->my);	        /* color may change */

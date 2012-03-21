@@ -304,8 +304,8 @@ int expltype;
 		}
 		if (mtmp->mhp <= 0) {
 			/* KMH -- Don't blame the player for pets killing gas spores */
-			if (!flags.mon_moving) mtmp = killed(mtmp, (int)adtyp);
-			else mtmp = monkilled(mtmp, "", (int)adtyp);
+			if (!flags.mon_moving) killed(mtmp, (int)adtyp);
+			else monkilled(mtmp, "", (int)adtyp);
 		} else if (!flags.mon_moving) setmangry(mtmp);
 	}
 
