@@ -275,17 +275,25 @@ choke(food)	/* To a full belly all food is bad. (It.) */
 				Strcpy(killer_buf, "");
 				if (halbackup && !Halluc_resistance)
 				    Strcat(killer_buf, "hallucinogen-distorted ");
-				Strcat(killer, food_xname(food, FALSE));
+				Strcat(killer_buf, food_xname(food, FALSE));
 				if ((food->otyp == CORPSE &&
 				     (mons[food->corpsenm].geno & G_UNIQ)) ||
 				     (obj_is_pname(food) ||
 				      the_unique_obj(food))) {
+				    boolean qarti =
+				    	(food->oartifact &&
+					 !strncmp(ONAME(food), "The ", 4));
 				    if ((food->otyp == CORPSE &&
 				        !type_is_pname(&mons[food->corpsenm]))
 					||
 					(food->otyp != CORPSE &&
-					 halbackup && !Halluc_resistance))
-					killer = the(killer);
+					 (qarti ||
+					  the_unique_obj(food) ||
+					 (halbackup && !Halluc_resistance))))
+					killer = (qarti &&
+					          (!halbackup ||
+						   Halluc_resistance))
+						? The(killer) : the(killer);
 				    killer_format = KILLED_BY;
 				}
 			}
