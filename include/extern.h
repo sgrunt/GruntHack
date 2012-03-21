@@ -249,6 +249,7 @@ E boolean NDECL(is_digging);
 E int NDECL(dig);
 #endif
 E int NDECL(holetime);
+E schar FDECL(fillholetyp,(int,int));
 E boolean FDECL(dig_check, (struct monst *, BOOLEAN_P, int, int));
 E void FDECL(digactualhole, (int,int,struct monst *,int));
 E boolean FDECL(dighole, (BOOLEAN_P));

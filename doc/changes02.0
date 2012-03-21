@@ -70,6 +70,9 @@ Dungeon-related:
 * Yeenoghu, Geryon, Dispater, and Demogorgon now have their own fortresses
   in Gehennom. Gehennom has been extended by five levels to allow room
   for this.
+* Killing the quest leader opens the stairway to the rest of the quest
+  (thus accidental conversion is less likely to render the game permanently
+   unwinnable).
 
 Player-related:
 * Attempting to call a high priest on the Astral Plane no longer results
