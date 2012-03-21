@@ -1650,7 +1650,7 @@ boolean reflection_skip;
 		}
 		nomore(MUSE_WAN_CANCELLATION);
 		if(obj->otyp == WAN_CANCELLATION) {
-		    if (obj->spe >= 0) {
+		    if (obj->spe > 0) {
 			m.offensive = obj;
 			m.has_offense = MUSE_WAN_CANCELLATION;
 		    } else if (!m.tocharge ||
