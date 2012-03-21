@@ -265,18 +265,31 @@ choke(food)	/* To a full belly all food is bad. (It.) */
 		 * high score list & tombstone.  So plan accordingly.
 		 */
 		if(food) {
+			int halbackup = HHallucination;
+			HHallucination = 0;
 			You("choke over your %s.", foodword(food));
 			if (food->oclass == COIN_CLASS) {
 				killer = "very rich meal";
 			} else {
-				killer = food_xname(food, FALSE);
-				if (food->otyp == CORPSE &&
-				    (mons[food->corpsenm].geno & G_UNIQ)) {
-				    if (!type_is_pname(&mons[food->corpsenm]))
+				killer = killer_buf;
+				Strcpy(killer_buf, "");
+				if (halbackup && !Halluc_resistance)
+				    Strcat(killer_buf, "hallucinogen-distorted ");
+				Strcat(killer, food_xname(food, FALSE));
+				if ((food->otyp == CORPSE &&
+				     (mons[food->corpsenm].geno & G_UNIQ)) ||
+				     (obj_is_pname(food) ||
+				      the_unique_obj(food))) {
+				    if ((food->otyp == CORPSE &&
+				        !type_is_pname(&mons[food->corpsenm]))
+					||
+					(food->otyp != CORPSE &&
+					 halbackup && !Halluc_resistance))
 					killer = the(killer);
 				    killer_format = KILLED_BY;
 				}
 			}
+			HHallucination = halbackup;
 		} else {
 			You("choke over it.");
 			killer = "quick snack";
