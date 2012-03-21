@@ -1321,7 +1321,7 @@ int final;
 		Sprintf(buf, "slippery %s", makeplural(body_part(FINGER)));
 		dump(youhad, buf);
 	}
-	if (Fumbling) dump("  ", "You fumbled");
+	/*if (Fumbling) dump("  ", "You fumbled");*/
 	if (Wounded_legs
 #ifdef STEED
 	    && !u.usteed
