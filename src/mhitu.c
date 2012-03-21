@@ -2127,7 +2127,7 @@ common:
 	    ugolemeffects((int)mattk->adtyp, tmp);
 	}
     }
-    mondead(mtmp, (int)mattk->adtyp);
+    mtmp = mondead(mtmp, (int)mattk->adtyp);
     wake_nearto(mtmp->mx, mtmp->my, 7*7);
     if (mtmp->mhp > 0) return(0);
     return(2);	/* it dies */
@@ -2169,7 +2169,7 @@ gazemu(mtmp, mattk)	/* monster gazes at you */
 		    if (useeit)
 			pline("%s is turned to stone!", Monnam(mtmp));
 		    stoned = TRUE;
-		    killed(mtmp, AD_STON);
+		    mtmp = killed(mtmp, AD_STON);
 
 		    if (mtmp->mhp > 0) break;
 		    return 2;
@@ -2786,7 +2786,7 @@ register struct attack *mattk;
 		    }
 		    pline("%s turns to stone!", Monnam(mtmp));
 		    stoned = 1;
-		    xkilled(mtmp, 0, AD_STON);
+		    mtmp = xkilled(mtmp, 0, AD_STON);
 		    if (mtmp->mhp > 0) return 1;
 		    return 2;
 		}
@@ -2891,7 +2891,7 @@ register struct attack *mattk;
     assess_dmg:
 	if((mtmp->mhp -= tmp) <= 0) {
 		pline("%s dies!", Monnam(mtmp));
-		xkilled(mtmp,0,olduasmon->mattk[i].adtyp);
+		mtmp = xkilled(mtmp,0,olduasmon->mattk[i].adtyp);
 		if (mtmp->mhp > 0) return 1;
 		return 2;
 	}

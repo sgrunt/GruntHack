@@ -715,7 +715,7 @@ explmm(magr, mdef, mattk)
 
 	/* Kill off agressor if it didn't die. */
 	if (!(result & MM_AGR_DIED)) {
-	    mondead(magr, (int)mattk->adtyp);
+	    magr = mondead(magr, (int)mattk->adtyp);
 	    if (magr->mhp > 0) return result;	/* life saved */
 	    result |= MM_AGR_DIED;
 	}
@@ -727,7 +727,7 @@ explmm(magr, mdef, mattk)
 	return result;
 }
 
-void
+struct monst *
 zombify(mtmp)
 register struct monst *mtmp;
 {
@@ -753,6 +753,8 @@ register struct monst *mtmp;
                    = 0;
     replmon(mtmp, mnew);
     set_malign(mnew);
+
+    return mnew;
 }
 
 /*
@@ -809,7 +811,7 @@ mdamagem(magr, mdef, mattk)
 			      mdef->data == &mons[PM_PESTILENCE] ?
 				"coughs spasmodically and collapses" :
 				"vomits violently and drops dead");
-		    mondied(magr, AD_DISE);
+		    magr = mondied(magr, AD_DISE);
 		    if (magr->mhp > 0) return 0;	/* lifesaved */
 		    else if (magr->mtame && !vis)
 			You(brief_feeling, "queasy");
@@ -901,7 +903,7 @@ mdamagem(magr, mdef, mattk)
 		if (pd == &mons[PM_STRAW_GOLEM] ||
 		    pd == &mons[PM_PAPER_GOLEM]) {
 			if (vis) pline("%s burns completely!", Monnam(mdef));
-			mondied(mdef, AD_FIRE);
+			mdef = mondied(mdef, AD_FIRE);
 			if (mdef->mhp > 0) return 0;
 			else if (mdef->mtame && !vis)
 			    pline("May %s roast in peace.", mon_nam(mdef));
@@ -974,7 +976,7 @@ mdamagem(magr, mdef, mattk)
 		if (magr->mcan) break;
 		if (pd == &mons[PM_IRON_GOLEM]) {
 			if (vis) pline("%s falls to pieces!", Monnam(mdef));
-			mondied(mdef, AD_RUST);
+			mdef = mondied(mdef, AD_RUST);
 			if (mdef->mhp > 0) return 0;
 			else if (mdef->mtame && !vis)
 			    pline("May %s rust in peace.", mon_nam(mdef));
@@ -996,7 +998,7 @@ mdamagem(magr, mdef, mattk)
 		if (pd == &mons[PM_WOOD_GOLEM] ||
 		    pd == &mons[PM_LEATHER_GOLEM]) {
 			if (vis) pline("%s falls to pieces!", Monnam(mdef));
-			mondied(mdef, AD_DCAY);
+			mdef = mondied(mdef, AD_DCAY);
 			if (mdef->mhp > 0) return MM_MISS;
 			else if (mdef->mtame && !vis)
 			    pline("May %s rot in peace.", mon_nam(mdef));
@@ -1127,7 +1129,7 @@ mdamagem(magr, mdef, mattk)
 				    s_suffix(mon_nam(mdef)));
 				pline("%s is destroyed!", Monnam(mdef));
 			    }
-			    mondied(mdef, AD_CNCL);
+			    mdef = mondied(mdef, AD_CNCL);
 			    if (mdef->mhp > 0) return MM_MISS;
 			    else if (mdef->mtame && !vis)
 				You(brief_feeling, "strangely sad");
@@ -1522,7 +1524,7 @@ msickness:
 	    if (pa == &mons[PM_ZOMBIE] && !nonliving(pd) &&
 	        (is_racial(pd) || is_were(pd)))
 	    {
-	    	zombify(mdef);
+	    	(void) zombify(mdef);
 		return MM_HIT|MM_DEF_DIED;
 	    }
 	    monkilled(mdef, "", (int)mattk->adtyp);

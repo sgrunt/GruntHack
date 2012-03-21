@@ -358,7 +358,7 @@ struct monst *mtmp;
 				if (canseemon(mtmp))
 					pline("%s is killed by the explosion!",
 						Monnam(mtmp));
-				mondied(mtmp, AD_SPEL);
+				mtmp = mondied(mtmp, AD_SPEL);
 			}
 		}
 	    } else {
@@ -1459,7 +1459,7 @@ register struct obj *obj;
     if (mon->mhp <= 0) {
     	if (canseemon(mon)) 
 	    pline("%s is killed by the explosion!", Monnam(mon));
-	mondied(mon, AD_SPEL);
+	mon = mondied(mon, AD_SPEL);
     }
 }
 

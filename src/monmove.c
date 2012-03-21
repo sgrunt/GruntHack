@@ -369,14 +369,14 @@ register struct monst *mtmp;
 		    (is_racial(mtmp->data) || is_were(mtmp->data)) &&
 		    !nonliving(mtmp->data))
 		{
-		    zombify(mtmp);
+		    (void) zombify(mtmp);
 		    return 1;
 		}
 		else
 		{
 		    mtmp->msick = 0;
  	            mtmp->mhp = -1;
-                    mondied(mtmp, AD_DISE);
+                    mtmp = mondied(mtmp, AD_DISE);
 		}
 
 	        return (mtmp->mhp > 0) ? 0 : 1; /* might lifesave */

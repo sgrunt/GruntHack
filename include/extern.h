@@ -1015,7 +1015,7 @@ E int FDECL(castum, (struct monst *,struct attack *));
 
 /* ### mhitm.c ### */
 
-E void FDECL(zombify, (struct monst *));
+E struct monst *FDECL(zombify, (struct monst *));
 E int FDECL(fightm, (struct monst *));
 E int FDECL(mattackm, (struct monst *,struct monst *));
 E int FDECL(noattacks, (struct permonst *));
@@ -1185,14 +1185,14 @@ E void FDECL(replmon, (struct monst *,struct monst *));
 E void FDECL(relmon, (struct monst *));
 E struct obj *FDECL(mlifesaver, (struct monst *));
 E boolean FDECL(corpse_chance,(struct monst *,struct monst *,BOOLEAN_P));
-E void FDECL(mondead, (struct monst *,int));
-E void FDECL(mondied, (struct monst *,int));
+E struct monst *FDECL(mondead, (struct monst *,int));
+E struct monst *FDECL(mondied, (struct monst *,int));
 E void FDECL(mongone, (struct monst *));
-E void FDECL(monstone, (struct monst *));
-E void FDECL(monkilled, (struct monst *,const char *,int));
+E struct monst *FDECL(monstone, (struct monst *));
+E struct monst *FDECL(monkilled, (struct monst *,const char *,int));
 E void FDECL(unstuck, (struct monst *));
-E void FDECL(killed, (struct monst *,int));
-E void FDECL(xkilled, (struct monst *,int,int));
+E struct monst *FDECL(killed, (struct monst *,int));
+E struct monst *FDECL(xkilled, (struct monst *,int,int));
 E void FDECL(mon_to_stone, (struct monst*));
 E void FDECL(mnexto, (struct monst *));
 E boolean FDECL(mnearto, (struct monst *,XCHAR_P,XCHAR_P,BOOLEAN_P));

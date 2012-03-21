@@ -571,7 +571,7 @@ register xchar x, y;
 			   that's the result of his actions; gain experience,
 			   lose pacifism, take alignment and luck hit, make
 			   corpse less likely to remain tame after revival */
-			xkilled(mtmp, 0, AD_PHYS); /* no "you kill it" message */
+			mtmp = xkilled(mtmp, 0, AD_PHYS); /* no "you kill it" message */
 			/* life-saving doesn't ordinarily reset this */
 			if (mtmp->mhp > 0) u.uconduct.killer = save_pacifism;
 		    } else {

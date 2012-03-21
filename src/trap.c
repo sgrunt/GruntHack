@@ -2006,7 +2006,7 @@ glovecheck:		    target = which_armor(mtmp, W_ARMG);
 				else if(mtmp->mtame)
 				    pline("May %s rust in peace.",
 								mon_nam(mtmp));
-				mondied(mtmp, AD_RUST);
+				mtmp = mondied(mtmp, AD_RUST);
 				if (mtmp->mhp <= 0)
 					trapkilled = TRUE;
 			} else if (mptr == &mons[PM_GREMLIN] && rn2(3)) {
@@ -2325,8 +2325,8 @@ boolean byplayer;
 		pline("%s turns to stone.", Monnam(mon));
 	if (byplayer) {
 		stoned = TRUE;
-		xkilled(mon,0, AD_STON);
-	} else monstone(mon);
+		mon = xkilled(mon,0, AD_STON);
+	} else mon = monstone(mon);
 }
 
 void
@@ -3285,7 +3285,7 @@ boolean force_failure;
 		    if (mtmp) {		/* must be a trap that holds monsters */
 			if (ttype == BEAR_TRAP) {
 			    if (mtmp->mtame) abuse_dog(mtmp);
-			    if ((mtmp->mhp -= rnd(4)) <= 0) killed(mtmp, AD_PHYS);
+			    if ((mtmp->mhp -= rnd(4)) <= 0) mtmp = killed(mtmp, AD_PHYS);
 			} else if (ttype == WEB) {
 			    if (!webmaker(youmonst.data)) {
 				struct trap *ttmp2 = maketrap(u.ux, u.uy, WEB);
@@ -3882,7 +3882,7 @@ boolean disarm;
 					if (canseemon(mon)) {
 						pline("%s is killed by the explosion!", Monnam(mon));
 					}
-					mondied(mon, AD_PHYS);
+					mon = mondied(mon, AD_PHYS);
 				}
 			  }
 			  return TRUE;
@@ -3905,7 +3905,7 @@ boolean disarm;
 				if (mon->mhp <= 0) {
 					if (canseemon(mon))
 						pline("%s is killed!", Monnam(mon));
-					mondied(mon, AD_DRST);
+					mon = mondied(mon, AD_DRST);
 				}
 			}
 			break;
@@ -3925,7 +3925,7 @@ boolean disarm;
 				if (mon->mhp <= 0) {
 					if (canseemon(mon))
 						pline("%s is killed!", Monnam(mon));
-					mondied(mon, AD_DRST);
+					mon = mondied(mon, AD_DRST);
 				}
 			}
 			break;
@@ -4007,7 +4007,7 @@ boolean disarm;
 						if (canseemon(mon)) 
 							pline("%s is killed!",
 								Monnam(mon));
-						mondied(mon, AD_ELEC);
+						mon = mondied(mon, AD_ELEC);
 					}
 				} else if (canseemon(mon)) {
 					pline("%s doesn't seem to be affected.", Monnam(mon));

@@ -744,7 +744,7 @@ rock1:
 			                              AD_MAGM - 1,
 			             u.ulevel / 2 + 1, &otmp);
 	                if (mon->mhp < 1)
-	                    killed(mon,
+	                    mon = killed(mon,
 			        obj->otyp-WAN_MAGIC_MISSILE+AD_MAGM-1);
 		    }
 		    else
@@ -1153,11 +1153,11 @@ rock2:
 		pline_The("poison doesn't seem to affect %s.", mon_nam(mon));
 	if (poiskilled) {
 		pline_The("poison was deadly...");
-		if (!already_killed) xkilled(mon, 0, AD_DRST);
+		if (!already_killed) mon = xkilled(mon, 0, AD_DRST);
 		return FALSE;
 	} else if (destroyed) {
 		if (!already_killed)
-		    killed(mon, AD_DRST);	/* takes care of most messages */
+		    mon = killed(mon, AD_DRST);	/* takes care of most messages */
 	} else if(u.umconf && !thrown) {
 		nohandglow(mon);
 		if (!mon->mconf && !resist(mon, SPBOOK_CLASS, 0, NOTELL)) {
@@ -1449,7 +1449,7 @@ register struct attack *mattk;
 		    pd == &mons[PM_PAPER_GOLEM]) {
 		    if (!Blind)
 			pline("%s burns completely!", Monnam(mdef));
-		    xkilled(mdef,2,AD_FIRE);
+		    mdef = xkilled(mdef,2,AD_FIRE);
 		    tmp = 0;
 		    break;
 		    /* Don't return yet; keep hp<1 and tmp=0 for pet msg */
@@ -1571,7 +1571,7 @@ register struct attack *mattk;
 			if (!Blind)
 			    pline("Some writing vanishes from %s head!",
 				s_suffix(mon_nam(mdef)));
-			xkilled(mdef, 0,AD_CNCL);
+			mdef = xkilled(mdef, 0,AD_CNCL);
 			/* Don't return yet; keep hp<1 and tmp=0 for pet msg */
 		    } else {
 			mdef->mcan = 1;
@@ -1587,7 +1587,7 @@ register struct attack *mattk;
 			mdef->mhpmax -= xtmp;
 			if ((mdef->mhp -= xtmp) <= 0 || !mdef->m_lev) {
 				pline("%s dies!", Monnam(mdef));
-				xkilled(mdef,0,AD_DRLI);
+				mdef = xkilled(mdef,0,AD_DRLI);
 			} else
 				mdef->m_lev--;
 			tmp = 0;
@@ -1596,7 +1596,7 @@ register struct attack *mattk;
 	    case AD_RUST:
 		if (pd == &mons[PM_IRON_GOLEM]) {
 			pline("%s falls to pieces!", Monnam(mdef));
-			xkilled(mdef,0,AD_RUST);
+			mdef = xkilled(mdef,0,AD_RUST);
 		}
 		hurtmarmor(mdef, AD_RUST);
 		tmp = 0;
@@ -1609,7 +1609,7 @@ register struct attack *mattk;
 		if (pd == &mons[PM_WOOD_GOLEM] ||
 		    pd == &mons[PM_LEATHER_GOLEM]) {
 			pline("%s falls to pieces!", Monnam(mdef));
-			xkilled(mdef,0,AD_DCAY);
+			mdef = xkilled(mdef,0,AD_DCAY);
 		}
 		hurtmarmor(mdef, AD_DCAY);
 		tmp = 0;
@@ -1856,7 +1856,7 @@ zombie:
 			    }
 			}
 
-			xkilled(mdef, 2,AD_DISN);
+			mdef = xkilled(mdef, 2,AD_DISN);
 			tmp = 0;
 		    }
 		    if (!die && otmp) {
@@ -1881,13 +1881,13 @@ zombie:
 	if((mdef->mhp -= tmp) < 1) {
 	    if (mdef->mtame && !cansee(mdef->mx,mdef->my)) {
 		You_feel("embarrassed for a moment.");
-		if (tmp) xkilled(mdef, 0, mattk->adtyp);
+		if (tmp) mdef = xkilled(mdef, 0, mattk->adtyp);
 		/* !tmp but hp<1: already killed */
 	    } else if (!flags.verbose) {
 		You("destroy it!");
-		if (tmp) xkilled(mdef, 0, mattk->adtyp);
+		if (tmp) mdef = xkilled(mdef, 0, mattk->adtyp);
 	    } else
-		if (tmp) killed(mdef, mattk->adtyp);
+		if (tmp) mdef = killed(mdef, mattk->adtyp);
 	    return(2);
 	}
 	return(1);
@@ -1933,7 +1933,7 @@ common:
 		    pline("%s gets blasted!", Monnam(mdef));
 		    mdef->mhp -= tmp;
 		    if (mdef->mhp <= 0) {
-			 killed(mdef, mattk->adtyp);
+			 mdef = killed(mdef, mattk->adtyp);
 			 return(2);
 		    }
 		} else {
@@ -2033,7 +2033,7 @@ register struct attack *mattk;
 			if (!!(otmp = mlifesaver(mdef))) m_useup(mdef, otmp);
 
 			newuhs(FALSE);
-			xkilled(mdef,2, AD_DGST);
+			mdef = xkilled(mdef,2, AD_DGST);
 			if (mdef->mhp > 0) { /* monster lifesaved */
 			    You("hurriedly regurgitate the sizzling in your %s.",
 				body_part(STOMACH));
@@ -2141,7 +2141,7 @@ register struct attack *mattk;
 		}
 		end_engulf();
 		if ((mdef->mhp -= dam) <= 0) {
-		    killed(mdef, mattk->adtyp);
+		    mdef = killed(mdef, mattk->adtyp);
 		    if (mdef->mhp <= 0)	/* not lifesaved */
 			return(2);
 		}
@@ -2750,9 +2750,9 @@ struct obj *otmp;	/* source of flash */
 			  "wails in agony" : "cries out in pain");
 		    if ((mtmp->mhp -= amt) <= 0) {
 			if (flags.mon_moving)
-			    monkilled(mtmp, (char *)0, AD_BLND);
+			    mtmp = monkilled(mtmp, (char *)0, AD_BLND);
 			else
-			    killed(mtmp, AD_BLND);
+			    mtmp = killed(mtmp, AD_BLND);
 		    } else if (cansee(mtmp->mx,mtmp->my) && !canspotmon(mtmp)){
 			map_invisible(mtmp->mx, mtmp->my);
 		    }
