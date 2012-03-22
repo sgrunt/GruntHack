@@ -2183,12 +2183,13 @@ register struct monst *mon;
 register int tmp;
 {
 	struct attack *mattk, alt_attk;
+	struct obj *wep = uwep;
 	int	i, sum[NATTK], hittmp = 0;
 	int	nsum = 0;
 	int	dhit = 0;
 
 	for(i = 0; i < NATTK; i++) {
-
+	    wep = uwep;
 	    sum[i] = 0;
 	    mattk = getmattk(youmonst.data, i, sum, &alt_attk);
 	    switch(mattk->aatyp) {
@@ -2203,19 +2204,19 @@ use_weapon:
 	 * we currently allow the player to get each of these as a weapon
 	 * attack.  Is this really desirable?
 	 */
-			if (uwep) {
-			    hittmp = hitval(uwep, mon);
-			    hittmp += weapon_hit_bonus(uwep);
+			if (wep) {
+			    hittmp = hitval(wep, mon);
+			    hittmp += weapon_hit_bonus(wep);
 			    tmp += hittmp;
 			}
-			dhit = (tmp > (dieroll = rnd(20)) || u.uswallow);
+			dhit = !!(tmp > (dieroll = rnd(20)) || u.uswallow);
 			/* KMH -- Don't accumulate to-hit bonuses */
-			if (uwep) tmp -= hittmp;
+			if (wep) tmp -= hittmp;
 			/* Enemy dead, before any special abilities used */
-			if (!known_hitum(mon,uwep,&dhit,mattk)) {
-			    sum[i] = 2;
+			if (!known_hitum(mon,wep,&dhit,mattk)) {
+			    sum[i] |= 2;
 			    break;
-			} else sum[i] = dhit;
+			} else sum[i] |= dhit;
 			/* might be a worm that gets cut in half */
 			if (m_at(u.ux+u.dx, u.uy+u.dy) != mon) return((boolean)(nsum != 0));
 			/* Do not print "You hit" message, since known_hitum
@@ -2223,7 +2224,12 @@ use_weapon:
 			 */
 			if (dhit && mattk->adtyp != AD_SPEL
 				&& mattk->adtyp != AD_PHYS)
-				sum[i] = damageum(mon,mattk);
+				sum[i] |= damageum(mon,mattk);
+
+			if (wep == uwep && u.twoweap && uswapwep) {
+			    wep = uswapwep;
+			    goto use_weapon;
+			}
 			break;
 		case AT_CLAW:
 			if (i==0 && uwep && !cantwield(youmonst.data)) goto use_weapon;
