@@ -1272,7 +1272,8 @@ register struct monst *mtmp;
 	register struct obj *obj;
 
 	for(obj = mtmp->minvent; obj; obj = obj->nobj) {
-		if(obj->otyp != BOULDER || !throws_rocks(mtmp->data))
+		if(obj->otyp != BOULDER ||
+		   !throws_rocks(&mons[mons_to_corpse(mtmp)]))
 			curload += obj->owt;
 	}
 
