@@ -43,7 +43,7 @@ extern const int monstr[];
 
 #define toostrongrace(monindx, racemask, lev) \
     (monstr[monindx] + race_lev_mod(racemask) > lev)
-#define tooweakrace(monindx, lev) \
+#define tooweakrace(monindx, racemask, lev) \
     (monstr[monindx] + racemask < lev)
 
 #ifdef OVLB
@@ -1357,6 +1357,9 @@ register int	mmflags;
 	boolean allow_minvent = ((mmflags & NO_MINVENT) == 0);
 	boolean countbirth = ((mmflags & MM_NOCOUNTBIRTH) == 0);
 	unsigned gpflags = (mmflags & MM_IGNOREWATER) ? MM_IGNOREWATER : 0;
+	int maxmlev = level_difficulty() >> 1,
+	    minmlev = level_difficulty() / 6,
+	    count = 10;
 
 	/* if caller wants random location, do it here */
 	if(x == 0 && y == 0) {
@@ -1432,12 +1435,22 @@ register int	mmflags;
 	fmon = mtmp;
 	mtmp->m_id = flags.ident++;
 	if (!mtmp->m_id) mtmp->m_id = flags.ident++;	/* ident overflowed */
-	set_mon_data(mtmp, ptr, 0);
-	mtmp->morigdata = monsndx(ptr);
-	if (is_racial(ptr) && !mtmp->mrace) {
-	    mongone(mtmp);
-	    return (struct monst *)0;
-	}
+	do {
+	    mtmp->mrace = 0;
+	    set_mon_data(mtmp, ptr, 0);
+	    mtmp->morigdata =
+	        (ptr == &mons[PM_WERERAT])    ? PM_HUMAN_WERERAT :
+	        (ptr == &mons[PM_WEREJACKAL]) ? PM_HUMAN_WEREJACKAL :
+	        (ptr == &mons[PM_WEREWOLF])   ? PM_HUMAN_WEREWOLF :
+	        monsndx(ptr);
+	    if (is_racial(ptr) && !mtmp->mrace) {
+	        mongone(mtmp);
+	        return (struct monst *)0;
+	    }
+	} while (count-- &&
+	         (is_racial(ptr) || is_were(ptr)) &&
+	         (toostrongrace(mtmp->morigdata, mtmp->mrace, maxmlev) ||
+	          tooweakrace(mtmp->morigdata, mtmp->mrace, minmlev)));
 	mtmp->morigrace = mtmp->mrace;
 	if (mtmp->data->msound == MS_LEADER)
 	    quest_status.leader_m_id = mtmp->m_id;
