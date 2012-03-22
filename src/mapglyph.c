@@ -179,7 +179,9 @@ unsigned *ospecial;
 #endif
 	    mon_color(offset);
 #ifdef TEXTCOLOR
-        if (iflags.use_color && iflags.showrace &&
+        if (iflags.use_color &&
+	    ((mtmp == &youmonst && iflags.showrace) ||
+	     (mtmp != &youmonst && iflags.showmonrace)) &&
 	     mtmp && mtmp->mrace)
 	    color = mtmp->data->mcolor;
 #endif
@@ -210,7 +212,9 @@ unsigned *ospecial;
 	    pet_color(offset);
 	    special |= MG_PET;
 #ifdef TEXTCOLOR
-        if (iflags.use_color && iflags.showrace &&
+        if (iflags.use_color &&
+	    ((mtmp == &youmonst && iflags.showrace) ||
+	     (mtmp != &youmonst && iflags.showmonrace)) &&
 	     mtmp && mtmp->mrace)
 	    color = mtmp->data->mcolor;
 #endif
@@ -248,8 +252,8 @@ unsigned *ospecial;
 		else*/
 		    color = mons[u.umonnum].mcolor;
 	    }
-	    else if (iflags.use_color && iflags.showrace &&
-	             mtmp && mtmp->mrace)
+	    else if (iflags.use_color && iflags.showmonrace &&
+	             mtmp && (mtmp != &youmonst) && mtmp->mrace)
 		color = mtmp->data->mcolor;
 #endif
 	}

@@ -303,6 +303,7 @@ struct instance_flags {
 	/* Items which belong in flags, but are here to allow save compatibility */
 	boolean  lootabc;	/* use "a/b/c" rather than "o/i/b" when looting */
 	boolean  showrace;	/* show hero glyph by race rather than by role */
+	boolean  showmonrace;	/* show mon glyphs by race rather than by type */
 	boolean  travelcmd;	/* allow travel command */
 	boolean  showsym;	/* show object symbols in menus */
 	int	 runmode;	/* update screen display during run moves */

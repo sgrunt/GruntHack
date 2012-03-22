@@ -63,6 +63,10 @@ Bug fixes:
 * Monster reading a non-blessed scroll of remove curse now behaves properly.
 * Zombification of shopkeepers, priests, etc. is handled better.
 
+Display-related:
+* showrace has been split into showrace (with the vanilla showrace behaviour of
+  only affecting the player) and showmonrace (for racial monsters).
+
 Dungeon-related:
 * Some additional Sokoban levels are present.
 * You now can obtain one of three rewards from Sokoban. (Whether this is

@@ -188,6 +188,7 @@ static struct Bool_Opt
 #endif
 	{"showbuc", &iflags.show_buc, FALSE, SET_IN_GAME},
 	{"showrace", &iflags.showrace, FALSE, SET_IN_GAME},
+	{"showmonrace", &iflags.showmonrace, FALSE, SET_IN_GAME},
 #ifdef REALTIME_ON_BOTL
   {"showrealtime", &iflags.showrealtime, FALSE, SET_IN_GAME},
 #endif
@@ -2450,6 +2451,7 @@ goodfruit:
 			}
 			else if ((boolopt[i].addr) == &iflags.use_inverse ||
 					(boolopt[i].addr) == &iflags.showrace ||
+					(boolopt[i].addr) == &iflags.showmonrace ||
 					(boolopt[i].addr) == &iflags.hilite_pet) {
 			    need_redraw = TRUE;
 			}

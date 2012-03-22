@@ -291,7 +291,8 @@
 
 #define GLYPH_INVISIBLE GLYPH_INVIS_OFF
 
-#define racial_glyph(mon) (iflags.showrace && \
+#define racial_glyph(mon) ((((mon == &youmonst) && iflags.showrace) || \
+                            ((mon != &youmonst) && iflags.showmonrace)) && \
                            (mon)->mrace && \
 			   is_racial((mon)->data) \
 			                 ? ((is_elf(mon))   ? PM_ELF    :  \
