@@ -1423,7 +1423,7 @@ register struct attack *mattk;
 	    case AD_WERE:	    /* no special effect on monsters */
 	    case AD_HEAL:	    /* likewise */
 	    case AD_PHYS:
- physical:
+physical:
 		if(mattk->aatyp == AT_WEAP) {
 		    if(uwep) tmp = 0;
 		} else if(mattk->aatyp == AT_KICK) {
@@ -1436,6 +1436,8 @@ register struct attack *mattk;
 			    tmp = rnd(4); /* bless damage */
 		    }
 		}
+		if (youmonst.data == &mons[PM_WATER_ELEMENTAL])
+		    goto do_rust;
 		break;
 	    case AD_FIRE:
 		if (negated) {
@@ -1594,6 +1596,7 @@ register struct attack *mattk;
 		}
 		break;
 	    case AD_RUST:
+do_rust:
 		if (pd == &mons[PM_IRON_GOLEM]) {
 			pline("%s falls to pieces!", Monnam(mdef));
 			xkilled(mdef,0,AD_RUST);
@@ -2464,6 +2467,12 @@ uchar aatyp;
 	    break;
 	  case AD_RUST:
 	    if(mhit && !mon->mcan) {
+	    	if (mon->data == &mons[PM_WATER_ELEMENTAL]) {
+		    if (rn2(2)) break;
+		    if (Blind || !flags.verbose) You("are splashed!");
+		    else	You("are splashed by %s water!",
+			                    s_suffix(mon_nam(mon)));
+		}
 		if (aatyp == AT_KICK) {
 		    if (uarmf)
 			(void)rust_dmg(uarmf, xname(uarmf), 1, TRUE, &youmonst);

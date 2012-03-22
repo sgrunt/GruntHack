@@ -109,6 +109,7 @@ Monster-related:
   if they do not have an objective in sight.
 * Bumping into a peaceful monster while invisible no longer angers it.
 * Monsters (and you!) can now be buried in the same manner as objects.
+* Water elementals now deal rust damage both passively and actively.
 
 Object-related:
 * Objects can now be invisible, with many associated side effects.

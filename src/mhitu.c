@@ -1044,12 +1044,14 @@ physical:
 			} else {
 			    u.ustuck = mtmp;
 			    pline("%s grabs you!", Monnam(mtmp));
+			    showed_msg = TRUE;
 			}
 		    } else if(u.ustuck == mtmp) {
 			exercise(A_STR, FALSE);
 			You("are being %s.",
 			      (mtmp->data == &mons[PM_ROPE_GOLEM])
 			      ? "choked" : "crushed");
+			showed_msg = TRUE;
 		    }
 		} else {			  /* hand to hand weapon */
 		    if(mattk->aatyp == AT_WEAP && otmp) {
@@ -1107,12 +1109,18 @@ physical:
 			}
 			urustm(mtmp, otmp);
 		    } else if (mattk->aatyp != AT_TUCH || dmg != 0 ||
-				mtmp != u.ustuck)
+				mtmp != u.ustuck) {
 			hitmsg(mtmp, mattk);
+		    }
 		}
 		if (mattk->aatyp == AT_WEAP && mattk->adtyp != AD_PHYS &&
 		    MON_WEP(mtmp))
 		    goto top;
+		if (mtmp->data == &mons[PM_WATER_ELEMENTAL])
+		{
+		    showed_msg = TRUE;
+		    goto do_rust;
+		}
 		break;
 	    case AD_DISE:
 	    	if (!showed_msg)
@@ -1518,6 +1526,7 @@ dopois:
 		}
 		break;
 	    case AD_RUST:
+do_rust:
 	    	if (!showed_msg)
 		    hitmsg(mtmp, mattk);
 		if (mtmp->mcan) break;
@@ -1966,6 +1975,7 @@ gulpmu(mtmp, mattk)	/* monster swallows you, or damage if u.uswallow */
 		        Strangled = 3;
 			tmp = 0;
 		    }
+		    water_damage(invent, FALSE, FALSE);
 		    break;
 		case AD_ACID:
 		    if (Acid_resistance) {
@@ -2364,6 +2374,11 @@ register struct obj *obj;
 	    is_acid = FALSE;
 	else
 	    return;
+
+	if (youmonst.data == &mons[PM_WATER_ELEMENTAL]) {
+	    if (rn2(2)) return;
+            pline("%s is splashed by your water!", Monnam(mon));
+	}
 
 	vis = cansee(mon->mx, mon->my);
 
