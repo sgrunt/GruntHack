@@ -688,7 +688,7 @@ long wp_mask;
 	    else u.xray_range = -1;
 	    vision_full_recalc = 1;
 	}
-	if ((spfx & SPFX_REFLECT) && (wp_mask & W_WEP)) {
+	if ((spfx & SPFX_REFLECT) && ((wp_mask & W_WEP|W_SWAPWEP))) {
 	    if (on) EReflecting |= wp_mask;
 	    else EReflecting &= ~wp_mask;
 	}

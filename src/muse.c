@@ -3168,6 +3168,14 @@ const char *fmt, *str;
 	    /* Due to wielded artifact weapon */
 	    if (fmt && str)
 	    	pline(fmt, str, "weapon");
+	    if (uwep && (uwep->oprops & ITEM_REFLECTION))
+	    	uwep->oprops_known |= ITEM_REFLECTION;
+	    return TRUE;
+	} else if (EReflecting & W_SWAPWEP) {
+	    if (fmt && str)
+	    	pline(fmt, str, "off-hand weapon");
+	    if (uswapwep && (uswapwep->oprops & ITEM_REFLECTION))
+	    	uswapwep->oprops_known |= ITEM_REFLECTION;
 	    return TRUE;
 	} else if (EReflecting & W_AMUL) {
 	    if (fmt && str) {
