@@ -1948,7 +1948,7 @@ gulpmu(mtmp, mattk)	/* monster swallows you, or damage if u.uswallow */
 		case AD_WRAP:
 		    /* Why AD_WRAP?  There's no suffocation AD_*,
 		     * but WRAP is a rarely used suffocation attack. */
-		    if (Amphibious &&
+		    if (amphibious(youmonst.data) &&
 		        mtmp->data == &mons[PM_WATER_ELEMENTAL])
 		    {
 		        You("feel quite comfortable in here.");
