@@ -1301,6 +1301,7 @@ struct obj *otmp;
 	boolean in_sight;
 	boolean trapkilled = FALSE;
 	boolean steedhit = FALSE;
+	register struct monst *curmonstbak = curmonst;
 
 	if (!u.usteed || !trap) return 0;
 	tt = trap->ttyp;
@@ -1308,6 +1309,7 @@ struct obj *otmp;
 	mtmp->my = u.uy;
 
 	in_sight = !Blind;
+	curmonst = (struct monst *)0;
 	switch (tt) {
 		case ARROW_TRAP:
 			if(!otmp) {
@@ -1368,9 +1370,11 @@ struct obj *otmp;
 		    steedhit = TRUE;
 		    break;
 		default:
+			curmonst = curmonstbak;
 			return 0;
 	    }
 	}
+	curmonst = curmonstbak;
 	if(trapkilled) {
 		dismount_steed(DISMOUNT_POLY);
 		return 2;
@@ -1783,6 +1787,9 @@ register struct monst *mtmp;
 	boolean trapkilled = FALSE;
 	struct permonst *mptr = mtmp->data;
 	struct obj *otmp;
+	register struct monst *curmonstbak = curmonst;
+
+	curmonst = (struct monst *)0;
 
 	if (!trap) {
 	    mtmp->mtrapped = 0;	/* perhaps teleported? */
@@ -1839,7 +1846,10 @@ register struct monst *mtmp;
 		    ((mtmp->mtrapseen & (1 << (tt-1))) != 0 ||
 			(tt == HOLE && !mindless(mtmp->data)))) {
 		/* it has been in such a trap - perhaps it escapes */
-		if(rn2(4)) return(0);
+		if(rn2(4)) {
+		    curmonst = curmonstbak;
+		    return(0);
+		}
 	    } else {
 		mtmp->mtrapseen |= (1 << (tt-1));
 	    }
@@ -2124,7 +2134,10 @@ glovecheck:		    target = which_armor(mtmp, W_ARMG);
 			    int mlev_res;
 			    mlev_res = mlevel_tele_trap(mtmp, trap,
 							inescapable, in_sight);
-			    if (mlev_res) return(mlev_res);
+			    if (mlev_res) {
+				curmonst = curmonstbak;
+			    	return(mlev_res);
+			    }
 			}
 			break;
 
@@ -2290,6 +2303,7 @@ glovecheck:		    target = which_armor(mtmp, W_ARMG);
 			impossible("Some monster encountered a strange trap of type %d.", tt);
 	    }
 	}
+	curmonst = curmonstbak;
 	if(trapkilled) return 2;
 	return mtmp->mtrapped;
 }
