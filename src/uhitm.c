@@ -689,8 +689,8 @@ rock1:
 			hittxt = TRUE;
 		    }
 
-		    if (((obj->oclass == WEAPON_CLASS &&
-		          obj->oprops) || obj->oartifact) &&
+		    if (((obj->oclass == WEAPON_CLASS/* &&
+		          obj->oprops*/) || obj->oartifact) &&
 			artifact_hit(&youmonst, mon, obj, &tmp, dieroll)) {
 			if(mon->mhp <= 0) /* artifact killed monster */
 			    return FALSE;

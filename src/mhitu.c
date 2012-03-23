@@ -1084,8 +1084,8 @@ physical:
 			    pline("The silver sears your flesh!");
 			}
 			if (dmg <= 0) dmg = 1;
-			if (!(((otmp->oclass == WEAPON_CLASS &&
-			        otmp->oprops) || otmp->oartifact) &&
+			if (!(((otmp->oclass == WEAPON_CLASS/* &&
+			        otmp->oprops*/) || otmp->oartifact) &&
 				artifact_hit(mtmp, &youmonst, otmp, &dmg,dieroll)))
 			     hitmsg(mtmp, mattk);
 			showed_msg = TRUE;

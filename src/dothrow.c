@@ -836,7 +836,7 @@ boolean thrown;
 	char *buf;
 
 	if (obj->oartifact ||
-	    (obj->oclass == WEAPON_CLASS && obj->oprops))
+	    (obj->oclass == WEAPON_CLASS /*&& obj->oprops*/))
 	    /* need a fake die roll here; rn1(18,2) avoids 1 and 20 */
 	    artimsg = artifact_hit((struct monst *)0, &youmonst,
 				   obj, &dmg, rn1(18,2));

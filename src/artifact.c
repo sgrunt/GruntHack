@@ -26,6 +26,8 @@ STATIC_DCL int FDECL(arti_invoke, (struct obj*));
 STATIC_DCL boolean FDECL(Mb_hit, (struct monst *magr,struct monst *mdef,
 				  struct obj *,int *,int,BOOLEAN_P,char *));
 
+STATIC_OVL struct obj *spec_launcher;
+
 /* The amount added to the victim's total hit points to insure that the
    victim will be killed even after damage bonus/penalty adjustments.
    Most such penalties are small, and 200 is plenty; the exception is
@@ -484,7 +486,8 @@ register struct obj *otmp;
 		return((boolean)(weap->attk.adtyp == adtyp));
 
 	if (!weap && otmp->oprops &&
-	    (otmp->oclass == WEAPON_CLASS || is_weptool(otmp)))
+	    ((otmp->oclass == WEAPON_CLASS || is_weptool(otmp))) &&
+	    ((otmp == spec_launcher) || (!is_launcher(otmp))))
 	{
 	    if (adtyp == AD_FIRE &&
 	        (otmp->oprops & ITEM_FIRE)) return TRUE;
@@ -494,13 +497,12 @@ register struct obj *otmp;
 	        (otmp->oprops & ITEM_DRLI)) return TRUE;
 	}
 
-	if (otmp->oclass == WEAPON_CLASS || is_weptool(otmp))
+	if ((otmp->oclass == WEAPON_CLASS || is_weptool(otmp)) &&
+	    (spec_launcher != otmp))
 	{
-	    register struct obj *otmp2 = NULL;
-	    if (curmonst == &youmonst) otmp2 = uwep;
-	    else if (curmonst) otmp2 = MON_WEP(curmonst);
-	    if (ammo_and_launcher(otmp, otmp2))
-	        return attacks(adtyp, otmp2); 
+	    if (spec_launcher) {
+	        return attacks(adtyp, spec_launcher);
+	    }
 	}
 
 	return FALSE;
@@ -879,11 +881,24 @@ int tmp;
 {
 	register const struct artifact *weap = get_artifact(otmp);
 	boolean yours = (mon == &youmonst);
+
+	long props = otmp->oprops |
+	             ((spec_launcher) ? spec_launcher->oprops : 0L);
+
+	register struct obj *obj;
+	
+	spec_launcher = NULL;
+        if (curmonst == &youmonst) spec_launcher = uwep;
+        else if (curmonst) spec_launcher = MON_WEP(curmonst);
+	if (!ammo_and_launcher(otmp, spec_launcher))
+	    spec_launcher = NULL;
+
+	obj = (spec_launcher) ? spec_launcher : otmp;
 	    
 	spec_dbon_applies = FALSE;
 
-	if (!weap && otmp->oprops &&
-	    (otmp->oclass == WEAPON_CLASS || is_weptool(otmp)))
+	if (!weap && (props &&
+	    (obj->oclass == WEAPON_CLASS || is_weptool(obj))))
 	{
 	    /* until we know otherwise: */
 
@@ -907,7 +922,7 @@ int tmp;
 
 		return tmp;
             }	
-	    if ((otmp->oprops & ITEM_DRLI) &&
+	    if ((props & ITEM_DRLI) &&
 	        ((yours) ? (!Drain_resistance) : (!resists_drli(mon))))
 	    {
                 spec_dbon_applies = TRUE; 
@@ -1249,8 +1264,12 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	if (attacks(AD_FIRE, otmp)) {
 	    if (realizes_damage &&
 	        (otmp->oartifact || 
-		 ((otmp->oprops & ITEM_FIRE) && 
-		  (spec_dbon_applies || (otmp->oprops_known & ITEM_FIRE)))))
+		 (((otmp->oprops & ITEM_FIRE) || 
+		   (spec_launcher && (spec_launcher->oprops & ITEM_FIRE))) && 
+		  (spec_dbon_applies ||
+		   ((otmp->oprops_known & ITEM_FIRE) ||
+		    (spec_launcher &&
+		     (spec_launcher->oprops_known & ITEM_FIRE)))))))
 	    {
                 if (otmp->oartifact &&
 		    otmp->oartifact == ART_FIRE_BRAND)
@@ -1263,34 +1282,60 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 			hittee, !spec_dbon_applies ? '.' : '!');
 		if ((otmp->oprops & ITEM_FIRE) && spec_dbon_applies)
 		    otmp->oprops_known |= ITEM_FIRE;
+		else if (spec_launcher &&
+		         (spec_launcher->oprops & ITEM_FIRE) &&
+		          spec_dbon_applies)
+		    spec_launcher->oprops_known |= ITEM_FIRE;
 		msgprinted = TRUE;
 	    }
 	    if (!rn2(4)) {
 	        if (destroy_mitem(mdef, POTION_CLASS, AD_FIRE) &&
-		    (otmp->oprops & ITEM_FIRE))
-		    otmp->oprops_known |= ITEM_FIRE;
+		    realizes_damage) {
+		    if (otmp->oprops & ITEM_FIRE)
+		        otmp->oprops_known |= ITEM_FIRE;
+		    else if (spec_launcher &&
+		             (spec_launcher->oprops & ITEM_FIRE))
+			spec_launcher->oprops_known |= ITEM_FIRE;
+		}
 	    }
 	    if (!rn2(4)) {
 	        if (destroy_mitem(mdef, SCROLL_CLASS, AD_FIRE) &&
-		    (otmp->oprops & ITEM_FIRE))
-		    otmp->oprops_known |= ITEM_FIRE;
+		    realizes_damage) {
+		    if (otmp->oprops & ITEM_FIRE)
+		        otmp->oprops_known |= ITEM_FIRE;
+		    else if (spec_launcher &&
+		             (spec_launcher->oprops & ITEM_FIRE))
+			spec_launcher->oprops_known |= ITEM_FIRE;
+		}
 	    }
 	    if (!rn2(7)) {
-	        if (destroy_mitem(mdef, SPBOOK_CLASS, AD_FIRE) &&
-		    (otmp->oprops & ITEM_FIRE))
-		    otmp->oprops_known |= ITEM_FIRE;
+	        if (destroy_mitem(mdef, SPBOOK_CLASS, AD_FIRE) && 
+		    realizes_damage) {
+		    if (otmp->oprops & ITEM_FIRE)
+		        otmp->oprops_known |= ITEM_FIRE;
+		    else if (spec_launcher &&
+		             (spec_launcher->oprops & ITEM_FIRE))
+			spec_launcher->oprops_known |= ITEM_FIRE;
+		}
 	    }
 	    if (youdefend && Slimed) {
 	        burn_away_slime();
 		if (otmp->oprops & ITEM_FIRE)
 		    otmp->oprops_known |= ITEM_FIRE;
+		else if (spec_launcher &&
+		         (spec_launcher->oprops & ITEM_FIRE))
+		    spec_launcher->oprops_known |= ITEM_FIRE;
 	    }
 	}
 	if (attacks(AD_COLD, otmp)) {
 	    if (realizes_damage &&
 	        (otmp->oartifact || 
-		 ((otmp->oprops & ITEM_FROST) && 
-		  (spec_dbon_applies || (otmp->oprops_known & ITEM_FROST)))))
+		 (((otmp->oprops & ITEM_FROST) || 
+		   (spec_launcher && (spec_launcher->oprops & ITEM_FROST))) && 
+		  (spec_dbon_applies ||
+		   ((otmp->oprops_known & ITEM_FROST) ||
+		    (spec_launcher &&
+		     (spec_launcher->oprops_known & ITEM_FROST)))))))
 	    {
                 if (otmp->oartifact &&
 		    otmp->oartifact == ART_FROST_BRAND)
@@ -1305,8 +1350,14 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	    }
 	    if (!rn2(4)) {
 	        if (destroy_mitem(mdef, POTION_CLASS, AD_COLD) &&
-	    	    (otmp->oprops & ITEM_FROST))
-		    otmp->oprops_known |= ITEM_FROST;
+		    realizes_damage) {
+		
+	    	    if (otmp->oprops & ITEM_FROST)
+		        otmp->oprops_known |= ITEM_FROST;
+		    else if (spec_launcher &&
+		             (spec_launcher->oprops & ITEM_FROST))
+		        spec_launcher->oprops_known |= ITEM_FROST;
+		}
 	    }
 	}
 	if (attacks(AD_ELEC, otmp)) {
@@ -1347,6 +1398,7 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	/* We really want "on a natural 20" but Nethack does it in */
 	/* reverse from AD&D. */
 	if ((otmp->oprops & ITEM_VORPAL) ||
+	    (spec_launcher && (spec_launcher->oprops & ITEM_VORPAL)) ||
 	    spec_ability(otmp, SPFX_BEHEAD)) {
 	    if (/*otmp->oartifact == ART_TSURUGI_OF_MURAMASA && */
 	        bimanual(otmp) && dieroll == 1) {
@@ -1354,8 +1406,13 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 		    otmp->oartifact == ART_TSURUGI_OF_MURAMASA)
 		wepdesc = "The razor-sharp blade";
 
-	        if (!otmp->oartifact)
-		    otmp->oprops_known |= ITEM_VORPAL;
+	        if (!otmp->oartifact) {
+		    if (otmp->oprops & ITEM_VORPAL)
+		        otmp->oprops_known |= ITEM_VORPAL;
+		    else if (spec_launcher &&
+		             (spec_launcher->oprops & ITEM_VORPAL))
+			spec_launcher->oprops_known |= ITEM_VORPAL;
+		}
 
 		/* not really beheading, but so close, why add another SPFX */
 		if (youattack && u.uswallow && mdef == u.ustuck) {
@@ -1414,8 +1471,13 @@ int dieroll; /* needed for Magicbane and vorpal blades */
                 if (otmp->oartifact && otmp->oartifact == ART_VORPAL_BLADE)
 		    wepdesc = artilist[ART_VORPAL_BLADE].name;
 
-	        if (!otmp->oartifact)
-		    otmp->oprops_known |= ITEM_VORPAL;
+	        if (!otmp->oartifact) {
+		    if (otmp->oprops & ITEM_VORPAL)
+		        otmp->oprops_known |= ITEM_VORPAL;
+		    else if (spec_launcher &&
+		             (spec_launcher->oprops & ITEM_VORPAL))
+			spec_launcher->oprops_known |= ITEM_VORPAL;
+		}
 
 		if (!youdefend) {
 			if (!has_head(mdef->data) || notonhead || u.uswallow) {
@@ -1480,6 +1542,9 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 				      mon_nam(mdef));
 				if (otmp->oprops & ITEM_DRLI)
 				    otmp->oprops_known |= ITEM_DRLI;
+				else if (spec_launcher &&
+				         (spec_launcher->oprops & ITEM_DRLI))
+				    spec_launcher->oprops_known |= ITEM_DRLI;
 			    }
 			}
 			if (mdef->m_lev == 0) {
@@ -1508,6 +1573,9 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 				      The(distant_name(otmp, xname)));
 				if (otmp->oprops & ITEM_DRLI)
 				    otmp->oprops_known |= ITEM_DRLI;
+				else if (spec_launcher &&
+				         (spec_launcher->oprops & ITEM_DRLI))
+				    spec_launcher->oprops_known |= ITEM_DRLI;
 			}
 			if (curmonst && curmonst != &youmonst) {
 			    Strcpy(killer_buf, s_suffix(done_in_name(curmonst)));

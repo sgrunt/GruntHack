@@ -875,7 +875,7 @@ mdamagem(magr, mdef, mattk)
 				touch_petrifies(&mons[otmp->corpsenm]))
 			    goto do_stone;
 			tmp += dmgval(otmp, mdef);
-			if ((otmp->oclass == WEAPON_CLASS && otmp->oprops) ||
+			if ((otmp->oclass == WEAPON_CLASS/* && otmp->oprops*/) ||
 			    otmp->oartifact) {
 			    (void)artifact_hit(magr,mdef, otmp, &tmp, dieroll);
 			    if (mdef->mhp <= 0)

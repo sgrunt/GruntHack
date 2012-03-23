@@ -81,7 +81,7 @@ const char *name;	/* if null, then format `obj' */
 		return(0);
 	} else {
 		if (!(obj && obj->oclass == WEAPON_CLASS &&
-		      (obj->oartifact || obj->oprops) &&
+		      /*(obj->oartifact || obj->oprops) &&*/
 		      artifact_hit(curmonst, &youmonst, obj, &dam, dieroll)))
 		{
 			if(Blind || !flags.verbose) You("are hit!");
