@@ -315,6 +315,8 @@ register struct monst *mtmp;
         static char buf[BUFSZ];
 	boolean use_an = TRUE;
 	boolean distorted = (boolean)(Hallucination && canspotmon(mtmp));
+	long tmphallu = HHallucination;
+	HHallucination = 0L;
 	
 	buf[0] = '\0';
 
@@ -357,6 +359,8 @@ register struct monst *mtmp;
 	}
 	if (use_an) 
 	    Strcpy(buf, an(buf));
+	
+	HHallucination = tmphallu;
 	
 	return buf;
 }
