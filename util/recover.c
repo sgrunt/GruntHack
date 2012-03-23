@@ -71,11 +71,12 @@ char *argv[];
 	char *startdir = (char *)0;
 #endif
 
-
+#if !defined(VAR_PLAYGROUND_DIR)
 	if (!dir) dir = getenv("NETHACKDIR");
 	if (!dir) dir = getenv("HACKDIR");
 #if defined(EXEPATH)
 	if (!dir) dir = exepath(argv[0]);
+#endif
 #endif
 	if (argc == 1 || (argc == 2 && !strcmp(argv[1], "-"))) {
 	    Fprintf(stderr,

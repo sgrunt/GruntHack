@@ -1566,7 +1566,7 @@ register int	mmflags;
 	} else if (mndx == PM_WIZARD_OF_YENDOR) {
 		mtmp->iswiz = TRUE;
 		flags.no_of_wizards++;
-		if (flags.no_of_wizards == 1 && Is_earthlevel(&u.uz))
+		if (flags.no_of_wizards == 1 && In_endgame(&u.uz))
 			mitem = SPE_DIG;
 	} else if (mndx == PM_DJINNI) {
 		flags.djinni_count++;
