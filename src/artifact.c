@@ -213,7 +213,7 @@ boolean allow_detrimental;
 	    ccount = 0;
 	    for (i = ARROW; i <= CROSSBOW; i++)
 	    {
-	        if (objects[i].oc_skill == skill)
+	        if (objects[i].oc_skill == abs(skill))
 		    candidates[ccount++] = i;
 		if (ccount == 128) break;
 	    }
