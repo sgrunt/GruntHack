@@ -391,6 +391,7 @@ struct obj *otmp;
 		} else {
 			pline("%s %s in pain!", Monnam(mtmp),
 				is_silent(mtmp->data) ? "writhes" : "shrieks");
+                        if (!is_silent(mtmp->data)) aggravate();
 		}
 		(void)resist(mtmp, otmp->oclass, dmg, NOTELL);
 		break;

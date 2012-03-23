@@ -2455,6 +2455,7 @@ boolean your_inv;
 		    angermon = TRUE;
 		    pline("%s %s in pain!", Monnam(mon),
 			  is_silent(mon->data) ? "writhes" : "shrieks");
+                    if (!is_silent(mon->data)) aggravate();
 		    mon->mhp -= d(obj->blessed ? 2 : 1, 8);
 		    if (mon->mhp < 1) {
 			if (your_fault)
