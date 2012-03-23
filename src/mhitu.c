@@ -734,8 +734,6 @@ mattacku(mtmp)
 						res |= MM_MOVED;
 			} else {
 			    int hittmp = 0;
-			
-			    res |= MM_MOVED;
 
 			    /* Rare but not impossible.  Normally the monster
 			     * wields when 2 spaces away, but it can be
@@ -748,8 +746,21 @@ mattacku(mtmp)
 				mtmp->weapon_check = NEED_HTH_WEAPON;
 				/* mon_wield_item resets weapon_check as
 				 * appropriate */
-				if (mon_wield_item(mtmp, FALSE) != 0) break;
+				if (mon_wield_item(mtmp, FALSE) != 0) {
+				    res |= MM_MOVED;
+				    break;
+				}
 			    }
+			    if (!MON_WEP(mtmp) ||
+			        is_launcher(MON_WEP(mtmp))) {
+			        /* implies we could not find a HTH weapon */
+				if (thrwmu(mtmp)) {
+				    res |= MM_MOVED;
+				    break;
+				}
+			    }
+			
+			    res |= MM_MOVED;
 			    if (foundyou) {
 				otmp = MON_WEP(mtmp);
 				if(otmp) {

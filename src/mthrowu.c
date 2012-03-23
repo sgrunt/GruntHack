@@ -609,8 +609,10 @@ struct monst *mtmp;
 
 	/* Rearranged beginning so monsters can use polearms not in a line */
 	if (mtmp->weapon_check == NEED_WEAPON || !MON_WEP(mtmp)) {
-	    if (dist2(mtmp->mx, mtmp->my, mtmp->mux, mtmp->muy) <= 8)
-	    	return FALSE; /* close to melee range */
+	    if (dist2(mtmp->mx, mtmp->my, mtmp->mux, mtmp->muy) <= 8) {
+	        mtmp->weapon_check = NEED_HTH_WEAPON;
+	        if(mon_wield_item(mtmp, FALSE) != 0) return TRUE;
+	    }
 	    mtmp->weapon_check = NEED_RANGED_WEAPON;
 	    /* mon_wield_item resets weapon_check as appropriate */
 	    if(mon_wield_item(mtmp, FALSE) != 0) return TRUE;
