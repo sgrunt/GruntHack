@@ -347,15 +347,27 @@ tactics(mtmp)
 		if (In_W_tower(mtmp->mx, mtmp->my, &u.uz) ||
 			(mtmp->iswiz && !xupstair && !mon_has_amulet(mtmp))) {
 		    if (!rn2(3 + mtmp->mhp/10) &&
-		        can_teleport(mtmp->data))
+		        can_teleport(mtmp->data) &&
+			!(mtmp->mtrapseen & (1 << TELEP_TRAP-1)))
 		    {
+		        if (tele_restrict(mtmp)) {
+		            if (level.flags.noteleport)
+			        mtmp->mtrapseen |= (1 << (TELEP_TRAP-1));
+			    return(1);
+			}
 			(void) rloc(mtmp, FALSE);
 		        return(1);
 		    }
 		} else if (xupstair &&
 			 (mtmp->mx != xupstair || mtmp->my != yupstair)) {
-	            if (can_teleport(mtmp->data))
+	            if (can_teleport(mtmp->data) &&
+			!(mtmp->mtrapseen & (1 << (TELEP_TRAP-1))))
 		    {
+		        if (tele_restrict(mtmp)) {
+		            if (level.flags.noteleport)
+			        mtmp->mtrapseen |= (1 << (TELEP_TRAP-1));
+			    return(1);
+			}
 		        if (control_teleport(mtmp->data))
 		            (void) mnearto(mtmp, xupstair, yupstair, TRUE);
 			else
@@ -382,8 +394,14 @@ tactics(mtmp)
 		if (can_teleport(mtmp->data) &&
 		    control_teleport(mtmp->data))
 		{
-		    if(!rn2(!mtmp->mflee ? 5 : 33))
+		    if(!rn2(!mtmp->mflee ? 5 : 33) &&
+		       !(mtmp->mtrapseen & (1 << (TELEP_TRAP-1))))
 		    {
+		        if (tele_restrict(mtmp)) {
+		            if (level.flags.noteleport)
+			        mtmp->mtrapseen |= (1 << (TELEP_TRAP-1));
+			    return(1);
+			}
 		        mnexto(mtmp);
 		        return(1);
 		    }
@@ -405,8 +423,14 @@ tactics(mtmp)
 		    /* player is standing on it (or has it) */
 		    if (can_teleport(mtmp->data) &&
 		        control_teleport(mtmp->data) &&
+			!(mtmp->mtrapseen & (1 << TELEP_TRAP-1)) &&
 			dist2(mtmp->mx, mtmp->my, tx, ty) > 2)
 		    {
+		        if (tele_restrict(mtmp)) {
+		            if (level.flags.noteleport)
+			        mtmp->mtrapseen |= (1 << (TELEP_TRAP-1));
+			    return(1);
+			}
 		        mnexto(mtmp);
 			return(1);
 		    }
@@ -415,10 +439,17 @@ tactics(mtmp)
 		if(where == STRAT_GROUND) {
 		    if(!MON_AT(tx, ty) || (mtmp->mx == tx && mtmp->my == ty)) {
 			/* teleport to it and pick it up */
-		        if ((!can_teleport(mtmp->data) || 
-		             !control_teleport(mtmp->data)) &&
-			     (mtmp->mx != tx || mtmp->my != ty))
+		        if (((!can_teleport(mtmp->data) || 
+		              !control_teleport(mtmp->data)) &&
+			      (mtmp->mx != tx || mtmp->my != ty)) ||
+			      (mtmp->mtrapseen & (1<<TELEP_TRAP-1)))
 			    return(0);
+		        
+			if (tele_restrict(mtmp)) {
+		            if (level.flags.noteleport)
+			        mtmp->mtrapseen |= (1 << (TELEP_TRAP-1));
+			    return(1);
+			}
 
 			rloc_to(mtmp, tx, ty);	/* clean old pos */
 
@@ -437,8 +468,14 @@ tactics(mtmp)
 		        if (can_teleport(mtmp->data) && 
 		            control_teleport(mtmp->data) &&
 			    dist2(mtmp->mx, mtmp->my, tx, ty) > 2 &&
-			    !rn2(5))
+			    !rn2(5) &&
+			    !(mtmp->mtrapseen & (1<<TELEP_TRAP-1)))
 			{
+		            if (tele_restrict(mtmp)) {
+		                if (level.flags.noteleport)
+			            mtmp->mtrapseen |= (1 << (TELEP_TRAP-1));
+			        return(1);
+			    }
 		            (void) mnearto(mtmp, tx, ty, FALSE);
 			    return(1);
 			}
@@ -447,8 +484,14 @@ tactics(mtmp)
 	        } else { /* a monster has it - 'port beside it. */
 		    if (can_teleport(mtmp->data) && 
 		        control_teleport(mtmp->data) &&
+			!(mtmp->mtrapseen & (1 << TELEP_TRAP-1)) &&
 			dist2(mtmp->mx, mtmp->my, tx, ty) > 2)
 	            {
+		        if (tele_restrict(mtmp)) {
+		            if (level.flags.noteleport)
+			        mtmp->mtrapseen |= (1 << (TELEP_TRAP-1));
+			    return(1);
+			}
 		        (void) mnearto(mtmp, tx, ty, FALSE);
 		        return(1);
 		    }
