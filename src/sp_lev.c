@@ -861,6 +861,7 @@ struct mkroom	*croom;
 		m_initweap(mtmp);
 		m_initinv(mtmp);
 	    	m_dowear(mtmp, TRUE);
+	    	mon_wield_item(mtmp, TRUE);
 
 		newsym(x, y);
 	    }

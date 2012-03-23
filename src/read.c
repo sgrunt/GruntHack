@@ -2089,6 +2089,7 @@ create_particular()
 			    	m_initweap(mtmp);
 				m_initinv(mtmp);
 	    			m_dowear(mtmp, TRUE);
+	    			mon_wield_item(mtmp, TRUE);
 			    /*}*/
 			}             
 		    }
@@ -2127,6 +2128,7 @@ create_particular()
 			    	m_initweap(mtmp);
 				m_initinv(mtmp);
 	    			m_dowear(mtmp, TRUE);
+	    			mon_wield_item(mtmp, TRUE);
 			    /*}*/
 			    newsym(mtmp->mx, mtmp->my);
 			}             
@@ -2159,6 +2161,7 @@ create_particular()
 			    		m_initweap(mtmp);
 					m_initinv(mtmp);
 	    				m_dowear(mtmp, TRUE);
+	    				mon_wield_item(mtmp, TRUE);
 			        /*}*/
 			        newsym(mtmp->mx, mtmp->my);
 			    }

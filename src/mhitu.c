@@ -730,7 +730,9 @@ mattacku(mtmp)
 #ifdef REINCARNATION
 				if (!Is_rogue_level(&u.uz))
 #endif
-					if (thrwmu(mtmp))
+					if ((!select_hwep(mtmp) ||
+					     dist2(mtmp->mx, mtmp->my, mtmp->mux, mtmp->muy) > 8) &&
+					    thrwmu(mtmp))
 						res |= MM_MOVED;
 			} else {
 			    int hittmp = 0;
@@ -751,8 +753,8 @@ mattacku(mtmp)
 				    break;
 				}
 			    }
-			    if (!MON_WEP(mtmp) ||
-			        is_launcher(MON_WEP(mtmp))) {
+			    if ((!MON_WEP(mtmp)) ||
+			         (is_launcher(MON_WEP(mtmp)))) {
 			        /* implies we could not find a HTH weapon */
 				if (thrwmu(mtmp)) {
 				    res |= MM_MOVED;
