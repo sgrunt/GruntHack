@@ -1026,7 +1026,7 @@ int spellnum;
 	break;
     }
 
-    if (dmg) mdamageu(mtmp, NULL, dmg);
+    if (dmg) mdamageu(mtmp, attacktype_fordmg(mtmp, AT_MAGC, AD_SPEL), dmg);
 }
 
 STATIC_OVL
@@ -1211,7 +1211,7 @@ int spellnum;
 	break;
     }
 
-    if (dmg) mdamageu(mtmp, NULL, dmg);
+    if (dmg) mdamageu(mtmp, attacktype_fordmg(mtmp, AT_MAGC, AD_CLRC), dmg);
 }
 
 STATIC_DCL

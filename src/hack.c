@@ -1578,7 +1578,9 @@ stillinwater:;
 				x_monnam(mtmp, ARTICLE_A, "falling", 0, TRUE));
 			    dmg = d(4,6);
 			    if(Half_physical_damage) dmg = (dmg+1) / 2;
-			    mdamageu(mtmp, NULL, dmg);
+			    mdamageu(mtmp,
+			    	attacktype_fordmg(mtmp, AT_BITE, AD_PHYS),
+			    	dmg);
 			}
 			break;
 		    default:	/* monster surprises you. */
