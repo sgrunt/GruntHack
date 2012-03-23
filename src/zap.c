@@ -868,6 +868,7 @@ register struct obj *obj;
 	struct monst *shkp = (struct monst *)0;
 
 	if (obj->no_charge) return;
+	if (flags.mon_moving) return;
 
 	switch (obj->where) {
 	case OBJ_INVENT:
