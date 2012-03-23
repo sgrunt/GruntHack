@@ -1379,10 +1379,13 @@ struct obj *otmp;
     long age, retval = otmp->age;
     
     if ((otmp->otyp == CORPSE ||
-        (otmp->otyp == ROCK && otmp->corpsenm != 0)) && ON_ICE(otmp)) {
+        (otmp->otyp == ROCK && otmp->corpsenm != 0)) &&
+	 ((otmp->where == OBJ_CONTAINED &&
+	   otmp->ocontainer->otyp == ICE_BOX) || (ON_ICE(otmp)))) {
 	/* Adjust the age; must be same as obj_timer_checks() for off ice*/
 	age = monstermoves - otmp->age;
-	retval = otmp->age + (age / ROT_ICE_ADJUSTMENT);
+	retval = ON_ICE(otmp) ? otmp->age + (age / ROT_ICE_ADJUSTMENT)
+	                      : age;
 #ifdef DEBUG_EFFECTS
 	pline_The("%s age has ice modifications:otmp->age = %ld, returning %ld.",
 		s_suffix(doname(otmp)),otmp->age, retval);

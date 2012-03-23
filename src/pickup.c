@@ -1844,7 +1844,7 @@ register struct obj *obj;
 {
 	boolean floor_container = !carried(current_container);
 	boolean was_unpaid = FALSE;
-	char buf[BUFSZ];
+	char buf[BUFSZ], namebuf[BUFSZ];
 
 	if (!current_container) {
 		impossible("<in> no current_container?");
@@ -1925,6 +1925,8 @@ register struct obj *obj;
 		return 0;
 	}
 
+	Sprintf(namebuf, doname(obj));
+
 	freeinv(obj);
 
 	if (obj_is_burning(obj))	/* this used to be part of freeinv() */
@@ -1956,7 +1958,7 @@ register struct obj *obj;
 		/* explicitly mention what item is triggering the explosion */
 		pline(
 	      "As you put %s inside, you are blasted by a magical explosion!",
-		      doname(obj));
+		      namebuf);
 		/* did not actually insert obj yet */
 		if (was_unpaid) addtobill(obj, FALSE, FALSE, TRUE);
 		obfree(obj, (struct obj *)0);
@@ -1985,7 +1987,7 @@ register struct obj *obj;
 
 	if (current_container) {
 	    Strcpy(buf, the(xname(current_container)));
-	    You("put %s into %s.", doname(obj), buf);
+	    You("put %s into %s.", namebuf, buf);
 
 	    /* gold in container always needs to be added to credit */
 	    if (floor_container && obj->oclass == COIN_CLASS)
