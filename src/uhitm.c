@@ -27,6 +27,8 @@ static int dieroll;
 /* Used to flag attacks caused by Stormbringer's maliciousness. */
 static boolean override_confirmation = FALSE;
 
+static struct obj *orig_uwep = (struct obj *)0;
+
 extern const char *flash_types[]; /* from zap.c */
 
 #define PROJECTILE(obj)	((obj) && is_ammo(obj))
@@ -511,6 +513,7 @@ struct attack *uattk;
 	int x = u.ux + u.dx, y = u.uy + u.dy;
 
 	if(tmp > dieroll) exercise(A_DEX, TRUE);
+	orig_uwep = uwep;
 	malive = known_hitum(mon, uwep, &mhit, uattk);
 	(void) passive(mon, mhit, malive, AT_WEAP);
 	if (malive && u.twoweap && !override_confirmation &&
@@ -523,6 +526,7 @@ struct attack *uattk;
 			tmp += weapon_hit_bonus(uswapwep);
 		}
 		mhit = (tmp > (/*dieroll = */rnd(20)) || u.uswallow);
+		orig_uwep = uswapwep;
 		malive = known_hitum(mon, uswapwep, &mhit, uattk);
 		(void) passive(mon, mhit, malive, AT_WEAP);
 	}
@@ -2377,10 +2381,13 @@ use_weapon:
 		killer_format = KILLED_BY_AN;
 		rehumanize("suicidal attack");
 	    }
-	    if (sum[i] == 2)
+	    if (sum[i] == 2) {
+	        orig_uwep = wep;
 		return((boolean)passive(mon, 1, 0, mattk->aatyp));
 							/* defender dead */
+	    }
 	    else {
+	        orig_uwep = wep;
 		(void) passive(mon, sum[i], 1, mattk->aatyp);
 		nsum |= sum[i];
 	    }
@@ -2451,7 +2458,7 @@ uchar aatyp;
 		if (aatyp == AT_MAGC) protector = W_ARMG;
 
 		if (protector == 0L ||		/* no protection */
-			(protector == W_ARMG && !uarmg && !uwep) ||
+			(protector == W_ARMG && !uarmg && !orig_uwep) ||
 			(protector == W_ARMF && !uarmf) ||
 			(protector == W_ARMH && !uarmh) ||
 			(protector == (W_ARMC|W_ARMG) && (!uarmc || !uarmg))) {
