@@ -539,12 +539,12 @@ drinksink()
 			break;
 		case 4: do {
 				otmp = mkobj(POTION_CLASS, NO_MO_FLAGS);
-				if (otmp->otyp == POT_WATER) {
+				if (otmp && otmp->otyp == POT_WATER) {
 					obfree(otmp, (struct obj *)0);
 					otmp = (struct obj *) 0;
 				}
 #ifdef INVISIBLE_OBJECTS
-				if (otmp->oinvis)
+				if (otmp && otmp->oinvis)
 					otmp->oinvis = FALSE;
 #endif
 			} while(!otmp);
