@@ -674,6 +674,7 @@ unsigned trflags;
 	boolean already_seen = trap->tseen;
 	boolean webmsgok = (!(trflags & NOWEBMSG));
 	boolean forcebungle = (trflags & FORCEBUNGLE);
+	register struct monst *curmonstbak = curmonst;
 
 	nomul(0);
 
@@ -735,6 +736,7 @@ unsigned trflags;
 		if (u.usteed && !rn2(2) && steedintrap(trap, otmp)) /* nothing */;
 		else
 #endif
+		curmonst = (struct monst *)0;
 		if (thitu(8, dmgval(otmp, &youmonst), otmp, "arrow")) {
 		    obfree(otmp, (struct obj *)0);
 		} else {
@@ -747,6 +749,7 @@ unsigned trflags;
 		    stackobj(otmp);
 		    newsym(u.ux, u.uy);
 		}
+		curmonst = curmonstbak;
 		break;
 	    case DART_TRAP:
 		if (trap->once && trap->tseen && !rn2(15)) {
@@ -766,6 +769,7 @@ unsigned trflags;
 		if (u.usteed && !rn2(2) && steedintrap(trap, otmp)) /* nothing */;
 		else
 #endif
+		curmonst = (struct monst *)0;
 		if (thitu(7, dmgval(otmp, &youmonst), otmp, "little dart")) {
 		    if (otmp->opoisoned)
 			poisoned("dart", A_CON, "little dart", -10);
@@ -780,6 +784,7 @@ unsigned trflags;
 		    stackobj(otmp);
 		    newsym(u.ux, u.uy);
 		}
+		curmonst = curmonstbak;
 		break;
 	    case ROCKTRAP:
 		if (trap->once && trap->tseen && !rn2(15)) {
