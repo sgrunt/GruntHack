@@ -829,16 +829,12 @@ struct mkroom	*croom;
 	if (MON_AT(x,y) && enexto(&cc, x, y, pm))
 	    x = cc.x,  y = cc.y;
 
-	
-
 	if(m->align != -12)
-	    mtmp = mk_roamer(racemask ? &mons[PM_LICHEN] : pm,
-	                     Amask2align(amask), x, y, m->peaceful);
+	    mtmp = mk_roamer(pm, Amask2align(amask), x, y, m->peaceful);
 	else if(PM_ARCHEOLOGIST <= m->id && m->id <= PM_WIZARD)
 	    mtmp = mk_mplayer(pm, x, y, FALSE), racemask = 0;
 	else
-	    mtmp = makemon(racemask ? &mons[PM_LICHEN] : pm,
-	                   x, y, NO_MM_FLAGS);
+	    mtmp = makemon(pm, x, y, racemask ? NO_MINVENT : NO_MM_FLAGS);
 
 	if (mtmp) {
 	    if (racemask)

@@ -2059,7 +2059,7 @@ create_particular()
 		if (maketame) {
 		    if (racemask)
 		    {
-		        mtmp = makemon(&mons[PM_LICHEN], u.ux, u.uy, MM_EDOG|NO_MINVENT);
+		        mtmp = makemon(whichpm, u.ux, u.uy, MM_EDOG|NO_MINVENT);
 			if (mtmp)
 			{
 			    mtmp->mrace = mtmp->morigrace = racemask;
@@ -2104,8 +2104,7 @@ create_particular()
 		} else {
 		    if (racemask)
 		    {
-		        mtmp = makemon(&mons[PM_LICHEN], u.ux, u.uy,
-			               NO_MM_FLAGS);
+		        mtmp = makemon(whichpm, u.ux, u.uy, NO_MINVENT);
 			if (mtmp)
 			{
 			    mtmp->mrace = mtmp->morigrace = racemask;
@@ -2123,12 +2122,12 @@ create_particular()
 			    mtmp->mnum = which;
 	    		    mtmp->mhpmax = mtmp->mhp =
 				d((int)mtmp->m_lev, 8);
-			    if (is_mplayer(whichpm))
-			    {
+			    /*if (is_mplayer(whichpm))
+			    {*/
 			    	m_initweap(mtmp);
 				m_initinv(mtmp);
 	    			m_dowear(mtmp, TRUE);
-			    }
+			    /*}*/
 			    newsym(mtmp->mx, mtmp->my);
 			}             
 		    }
@@ -2137,8 +2136,8 @@ create_particular()
 		        if ((is_racial(whichpm) || is_were(whichpm))
 			    && racemask)
 			{
-		            mtmp = makemon(&mons[PM_LICHEN],
-			                   u.ux, u.uy, NO_MM_FLAGS);
+		            mtmp = makemon(whichpm, u.ux, u.uy,
+			                   NO_MINVENT);
 			    if (mtmp)
 			    {
 			        mtmp->mrace = mtmp->morigrace = racemask;
@@ -2155,12 +2154,12 @@ create_particular()
 			    	mtmp->mnum = which;
 	    		    	mtmp->mhpmax = mtmp->mhp =
 				    d((int)mtmp->m_lev, 8);
-			    	if (is_mplayer(whichpm))
-				{
+			    	/*if (is_mplayer(whichpm))
+				{*/
 			    		m_initweap(mtmp);
 					m_initinv(mtmp);
 	    				m_dowear(mtmp, TRUE);
-			        }
+			        /*}*/
 			        newsym(mtmp->mx, mtmp->my);
 			    }
 			}
