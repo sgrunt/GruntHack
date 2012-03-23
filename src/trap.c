@@ -4151,7 +4151,7 @@ register int bodypart;
     		struct rm *lev;
 		int tx = 0, ty = 0;
 		pline("As the door gives way, you %s the other doors seal%s.",
-			Blind ? "sense" : "seee",
+			Blind ? "sense" : "see",
 			Blind ? "ing" : "");
 		for (; ty < ROWNO; ty++) {
 			for (tx = 0; tx < COLNO; tx++) {
