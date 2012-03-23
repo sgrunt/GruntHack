@@ -290,6 +290,20 @@ mattackm(magr, mdef)
 		    magr->weapon_check = NEED_HTH_WEAPON;
 		    if (mon_wield_item(magr, FALSE) != 0) return(MM_MOVED);
 		}
+
+#ifdef TAME_RANGED_ATTACKS
+		if (!MON_WEP(magr) ||
+		    is_launcher(MON_WEP(magr))) {
+		    /* implies no melee weapon found */
+		    if (thrwmm(magr, mdef)) {
+		    	res[i] |= MM_MOVED;
+		        if (tmphp > mdef->mhp) res[i] |= MM_HIT;
+		        if (mdef->mhp < 1) res[i] |= MM_DEF_DIED;
+		        if (magr->mhp < 1) res[i] |= MM_AGR_DIED;
+			break;
+		    }
+		}
+#endif
 		possibly_unwield(magr, FALSE);
 		otmp = MON_WEP(magr);
 
