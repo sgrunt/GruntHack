@@ -1436,7 +1436,7 @@ register int	mmflags;
 	mtmp->m_id = flags.ident++;
 	if (!mtmp->m_id) mtmp->m_id = flags.ident++;	/* ident overflowed */
 	do {
-	    mtmp->mrace = (count == 0) ?
+	    mtmp->mrace = ((count == 0) && !In_mines(&u.uz)) ?
 	    	((toostrongrace(mtmp->morigdata, mtmp->mrace, maxmlev)) ?
 			weakest_race(ptr->mflags2) :
 			strongest_race(ptr->mflags2)) :
