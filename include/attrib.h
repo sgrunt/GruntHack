@@ -42,7 +42,8 @@ struct	attribs {
 #define ATTRMIN(x) (urace.attrmin[x])
 
 /* I'm not sure this belongs here.  However... */
-#define FUMBLED ((HFumbling & FROMOUTSIDE) || ((rn2(7) + 3) >= ACURR(A_DEX)))
+#define FUMBLED ((HFumbling & FROMOUTSIDE) || \
+                 (rn2(18) >= (ACURR(A_DEX)-3)*(ACURR(A_DEX)-3)))
 
 #endif /* ATTRIB_H */
 
