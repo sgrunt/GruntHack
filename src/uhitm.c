@@ -1101,7 +1101,7 @@ rock2:
 	}
 	if((mdat == &mons[PM_BLACK_PUDDING] || mdat == &mons[PM_BROWN_PUDDING])
 		   && obj && obj == uwep
-		   && objects[obj->otyp].oc_skill != WHACK 
+		   && objects[obj->otyp].oc_dir != WHACK 
 		   && mon->mhp > 1 && !thrown && !mon->mcan
 		   /* && !destroyed  -- guaranteed by mhp > 1 */ ) {
 		struct monst *mtmp2;

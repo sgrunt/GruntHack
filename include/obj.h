@@ -185,7 +185,7 @@ struct obj {
 			 objects[otmp->otyp].oc_skill <= -P_BOW)
 #else
 #define is_poisonable(otmp)     (otmp->oclass == WEAPON_CLASS && \
-                                 objects[otmp->otyp].oc_skill != WHACK)
+                                 objects[otmp->otyp].oc_dir != WHACK)
 #endif
 #define uslinging()	(uwep && objects[uwep->otyp].oc_skill == P_SLING)
 
