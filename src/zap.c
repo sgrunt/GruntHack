@@ -4272,6 +4272,7 @@ int osym, dmgtyp;
 	long i, cnt, quan;
 	int dindx;
 	boolean vis;
+	const char *mult;
 
 	if (mtmp == &youmonst) {	/* this simplifies artifact_hit() */
 	    destroy_item(osym, dmgtyp);
@@ -4350,8 +4351,11 @@ int osym, dmgtyp;
 		    if(!rn2(3)) cnt++;
 
 		if(!cnt) continue;
-		if (vis) pline("%s %s %s!",
-			s_suffix(Monnam(mtmp)), xname(obj),
+		if(cnt == quan)	mult = "";
+		else	mult = (cnt == 1L) ? "One of " : "Some of ";
+		if (vis) pline("%s%s %s %s!", mult,
+			s_suffix((cnt == quan) ? Monnam(mtmp) : mon_nam(mtmp)),
+			xname(obj),
 			(cnt > 1L) ? destroy_strings[dindx*3 + 1]
 				  : destroy_strings[dindx*3]);
 		for(i = 0; i < cnt; i++) m_useup(mtmp, obj);
