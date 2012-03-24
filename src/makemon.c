@@ -1452,6 +1452,7 @@ register int	mmflags;
 	        return (struct monst *)0;
 	    }
 	} while (count-- &&
+	         (!always_peaceful(ptr)) &&
 	         (is_racial(ptr) || is_were(ptr)) &&
 	         (toostrongrace(mtmp->morigdata, mtmp->mrace, maxmlev) ||
 	          tooweakrace(mtmp->morigdata, mtmp->mrace, minmlev)));
