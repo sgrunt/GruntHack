@@ -191,11 +191,14 @@ register struct monst *mon;
 		           ? select_rwep(mon) : (struct obj *)0,
 		   *rwep;
 	boolean item1 = FALSE, item2 = FALSE;
+	boolean intelligent = TRUE;
 
 	rwep = attacktype(mon->data, AT_WEAP) ? propellor : &zeroobj;
 
-	if (is_animal(mon->data) || mindless(mon->data))
+	if (is_animal(mon->data) || mindless(mon->data)) {
+		intelligent = FALSE;
 		item1 = item2 = TRUE;
+	}
 	if (!tunnels(mon->data) || !needspick(mon->data))
 		item1 = TRUE;
 	for(obj = mon->minvent; obj; obj = obj->nobj) {
@@ -208,14 +211,16 @@ register struct monst *mon;
 			item2 = TRUE;
 			continue;
 		}
-		if (!obj->owornmask && obj != wep && obj != rwep
+		if (!obj->owornmask && obj != wep &&
+		    (!intelligent ||
+		    (obj != rwep
 		    && obj != proj && obj != hwep
 		    && !would_prefer_hwep(mon, obj) /*cursed item in hand?*/
 		    && !would_prefer_rwep(mon, obj)
 		    && ((rwep != &zeroobj) ||
 		        (!is_ammo(obj) && !is_launcher(obj)))
 		    && (rwep == &zeroobj || !ammo_and_launcher(obj, rwep))
-		    && !could_use_item(mon, obj, TRUE))
+		    && !could_use_item(mon, obj, TRUE))))
 		    return obj;
 	}
 	return (struct obj *)0;
