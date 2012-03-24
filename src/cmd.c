@@ -513,6 +513,10 @@ extcmd_via_menu()	/* here after # - now show pick-list of possible commands */
 STATIC_PTR int
 domonability(VOID_ARGS)
 {
+	if (!Upolyd) {
+	    You("don't have a special ability in your normal form!");
+	    return 0;
+	}
 	if (can_breathe(youmonst.data)) return dobreathe();
 	else if (attacktype(youmonst.data, AT_SPIT)) return dospit();
 	else if (attacktype(youmonst.data, AT_MAGC))
@@ -538,9 +542,8 @@ domonability(VOID_ARGS)
 	    if(u.uburied)
 		pline("Unfortunately sound does not carry well through rock.");
 	    else aggravate();
-	} else if (Upolyd)
+	} else
 		pline("Any special ability you may have is purely reflexive.");
-	else You("don't have a special ability in your normal form!");
 	return 0;
 }
 
