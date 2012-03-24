@@ -78,20 +78,52 @@ extern NEARDATA struct permonst
 	/* mons[SPECIAL_PM] through mons[NUMMONS-1], inclusive, are
 	   never generated randomly and cannot be polymorphed into */
 
-#define race_lev_mod(racemask)  ((racemask & M2_KOBOLD)          ? -3 : \
-                                 (racemask & (M2_GNOME|M2_ORC))  ? -2 : \
-                                 (racemask & (M2_DWARF|M2_ELF))  ? -1 : \
-				 (racemask & M2_HUMAN)           ?  0 : \
-				 (racemask & M2_OGRE)            ?  1 : \
-                                 (racemask & M2_ETTIN)           ?  2 : \
-                                 (racemask & M2_GIANT)           ?  3 : 0)
+#define race_lev_mod(racemask)  (((racemask) & M2_KOBOLD)          ? -3 : \
+                                 ((racemask) & (M2_GNOME|M2_ORC))  ? -2 : \
+                                 ((racemask) & (M2_DWARF|M2_ELF))  ? -1 : \
+				 ((racemask) & M2_HUMAN)           ?  0 : \
+				 ((racemask) & M2_OGRE)            ?  1 : \
+                                 ((racemask) & M2_ETTIN)           ?  2 : \
+                                 ((racemask) & M2_GIANT)           ?  3 : 0)
 
-#define race_lev_mod2(racemask) ((racemask & M2_GIANT)          ?  3 : \
-                                 (racemask & M2_ETTIN)          ?  2 : \
-				 (racemask & M2_OGRE)           ?  1 : \
-				 (racemask & M2_HUMAN)          ?  0 : \
-                                 (racemask & (M2_DWARF|M2_ELF)) ? -1 : \
-                                 (racemask & (M2_GNOME|M2_ORC)) ? -2 : \
-                                 (racemask & M2_KOBOLD)         ? -3 : 0)
+#define race_lev_mod2(racemask) (((racemask) & M2_GIANT)          ?  3 : \
+                                 ((racemask) & M2_ETTIN)          ?  2 : \
+				 ((racemask) & M2_OGRE)           ?  1 : \
+				 ((racemask) & M2_HUMAN)          ?  0 : \
+                                 ((racemask) & (M2_DWARF|M2_ELF)) ? -1 : \
+                                 ((racemask) & (M2_GNOME|M2_ORC)) ? -2 : \
+                                 ((racemask) & M2_KOBOLD)         ? -3 : 0)
+
+#define weakest_race(racemask) \
+				((((racemask) & M2_KOBOLD))	  ? M2_KOBOLD : \
+				(((racemask) & M2_GNOME) && \
+				 (!((racemask) & M2_ORC) || rn2(2))) \
+				 				  ? M2_GNOME : \
+				(((racemask) & M2_ORC))		  ? M2_ORC : \
+				(((racemask) & M2_DWARF) && \
+				 (!((racemask) & M2_ELF) || rn2(2))) \
+				 				  ? M2_DWARF : \
+				(((racemask) & M2_ELF))		  ? M2_ELF : \
+				(((racemask) & M2_HUMAN))	  ? M2_HUMAN : \
+				(((racemask) & M2_OGRE))	  ? M2_OGRE : \
+				(((racemask) & M2_ETTIN))	  ? M2_ETTIN : \
+				(((racemask) & M2_GIANT))	  ? M2_GIANT : \
+								    0)
+#define strongest_race(racemask) \
+				((((racemask) & M2_GIANT))	  ? M2_GIANT : \
+				(((racemask) & M2_ETTIN))	  ? M2_ETTIN : \
+				(((racemask) & M2_OGRE))	  ? M2_OGRE : \
+				(((racemask) & M2_HUMAN))	  ? M2_HUMAN : \
+				(((racemask) & M2_DWARF) && \
+				 (!((racemask) & M2_ELF) || rn2(2))) \
+				 				  ? M2_DWARF : \
+				(((racemask) & M2_ELF))		  ? M2_ELF : \
+				(((racemask) & M2_GNOME) && \
+				 (!((racemask) & M2_ORC) || rn2(2))) \
+				 				  ? M2_GNOME : \
+				(((racemask) & M2_ORC))		  ? M2_ORC : \
+				(((racemask) & M2_KOBOLD))	  ? M2_KOBOLD : \
+								    0)
+                                 
 
 #endif /* PERMONST_H */

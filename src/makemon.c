@@ -1436,7 +1436,11 @@ register int	mmflags;
 	mtmp->m_id = flags.ident++;
 	if (!mtmp->m_id) mtmp->m_id = flags.ident++;	/* ident overflowed */
 	do {
-	    mtmp->mrace = 0;
+	    mtmp->mrace = (count == 0) ?
+	    	((toostrongrace(mtmp->morigdata, mtmp->mrace, maxmlev)) ?
+			weakest_race(ptr->mflags2) :
+			strongest_race(ptr->mflags2)) :
+			0;
 	    set_mon_data(mtmp, ptr, 0);
 	    mtmp->morigdata =
 	        (ptr == &mons[PM_WERERAT])    ? PM_HUMAN_WERERAT :
