@@ -1014,6 +1014,24 @@ boolean suppress_impossible;
 		goto found_xy;
 	}
 
+	if (control_teleport(mtmp->data)) {
+	    coord pos;
+	    if (is_covetous(mtmp->data)) {
+	        x = STRAT_GOALX(mtmp->mstrategy);
+	        y = STRAT_GOALY(mtmp->mstrategy);
+	    } else {
+	        /* at time of writing, this applies only to tengu */
+	        x = u.ux;
+		y = u.uy;
+	    }
+	    if (enexto(&pos, x, y, mtmp->data)) {
+	        x = pos.x;
+		y = pos.y;
+	    }
+	    if (goodpos(x, y, mtmp, 0))
+	        goto found_xy;
+	}
+
 	trycount = 0;
 	do {
 	    x = rn1(COLNO-3,2);
