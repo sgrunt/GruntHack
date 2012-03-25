@@ -939,6 +939,18 @@ mon_tele:
 		return 2;
 	case MUSE_SPE_TELEPORT_AWAY:
 	case MUSE_WAN_TELEPORTATION:
+		if (!mtmp->mtarget &&
+		    !mfind_target(mtmp)) {
+		    impossible(
+		        "trying to teleport someone away with no target?");
+		    return 0;
+		}
+		tbx = (mtmp->mtarget == &youmonst)
+		    ? (mtmp->mux - mtmp->mx)
+		    : (mtmp->mtarget->mx - mtmp->mx);
+		tby = (mtmp->mtarget == &youmonst)
+		    ? (mtmp->muy - mtmp->my)
+		    : (mtmp->mtarget->my - mtmp->my);
 		if (otmp) {
 			zap_oseen = oseen;
 			mzapmsg(mtmp, otmp, FALSE);
@@ -970,6 +982,18 @@ mon_tele:
 		return 2;
 	case MUSE_SPE_POLYMORPH:
 	case MUSE_WAN_POLYMORPH:
+		if (!mtmp->mtarget &&
+		    !mfind_target(mtmp)) {
+		    impossible(
+		        "trying to teleport someone away with no target?");
+		    return 0;
+		}
+		tbx = (mtmp->mtarget == &youmonst)
+		    ? (mtmp->mux - mtmp->mx)
+		    : (mtmp->mtarget->mx - mtmp->mx);
+		tby = (mtmp->mtarget == &youmonst)
+		    ? (mtmp->muy - mtmp->my)
+		    : (mtmp->mtarget->my - mtmp->my);
 		if (otmp) {
 			zap_oseen = oseen;
 			mzapmsg(mtmp, otmp, FALSE);
@@ -3031,7 +3055,7 @@ struct obj *obj;
 	    if (typ == WAN_DIGGING)
 		return (boolean)(!levitating(mon));
 	    if (typ == WAN_POLYMORPH)
-		return (boolean)(monstr[monsndx(mon->data)] < 6);
+		return TRUE; /*(boolean)(monstr[monsndx(mon->data)] < 6);*/
 	    if (objects[typ].oc_dir == RAY ||
 		    typ == WAN_STRIKING ||
 		    typ == WAN_TELEPORTATION ||

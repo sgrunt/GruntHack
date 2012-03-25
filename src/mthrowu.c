@@ -762,7 +762,11 @@ struct monst *mtmp;
                      gy = STRAT_GOALY(mtmp->mstrategy);
         register struct monst *mtmp2 = m_at(gx, gy);
 	if (mtmp2 && mlined_up(mtmp, mtmp2, FALSE))
+	{
+	    tbx = (mtmp2->mx - mtmp->mx);
+	    tby = (mtmp2->my - mtmp->my);
 	    return mtmp2;
+	}
 	
 #if 0
 	if (!is_mplayer(mtmp->data)/* || !(mtmp->mstrategy & STRAT_NONE)*/)
@@ -775,6 +779,8 @@ struct monst *mtmp;
 	    lined_up(mtmp)) {
 	    	mtmp->mtarget = &youmonst;
 		mtmp->mtarget_id = youmonst.m_id;
+	        tbx = (mtmp->mux - mtmp->mx);
+	        tby = (mtmp->muy - mtmp->my);
         	return &youmonst;  /* kludge - attack the player first
 				      if possible */
 	}
@@ -784,7 +790,10 @@ struct monst *mtmp;
 		    diry[dir] == sgn(gy-mtmp->my))
 		    	break;
 
-	if (dir == 8) return 0;
+	if (dir == 8) {
+	    tbx = tby = 0;
+	    return 0;
+	}
 
 	origdir = dir;
     } else {
@@ -795,12 +804,18 @@ struct monst *mtmp;
 	    ((!mtmp->mtame && !mtmp->mpeaceful) ||
 	     (sgn(mtmp->mtarget->mx - mtmp->mx) != sgn(u.ux - mtmp->mx)) ||
 	     (sgn(mtmp->mtarget->my - mtmp->my) != sgn(u.uy - mtmp->my))))
+	     {
+	        tbx = (mtmp->mtarget->mx - mtmp->mx);
+	        tby = (mtmp->mtarget->my - mtmp->my);
 		return mtmp->mtarget; /* don't attack if player is in path 
 					 and monster is not hostile */
+	     }
 
     	if (!mtmp->mpeaceful && lined_up(mtmp)) {
 	    	mtmp->mtarget = &youmonst;
 		mtmp->mtarget_id = youmonst.m_id;
+	        tbx = (mtmp->mux - mtmp->mx);
+	        tby = (mtmp->muy - mtmp->my);
         	return &youmonst;  /* kludge - attack the player first
 				      if possible */
 	}
@@ -810,7 +825,7 @@ struct monst *mtmp;
     {
         if (origdir < 0) origdir = dir;
 
-	mret = oldmret = (struct monst *)0;
+	mret = (struct monst *)0;
 
 	x = mtmp->mx;
 	y = mtmp->my;
@@ -820,9 +835,6 @@ struct monst *mtmp;
 	{
 	    x += dx;
 	    y += dy;
-
-	    tbx = (x - mtmp->mx);
-	    tby = (y - mtmp->my);
 
 	    if (!isok(x, y) || !ZAP_POS(levl[x][y].typ) || closed_door(x, y))
 	        break; /* off the map or otherwise bad */
@@ -884,6 +896,8 @@ struct monst *mtmp;
     if (mret != (struct monst *)0) {
         mtmp->mtarget = mret;
 	mtmp->mtarget_id = mret->m_id;
+	tbx = (mret->mx - mtmp->mx);
+	tby = (mret->my - mtmp->my);
         return mret; /* should be the strongest monster that's not behind
 	                a friendly */
     }
