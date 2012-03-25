@@ -484,7 +484,8 @@ struct monst *mtmp;
 	int fraction;
 	
 	/* SPECIAL CASE: fleeing monster with some object of importance */
-	if (is_covetous(mtmp->data))
+	if (is_covetous(mtmp->data) &&
+	    !(mtmp->mstrategy & STRAT_HEAL))
 	{
 	    register int gx = STRAT_GOALX(mtmp->mstrategy),
 	                 gy = STRAT_GOALY(mtmp->mstrategy);

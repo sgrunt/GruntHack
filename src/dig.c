@@ -1261,6 +1261,7 @@ int dy;
 	int zx, zy, digdepth;
 	boolean shopdoor, shopwall, maze_dig;
 	boolean yours = (mon == &youmonst);
+	int rocks = 0, doors = 0;
 	/*
 	 * Original effect (approximately):
 	 * from CORR: dig until we pierce a wall
@@ -1356,6 +1357,7 @@ int dy;
 	    if (cansee(zx, zy))
 	    	delay_output();	/* wait a little bit */
 	    if (closed_door(zx, zy) || room->typ == SDOOR) {
+	        doors++;
 		if (*in_rooms(zx,zy,SHOPBASE)) {
 		    add_damage(zx, zy, yours ? 400L : 0L);
 		    shopdoor = yours;
@@ -1376,6 +1378,7 @@ int dy;
 			    add_damage(zx, zy, 200L);
 			    shopwall = yours;
 			}
+			rocks++;
 			room->typ = ROOM;
 			unblock_point(zx,zy); /* vision */
 		    } else if (!Blind && cansee(zx-dx,zy-dy))
@@ -1383,6 +1386,7 @@ int dy;
 		    break;
 		} else if (IS_TREE(room->typ)) { /* check trees before stone */
 		    if (!(room->wall_info & W_NONDIGGABLE)) {
+		        rocks++;
 			room->typ = ROOM;
 			unblock_point(zx,zy); /* vision */
 		    } else if (!Blind && cansee(zx-dx,zy-dy))
@@ -1390,6 +1394,7 @@ int dy;
 		    break;
 		} else if (room->typ == STONE || room->typ == SCORR) {
 		    if (!(room->wall_info & W_NONDIGGABLE)) {
+		        rocks++;
 			room->typ = CORR;
 			unblock_point(zx,zy); /* vision */
 		    } else if (!Blind && cansee(zx-dx,zy-dy))
@@ -1398,6 +1403,7 @@ int dy;
 		}
 	    } else if (IS_ROCK(room->typ)) {
 		if (!may_dig(zx,zy)) break;
+		rocks++;
 		if (IS_WALL(room->typ) || room->typ == SDOOR) {
 		    if (*in_rooms(zx,zy,SHOPBASE)) {
 			add_damage(zx, zy, yours ? 200L : 0L);
@@ -1425,8 +1431,10 @@ int dy;
 	    zy += (yours) ? u.dy : dy;
 	} /* while */
 	tmp_at(DISP_END,0);	/* closing call */
-	if (!yours && flags.soundok && flags.verbose/* && !rn2(5)*/)
+	if (!yours && flags.soundok && flags.verbose && rocks)
 	    You_hear("crashing rock.");
+	if (!yours && flags.verbose && doors)
+	    You_feel("an unexpected draft.");
 	if (shopdoor || shopwall)
 	    pay_for_damage(shopdoor ? "destroy" : "dig into", FALSE);
 	return;

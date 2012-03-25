@@ -1052,8 +1052,34 @@ actualmove:
 	     dist2(mtmp->mx, mtmp->my, mtmp->mux, mtmp->muy) <= 8))
 	    can_tunnel = FALSE;
 
+
 	nix = omx;
 	niy = omy;
+	if (is_covetous(ptr) && !mtmp->ispriest &&
+	    !mindless(ptr) && !is_animal(ptr) &&
+	    ptr != &mons[PM_GHOST] &&
+	    (gx != mtmp->mx || gy != mtmp->my)) {
+	    boolean havepos = FALSE;
+	    long tmpinfo;
+	    schar dx, dy;
+	    if (findtravelpath(mtmp, gx, gy, &dx, &dy, &tmpinfo, FALSE))
+	    {
+	        havepos = TRUE;
+	    }
+	    else if (findtravelpath(mtmp, gx, gy, &dx, &dy, &tmpinfo, TRUE))
+	    {
+	        havepos = TRUE;
+	    }
+
+            if (havepos) {
+	        info[0] = tmpinfo;
+		nix = mtmp->mx + dx;
+		niy = mtmp->my + dy;
+		chi = 0;
+		mmoved = 1;
+	    }
+	}
+	if (!mmoved) {
 	flag = 0L;
 	if (mtmp->mpeaceful && (!Conflict || resist(mtmp, RING_CLASS, 0, 0)))
 	    flag |= (ALLOW_SANCT | ALLOW_SSM);
@@ -1116,6 +1142,7 @@ actualmove:
 		}
 	    nxti:	;
 	    }
+	}
 	}
 
 	if(mmoved) {

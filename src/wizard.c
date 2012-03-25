@@ -465,21 +465,23 @@ tactics(mtmp)
 		}
 		if(where == STRAT_GROUND) {
 		    if(!MON_AT(tx, ty) || (mtmp->mx == tx && mtmp->my == ty)) {
-			/* teleport to it and pick it up */
-		        if (((!can_teleport(mtmp->data) || 
-		              !control_teleport(mtmp->data)) &&
-			      (mtmp->mx != tx || mtmp->my != ty)) ||
-			      (level.flags.noteleport &&
-			       (mtmp->mtrapseen & (1<<TELEP_TRAP-1))))
-			    return(0);
+		        if (mtmp->mx != tx || mtmp->my != ty) {
+			    /* teleport to it and pick it up */
+		            if (((!can_teleport(mtmp->data) || 
+		                  !control_teleport(mtmp->data)) &&
+			          (mtmp->mx != tx || mtmp->my != ty)) ||
+			          (level.flags.noteleport &&
+			           (mtmp->mtrapseen & (1<<TELEP_TRAP-1))))
+			        return(0);
 		        
-			if (tele_restrict(mtmp)) {
-		            if (level.flags.noteleport)
-			        mtmp->mtrapseen |= (1 << (TELEP_TRAP-1));
-			    return(1);
-			}
+			    if (tele_restrict(mtmp)) {
+		                if (level.flags.noteleport)
+			            mtmp->mtrapseen |= (1 << (TELEP_TRAP-1));
+			        return(1);
+			    }
 
-			rloc_to(mtmp, tx, ty);	/* clean old pos */
+			    rloc_to(mtmp, tx, ty);	/* clean old pos */
+			}
 
 			if ((otmp = on_ground(which_arti(targ))) != 0) {
 			    if (cansee(mtmp->mx, mtmp->my))

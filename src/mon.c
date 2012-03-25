@@ -1356,30 +1356,26 @@ struct obj *otmp;
 	return(TRUE);
 }
 
-/* return number of acceptable neighbour positions */
-int
-mfndpos(mon, poss, info, flag)
-	register struct monst *mon;
-	coord *poss;	/* coord poss[9] */
-	long *info;	/* long info[9] */
-	long flag;
+boolean
+mcheckpos(mon, x, y, nx, ny, info, flag, wantpool)
+struct monst *mon;
+register xchar x, y;
+register xchar nx, ny;
+long *info;
+long flag;
+boolean wantpool;
 {
 	struct permonst *mdat = mon->data;
 	struct obj *otmp;
-	register xchar x,y,nx,ny;
-	register int cnt = 0;
 	register uchar ntyp;
 	uchar nowtyp;
-	boolean wantpool,poolok,lavaok,nodiag;
+	boolean poolok,lavaok,nodiag;
 	boolean rockok = FALSE, treeok = FALSE, thrudoor;
-	int maxx, maxy;
-
-	x = mon->mx;
-	y = mon->my;
+    	int dispx, dispy;
+	
 	nowtyp = levl[x][y].typ;
 
 	nodiag = (mdat == &mons[PM_GRID_BUG]);
-	wantpool = mdat->mlet == S_EEL;
 	poolok = is_flyer(mdat) || is_clinger(mdat) ||
 		 (is_swimmer(mdat) && !wantpool) || 
 		 levitating(mon) || waterwalking(mon);
@@ -1414,161 +1410,182 @@ mfndpos(mon, poss, info, flag)
 	    thrudoor |= rockok || treeok;
 	}
 
-nexttry:	/* eels prefer the water, but if there is no water nearby,
-		   they will crawl over land */
+        if(nx == x && ny == y) return FALSE;
+        if(IS_ROCK(ntyp = levl[nx][ny].typ) &&
+           !((flag & ALLOW_WALL) && may_passwall(nx,ny)) &&
+           !((IS_TREE(ntyp) ? treeok : rockok) && may_dig(nx,ny))) return FALSE;
+        /* KMH -- Added iron bars */
+        if (ntyp == IRONBARS && !(flag & ALLOW_BARS)) return FALSE;
+        if(IS_DOOR(ntyp) && !amorphous(mdat) &&
+           (((In_sokoban(&u.uz) && !!(levl[nx][ny].doormask & D_TRAPPED))) ||
+            (((levl[nx][ny].doormask & D_CLOSED && !(flag & OPENDOOR)) ||
+    	 (levl[nx][ny].doormask & D_LOCKED && !(flag & UNLOCKDOOR))) &&
+    	 !thrudoor))) return FALSE;
+        if(nx != x && ny != y && (nodiag ||
+#ifdef REINCARNATION
+           ((IS_DOOR(nowtyp) &&
+    	 ((levl[x][y].doormask & ~D_BROKEN) || Is_rogue_level(&u.uz))) ||
+    	(IS_DOOR(ntyp) &&
+    	 ((levl[nx][ny].doormask & ~D_BROKEN) || Is_rogue_level(&u.uz))))
+#else
+           ((IS_DOOR(nowtyp) && (levl[x][y].doormask & ~D_BROKEN)) ||
+    	(IS_DOOR(ntyp) && (levl[nx][ny].doormask & ~D_BROKEN)))
+#endif
+           ))
+    	return FALSE;
+        if(!(((is_pool(nx,ny) == wantpool) || poolok) &&
+             (lavaok || !is_lava(nx,ny)))) return FALSE;
+
+    	boolean monseeu = (mon->mcansee && (!Invis || sees_invis(mon)));
+    	boolean checkobj = OBJ_AT(nx,ny);
+
+    	/* Displacement also displaces the Elbereth/scare monster,
+    	 * as long as you are visible.
+    	 */
+    	if(Displaced && monseeu && (mon->mux==nx) && (mon->muy==ny)) {
+    	    dispx = u.ux;
+    	    dispy = u.uy;
+    	} else {
+    	    dispx = nx;
+    	    dispy = ny;
+    	}
+
+    	if ((checkobj || Displaced) && onscary(dispx, dispy, mon)) {
+    	    if(!(flag & ALLOW_SSM)) return FALSE;
+    	    *info |= ALLOW_SSM;
+    	}
+    	if((nx == u.ux && ny == u.uy) ||
+    	   (nx == mon->mux && ny == mon->muy)) {
+    		if (nx == u.ux && ny == u.uy) {
+    			/* If it's right next to you, it found you,
+    			 * displaced or no.  We must set mux and muy
+    			 * right now, so when we return we can tell
+    			 * that the ALLOW_U means to attack _you_ and
+    			 * not the image.
+    			 */
+    			mon->mux = u.ux;
+    			mon->muy = u.uy;
+    		}
+    		if(!(flag & ALLOW_U)) return FALSE;
+    		*info |= ALLOW_U;
+    	} else {
+    		if(MON_AT(nx, ny)) {
+    			struct monst *mtmp2 = m_at(nx, ny);
+    			long mmflag = flag | mm_aggression(mon, mtmp2);
+
+    			if (!(mmflag & ALLOW_M)) return FALSE;
+    			*info |= ALLOW_M;
+    			if (mtmp2->mtame) {
+    				if (!(mmflag & ALLOW_TM)) return FALSE;
+    				*info |= ALLOW_TM;
+    			}
+    		}
+    		/* Note: ALLOW_SANCT only prevents movement, not */
+    		/* attack, into a temple. */
+    		if(level.flags.has_temple &&
+    		   *in_rooms(nx, ny, TEMPLE) &&
+    		   !*in_rooms(x, y, TEMPLE) &&
+    		   in_your_sanctuary((struct monst *)0, nx, ny)) {
+    			if(!(flag & ALLOW_SANCT)) return FALSE;
+    			*info |= ALLOW_SANCT;
+    		}
+    	}
+    	if(checkobj && sobj_at(CLOVE_OF_GARLIC, nx, ny)) {
+    		if(flag & NOGARLIC) return FALSE;
+    		*info |= NOGARLIC;
+    	}
+    	if(checkobj && sobj_at(BOULDER, nx, ny)) {
+    		if(!(flag & ALLOW_ROCK)) return FALSE;
+    		*info |= ALLOW_ROCK;
+    	}
+    	if (monseeu && onlineu(nx,ny)) {
+    		if(flag & NOTONL) return FALSE;
+    		*info |= NOTONL;
+    	}
+    	if (nx != x && ny != y && bad_rock(mdat, x, ny)
+    		    && bad_rock(mdat, nx, y)
+    		    && (bigmonst(mdat) || (curr_mon_load(mon) > 600)))
+    		return FALSE;
+    	/* The monster avoids a particular type of trap if it's familiar
+    	 * with the trap type.  Pets get ALLOW_TRAPS and checking is
+    	 * done in dogmove.c.  In either case, "harmless" traps are
+    	 * neither avoided nor marked in info[].
+    	 */
+    	{ register struct trap *ttmp = t_at(nx, ny);
+    	    if(ttmp) {
+    		if(ttmp->ttyp >= TRAPNUM || ttmp->ttyp == 0)  {
+impossible("A monster looked at a very strange trap of type %d.", ttmp->ttyp);
+    		    return FALSE;
+    		}
+    		if ((ttmp->ttyp != RUST_TRAP
+    				|| mdat == &mons[PM_IRON_GOLEM])
+    			&& ttmp->ttyp != STATUE_TRAP
+    			&& ((ttmp->ttyp != PIT
+    			    && ttmp->ttyp != SPIKED_PIT
+    			    && ttmp->ttyp != TRAPDOOR
+    			    && ttmp->ttyp != HOLE)
+    			      || (!is_flyer(mdat)
+    			    && !levitating(mon)
+    			    && !is_clinger(mdat))
+    			      || In_sokoban(&u.uz))
+    			&& (ttmp->ttyp != SLP_GAS_TRAP ||
+    			    !resists_sleep(mon))
+    			&& (ttmp->ttyp != BEAR_TRAP ||
+    			    (mdat->msize > MZ_SMALL &&
+    			     !amorphous(mdat) && !is_flyer(mdat)))
+    			&& (ttmp->ttyp != FIRE_TRAP ||
+    			    !resists_fire(mon))
+    			&& (ttmp->ttyp != SQKY_BOARD || !is_flyer(mdat))
+    			&& (ttmp->ttyp != WEB || (!amorphous(mdat) &&
+    			    !webmaker(mdat)))
+    		) {
+    		    if (!(flag & ALLOW_TRAPS)) {
+    			if (mon->mtrapseen & (1L << (ttmp->ttyp - 1)))
+    			    return FALSE;
+    		    }
+    		    *info |= ALLOW_TRAPS;
+    		}
+    	    }
+    	}
+    	return TRUE;
+}
+
+/* return number of acceptable neighbour positions */
+int
+mfndpos(mon, poss, info, flag)
+	register struct monst *mon;
+	coord *poss;	/* coord poss[9] */
+	long *info;	/* long info[9] */
+	long flag;
+{
+	register int cnt = 0;
+	boolean wantpool = mon->data->mlet == S_EEL;
+	coord tmpposs;
+	long tmpinfo = 0;
+	int x = mon->mx, y = mon->my;
+	register xchar nx, ny;
+	int maxx, maxy;
+
 	if(mon->mconf) {
 		flag |= ALLOW_ALL;
 		flag &= ~NOTONL;
 	}
 	if(!mon->mcansee)
 		flag |= ALLOW_SSM;
+
+nexttry:
 	maxx = min(x+1,COLNO-1);
 	maxy = min(y+1,ROWNO-1);
 	for(nx = max(1,x-1); nx <= maxx; nx++)
 	  for(ny = max(0,y-1); ny <= maxy; ny++) {
-	    if(nx == x && ny == y) continue;
-	    if(IS_ROCK(ntyp = levl[nx][ny].typ) &&
-	       !((flag & ALLOW_WALL) && may_passwall(nx,ny)) &&
-	       !((IS_TREE(ntyp) ? treeok : rockok) && may_dig(nx,ny))) continue;
-	    /* KMH -- Added iron bars */
-	    if (ntyp == IRONBARS && !(flag & ALLOW_BARS)) continue;
-	    if(IS_DOOR(ntyp) && !amorphous(mdat) &&
-	       (((In_sokoban(&u.uz) && !!(levl[nx][ny].doormask & D_TRAPPED))) ||
-	        ((levl[nx][ny].doormask & D_CLOSED && !(flag & OPENDOOR)) ||
-		 (levl[nx][ny].doormask & D_LOCKED && !(flag & UNLOCKDOOR)) &&
-		 !thrudoor))) continue;
-	    if(nx != x && ny != y && (nodiag ||
-#ifdef REINCARNATION
-	       ((IS_DOOR(nowtyp) &&
-		 ((levl[x][y].doormask & ~D_BROKEN) || Is_rogue_level(&u.uz))) ||
-		(IS_DOOR(ntyp) &&
-		 ((levl[nx][ny].doormask & ~D_BROKEN) || Is_rogue_level(&u.uz))))
-#else
-	       ((IS_DOOR(nowtyp) && (levl[x][y].doormask & ~D_BROKEN)) ||
-		(IS_DOOR(ntyp) && (levl[nx][ny].doormask & ~D_BROKEN)))
-#endif
-	       ))
-		continue;
-	    if((is_pool(nx,ny) == wantpool || poolok) &&
-	       (lavaok || !is_lava(nx,ny))) {
-		int dispx, dispy;
-		boolean monseeu = (mon->mcansee && (!Invis || sees_invis(mon)));
-		boolean checkobj = OBJ_AT(nx,ny);
-
-		/* Displacement also displaces the Elbereth/scare monster,
-		 * as long as you are visible.
-		 */
-		if(Displaced && monseeu && (mon->mux==nx) && (mon->muy==ny)) {
-		    dispx = u.ux;
-		    dispy = u.uy;
-		} else {
-		    dispx = nx;
-		    dispy = ny;
+		info[cnt] = 0L;
+	        if (nx == x && ny == y) continue;
+	  	if (mcheckpos(mon, x, y, nx, ny, &info[cnt], flag, wantpool)) {
+		    poss[cnt].x = nx;
+		    poss[cnt].y = ny;
+ 		    cnt++;
 		}
-
-		info[cnt] = 0;
-		if ((checkobj || Displaced) && onscary(dispx, dispy, mon)) {
-		    if(!(flag & ALLOW_SSM)) continue;
-		    info[cnt] |= ALLOW_SSM;
-		}
-		if((nx == u.ux && ny == u.uy) ||
-		   (nx == mon->mux && ny == mon->muy)) {
-			if (nx == u.ux && ny == u.uy) {
-				/* If it's right next to you, it found you,
-				 * displaced or no.  We must set mux and muy
-				 * right now, so when we return we can tell
-				 * that the ALLOW_U means to attack _you_ and
-				 * not the image.
-				 */
-				mon->mux = u.ux;
-				mon->muy = u.uy;
-			}
-			if(!(flag & ALLOW_U)) continue;
-			info[cnt] |= ALLOW_U;
-		} else {
-			if(MON_AT(nx, ny)) {
-				struct monst *mtmp2 = m_at(nx, ny);
-				long mmflag = flag | mm_aggression(mon, mtmp2);
-
-				if (!(mmflag & ALLOW_M)) continue;
-				info[cnt] |= ALLOW_M;
-				if (mtmp2->mtame) {
-					if (!(mmflag & ALLOW_TM)) continue;
-					info[cnt] |= ALLOW_TM;
-				}
-			}
-			/* Note: ALLOW_SANCT only prevents movement, not */
-			/* attack, into a temple. */
-			if(level.flags.has_temple &&
-			   *in_rooms(nx, ny, TEMPLE) &&
-			   !*in_rooms(x, y, TEMPLE) &&
-			   in_your_sanctuary((struct monst *)0, nx, ny)) {
-				if(!(flag & ALLOW_SANCT)) continue;
-				info[cnt] |= ALLOW_SANCT;
-			}
-		}
-		if(checkobj && sobj_at(CLOVE_OF_GARLIC, nx, ny)) {
-			if(flag & NOGARLIC) continue;
-			info[cnt] |= NOGARLIC;
-		}
-		if(checkobj && sobj_at(BOULDER, nx, ny)) {
-			if(!(flag & ALLOW_ROCK)) continue;
-			info[cnt] |= ALLOW_ROCK;
-		}
-		if (monseeu && onlineu(nx,ny)) {
-			if(flag & NOTONL) continue;
-			info[cnt] |= NOTONL;
-		}
-		if (nx != x && ny != y && bad_rock(mdat, x, ny)
-			    && bad_rock(mdat, nx, y)
-			    && (bigmonst(mdat) || (curr_mon_load(mon) > 600)))
-			continue;
-		/* The monster avoids a particular type of trap if it's familiar
-		 * with the trap type.  Pets get ALLOW_TRAPS and checking is
-		 * done in dogmove.c.  In either case, "harmless" traps are
-		 * neither avoided nor marked in info[].
-		 */
-		{ register struct trap *ttmp = t_at(nx, ny);
-		    if(ttmp) {
-			if(ttmp->ttyp >= TRAPNUM || ttmp->ttyp == 0)  {
-impossible("A monster looked at a very strange trap of type %d.", ttmp->ttyp);
-			    continue;
-			}
-			if ((ttmp->ttyp != RUST_TRAP
-					|| mdat == &mons[PM_IRON_GOLEM])
-				&& ttmp->ttyp != STATUE_TRAP
-				&& ((ttmp->ttyp != PIT
-				    && ttmp->ttyp != SPIKED_PIT
-				    && ttmp->ttyp != TRAPDOOR
-				    && ttmp->ttyp != HOLE)
-				      || (!is_flyer(mdat)
-				    && !levitating(mon)
-				    && !is_clinger(mdat))
-				      || In_sokoban(&u.uz))
-				&& (ttmp->ttyp != SLP_GAS_TRAP ||
-				    !resists_sleep(mon))
-				&& (ttmp->ttyp != BEAR_TRAP ||
-				    (mdat->msize > MZ_SMALL &&
-				     !amorphous(mdat) && !is_flyer(mdat)))
-				&& (ttmp->ttyp != FIRE_TRAP ||
-				    !resists_fire(mon))
-				&& (ttmp->ttyp != SQKY_BOARD || !is_flyer(mdat))
-				&& (ttmp->ttyp != WEB || (!amorphous(mdat) &&
-				    !webmaker(mdat)))
-			) {
-			    if (!(flag & ALLOW_TRAPS)) {
-				if (mon->mtrapseen & (1L << (ttmp->ttyp - 1)))
-				    continue;
-			    }
-			    info[cnt] |= ALLOW_TRAPS;
-			}
-		    }
-		}
-		poss[cnt].x = nx;
-		poss[cnt].y = ny;
-		cnt++;
 	    }
-	}
 	if(!cnt && wantpool && !is_pool(x,y)) {
 		wantpool = FALSE;
 		goto nexttry;
@@ -1612,9 +1629,8 @@ struct monst *magr,	/* monster that is currently deciding where to move */
         /* hostiles who want an artifact will kill anything to get it,
 	   if something is standing in its way */
 	if ((ma->mflags3 & M3_COVETOUS) != 0 &&
-	   !(magr->mstrategy & STRAT_WAITMASK) && 
-	    m_cansee(magr,STRAT_GOALX(magr->mstrategy),
-	    	STRAT_GOALY(magr->mstrategy)))
+	   !(magr->mstrategy & STRAT_WAITMASK) &&
+	    (magr->mstrategy & (STRAT_GROUND|STRAT_PLAYER|STRAT_MONSTR)))
 	    return ALLOW_M|ALLOW_TM;
 
 	/* Zombies are after the living */

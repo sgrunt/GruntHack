@@ -3,6 +3,7 @@
 /* NetHack may be freely redistributed.  See license for details. */
 
 #include "hack.h"
+#include "mfndpos.h"
 
 #ifdef OVL1
 STATIC_DCL void NDECL(maybe_wail);
@@ -12,7 +13,6 @@ STATIC_DCL int FDECL(still_chewing,(XCHAR_P,XCHAR_P));
 #ifdef SINKS
 STATIC_DCL void NDECL(dosinkfall);
 #endif
-STATIC_DCL boolean FDECL(findtravelpath, (BOOLEAN_P));
 STATIC_DCL boolean FDECL(monstinroom, (struct permonst *,int));
 
 STATIC_DCL void FDECL(move_update, (BOOLEAN_P));
@@ -720,23 +720,73 @@ int mode;
  * inaccessible locations as valid intermediate path points.
  * Returns TRUE if a path was found.
  */
-static boolean
-findtravelpath(guess)
+boolean
+findtravelpath(mon, gx, gy, dx, dy, info, guess)
+register struct monst *mon;
+xchar gx, gy;
+schar *dx, *dy;
+long *info;
 boolean guess;
 {
+    boolean yours = (mon == &youmonst);
+    int sx = (yours) ? u.ux : mon->mx;
+    int sy = (yours) ? u.uy : mon->my;
+    long flag = 0L;
+    boolean digger = FALSE;
+    if (!yours) {
+        struct permonst *ptr = mon->data;
+	if (mon->mpeaceful && (!Conflict || resist(mon, RING_CLASS, 0, 0)))
+	    flag |= (ALLOW_SANCT | ALLOW_SSM);
+	else flag |= ALLOW_U;
+	if (is_minion(ptr) || is_rider(ptr)) flag |= ALLOW_SANCT;
+	/* unicorn may not be able to avoid hero on a noteleport level */
+	if (is_unicorn(ptr) && !level.flags.noteleport) flag |= NOTONL;
+	if (passes_walls(ptr)) flag |= (ALLOW_WALL | ALLOW_ROCK);
+	if (passes_bars(ptr)) flag |= ALLOW_BARS;
+#ifdef REINCARNATION
+	if (!Is_rogue_level(&u.uz))
+#endif
+	{
+	    struct obj *wand;
+	    if (!mindless(ptr) && !is_animal(ptr))
+	        wand = m_carrying(mon, WAN_DIGGING);
+	    if (wand && wand->spe == 0)
+	    	wand = (struct obj *)0;
+	    if (tunnels(ptr) || !!wand 
+#ifdef COMBINED_SPELLS
+		|| (is_spellcaster(ptr) && mon->m_lev >= 9 &&
+		    can_cast_spells(mon)))
+#endif
+		digger = TRUE, flag |= ALLOW_DIG;
+	}
+	if (is_human(mon) || ptr == &mons[PM_MINOTAUR]) flag |= ALLOW_SSM;
+	if (is_undead(ptr) && ptr->mlet != S_GHOST) flag |= NOGARLIC;
+	if (throws_rocks(ptr)) flag |= ALLOW_ROCK;
+	if (!(nohands(ptr) || verysmall(ptr))) flag |= OPENDOOR;
+	if (((flag | OPENDOOR) && m_carrying(mon, SKELETON_KEY)) ||
+		      mon->iswiz || is_rider(ptr)) flag |= UNLOCKDOOR;
+	if (is_giant(mon)) flag |= BUSTDOOR;
+    }
     /* if travel to adjacent, reachable location, use normal movement rules */
-    if (!guess && iflags.travel1 && distmin(u.ux, u.uy, u.tx, u.ty) == 1) {
-	flags.run = 0;
-	if (test_move(u.ux, u.uy, u.tx-u.ux, u.ty-u.uy, TEST_MOVE)) {
-	    u.dx = u.tx-u.ux;
-	    u.dy = u.ty-u.uy;
-	    nomul(0);
-	    iflags.travelcc.x = iflags.travelcc.y = -1;
+    if (!guess && (!yours || iflags.travel1) &&
+        distmin(sx, sy, gx, gy) == 1 &&
+	(u.umonnum != PM_GRID_BUG || gx==sy || gy==sy)) {
+	if (yours) flags.run = 0;
+	if ((yours && test_move(sx, sy, gx-sx, gy-sy, TEST_MOVE)) ||
+	    (!yours && mcheckpos(mon, sx, sy, gx, gy, info, flag,
+	                         mon->data->mlet == S_EEL))) {
+	    *dx = gx-sx;
+	    *dy = gy-sy;
+	    if (yours) {
+	        nomul(0);
+	        iflags.travelcc.x = iflags.travelcc.y = -1;
+	    }
 	    return TRUE;
 	}
-	flags.run = 8;
+	if (yours)
+	    flags.run = 8;
     }
-    if (u.tx != u.ux || u.ty != u.uy) {
+    if (gx != sx || gy != sy) {
 	xchar travel[COLNO][ROWNO];
 	xchar travelstepx[2][COLNO*ROWNO];
 	xchar travelstepy[2][COLNO*ROWNO];
@@ -751,9 +801,9 @@ boolean guess;
 	 * (couldsee) that is closest to the target on a straight path.
 	 */
 	if (guess) {
-	    tx = u.ux; ty = u.uy; ux = u.tx; uy = u.ty;
+	    tx = sx; ty = sy; ux = gx; uy = gy;
 	} else {
-	    tx = u.tx; ty = u.ty; ux = u.ux; uy = u.uy;
+	    tx = gx; ty = gy; ux = sx; uy = sy;
 	}
 
     noguess:
@@ -770,15 +820,22 @@ boolean guess;
 		int y = travelstepy[set][i];
 		static int ordered[] = { 0, 2, 4, 6, 1, 3, 5, 7 };
 		/* no diagonal movement for grid bugs */
-		int dirmax = u.umonnum == PM_GRID_BUG ? 4 : 8;
+		int dirmax = ((yours && u.umonnum == PM_GRID_BUG)
+		              || (!yours && mon->data == &mons[PM_GRID_BUG]))
+			      ? 4 : 8;
 
 		for (dir = 0; dir < dirmax; ++dir) {
 		    int nx = x+xdir[ordered[dir]];
 		    int ny = y+ydir[ordered[dir]];
 
 		    if (!isok(nx, ny)) continue;
-		    if ((!Passes_walls && !can_ooze(&youmonst) &&
-			closed_door(x, y)) || sobj_at(BOULDER, x, y)) {
+		    if (((yours &&
+		         (!Passes_walls && !can_ooze(&youmonst))) ||
+			 (!yours && !passes_walls(mon->data) &&
+			  !can_ooze(mon))) &&
+			((closed_door(x, y) && (yours || !digger) ||
+			 (sobj_at(BOULDER, x, y) && 
+			  (yours || throws_rocks(mon->data)))))) {
 			/* closed doors and boulders usually
 			 * cause a delay, so prefer another path */
 			if (travel[x][y] > radius-3) {
@@ -789,21 +846,40 @@ boolean guess;
 			    continue;
 			}
 		    }
-		    if (test_move(x, y, nx-x, ny-y, TEST_TRAV) &&
-			(levl[nx][ny].seenv || (!Blind && couldsee(nx, ny)))) {
+		    if ((yours && test_move(x, y, nx-x, ny-y, TEST_TRAV) &&
+			(levl[nx][ny].seenv || (!Blind && couldsee(nx, ny)))) ||
+			(!yours &&
+	                 mcheckpos(mon, nx, ny, x, y, info, flag,
+	                         mon->data->mlet == S_EEL))) {
 			if (nx == ux && ny == uy) {
 			    if (!guess) {
-				u.dx = x-ux;
-				u.dy = y-uy;
-				if (x == u.tx && y == u.ty) {
-				    nomul(0);
-				    /* reset run so domove run checks work */
-				    flags.run = 8;
-				    iflags.travelcc.x = iflags.travelcc.y = -1;
+			        if (!yours) {
+				    *info = 0L;
+	                            (void)
+				    mcheckpos(mon, nx, ny, x, y, info, flag,
+	                                mon->data->mlet == S_EEL);
+				}
+				*dx = x-ux;
+				*dy = y-uy;
+				if (x == gx && y == gy) {
+				    if (yours) {
+				        nomul(0);
+				        /* reset run so domove run checks work */
+				        flags.run = 8;
+				        iflags.travelcc.x =
+					iflags.travelcc.y = -1;
+				    }
 				}
 				return TRUE;
 			    }
-			} else if (!travel[nx][ny]) {
+			} else if (!yours && !passes_walls(mon->data) &&
+			           digger && ((*info) & ALLOW_DIG) &&
+				   travel[nx][ny] > radius-7) {
+			    travelstepx[1-set][nn] = nx;
+			    travelstepy[1-set][nn] = ny;
+			    nn++;
+			} else if (!travel[nx][ny] ||
+			            travel[nx][ny] > radius) {
 			    travelstepx[1-set][nn] = nx;
 			    travelstepy[1-set][nn] = ny;
 			    travel[nx][ny] = radius;
@@ -829,32 +905,38 @@ boolean guess;
 		for (ty = 0; ty < ROWNO; ++ty)
 		    if (travel[tx][ty]) {
 			nxtdist = distmin(ux, uy, tx, ty);
-			if (nxtdist == dist && couldsee(tx, ty)) {
+			if (nxtdist == dist && (!yours || couldsee(tx, ty))) {
 			    nd2 = dist2(ux, uy, tx, ty);
 			    if (nd2 < d2) {
 				/* prefer non-zigzag path */
 				px = tx; py = ty;
 				d2 = nd2;
 			    }
-			} else if (nxtdist < dist && couldsee(tx, ty)) {
+			} else if (nxtdist < dist && (!yours || couldsee(tx, ty))) {
 			    px = tx; py = ty;
 			    dist = nxtdist;
 			    d2 = dist2(ux, uy, tx, ty);
 			}
 		    }
 
-	    if (px == u.ux && py == u.uy) {
+	    if (px == sx && py == sy) {
 		/* no guesses, just go in the general direction */
-		u.dx = sgn(u.tx - u.ux);
-		u.dy = sgn(u.ty - u.uy);
-		if (test_move(u.ux, u.uy, u.dx, u.dy, TEST_MOVE))
+		*dx = sgn(gx - sx);
+		*dy = sgn(gy - sy);
+		if (!yours)
+		    *info = 0L;
+		if ((yours && test_move(sx, sy, *dx, *dy, TEST_MOVE)) ||
+		    (!yours &&
+	                 mcheckpos(mon, sx, sy, sx+*dx, sy+*dy, info, flag,
+			           mon->data->mlet == S_EEL)
+		    ))
 		    return TRUE;
 		goto found;
 	    }
 	    tx = px;
 	    ty = py;
-	    ux = u.ux;
-	    uy = u.uy;
+	    ux = sx;
+	    uy = sy;
 	    set = 0;
 	    n = radius = 1;
 	    guess = FALSE;
@@ -864,9 +946,10 @@ boolean guess;
     }
 
 found:
-    u.dx = 0;
-    u.dy = 0;
-    nomul(0);
+    *dx = 0;
+    *dy = 0;
+    if (yours)
+        nomul(0);
     return FALSE;
 }
 
@@ -887,8 +970,10 @@ domove()
 	u_wipe_engr(rnd(5));
 
 	if (flags.travel) {
-	    if (!findtravelpath(FALSE))
-		(void) findtravelpath(TRUE);
+	    if (!findtravelpath(&youmonst, u.tx, u.ty, &u.dx, &u.dy, 
+	                        NULL, FALSE))
+		(void) findtravelpath(&youmonst, u.tx, u.ty, &u.dx, &u.dy,
+		                      NULL, TRUE);
 	    iflags.travel1 = 0;
 	}
 
@@ -1579,7 +1664,7 @@ stillinwater:;
 			    dmg = d(4,6);
 			    if(Half_physical_damage) dmg = (dmg+1) / 2;
 			    mdamageu(mtmp,
-			    	attacktype_fordmg(mtmp, AT_BITE, AD_PHYS),
+			    	attacktype_fordmg(mtmp->data, AT_BITE, AD_PHYS),
 			    	dmg);
 			}
 			break;
