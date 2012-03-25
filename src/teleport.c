@@ -1002,21 +1002,6 @@ boolean suppress_impossible;
 	    return TRUE;
 	}
 #endif
-
-	if (mtmp->iswiz && mtmp->mx) {	/* Wizard, not just arriving */
-	    if (!In_W_tower(u.ux, u.uy, &u.uz))
-		x = xupstair,  y = yupstair;
-	    else if (!xdnladder)	/* bottom level of tower */
-		x = xupladder,  y = yupladder;
-	    else
-		x = xdnladder,  y = ydnladder;
-	    /* if the wiz teleports away to heal, try the up staircase,
-	       to block the player's escaping before he's healed
-	       (deliberately use `goodpos' rather than `rloc_pos_ok' here) */
-	    if (goodpos(x, y, mtmp, 0))
-		goto found_xy;
-	}
-
 	if (control_teleport(mtmp->data)) {
 	    coord pos;
 	    if (is_covetous(mtmp->data)) {
@@ -1034,6 +1019,22 @@ boolean suppress_impossible;
 	    if (goodpos(x, y, mtmp, 0))
 	        goto found_xy;
 	}
+
+#if 0
+	if (mtmp->iswiz && mtmp->mx) {	/* Wizard, not just arriving */
+	    if (!In_W_tower(u.ux, u.uy, &u.uz))
+		x = xupstair,  y = yupstair;
+	    else if (!xdnladder)	/* bottom level of tower */
+		x = xupladder,  y = yupladder;
+	    else
+		x = xdnladder,  y = ydnladder;
+	    /* if the wiz teleports away to heal, try the up staircase,
+	       to block the player's escaping before he's healed
+	       (deliberately use `goodpos' rather than `rloc_pos_ok' here) */
+	    if (goodpos(x, y, mtmp, 0))
+		goto found_xy;
+	}
+#endif
 
 	trycount = 0;
 	do {
