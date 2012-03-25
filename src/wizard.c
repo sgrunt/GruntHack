@@ -372,7 +372,7 @@ tactics(mtmp)
 		    if (!rn2(3 + mtmp->mhp/10) &&
 		        can_teleport(mtmp->data) &&
 		        (!level.flags.noteleport ||
-			 !(mtmp->mtrapseen & (1 << TELEP_TRAP-1))))
+			 !(mtmp->mtrapseen & (1 << (TELEP_TRAP-1)))))
 		    {
 		        if (tele_restrict(mtmp)) {
 		            if (level.flags.noteleport)
@@ -471,7 +471,7 @@ tactics(mtmp)
 		                  !control_teleport(mtmp->data)) &&
 			          (mtmp->mx != tx || mtmp->my != ty)) ||
 			          (level.flags.noteleport &&
-			           (mtmp->mtrapseen & (1<<TELEP_TRAP-1))))
+			           (mtmp->mtrapseen & (1<<(TELEP_TRAP-1)))))
 			        return(0);
 		        
 			    if (tele_restrict(mtmp)) {
@@ -500,7 +500,7 @@ tactics(mtmp)
 			    dist2(mtmp->mx, mtmp->my, tx, ty) > 2 &&
 			    !rn2(5) &&
 			    (!level.flags.noteleport ||
-			     !(mtmp->mtrapseen & (1<<TELEP_TRAP-1))))
+			     !(mtmp->mtrapseen & (1<<(TELEP_TRAP-1)))))
 			{
 		            if (tele_restrict(mtmp)) {
 		                if (level.flags.noteleport)
@@ -516,7 +516,7 @@ tactics(mtmp)
 		    if (can_teleport(mtmp->data) && 
 		        control_teleport(mtmp->data) &&
 			(!level.flags.noteleport ||
-			 !(mtmp->mtrapseen & (1 << TELEP_TRAP-1))) &&
+			 !(mtmp->mtrapseen & (1 << (TELEP_TRAP-1)))) &&
 			dist2(mtmp->mx, mtmp->my, tx, ty) > 2)
 	            {
 		        if (tele_restrict(mtmp)) {

@@ -1440,118 +1440,119 @@ boolean wantpool;
     	return FALSE;
         if(!(((is_pool(nx,ny) == wantpool) || poolok) &&
              (lavaok || !is_lava(nx,ny)))) return FALSE;
+		{
+    		boolean monseeu = (mon->mcansee && (!Invis || sees_invis(mon)));
+    		boolean checkobj = OBJ_AT(nx,ny);
 
-    	boolean monseeu = (mon->mcansee && (!Invis || sees_invis(mon)));
-    	boolean checkobj = OBJ_AT(nx,ny);
-
-    	/* Displacement also displaces the Elbereth/scare monster,
-    	 * as long as you are visible.
-    	 */
-    	if(Displaced && monseeu && (mon->mux==nx) && (mon->muy==ny)) {
-    	    dispx = u.ux;
-    	    dispy = u.uy;
-    	} else {
-    	    dispx = nx;
-    	    dispy = ny;
-    	}
-
-    	if ((checkobj || Displaced) && onscary(dispx, dispy, mon)) {
-    	    if(!(flag & ALLOW_SSM)) return FALSE;
-    	    *info |= ALLOW_SSM;
-    	}
-    	if((nx == u.ux && ny == u.uy) ||
-    	   (nx == mon->mux && ny == mon->muy)) {
-    		if (nx == u.ux && ny == u.uy) {
-    			/* If it's right next to you, it found you,
-    			 * displaced or no.  We must set mux and muy
-    			 * right now, so when we return we can tell
-    			 * that the ALLOW_U means to attack _you_ and
-    			 * not the image.
-    			 */
-    			mon->mux = u.ux;
-    			mon->muy = u.uy;
+    		/* Displacement also displaces the Elbereth/scare monster,
+    		 * as long as you are visible.
+    		 */
+    		if(Displaced && monseeu && (mon->mux==nx) && (mon->muy==ny)) {
+    			dispx = u.ux;
+    			dispy = u.uy;
+    		} else {
+    			dispx = nx;
+    			dispy = ny;
     		}
-    		if(!(flag & ALLOW_U)) return FALSE;
-    		*info |= ALLOW_U;
-    	} else {
-    		if(MON_AT(nx, ny)) {
-    			struct monst *mtmp2 = m_at(nx, ny);
-    			long mmflag = flag | mm_aggression(mon, mtmp2);
 
-    			if (!(mmflag & ALLOW_M)) return FALSE;
-    			*info |= ALLOW_M;
-    			if (mtmp2->mtame) {
-    				if (!(mmflag & ALLOW_TM)) return FALSE;
-    				*info |= ALLOW_TM;
+    		if ((checkobj || Displaced) && onscary(dispx, dispy, mon)) {
+    			if(!(flag & ALLOW_SSM)) return FALSE;
+    			*info |= ALLOW_SSM;
+    		}
+    		if((nx == u.ux && ny == u.uy) ||
+    		   (nx == mon->mux && ny == mon->muy)) {
+    			if (nx == u.ux && ny == u.uy) {
+    				/* If it's right next to you, it found you,
+    				 * displaced or no.  We must set mux and muy
+    				 * right now, so when we return we can tell
+    				 * that the ALLOW_U means to attack _you_ and
+    				 * not the image.
+    				 */
+    				mon->mux = u.ux;
+    				mon->muy = u.uy;
+    			}
+    			if(!(flag & ALLOW_U)) return FALSE;
+    			*info |= ALLOW_U;
+    		} else {
+    			if(MON_AT(nx, ny)) {
+    				struct monst *mtmp2 = m_at(nx, ny);
+    				long mmflag = flag | mm_aggression(mon, mtmp2);
+
+    				if (!(mmflag & ALLOW_M)) return FALSE;
+    				*info |= ALLOW_M;
+    				if (mtmp2->mtame) {
+    					if (!(mmflag & ALLOW_TM)) return FALSE;
+    					*info |= ALLOW_TM;
+    				}
+    			}
+    			/* Note: ALLOW_SANCT only prevents movement, not */
+    			/* attack, into a temple. */
+    			if(level.flags.has_temple &&
+    			   *in_rooms(nx, ny, TEMPLE) &&
+    			   !*in_rooms(x, y, TEMPLE) &&
+    			   in_your_sanctuary((struct monst *)0, nx, ny)) {
+    				if(!(flag & ALLOW_SANCT)) return FALSE;
+    				*info |= ALLOW_SANCT;
     			}
     		}
-    		/* Note: ALLOW_SANCT only prevents movement, not */
-    		/* attack, into a temple. */
-    		if(level.flags.has_temple &&
-    		   *in_rooms(nx, ny, TEMPLE) &&
-    		   !*in_rooms(x, y, TEMPLE) &&
-    		   in_your_sanctuary((struct monst *)0, nx, ny)) {
-    			if(!(flag & ALLOW_SANCT)) return FALSE;
-    			*info |= ALLOW_SANCT;
+    		if(checkobj && sobj_at(CLOVE_OF_GARLIC, nx, ny)) {
+    			if(flag & NOGARLIC) return FALSE;
+    			*info |= NOGARLIC;
     		}
-    	}
-    	if(checkobj && sobj_at(CLOVE_OF_GARLIC, nx, ny)) {
-    		if(flag & NOGARLIC) return FALSE;
-    		*info |= NOGARLIC;
-    	}
-    	if(checkobj && sobj_at(BOULDER, nx, ny)) {
-    		if(!(flag & ALLOW_ROCK)) return FALSE;
-    		*info |= ALLOW_ROCK;
-    	}
-    	if (monseeu && onlineu(nx,ny)) {
-    		if(flag & NOTONL) return FALSE;
-    		*info |= NOTONL;
-    	}
-    	if (nx != x && ny != y && bad_rock(mdat, x, ny)
-    		    && bad_rock(mdat, nx, y)
-    		    && (bigmonst(mdat) || (curr_mon_load(mon) > 600)))
-    		return FALSE;
-    	/* The monster avoids a particular type of trap if it's familiar
-    	 * with the trap type.  Pets get ALLOW_TRAPS and checking is
-    	 * done in dogmove.c.  In either case, "harmless" traps are
-    	 * neither avoided nor marked in info[].
-    	 */
-    	{ register struct trap *ttmp = t_at(nx, ny);
-    	    if(ttmp) {
-    		if(ttmp->ttyp >= TRAPNUM || ttmp->ttyp == 0)  {
-impossible("A monster looked at a very strange trap of type %d.", ttmp->ttyp);
-    		    return FALSE;
+    		if(checkobj && sobj_at(BOULDER, nx, ny)) {
+    			if(!(flag & ALLOW_ROCK)) return FALSE;
+    			*info |= ALLOW_ROCK;
     		}
-    		if ((ttmp->ttyp != RUST_TRAP
-    				|| mdat == &mons[PM_IRON_GOLEM])
-    			&& ttmp->ttyp != STATUE_TRAP
-    			&& ((ttmp->ttyp != PIT
-    			    && ttmp->ttyp != SPIKED_PIT
-    			    && ttmp->ttyp != TRAPDOOR
-    			    && ttmp->ttyp != HOLE)
-    			      || (!is_flyer(mdat)
-    			    && !levitating(mon)
-    			    && !is_clinger(mdat))
-    			      || In_sokoban(&u.uz))
-    			&& (ttmp->ttyp != SLP_GAS_TRAP ||
-    			    !resists_sleep(mon))
-    			&& (ttmp->ttyp != BEAR_TRAP ||
-    			    (mdat->msize > MZ_SMALL &&
-    			     !amorphous(mdat) && !is_flyer(mdat)))
-    			&& (ttmp->ttyp != FIRE_TRAP ||
-    			    !resists_fire(mon))
-    			&& (ttmp->ttyp != SQKY_BOARD || !is_flyer(mdat))
-    			&& (ttmp->ttyp != WEB || (!amorphous(mdat) &&
-    			    !webmaker(mdat)))
-    		) {
-    		    if (!(flag & ALLOW_TRAPS)) {
-    			if (mon->mtrapseen & (1L << (ttmp->ttyp - 1)))
-    			    return FALSE;
-    		    }
-    		    *info |= ALLOW_TRAPS;
+    		if (monseeu && onlineu(nx,ny)) {
+    			if(flag & NOTONL) return FALSE;
+    			*info |= NOTONL;
     		}
-    	    }
-    	}
+    		if (nx != x && ny != y && bad_rock(mdat, x, ny)
+    				&& bad_rock(mdat, nx, y)
+    				&& (bigmonst(mdat) || (curr_mon_load(mon) > 600)))
+    			return FALSE;
+    		/* The monster avoids a particular type of trap if it's familiar
+    		 * with the trap type.  Pets get ALLOW_TRAPS and checking is
+    		 * done in dogmove.c.  In either case, "harmless" traps are
+    		 * neither avoided nor marked in info[].
+    		 */
+    		{ register struct trap *ttmp = t_at(nx, ny);
+    			if(ttmp) {
+    			if(ttmp->ttyp >= TRAPNUM || ttmp->ttyp == 0)  {
+	impossible("A monster looked at a very strange trap of type %d.", ttmp->ttyp);
+    				return FALSE;
+    			}
+    			if ((ttmp->ttyp != RUST_TRAP
+    					|| mdat == &mons[PM_IRON_GOLEM])
+    				&& ttmp->ttyp != STATUE_TRAP
+    				&& ((ttmp->ttyp != PIT
+    					&& ttmp->ttyp != SPIKED_PIT
+    					&& ttmp->ttyp != TRAPDOOR
+    					&& ttmp->ttyp != HOLE)
+    					  || (!is_flyer(mdat)
+    					&& !levitating(mon)
+    					&& !is_clinger(mdat))
+    					  || In_sokoban(&u.uz))
+    				&& (ttmp->ttyp != SLP_GAS_TRAP ||
+    					!resists_sleep(mon))
+    				&& (ttmp->ttyp != BEAR_TRAP ||
+    					(mdat->msize > MZ_SMALL &&
+    					 !amorphous(mdat) && !is_flyer(mdat)))
+    				&& (ttmp->ttyp != FIRE_TRAP ||
+    					!resists_fire(mon))
+    				&& (ttmp->ttyp != SQKY_BOARD || !is_flyer(mdat))
+    				&& (ttmp->ttyp != WEB || (!amorphous(mdat) &&
+    					!webmaker(mdat)))
+    			) {
+    				if (!(flag & ALLOW_TRAPS)) {
+    				if (mon->mtrapseen & (1L << (ttmp->ttyp - 1)))
+    					return FALSE;
+    				}
+    				*info |= ALLOW_TRAPS;
+    			}
+    			}
+    		}
+		}
     	return TRUE;
 }
 

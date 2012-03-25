@@ -2438,7 +2438,7 @@ boolean put_in;
 	    if (res < 0) break;
 	}
     } else {
-	for (otmp = container->cobj; otmp; otmp = otmp2)
+	for (otmp = container->cobj; otmp; otmp = otmp->nobj)
 	    otmp->opresenceknown = TRUE;
 	mflags = INVORDER_SORT;
 	if (put_in && flags.invlet_constant) mflags |= USE_INVLET;

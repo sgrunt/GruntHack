@@ -798,7 +798,6 @@ boolean thrown;
     } else if (obj->oclass == WAND_CLASS) {
 	if (zappable(obj))
 	{
-	    struct obj *otmp;
 	    pline_The("%s %s!", xname(obj),
 	                        Blind ? "vibrates" : "glows");
             if (obj->otyp >= WAN_MAGIC_MISSILE && 
