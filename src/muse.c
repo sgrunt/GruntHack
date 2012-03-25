@@ -3026,12 +3026,11 @@ struct monst *mtmp;
 		case 1:
 			if (mtmp->mpeaceful && !See_invisible) return 0;
 			return rn2(6) ? POT_INVISIBILITY : WAN_MAKE_INVISIBLE;
+		case 3:
+			if (!levitating(mtmp) && ~is_flyer(mtmp->data))
+				return POT_LEVITATION;
 		case 2:
 			return POT_GAIN_LEVEL;
-		case 3:
-			if (levitating(mtmp) || is_flyer(mtmp->data))
-				return 0;
-			return POT_LEVITATION;
 	}
 	/*NOTREACHED*/
 	return 0;
