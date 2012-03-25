@@ -490,7 +490,8 @@ register struct monst *mtmp;
     boolean inpool, inlava, infountain;
 
     inpool = is_pool(mtmp->mx,mtmp->my) &&
-	     !is_flyer(mtmp->data) && !levitating(mtmp);
+	     !((is_flyer(mtmp->data) || levitating(mtmp)) &&
+	       !Is_waterlevel(&u.uz));
     inlava = is_lava(mtmp->mx,mtmp->my) &&
 	     !is_flyer(mtmp->data) && !levitating(mtmp);
     infountain = IS_FOUNTAIN(levl[mtmp->mx][mtmp->my].typ);

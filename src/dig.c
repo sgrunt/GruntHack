@@ -12,7 +12,7 @@ static NEARDATA boolean did_dig_msg;
 
 STATIC_DCL boolean NDECL(rm_waslit);
 STATIC_DCL void FDECL(mkcavepos, (XCHAR_P,XCHAR_P,int,BOOLEAN_P,BOOLEAN_P));
-STATIC_DCL void FDECL(mkcavearea, (BOOLEAN_P));
+STATIC_DCL void FDECL(mkcavearea, (BOOLEAN_P,XCHAR_P,XCHAR_P));
 STATIC_DCL int FDECL(dig_typ, (struct obj *,XCHAR_P,XCHAR_P));
 STATIC_DCL int NDECL(dig);
 STATIC_DCL void NDECL(dig_up_grave);
@@ -83,18 +83,28 @@ mkcavepos(x, y, dist, waslit, rockit)
 }
 
 STATIC_OVL void
-mkcavearea(rockit)
+mkcavearea(rockit, x, y)
 register boolean rockit;
+register xchar x, y;
 {
     int dist;
-    xchar xmin = u.ux, xmax = u.ux;
-    xchar ymin = u.uy, ymax = u.uy;
+    xchar xmin = x, xmax = x;
+    xchar ymin = y, ymax = y;
     register xchar i;
     register boolean waslit = rm_waslit();
 
-    if(rockit) pline("Crash!  The ceiling collapses around you!");
-    else pline("A mysterious force %s cave around you!",
-	     (levl[u.ux][u.uy].typ == CORR) ? "creates a" : "extends the");
+    if(rockit) {
+        if (cansee(x, y) || (x == u.ux && y == u.uy))
+            pline("%sThe ceiling collapses%s!",
+	    		     flags.soundok ? "Crash! " : "",
+                             (x == u.ux && y == u.uy) ? " around you" : "");
+	else if (flags.soundok)
+	    You_hear("a tremendous crash!");
+    }
+    else if (cansee(x, y) || (x == u.ux && y == u.uy))
+        pline("A mysterious force %s cave%s!",
+	     (levl[x][y].typ == CORR) ? "creates a" : "extends the",
+	      (x == u.ux && y == u.uy) ? " around you" : "");
     display_nhwindow(WIN_MESSAGE, TRUE);
 
     for(dist = 1; dist <= 2; dist++) {
@@ -119,10 +129,10 @@ register boolean rockit;
 	delay_output();
     }
 
-    if(!rockit && levl[u.ux][u.uy].typ == CORR) {
-	levl[u.ux][u.uy].typ = ROOM;
-	if(waslit) levl[u.ux][u.uy].waslit = TRUE;
-	newsym(u.ux, u.uy); /* in case player is invisible */
+    if(!rockit && levl[x][y].typ == CORR) {
+	levl[x][y].typ = ROOM;
+	if(waslit) levl[x][y].waslit = TRUE;
+	newsym(x, y); /* in case player is invisible */
     }
 
     vision_full_recalc = 1;	/* everything changed */
@@ -384,11 +394,11 @@ dig(VOID_ARGS)
 				IS_TREE(lev->typ)) {
 			if(Is_earthlevel(&u.uz)) {
 			    if(uwep->blessed && !rn2(3)) {
-				mkcavearea(FALSE);
+				mkcavearea(FALSE, u.ux, u.uy);
 				goto cleanup;
 			    } else if((uwep->cursed && !rn2(4)) ||
 					  (!uwep->blessed && !rn2(6))) {
-				mkcavearea(TRUE);
+				mkcavearea(TRUE, u.ux, u.uy);
 				goto cleanup;
 			    }
 			}
@@ -1228,6 +1238,31 @@ register struct monst *mtmp;
 		here->typ = DOOR;
 		here->doormask = D_NODOOR;
 	    }
+	    if (Is_earthlevel(&u.uz)) {
+	        register struct obj *pick = (struct obj *)0;
+		if (needspick(mtmp->data))
+		    pick = MON_WEP(mtmp);
+		if(pick && pick->blessed && !rn2(3)) {
+		    mkcavearea(FALSE, mtmp->mx, mtmp->my);
+		} else if((pick && pick->cursed && !rn2(4)) ||
+			  (!(pick && pick->blessed) && !rn2(6))) {
+		    mkcavearea(TRUE, mtmp->mx, mtmp->my);
+		} else if (!rn2(3)) {
+		    register struct permonst *newdat =
+		    	rn2(2) ? &mons[PM_EARTH_ELEMENTAL]
+			       : &mons[PM_XORN];
+		    coord bypos;
+
+		    if (enexto(&bypos, mtmp->mx, mtmp->my, newdat)) {
+		        register struct monst *mtmp2 =
+			    makemon(newdat,
+					bypos.x, bypos.y, NO_MM_FLAGS);
+			if (mtmp2 && canseemon(mtmp2))
+			   pline_The("debris from %s digging comes to life!",
+			             s_suffix(Monnam(mtmp)));
+		    }
+		}
+	    }
 	} else if (IS_TREE(here->typ)) {
 	    here->typ = ROOM;
 	    if (pile && pile < 5)
@@ -1426,6 +1461,25 @@ int dy;
 		    digdepth--;
 		}
 		unblock_point(zx,zy); /* vision */
+		if (Is_earthlevel(&u.uz)) {
+		    if (!rn2(4)) {
+		        mkcavearea(TRUE, zx, zy);
+		        break;
+		    } else if (!rn2(3)) {
+		        register struct permonst *newdat =
+		    	    rn2(2) ? &mons[PM_EARTH_ELEMENTAL]
+			           : &mons[PM_XORN];
+		        coord bypos;
+
+		        if (enexto(&bypos, zx, zy, newdat)) {
+			    register struct monst *mtmp2 =
+			        makemon(newdat,
+					    bypos.x, bypos.y, NO_MM_FLAGS);
+			    if (mtmp2 && canseemon(mtmp2))
+			        pline_The("debris from the digging beam comes to life!");
+		        }
+		    }
+		}
 	    }
 	    zx += (yours) ? u.dx : dx;
 	    zy += (yours) ? u.dy : dy;
