@@ -67,7 +67,7 @@
  * invisible to infravision), because this is usually called from within
  * canseemon() or canspotmon() which already check that.
  */
-#define see_with_infrared(mon) (!Blind && Infravision && infravisible(mon->data) && couldsee(mon->mx, mon->my))
+#define see_with_infrared(mon) (!Blind && Infravision && infravisible(mon->data) && couldsee(mon->mix, mon->miy))
 
 
 /*
