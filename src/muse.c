@@ -675,11 +675,14 @@ struct monst *mtmp;
 		}
 		if (mtmp->m_lev >= 11 && rn2(3))
 		{
-			m.defensive = (struct obj *)0;
-			m.has_defense = (mon_has_amulet(mtmp))
-				? MUSE_SPE_TELEPORT_AWAY
-			        : MUSE_SPE_TELEPORT_AWAY_SELF;
-			goto botm;
+			if (!mon_has_amulet(mtmp) ||
+			    ((mtmp->mtarget || mfind_target(mtmp)))) { 
+				m.defensive = (struct obj *)0;
+				m.has_defense = (mon_has_amulet(mtmp))
+					? MUSE_SPE_TELEPORT_AWAY
+			        	: MUSE_SPE_TELEPORT_AWAY_SELF;
+				goto botm;
+			}
 		}
 		if (mtmp->m_lev >= 9 && rn2(3) && !stuck && !t
 		    && !mtmp->isshk && !mtmp->isgd && !mtmp->ispriest
@@ -754,10 +757,13 @@ struct obj *start;
 		     */
 		    if (!level.flags.noteleport ||
 			!(mtmp->mtrapseen & (1 << (TELEP_TRAP-1)))) {
-			m.defensive = obj;
-			m.has_defense = (mon_has_amulet(mtmp))
-				? MUSE_WAN_TELEPORTATION
-				: MUSE_WAN_TELEPORTATION_SELF;
+			if (!mon_has_amulet(mtmp) ||
+			    (mfind_target(mtmp))) {
+			    m.defensive = obj;
+			    m.has_defense = (mon_has_amulet(mtmp))
+				    ? MUSE_WAN_TELEPORTATION
+				    : MUSE_WAN_TELEPORTATION_SELF;
+			}
 		    }
 		}
 		nomore(MUSE_SCR_TELEPORTATION);
@@ -783,7 +789,8 @@ struct obj *start;
 			m.has_defense = MUSE_SCR_SCARE_MONSTER;
 		}
 		nomore(MUSE_WAN_POLYMORPH);
-		if(obj->otyp == WAN_POLYMORPH && obj->spe > 0) {
+		if(obj->otyp == WAN_POLYMORPH && obj->spe > 0 &&
+		   (mfind_target(mtmp))) {
 		    m.defensive = obj;
 		    m.has_defense = MUSE_WAN_POLYMORPH; 
 		}
@@ -939,8 +946,7 @@ mon_tele:
 		return 2;
 	case MUSE_SPE_TELEPORT_AWAY:
 	case MUSE_WAN_TELEPORTATION:
-		if (!mtmp->mtarget &&
-		    !mfind_target(mtmp)) {
+		if (!mtmp->mtarget) {
 		    impossible(
 		        "trying to teleport someone away with no target?");
 		    return 0;
@@ -982,10 +988,9 @@ mon_tele:
 		return 2;
 	case MUSE_SPE_POLYMORPH:
 	case MUSE_WAN_POLYMORPH:
-		if (!mtmp->mtarget &&
-		    !mfind_target(mtmp)) {
+		if (!mtmp->mtarget) {
 		    impossible(
-		        "trying to teleport someone away with no target?");
+		        "trying to polymorph someone with no target?");
 		    return 0;
 		}
 		tbx = (mtmp->mtarget == &youmonst)
