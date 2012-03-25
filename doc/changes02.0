@@ -62,6 +62,14 @@ Bug fixes:
   ranged weapon).
 * Monster reading a non-blessed scroll of remove curse now behaves properly.
 * Zombification of shopkeepers, priests, etc. is handled better.
+* Blunt weapons can no longer be poisoned.
+* Racial monsters are much less likely to be generated in forms too weak or
+  strong for the player to face them.
+* Covetous monsters can no longer teleport on no-teleport levels.
+* Known item properties are now cleared when saving to bones files.
+* Covetous monsters no longer have a sudden intense desire to inspect the
+  top left corner of the map when fleeing the player or in some other cases.
+* Visibility of monsters spawning on top edge of map is calculated properly.
 
 Display-related:
 * showrace has been split into showrace (with the vanilla showrace behaviour of
@@ -114,6 +122,16 @@ Monster-related:
 * Bumping into a peaceful monster while invisible no longer angers it.
 * Monsters (and you!) can now be buried in the same manner as objects.
 * Water elementals now deal rust damage both passively and actively.
+* Non-human, non-elven racial monsters whose base types are symbolised by
+  an '@' now once again respect scary squares.
+* Attempting to teleport away a monster with teleport control causes it to
+  choose where it wants to teleport.
+* Covetous monsters are much better at path-finding when looking for their
+  targets.
+* Non-flying, non-levitating monsters on the Plane of Air are subject to
+  the same movement restrictions as the player.
+* Stunned and confused monsters now wobble as the player does in the same
+  circumstances.
 
 Object-related:
 * Objects can now be invisible, with many associated side effects.
@@ -129,6 +147,8 @@ Object-related:
 * Two additional item properties have been added: hunger and aggravation.
 * Items can now bear the same name as an artifact (no more "While engraving
   your [hand] slips"). This removes the ability to #name-test objects.
+* Behaviour between items with similar purposes with respect to the Planes
+  is now more consistent.
 
 There are some subtle changes that are not listed here.  You are encouraged
 to explore the game to find some of them.
