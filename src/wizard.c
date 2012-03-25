@@ -450,7 +450,7 @@ tactics(mtmp)
 		    if (can_teleport(mtmp->data) &&
 		        control_teleport(mtmp->data) &&
 		        (!level.flags.noteleport ||
-			 !(mtmp->mtrapseen & (1 << TELEP_TRAP-1))) &&
+			 !(mtmp->mtrapseen & (1 << (TELEP_TRAP-1)))) &&
 			dist2(mtmp->mx, mtmp->my, tx, ty) > 2)
 		    {
 		        if (tele_restrict(mtmp)) {
