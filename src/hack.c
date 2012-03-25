@@ -714,6 +714,8 @@ int mode;
     return TRUE;
 }
 
+extern boolean mconfdir;
+
 /*
  * Find a path from the destination (u.tx,u.ty) back to (u.ux,u.uy).
  * A shortest path is returned.  If guess is TRUE, consider various

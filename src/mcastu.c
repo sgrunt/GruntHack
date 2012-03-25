@@ -963,8 +963,13 @@ int spellnum;
     case SPE_LEVITATION:
     	dmg = 0;
 
-    	if (!levitating(mtmp) && canseemon(mtmp))
-	        pline("%s begins to float in the air!", Monnam(mtmp));
+    	if (!levitating(mtmp) && canseemon(mtmp)) {
+		if (Is_airlevel(&u.uz))
+			pline("%s gains control over %s movements.",
+			      Monnam(mtmp), mhis(mtmp));
+	        else
+			pline("%s begins to float in the air!", Monnam(mtmp));
+	}
 	
 	mtmp->mlevitating += (mtmp->iswiz ||
 	                      mtmp->data->msound == MS_NEMESIS ||

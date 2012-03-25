@@ -295,7 +295,11 @@ new_property:
 	        !levitating(mon))
 	    {
                 makeknown(obj->otyp);
-	        pline("%s begins to float in the air!", Monnam(mon));
+		if (Is_airlevel(&u.uz))
+			pline("%s gains control over %s movements.",
+			      Monnam(mon), mhis(mon));
+	        else
+	        	pline("%s begins to float in the air!", Monnam(mon));
             }
 	    mon->mintrinsics |= MR2_LEVITATE;
 	    break;

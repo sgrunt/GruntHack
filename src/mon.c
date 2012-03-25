@@ -1357,6 +1357,8 @@ struct obj *otmp;
 	return(TRUE);
 }
 
+extern boolean mconfdir;
+
 boolean
 mcheckpos(mon, x, y, nx, ny, info, flag, wantpool)
 struct monst *mon;
@@ -1377,10 +1379,12 @@ boolean wantpool;
 	nowtyp = levl[x][y].typ;
 
 	nodiag = (mdat == &mons[PM_GRID_BUG]);
-	poolok = is_flyer(mdat) || is_clinger(mdat) ||
+	poolok = mconfdir ||
+	         is_flyer(mdat) || is_clinger(mdat) ||
 		 (is_swimmer(mdat) && !wantpool) || 
 		 levitating(mon) || waterwalking(mon);
-	lavaok = is_flyer(mdat) || is_clinger(mdat) || likes_lava(mdat) ||
+	lavaok = mconfdir ||
+	         is_flyer(mdat) || is_clinger(mdat) || likes_lava(mdat) ||
 	         levitating(mon);
 	thrudoor = ((flag & (ALLOW_WALL|BUSTDOOR)) != 0L);
 	if (flag & ALLOW_DIG) {

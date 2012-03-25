@@ -722,6 +722,8 @@ int after, udist, whappr;
 	return appr;
 }
 
+extern boolean mconfdir;
+
 /* return 0 (no move), 1 (move) or 2 (dead) */
 int
 dog_move(mtmp, after)
@@ -792,6 +794,8 @@ register int after;	/* this is extra fast monster movement */
 	if (passes_walls(mtmp->data)) allowflags |= (ALLOW_ROCK | ALLOW_WALL);
 	if (passes_bars(mtmp->data)) allowflags |= ALLOW_BARS;
 	if (throws_rocks(mtmp->data)) allowflags |= ALLOW_ROCK;
+	if (mconfdir) allowflags |= ALLOW_U;
+
 	if (Conflict && !resist(mtmp, RING_CLASS, 0, 0)) {
 	    allowflags |= ALLOW_U;
 	    if (!has_edog) {
@@ -879,8 +883,10 @@ register int after;	/* this is extra fast monster movement */
 	uncursedcnt = 0;
 	for (i = 0; i < cnt; i++) {
 		nx = poss[i].x; ny = poss[i].y;
-		if (MON_AT(nx,ny) && !(info[i] & ALLOW_M)) continue;
-		if (cursed_object_at(nx, ny)) continue;
+		if (!mconfdir) {
+		    if (MON_AT(nx,ny) && !(info[i] & ALLOW_M)) continue;
+		    if (cursed_object_at(nx, ny)) continue;
+		}
 		uncursedcnt++;
 	}
 
@@ -888,7 +894,11 @@ register int after;	/* this is extra fast monster movement */
 	chi = -1;
 	nidist = GDIST(nix,niy);
 
-	for (i = 0; i < cnt; i++) {
+	if (mconfdir) {
+            chi = rn2(cnt);
+	    nix = poss[chi].x;
+	    niy = poss[chi].y;
+	} else for (i = 0; i < cnt; i++) {
 		nx = poss[i].x;
 		ny = poss[i].y;
 		cursemsg[i] = FALSE;

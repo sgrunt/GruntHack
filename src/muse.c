@@ -2912,8 +2912,14 @@ skipmsg:
 	{
 		boolean blessed = otmp->blessed, cursed = otmp->cursed;
 		mquaffmsg(mtmp, otmp);
-		if (vismon && !mtmp->mlevitating)
-			pline("%s begins to float in the air!", Monnam(mtmp));
+		if (vismon && !mtmp->mlevitating) {
+			if (Is_airlevel(&u.uz))
+				pline("%s gains control over %s movements.",
+				      Monnam(mtmp), mhis(mtmp));
+		        else
+				pline("%s begins to float in the air!",
+				      Monnam(mtmp));
+		}
 		if (oseen && (!mtmp->mlevitating || cursed))
 			makeknown(POT_LEVITATION);
 		m_useup(mtmp, otmp);

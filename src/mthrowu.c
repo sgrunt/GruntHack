@@ -763,8 +763,6 @@ struct monst *mtmp;
         register struct monst *mtmp2 = m_at(gx, gy);
 	if (mtmp2 && mlined_up(mtmp, mtmp2, FALSE))
 	{
-	    tbx = (mtmp2->mx - mtmp->mx);
-	    tby = (mtmp2->my - mtmp->my);
 	    return mtmp2;
 	}
 	
@@ -779,8 +777,6 @@ struct monst *mtmp;
 	    lined_up(mtmp)) {
 	    	mtmp->mtarget = &youmonst;
 		mtmp->mtarget_id = youmonst.m_id;
-	        tbx = (mtmp->mux - mtmp->mx);
-	        tby = (mtmp->muy - mtmp->my);
         	return &youmonst;  /* kludge - attack the player first
 				      if possible */
 	}
@@ -805,8 +801,6 @@ struct monst *mtmp;
 	     (sgn(mtmp->mtarget->mx - mtmp->mx) != sgn(u.ux - mtmp->mx)) ||
 	     (sgn(mtmp->mtarget->my - mtmp->my) != sgn(u.uy - mtmp->my))))
 	     {
-	        tbx = (mtmp->mtarget->mx - mtmp->mx);
-	        tby = (mtmp->mtarget->my - mtmp->my);
 		return mtmp->mtarget; /* don't attack if player is in path 
 					 and monster is not hostile */
 	     }
@@ -814,8 +808,6 @@ struct monst *mtmp;
     	if (!mtmp->mpeaceful && lined_up(mtmp)) {
 	    	mtmp->mtarget = &youmonst;
 		mtmp->mtarget_id = youmonst.m_id;
-	        tbx = (mtmp->mux - mtmp->mx);
-	        tby = (mtmp->muy - mtmp->my);
         	return &youmonst;  /* kludge - attack the player first
 				      if possible */
 	}
@@ -898,6 +890,13 @@ struct monst *mtmp;
 	mtmp->mtarget_id = mret->m_id;
 	tbx = (mret->mx - mtmp->mx);
 	tby = (mret->my - mtmp->my);
+
+	if (mtmp->mstun || (mtmp->mconf && !rn2(5))) {
+	    dir = rn2(8);
+	    tbx = dirx[dir];
+	    tby = diry[dir];
+	}
+
         return mret; /* should be the strongest monster that's not behind
 	                a friendly */
     }
@@ -1235,7 +1234,14 @@ boolean
 lined_up(mtmp)		/* is mtmp in position to use ranged attack? */
 	register struct monst *mtmp;
 {
-	return(linedup(mtmp->mux,mtmp->muy,mtmp->mx,mtmp->my));
+	boolean retval = linedup(mtmp->mux,mtmp->muy,mtmp->mx,mtmp->my);
+
+	if (retval && ((mtmp->mconf && !rn2(5)) || mtmp->mstun)) {
+	    do {
+	        tbx = rn1(3,-1);
+		tby = rn1(3,-1);
+            } while (tbx == 0 && tby == 0);
+	}
 }
 
 boolean
@@ -1254,6 +1260,13 @@ mlined_up(mtmp, mdef, breath)	/* is mtmp in position to use ranged attack? */
 	int x = mtmp->mx, y = mtmp->my;
 
 	int i = 10; /*arbitrary*/
+	
+	if (lined_up && ((mtmp->mconf && !rn2(5)) || mtmp->mstun)) {
+	    do {
+	        tbx = rn1(3,-1);
+		tby = rn1(3,-1);
+            } while (tbx == 0 && tby == 0);
+	}
 
         /* No special checks if confused - can't tell friend from foe */
 	if (!lined_up || mtmp->mconf || !mtmp->mtame) return lined_up;

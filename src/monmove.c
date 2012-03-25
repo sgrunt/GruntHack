@@ -299,6 +299,8 @@ struct monst *mon;
 	return -1;
 }
 
+boolean mconfdir = FALSE;
+
 /* returns 1 if monster died moving, 0 otherwise */
 /* The whole dochugw/m_move/distfleeck/mfndpos section is serious spaghetti
  * code. --KAA
@@ -313,6 +315,8 @@ register struct monst *mtmp;
 #ifdef GOLDOBJ
         struct obj *ygold = 0, *lepgold = 0;
 #endif
+
+	mconfdir = FALSE;
 
 /*	Pre-movement adjustments	*/
 
@@ -557,6 +561,7 @@ toofar:
 
 #ifndef GOLDOBJ
 	if(!nearby || mtmp->mflee || scared ||
+	   (mtmp->data == &mons[PM_STALKER] || mtmp->data->mlet == S_BAT) ||
 	   mtmp->mconf || mtmp->mstun || (mtmp->minvis && !rn2(3)) ||
 	   (mdat->mlet == S_LEPRECHAUN && !u.ugold && (mtmp->mgold || rn2(2))) ||
 #else
@@ -566,6 +571,7 @@ toofar:
 	}
 
 	if(!nearby || mtmp->mflee || scared ||
+	   (mtmp->data == &mons[PM_STALKER] || mtmp->data->mlet == S_BAT) ||
 	   mtmp->mconf || mtmp->mstun || (mtmp->minvis && !rn2(3)) ||
 	   (mdat->mlet == S_LEPRECHAUN && !ygold && (lepgold || rn2(2))) ||
 #endif
@@ -748,6 +754,11 @@ register int after;
 	int  omx = mtmp->mx, omy = mtmp->my;
 	struct obj *mw_tmp;
 	struct obj *wand = (struct obj *)0;
+	
+	mconfdir =
+	    (mtmp->data == &mons[PM_STALKER]) ||
+	    (mtmp->data->mlet == S_BAT) ||
+	    (mtmp->mstun) || (mtmp->mconf && !rn2(5));
 
 	if(mtmp->mtrapped) {
 	    int i = mintrap(mtmp);
@@ -1055,7 +1066,35 @@ actualmove:
 
 	nix = omx;
 	niy = omy;
-	if (is_covetous(ptr) && !mtmp->ispriest &&
+
+	if (Is_airlevel(&u.uz) && !levitating(mtmp) && !is_flyer(ptr) &&
+	    rn2(4)) {
+	    if (canseemon(mtmp)) {
+	        switch(rn2(3)) {
+		    case 0:
+		        pline("%s tumbles in place.", Monnam(mtmp));
+			break;
+                    case 1:
+		        pline("%s seems to be having difficulty controlling %s movements.",
+			      Monnam(mtmp), mhis(mtmp));
+			break;
+		    case 2:
+		        pline("%s %s %s %s in a futile attempt to move.",
+			      Monnam(mtmp),
+			      makeplural(locomotion(mtmp->data, "kick")),
+			      mhis(mtmp),
+			      makeplural(mbodypart(mtmp, LEG)));
+			break;
+		}
+	    }
+            mmoved = 3;
+	    goto postmov;
+	}
+
+	if (is_covetous(ptr) && !mtmp->mconf && !mtmp->mstun &&
+	    (mtmp->data != &mons[PM_STALKER]) &&
+	    (mtmp->data->mlet != S_BAT) &&
+	    !mtmp->ispriest &&
 	    !mindless(ptr) && !is_animal(ptr) &&
 	    ptr != &mons[PM_GHOST] &&
 	    (gx != mtmp->mx || gy != mtmp->my)) {
@@ -1096,6 +1135,7 @@ actualmove:
 	if (can_open) flag |= OPENDOOR;
 	if (can_unlock) flag |= UNLOCKDOOR;
 	if (doorbuster) flag |= BUSTDOOR;
+	if (mconfdir) flag |= (ALLOW_M|ALLOW_TM);
 	{
 	    register int i, j, nx, ny, nearer;
 	    int jcnt, cnt;
@@ -1117,7 +1157,12 @@ actualmove:
 		    if(!(info[i] & NOTONL)) avoid=TRUE;
 	    }
 
-	    for(i=0; i < cnt; i++) {
+            if (mconfdir) {
+	        chi = rn2(cnt);
+		nix = poss[chi].x;
+		niy = poss[chi].y;
+                mmoved = 1;
+	    } else for(i=0; i < cnt; i++) {
 		if (avoid && (info[i] & NOTONL)) continue;
 		nx = poss[i].x;
 		ny = poss[i].y;
@@ -1198,7 +1243,8 @@ actualmove:
 	 * mfndpos) has no effect for normal attacks, though it lets a confused
 	 * monster attack you by accident.
 	 */
-	    if(info[chi] & ALLOW_U) {
+	    if((info[chi] & ALLOW_U) &&
+	        !mconfdir) {
 		nix = mtmp->mux;
 		niy = mtmp->muy;
 	    }
