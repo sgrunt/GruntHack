@@ -142,7 +142,10 @@ int x, y;
 struct monst *mtmp;
 {
 	if (mtmp->isshk || mtmp->isgd || mtmp->iswiz || !mtmp->mcansee ||
-	    mtmp->mpeaceful || mtmp->data->mlet == S_HUMAN ||
+	    mtmp->mpeaceful ||
+	    (mtmp->data->mlet == S_HUMAN &&
+	     (!(is_racial(mtmp->data) || is_were(mtmp->data)) ||
+	       (mtmp->mrace & (M2_HUMAN|M2_ELF)))) ||
 	    is_lminion(mtmp) || mtmp->data == &mons[PM_ANGEL] ||
 	    is_rider(mtmp->data) || mtmp->data == &mons[PM_MINOTAUR])
 		return(FALSE);
