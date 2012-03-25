@@ -669,8 +669,6 @@ void
 displace_mon(mon)
 struct monst *mon;
 {
-    if (!mon->mx || !mon->my) return; /* not on map yet */
-
     if (m_img_at(mon->mix, mon->miy) == mon)
         remove_monster_img(mon->mix, mon->miy);
         
@@ -692,7 +690,7 @@ struct monst *mon;
 		  (mon->mix == mon->mx && mon->miy == mon->my)) &&
 		  --trycount > 0);
         if (trycount == 0)
-	    mon->mix = mon->mx, mon->mix = mon->my;
+	    mon->mix = mon->mx, mon->miy = mon->my;
     } else {
         mon->mix = mon->mx;
 	mon->miy = mon->my;
