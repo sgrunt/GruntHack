@@ -142,6 +142,7 @@ int x, y;
 struct monst *mtmp;
 {
 	if (mtmp->isshk || mtmp->isgd || mtmp->iswiz || !mtmp->mcansee ||
+	    is_mplayer(mtmp->data) ||
 	    mtmp->mpeaceful ||
 	    (mtmp->data->mlet == S_HUMAN &&
 	     (!(is_racial(mtmp->data) || is_were(mtmp->data)) ||
