@@ -848,6 +848,7 @@ boolean guess;
 			    continue;
 			}
 		    }
+		    if (!yours) *info = 0L;
 		    if ((yours && test_move(x, y, nx-x, ny-y, TEST_TRAV) &&
 			(levl[nx][ny].seenv || (!Blind && couldsee(nx, ny)))) ||
 			(!yours &&
