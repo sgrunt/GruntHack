@@ -854,7 +854,9 @@ struct mkroom	*croom;
 		    if (mtmp->m_lev < 1) mtmp->m_lev = 1;
 		    if (mtmp->m_lev > 30) mtmp->m_lev = 30;
 		}
-	    	mtmp->mhpmax = mtmp->mhp = d((int)mtmp->m_lev, 8);
+	    	mtmp->mhpmax = mtmp->mhp =
+		    (mtmp->m_lev == 0) ? rnd(2) :
+		    d((int)mtmp->m_lev, 8);
 		if (mtmp->mhpmax < 1)
 		   mtmp->mhpmax = mtmp->mhp = 1;
 

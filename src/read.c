@@ -2068,11 +2068,13 @@ create_particular()
 	                    mtmp->m_lev = adj_lev(whichpm);
 	                    if (-race_lev_mod(mtmp->mrace) > mtmp->m_lev)
 			    {
-			        mtmp->m_lev = 0;
+			        mtmp->m_lev = is_mplayer(mtmp->data) ? 1 : 0;
 			    }
 	                    else
 	                    {
-	                       mtmp->m_lev += race_lev_mod(mtmp->mrace);
+	                        mtmp->m_lev += race_lev_mod(mtmp->mrace);
+			        if (is_mplayer(mtmp->data) &&
+			            mtmp->m_lev > 30) mtmp->m_lev = 30;
 	                        if (mtmp->m_lev > 49) mtmp->m_lev = 49;
 	                    }
 			    if (is_mplayer(whichpm)) {
@@ -2081,6 +2083,7 @@ create_particular()
 			    }
 			    mtmp->mnum = which;
 	    		    mtmp->mhpmax = mtmp->mhp =
+				(mtmp->m_lev == 0) ? rnd(2) : 
 				d((int)mtmp->m_lev, 8);
 			    if (mtmp->mhpmax < 1)
 			    	mtmp->mhpmax = mtmp->mhp = 1;
@@ -2113,15 +2116,19 @@ create_particular()
 			    mtmp->mpeaceful = peace_minded(mtmp);
 			    mtmp->morigdata = which;
 	                    mtmp->m_lev = adj_lev(whichpm);
-	                    if (-race_lev_mod(mtmp->mrace) > mtmp->m_lev)
-			        mtmp->m_lev = 0;
+	                    if (-race_lev_mod(mtmp->mrace) > mtmp->m_lev) {
+			        mtmp->m_lev = is_mplayer(mtmp->data) ? 1 : 0;
+			    }
 	                    else
 	                    {
-	                       mtmp->m_lev += race_lev_mod(mtmp->mrace);
+	                        mtmp->m_lev += race_lev_mod(mtmp->mrace);
+			        if (is_mplayer(mtmp->data) &&
+			            mtmp->m_lev > 30) mtmp->m_lev = 30;
 	                        if (mtmp->m_lev > 49) mtmp->m_lev = 49;
 	                    }
 			    mtmp->mnum = which;
 	    		    mtmp->mhpmax = mtmp->mhp =
+				(mtmp->m_lev == 0) ? rnd(2) : 
 				d((int)mtmp->m_lev, 8);
 			    /*if (is_mplayer(whichpm))
 			    {*/
@@ -2146,15 +2153,19 @@ create_particular()
 			        set_mon_data(mtmp, whichpm, 0);
 			        mtmp->morigdata = which;
 	                        mtmp->m_lev = adj_lev(whichpm);
-	                        if (-race_lev_mod(mtmp->mrace) > mtmp->m_lev)
-			            mtmp->m_lev = 0;
+	                        if (-race_lev_mod(mtmp->mrace) > mtmp->m_lev) {
+			            mtmp->m_lev = is_mplayer(mtmp->data) ? 1 : 0;
+				}
 	                        else
 	                        {
 	                            mtmp->m_lev += race_lev_mod(mtmp->mrace);
+			            if (is_mplayer(mtmp->data) &&
+			                mtmp->m_lev > 30) mtmp->m_lev = 30;
 	                            if (mtmp->m_lev > 49) mtmp->m_lev = 49;
 	                        }
 			    	mtmp->mnum = which;
 	    		    	mtmp->mhpmax = mtmp->mhp =
+				    (mtmp->m_lev == 0) ? rnd(2) : 
 				    d((int)mtmp->m_lev, 8);
 			    	/*if (is_mplayer(whichpm))
 				{*/
