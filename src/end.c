@@ -320,6 +320,13 @@ register struct monst *mtmp;
 	
 	buf[0] = '\0';
 
+	if (mtmp == &youmonst) {
+	    /* currently this only happens with objects */
+	    Sprintf(buf, "%s own", uhis());
+	    HHallucination = tmphallu;
+	    return buf;
+	}
+
 	/* "killed by the high priest of Crom" is okay, "killed by the high
 	   priest" alone isn't */
 	if ((mtmp->data->geno & G_UNIQ) != 0 && 

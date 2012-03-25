@@ -741,9 +741,11 @@ rock1:
 	            if (obj->otyp >= WAN_MAGIC_MISSILE && 
 		        obj->otyp <= WAN_LIGHTNING)
 		    {
-		        makeknown(obj->otyp);
-		        pline("It emits a %s!", flash_types[obj->otyp -
+		        if (!Blind) {
+		            makeknown(obj->otyp);
+		            pline("It emits a %s!", flash_types[obj->otyp -
 			                                    WAN_MAGIC_MISSILE]);
+			}
 	                (void) zhitm(mon, obj->otyp - WAN_MAGIC_MISSILE + 
 			                              AD_MAGM - 1,
 			             u.ulevel / 2 + 1, &otmp);

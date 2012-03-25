@@ -758,6 +758,8 @@ register boolean broken;
 	}
 }
 
+extern const char *flash_types[];
+
 /*
  * Hero tosses an object upwards with appropriate consequences.
  *
@@ -793,6 +795,42 @@ boolean thrown;
 
     if (obj->oclass == POTION_CLASS) {
 	potionhit(&youmonst, obj, TRUE);
+    } else if (obj->oclass == WAND_CLASS) {
+	if (zappable(obj))
+	{
+	    struct obj *otmp;
+	    pline_The("%s %s!", xname(obj),
+	                        Blind ? "vibrates" : "glows");
+            if (obj->otyp >= WAN_MAGIC_MISSILE && 
+	        obj->otyp <= WAN_LIGHTNING)
+	    {
+	        const char *fltxt = flash_types[obj->otyp - WAN_MAGIC_MISSILE];
+	        if (!Blind) {
+	            makeknown(obj->otyp);
+	            pline("It emits a %s!", fltxt);
+		}
+		if (Reflecting)
+		{
+		    if (!Blind) {
+		    	(void) ureflects("But %s reflects from your %s!", "it");
+		    } else
+			pline("For some reason you are not affected.");
+		    shieldeff(u.ux, u.uy);
+		} else
+                (void) zhitu(obj->otyp - WAN_MAGIC_MISSILE + 
+		                         AD_MAGM - 1,
+		             u.ulevel / 2 + 1, fltxt, u.ux, u.uy);
+	    }
+	    else
+	    {
+                mbhitm(&youmonst, obj);
+	    }
+	}
+	if (obj->spe <= 0) {
+	    pline("%s to dust.", Tobjnam(obj, "turn"));
+	    useup(obj);
+	    return FALSE;
+	} else hitfloor(obj);
     } else if (obj->oclass == SCROLL_CLASS) {
 	if (!scrollhit(&youmonst, obj, TRUE, FALSE))
 	    hitfloor(obj);

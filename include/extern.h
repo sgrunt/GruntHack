@@ -2446,6 +2446,7 @@ E int FDECL(dowrite, (struct obj *));
 E int FDECL(bhitm, (struct monst *,struct obj *));
 E void FDECL(probe_monster, (struct monst *));
 E int FDECL(zhitm, (struct monst *,int,int,struct obj **));
+E void FDECL(zhitu, (int,int,const char *,XCHAR_P,XCHAR_P));
 E boolean FDECL(get_obj_location, (struct obj *,xchar *,xchar *,int));
 E boolean FDECL(get_mon_location, (struct monst *,xchar *,xchar *,int));
 E struct monst *FDECL(get_container_location, (struct obj *obj, int *, int *));

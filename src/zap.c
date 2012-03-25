@@ -26,7 +26,6 @@ STATIC_DCL void FDECL(costly_cancel, (struct obj *));
 STATIC_DCL void FDECL(polyuse, (struct obj*, int, int));
 STATIC_DCL void FDECL(create_polymon, (struct obj *, int));
 STATIC_DCL boolean FDECL(zap_updown, (struct obj *));
-STATIC_DCL void FDECL(zhitu, (int,int,const char *,XCHAR_P,XCHAR_P));
 STATIC_DCL void FDECL(revive_egg, (struct obj *));
 #ifdef STEED
 STATIC_DCL boolean FDECL(zap_steed, (struct obj *));
@@ -3335,7 +3334,7 @@ struct obj **ootmp;	/* to return worn armor for caller to disintegrate */
 	return(tmp);
 }
 
-STATIC_OVL void
+void
 zhitu(type, nd, fltxt, sx, sy)
 int type, nd;
 const char *fltxt;
