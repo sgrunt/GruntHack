@@ -291,8 +291,11 @@ moveloop()
 			u_wipe_engr(rnd(3));
 		    if (u.uevent.udemigod && !u.uinvulnerable) {
 			if (u.udg_cnt) u.udg_cnt--;
-			if (!u.udg_cnt) {
-			    intervene();
+			if (!(u.udg_cnt & ~UDG_DO_RESURRECT)) {
+			    if (u.udg_cnt & UDG_DO_RESURRECT)
+			    	resurrect();
+			    else
+			        intervene();
 			    u.udg_cnt = rn1(200, 50);
 			}
 		    }

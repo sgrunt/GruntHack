@@ -260,6 +260,7 @@ struct obj *book2;
 	    }
 	    u.uevent.udemigod = 1;	/* wizdead() */
 	    if (!u.udg_cnt || u.udg_cnt > soon) u.udg_cnt = soon;
+	    u.udg_cnt |= UDG_DO_RESURRECT;
 	} else {	/* at least one artifact not prepared properly */
 	    You("have a feeling that %s is amiss...", something);
 	    goto raise_dead;

@@ -315,6 +315,8 @@ struct you {
 	Bitfield(uedibility,1);		/* blessed food detection; sense unsafe food */
 	/* 1 free bit! */
 
+#define UDG_DO_RESURRECT (0x8000U)	/* if set in udg_cnt, resurrect
+					   on next intervene() */
 	unsigned udg_cnt;		/* how long you have been demigod */
 	struct u_event	uevent;		/* certain events have happened */
 	struct u_have	uhave;		/* you're carrying special objects */
