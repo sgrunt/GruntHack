@@ -285,6 +285,11 @@ strategy(mtmp)
 		(mtmp->isshk && inhishop(mtmp)))
 	    return STRAT_NONE;
 
+	if (mtmp->mflee) {
+	    dstrat = STRAT_HEAL;
+	    goto skipchecks;
+	}
+
 	switch((mtmp->mhp*3)/mtmp->mhpmax) {	/* 0-3 */
 
 	   default:
@@ -349,9 +354,15 @@ tactics(mtmp)
 {
 	long strat = strategy(mtmp);
 
+	if ((!((mtmp->mstrategy & STRAT_HEAL))) &&
+	    (!!(strat & STRAT_HEAL)) &&
+	    canseemon(mtmp) && !mtmp->mfrozen &&
+	    !mtmp->mundetected && !mtmp->m_ap_type)
+	    pline("%s turns to flee!", Monnam(mtmp));
+
 	mtmp->mstrategy = (mtmp->mstrategy & STRAT_WAITMASK) | strat;
 
-	switch (strat) {
+	switch (strat & STRAT_STRATMASK) {
 	    case STRAT_HEAL:	/* hide and recover */
 		/* if wounded, hole up on or near the stairs (to block them) */
 		/* unless, of course, there are no stairs (e.g. endlevel) */
@@ -360,7 +371,8 @@ tactics(mtmp)
 			(mtmp->iswiz && !xupstair && !mon_has_amulet(mtmp))) {
 		    if (!rn2(3 + mtmp->mhp/10) &&
 		        can_teleport(mtmp->data) &&
-			!(mtmp->mtrapseen & (1 << TELEP_TRAP-1)))
+		        (!level.flags.noteleport ||
+			 !(mtmp->mtrapseen & (1 << TELEP_TRAP-1))))
 		    {
 		        if (tele_restrict(mtmp)) {
 		            if (level.flags.noteleport)
@@ -373,7 +385,8 @@ tactics(mtmp)
 		} else if (xupstair &&
 			 (mtmp->mx != xupstair || mtmp->my != yupstair)) {
 	            if (can_teleport(mtmp->data) &&
-			!(mtmp->mtrapseen & (1 << (TELEP_TRAP-1))))
+		        (!level.flags.noteleport ||
+			 !(mtmp->mtrapseen & (1 << (TELEP_TRAP-1)))))
 		    {
 		        if (tele_restrict(mtmp)) {
 		            if (level.flags.noteleport)
@@ -407,7 +420,8 @@ tactics(mtmp)
 		    control_teleport(mtmp->data))
 		{
 		    if(!rn2(!mtmp->mflee ? 5 : 33) &&
-		       !(mtmp->mtrapseen & (1 << (TELEP_TRAP-1))))
+		       (!level.flags.noteleport ||
+		        !(mtmp->mtrapseen & (1 << (TELEP_TRAP-1)))))
 		    {
 		        if (tele_restrict(mtmp)) {
 		            if (level.flags.noteleport)
@@ -435,7 +449,8 @@ tactics(mtmp)
 		    /* player is standing on it (or has it) */
 		    if (can_teleport(mtmp->data) &&
 		        control_teleport(mtmp->data) &&
-			!(mtmp->mtrapseen & (1 << TELEP_TRAP-1)) &&
+		        (!level.flags.noteleport ||
+			 !(mtmp->mtrapseen & (1 << TELEP_TRAP-1))) &&
 			dist2(mtmp->mx, mtmp->my, tx, ty) > 2)
 		    {
 		        if (tele_restrict(mtmp)) {
@@ -454,7 +469,8 @@ tactics(mtmp)
 		        if (((!can_teleport(mtmp->data) || 
 		              !control_teleport(mtmp->data)) &&
 			      (mtmp->mx != tx || mtmp->my != ty)) ||
-			      (mtmp->mtrapseen & (1<<TELEP_TRAP-1)))
+			      (level.flags.noteleport &&
+			       (mtmp->mtrapseen & (1<<TELEP_TRAP-1))))
 			    return(0);
 		        
 			if (tele_restrict(mtmp)) {
@@ -481,7 +497,8 @@ tactics(mtmp)
 		            control_teleport(mtmp->data) &&
 			    dist2(mtmp->mx, mtmp->my, tx, ty) > 2 &&
 			    !rn2(5) &&
-			    !(mtmp->mtrapseen & (1<<TELEP_TRAP-1)))
+			    (!level.flags.noteleport ||
+			     !(mtmp->mtrapseen & (1<<TELEP_TRAP-1))))
 			{
 		            if (tele_restrict(mtmp)) {
 		                if (level.flags.noteleport)
@@ -496,7 +513,8 @@ tactics(mtmp)
 	        } else { /* a monster has it - 'port beside it. */
 		    if (can_teleport(mtmp->data) && 
 		        control_teleport(mtmp->data) &&
-			!(mtmp->mtrapseen & (1 << TELEP_TRAP-1)) &&
+			(!level.flags.noteleport ||
+			 !(mtmp->mtrapseen & (1 << TELEP_TRAP-1))) &&
 			dist2(mtmp->mx, mtmp->my, tx, ty) > 2)
 	            {
 		        if (tele_restrict(mtmp)) {
