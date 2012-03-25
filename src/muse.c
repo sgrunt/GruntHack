@@ -946,7 +946,7 @@ mon_tele:
 		return 2;
 	case MUSE_SPE_TELEPORT_AWAY:
 	case MUSE_WAN_TELEPORTATION:
-		if (!mtmp->mtarget) {
+		if (!mtmp->mtarget && !mfind_target(mtmp)) {
 		    impossible(
 		        "trying to teleport someone away with no target?");
 		    return 0;
@@ -988,7 +988,7 @@ mon_tele:
 		return 2;
 	case MUSE_SPE_POLYMORPH:
 	case MUSE_WAN_POLYMORPH:
-		if (!mtmp->mtarget) {
+		if (!mtmp->mtarget && !mfind_target(mtmp)) {
 		    impossible(
 		        "trying to polymorph someone with no target?");
 		    return 0;

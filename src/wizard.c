@@ -289,11 +289,14 @@ strategy(mtmp)
 
 	   default:
 	    case 0:	/* panic time - mtmp is almost snuffed */
-			return(STRAT_HEAL);
+			dstrat = STRAT_HEAL;
+			goto skipchecks;
 
 	    case 1:	/* the wiz is less cautious */
-			if(mtmp->data != &mons[PM_WIZARD_OF_YENDOR])
-			    return(STRAT_HEAL);
+			if(mtmp->data != &mons[PM_WIZARD_OF_YENDOR]) {
+			    dstrat = STRAT_HEAL;
+			    goto skipchecks;
+			}
 			/* else fall through */
 
 	    case 2:	dstrat = STRAT_HEAL;
@@ -328,7 +331,16 @@ strategy(mtmp)
 	    if((strat = target_on(M3_WANTSARTI, mtmp)) != STRAT_NONE)
 		return(strat);
 	}
-	return(dstrat);
+skipchecks:
+	if (dstrat == STRAT_HEAL) {
+	    if (In_W_tower(mtmp->mx, mtmp->my, &u.uz) ||
+	        In_quest(&u.uz) ||
+	        !xupstair) {
+	        return(STRAT(STRAT_HEAL, u.ux, u.uy, 0L));
+	    }
+	    return(STRAT(STRAT_HEAL, xupstair, yupstair, 0L));
+	}
+	return(STRAT(dstrat, u.ux, u.uy, 0L));
 }
 
 int
