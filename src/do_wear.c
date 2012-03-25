@@ -136,8 +136,8 @@ long mask;
     if (props & (ITEM_DEXTERITY|ITEM_BRILLIANCE))
     {
 	adj_abon(otmp, otmp->spe);
-        
-	otmp->oprops_known |= (props & (ITEM_DEXTERITY|ITEM_BRILLIANCE)); 
+       	if (otmp->spe != 0) 
+	    otmp->oprops_known |= (props & (ITEM_DEXTERITY|ITEM_BRILLIANCE)); 
     }
     
     if (props & ITEM_ESP) {
@@ -279,8 +279,9 @@ long mask;
     if (props & (ITEM_DEXTERITY|ITEM_BRILLIANCE))
     {
 	if (!cancelled_don) adj_abon(otmp, -otmp->spe);
-        
-	otmp->oprops_known |= (props & (ITEM_DEXTERITY|ITEM_BRILLIANCE)); 
+       
+        if (otmp->spe != 0)
+	    otmp->oprops_known |= (props & (ITEM_DEXTERITY|ITEM_BRILLIANCE)); 
     }
 
     if (props & ITEM_ESP) {

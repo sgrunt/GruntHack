@@ -83,6 +83,7 @@ boolean restore;
 				otmp->iknown =
 #endif
 				0;
+			otmp->oprops_known = 0;
 			otmp->rknown = 0;
 			otmp->invlet = 0;
 			otmp->no_charge = 0;
