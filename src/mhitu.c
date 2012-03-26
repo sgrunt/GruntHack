@@ -2047,6 +2047,11 @@ gulpmu(mtmp, mattk)	/* monster swallows you, or damage if u.uswallow */
 		case AD_DISE:
 		    if (!diseasemu(mtmp)) tmp = 0;
 		    break;
+	    	case AD_DREN:
+		    if (!rn2(4))
+		        drain_en(tmp);
+		    tmp = 0;
+		    break;
 		default:
 		    tmp = 0;
 		    break;
