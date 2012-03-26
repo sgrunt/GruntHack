@@ -455,7 +455,8 @@ mattackm(magr, mdef)
             case AT_MAGC:
 		/*if (dist2(magr->mx,magr->my,mdef->mx,mdef->my) > 2) break;*/
 
-	        res[i] = castmm(magr, mdef, mattk) | MM_MOVED;
+	        res[i] = castmm(magr, mdef, mattk);
+		if (res[i] > 0) res[i] |= MM_MOVED;
 		if (res[i] & MM_DEF_DIED)
 			return (MM_DEF_DIED |
 				(grow_up(magr,mdef) ? 0 : MM_AGR_DIED));
