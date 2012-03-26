@@ -1164,6 +1164,7 @@ mpickstuff(mtmp, str)
 		    waslocked = TRUE;
 		}
 		if (otmp->otrapped) {
+			if (cansee(mtmp->mx, mtmp->my))
 			pline("%s %s %s%s", Monnam(mtmp),
 			      waslocked ? "unlocks" : "carefully opens",
 			      (distu(mtmp->mx, mtmp->my) <= 5) ?
