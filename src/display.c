@@ -680,6 +680,8 @@ newsym(x,y)
 	lev->waslit = (lev->lit!=0);	/* remember lit condition */
 
 	if (reg != NULL &&
+	    (u.xray_range <= 0 ||
+	     dist2(u.ux,u.uy,x,y) > u.xray_range*u.xray_range) &&
 	    (ACCESSIBLE(lev->typ) ||
 	     lev->typ == POOL || lev->typ == MOAT || lev->typ == WATER ||
 	     lev->typ == LAVAPOOL)) {
@@ -726,6 +728,15 @@ newsym(x,y)
 	        display_warning(mon);
 	    else if (glyph_is_invisible(levl[x][y].glyph))
 		map_invisible(x, y);
+	    else if ((u.xray_range >= 0 &&
+	             dist2(u.ux,u.uy,x,y) <= u.xray_range*u.xray_range) &&
+	             reg != NULL &&
+	             (ACCESSIBLE(lev->typ) ||
+	              lev->typ == POOL || lev->typ == MOAT ||
+		      lev->typ == WATER || lev->typ == LAVAPOOL)) {
+	        show_region(reg,x,y);
+	        return;
+	    }
 	    else
 		_map_location(x,y,1);	/* map the location */
 	}
