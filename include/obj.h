@@ -323,7 +323,9 @@ struct obj {
 			     (o)->otyp != POT_SEE_INVISIBLE)
 #define often_invisible(o)  ((o)->otyp == POT_INVISIBILITY || \
 			     (o)->otyp == SPE_INVISIBILITY || \
-			     (o)->otyp == WAN_MAKE_INVISIBLE)
+			     (o)->otyp == WAN_MAKE_INVISIBLE || \
+			     (o)->otyp == CLOAK_OF_INVISIBILITY || \
+			     (o)->otyp == RIN_INVISIBILITY)
 
 /* Flags for get_obj_location(). */
 #define CONTAINED_TOO	0x1
