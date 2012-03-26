@@ -791,19 +791,26 @@ struct monst *mtmp;
 	    return 0;
 	}
 
-	origdir = dir;
+	origdir = -1;
     } else {
     	dir = rn2(8);
-	origdir = dir;
+	origdir = -1;
 	if (mtmp->mtarget && mtmp->mtarget != &youmonst &&
-	    mlined_up(mtmp, mtmp->mtarget, FALSE) &&
-	    ((!mtmp->mtame && !mtmp->mpeaceful) ||
-	     (sgn(mtmp->mtarget->mx - mtmp->mx) != sgn(u.ux - mtmp->mx)) ||
-	     (sgn(mtmp->mtarget->my - mtmp->my) != sgn(u.uy - mtmp->my))))
-	     {
-		return mtmp->mtarget; /* don't attack if player is in path 
-					 and monster is not hostile */
-	     }
+	    mlined_up(mtmp, mtmp->mtarget, FALSE)) {
+	        int oldtbx = tbx, oldtby = tby;
+		if (!(mtmp->mtame || mtmp->mpeaceful) ||
+		    !lined_up(mtmp) ||
+		    (sgn(mtmp->mtarget->mx-mtmp->mx) !=
+		     sgn(mtmp->mux-mtmp->mx)) ||
+		    (sgn(mtmp->mtarget->my-mtmp->my) !=
+		     sgn(mtmp->muy-mtmp->my)))
+		{
+		    tbx = oldtbx;
+		    tby = oldtby;
+		    return mtmp->mtarget; /* don't attack if player is in path 
+					     and monster is not hostile */
+		}
+	    }
 
     	if (!mtmp->mpeaceful && lined_up(mtmp)) {
 	    	mtmp->mtarget = &youmonst;
