@@ -2780,9 +2780,9 @@ xchar x, y;
 	    if (!force && (Luck + 5) > rn2(chance))
 		continue;
 	    /* Container is burnt up - dump contents out */
-	    if (in_sight) pline("%s catches fire and burns.", Yname2(obj));
+	    if (in_sight) pline("%s catches fire and burns!", Yname2(obj));
 	    if (Has_contents(obj)) {
-		if (in_sight) pline("Its contents fall out.");
+		if (in_sight) pline("Its contents fall out!");
 		for (otmp = obj->cobj; otmp; otmp = ncobj) {
 		    ncobj = otmp->nobj;
 		    obj_extract_self(otmp);
@@ -2800,6 +2800,15 @@ xchar x, y;
 	     *	awful luck (Luck<-4):  100%
 	     */
 	    continue;
+	} else if (obj->otyp == CORPSE ||
+	           (obj->otyp == ROCK && obj->corpsenm != 0)) {
+	    if (!(mons[obj->corpsenm].mresists & MR_FIRE)) {
+	        if (in_sight)
+		    pline("%s burst%s into flames!", Yname2(obj),
+		          obj->quan > 1 ? "" : "s");
+	        delobj(obj);
+	        retval++;
+	    } 
 	} else if (obj->oclass == SCROLL_CLASS || obj->oclass == SPBOOK_CLASS) {
 	    if (obj->otyp == SCR_FIRE || obj->otyp == SPE_FIREBALL)
 		continue;
@@ -2809,19 +2818,28 @@ xchar x, y;
 	    }
 	    dindx = (obj->oclass == SCROLL_CLASS) ? 2 : 3;
 	    if (in_sight)
-		pline("%s %s.", Yname2(obj), (obj->quan > 1) ?
+		pline("%s %s!", Yname2(obj), (obj->quan > 1) ?
 		      destroy_strings[dindx*3 + 1] : destroy_strings[dindx*3]);
 	    delobj(obj);
 	    retval++;
 	} else if (obj->oclass == POTION_CLASS) {
 	    dindx = 1;
 	    if (in_sight)
-		pline("%s %s.", Yname2(obj), (obj->quan > 1) ?
+		pline("%s %s!", Yname2(obj), (obj->quan > 1) ?
 		      destroy_strings[dindx*3 + 1] : destroy_strings[dindx*3]);
 	    delobj(obj);
 	    retval++;
 	} else if (is_flammable(obj)) {
-	    rust_dmg(obj, simple_typename(obj->otyp), 0, FALSE, m_at(x, y));
+	    if (force) {
+	        /* force implies lava; destroy it */
+	        if (in_sight)
+		    pline("%s burst%s into flames!", Yname2(obj),
+		          obj->quan > 1 ? "" : "s");
+	        delobj(obj);
+	        retval++;
+            } else
+	        rust_dmg(obj, simple_typename(obj->otyp), 0, FALSE,
+		         (x == u.ux && y == u.uy) ? &youmonst : m_at(x, y));
 	}
     }
 
@@ -2832,7 +2850,8 @@ xchar x, y;
 
 /* returns TRUE if obj is destroyed */
 boolean
-water_damage(obj, force, here)
+water_damage(victim, obj, force, here)
+register struct monst *victim;
 register struct obj *obj;
 register boolean force, here;
 {
@@ -2855,7 +2874,7 @@ register boolean force, here;
 			(!(obj->otyp == OILSKIN_SACK ||
 			   obj->oprops & ITEM_OILSKIN)
 			   || (obj->cursed && !rn2(3)))) {
-			water_damage(obj->cobj, force, FALSE);
+			water_damage(victim, obj->cobj, force, FALSE);
 		} else if (!force && (Luck + 5) > rn2(20)) {
 			/*  chance per item of sustaining damage:
 			 *	max luck (full moon):	 5%
@@ -2879,7 +2898,9 @@ register boolean force, here;
 		} else if (obj->oclass == POTION_CLASS) {
 			if (obj->otyp == POT_ACID) {
 				/* damage player/monster? */
-				pline("A potion explodes!");
+				if ((victim == &youmonst) ||
+				    (victim && canseemon(victim)))
+				    pline("A potion explodes!");
 				delobj(obj);
 				obj_destroyed = (obj == oorig);
 				continue;
@@ -2900,7 +2921,7 @@ register boolean force, here;
 			   (uarmc->cursed && !rn2(3)))
 			   {
 			       rust_dmg(obj, simple_typename(obj->otyp),
-			                1, FALSE, curmonst);
+			                1, FALSE, victim);
 			   }
 		}
 		obj_destroyed = FALSE;
@@ -3008,7 +3029,7 @@ drown()
 			Hallucination ? "the Titanic" : "a rock");
 	}
 
-	water_damage(invent, FALSE, FALSE);
+	water_damage(&youmonst, invent, FALSE, FALSE);
 	if (Punished && inpool_ok) { /* handled later if !inpool_ok */
 	    if (!(uchain->oerodeproof || (uchain->blessed && !rnl(4)))) {
 		rust_dmg(uchain, simple_typename(uchain->otyp), 1, FALSE,
@@ -4349,9 +4370,10 @@ burn_stuff:
 	(void) Boots_off();
 	useup(obj);
     }
-    destroy_item(SCROLL_CLASS, AD_FIRE);
+/*    destroy_item(SCROLL_CLASS, AD_FIRE);
     destroy_item(SPBOOK_CLASS, AD_FIRE);
-    destroy_item(POTION_CLASS, AD_FIRE);
+    destroy_item(POTION_CLASS, AD_FIRE);*/
+    fire_damage(invent, FALSE, FALSE, u.ux, u.uy);
     return(FALSE);
 }
 

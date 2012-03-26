@@ -3892,7 +3892,7 @@ srch:
 			del_engr_at(u.ux, u.uy);
 			pline("A pool.");
 			/* Must manually make kelp! */
-			water_damage(level.objects[u.ux][u.uy], FALSE, TRUE);
+			water_damage(NULL, level.objects[u.ux][u.uy], FALSE, TRUE);
 			newsym(u.ux, u.uy);
 			return &zeroobj;
 		}
