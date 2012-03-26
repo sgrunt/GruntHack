@@ -850,7 +850,7 @@ struct monst *mtmp;
 	        /* i > 0 ensures this is not a close range attack */
 	        if (mtmp->mtame && !mat->mtame && i > 0) {
 		    if ((!oldmret) ||
-		        (monstr[monsndx(mret->data)] >
+		        (monstr[monsndx(mat->data)] >
 			 monstr[monsndx(oldmret->data)]))
 		    	mret = mat;
 		}
@@ -875,7 +875,7 @@ struct monst *mtmp;
 		        (!(mtmp->mtame && mat->mtame) || !rn2(5))) &&
 			i > 0) {
 		    	if ((!oldmret) ||
-		            (monstr[monsndx(mret->data)] >
+		            (monstr[monsndx(mat->data)] >
 			     monstr[monsndx(oldmret->data)]))
 		        	mret = mat;
 		    }
