@@ -532,6 +532,10 @@ toofar:
 	if (( attacktype(mtmp->data, AT_BREA) ||
 	      attacktype(mtmp->data, AT_GAZE) ||
 	      attacktype(mtmp->data, AT_SPIT) ||
+	     (attacktype(mtmp->data, AT_MAGC) &&
+	      (((attacktype_fordmg(mtmp->data, AT_MAGC, AD_ANY))->adtyp
+	         <= AD_SPC2) || is_spellcaster(mtmp->data))
+	      ) ||
 	     (attacktype(mtmp->data, AT_WEAP) &&
 	      select_rwep(mtmp) != 0) ||
 	      find_offensive(mtmp)) && 
@@ -596,7 +600,8 @@ toofar:
 		    }
 		}
 
-		tmp = m_move(mtmp, 0);
+		if (!tmp)
+		    tmp = m_move(mtmp, 0);
 		distfleeck(mtmp,&inrange,&nearby,&scared);	/* recalc */
 
 		switch (tmp) {

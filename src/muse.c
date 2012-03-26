@@ -1468,9 +1468,12 @@ struct monst *mtmp;
 			|| pm->mlet == S_KOP
 # endif
 		) return 0;
+
+	if (difficulty > 7 && !rn2(20)) return WAN_POLYMORPH;
+
     try_again:
 	switch (rn2(8 + (difficulty > 3) + (difficulty > 6) +
-				(difficulty > 8) + (difficulty > 10))) {
+				(difficulty > 8))) {
 		case 6: case 9:
 			if (level.flags.noteleport && ++trycnt < 2)
 			    goto try_again;
@@ -1492,7 +1495,6 @@ struct monst *mtmp;
 				return 0;
 			else
 				return WAN_DIGGING;
-		case 11: return WAN_POLYMORPH;
 	}
 	/*NOTREACHED*/
 	return 0;
@@ -1518,6 +1520,7 @@ struct monst *mtmp;
 #define MUSE_WAN_CANCELLATION 18
 #define MUSE_SCR_CHARGING 19
 #define MUSE_SCR_STINKING_CLOUD 20
+#define MUSE_WAN_SLOW_MONSTER 21
 
 /* Select an offensive item/action for a monster.  Returns TRUE iff one is
  * found.
@@ -1731,6 +1734,14 @@ boolean reflection_skip;
 				m.tocharge->otyp != WAN_CANCELLATION)) {
 		        m.tocharge = obj;
 		    }
+		}
+		nomore(MUSE_WAN_SLOW_MONSTER);
+		/* don't bother charging this one */
+		if(obj->otyp == WAN_SLOW_MONSTER &&
+		   (obj->spe > 0) &&
+		   (HFast | (TIMEOUT|INTRINSIC))) {
+			m.offensive = obj;
+			m.has_offense = MUSE_WAN_SLOW_MONSTER;
 		}
 		if (m.has_offense == MUSE_SCR_CHARGING && m.tocharge)
 		    continue;
@@ -1970,6 +1981,22 @@ register struct obj *otmp;
 		    }
 		}
 		break;
+	case WAN_SLOW_MONSTER:
+	case SPE_SLOW_MONSTER:
+		if (mtmp == &youmonst) {
+		    if(HFast & (TIMEOUT | INTRINSIC))
+			u_slow_down();
+		} else {
+		    mon_adjust_speed(mtmp, -1, otmp);
+		    m_dowear(mtmp, FALSE); /* consistency with player use */
+		    if (u.uswallow && (mtmp == u.ustuck) &&
+			is_whirly(mtmp->data)) {
+			    pline("%s is disrupted!", Monnam(mtmp));
+			    pline("A huge hole opens up...");
+			    expels(mtmp, mtmp->data, TRUE);
+		    }
+		}
+		break;
 	case SPE_DRAIN_LIFE:
 		if (mtmp == &youmonst) {
 		    char buf[BUFSZ];
@@ -1978,6 +2005,10 @@ register struct obj *otmp;
 	                                s_suffix(done_in_name(curmonst)));
 		    else
 		    	Strcpy(buf, "level drainage");
+		    if (Antimagic || Drain_resistance)
+		        shieldeff(u.ux, u.uy);
+		    else
+		        losexp(buf);
 		} else {
 		    int dmg = rnd(8);
 		    if (resists_drli(mtmp))
@@ -2186,6 +2217,7 @@ struct monst *mtmp;
 	case MUSE_WAN_CANCELLATION:
 	case MUSE_WAN_TELEPORTATION:
 	case MUSE_WAN_STRIKING:
+	case MUSE_WAN_SLOW_MONSTER:
 		zap_oseen = oseen;
 		mzapmsg(mtmp, otmp, FALSE);
 		otmp->spe--;
@@ -2396,7 +2428,7 @@ struct monst *mtmp;
 # endif
 		) return 0;
 	if (difficulty > 7 && !rn2(35)) return WAN_DEATH;
-	switch (rn2(9 - (difficulty < 4) + 3 * (difficulty > 6) + 3 * (difficulty > 8))) {
+	switch (rn2(10 - (difficulty < 4) + 3 * (difficulty > 6) + 3 * (difficulty > 8))) {
 		case 0: {
 		    struct obj *helmet = which_armor(mtmp, W_ARMH);
 
@@ -2412,11 +2444,12 @@ struct monst *mtmp;
 		case 7: case 8:
 			return WAN_MAGIC_MISSILE;
 		case 9: return WAN_SLEEP;
-		case 10: return WAN_FIRE;
-		case 11: return WAN_COLD;
-		case 12: return WAN_LIGHTNING;
-		case 13: return WAN_CANCELLATION;
+		case 10: return WAN_SLOW_MONSTER;
+		case 11: return WAN_FIRE;
+		case 12: return WAN_COLD;
+		case 13: return WAN_LIGHTNING;
 		case 14: return SCR_STINKING_CLOUD;
+		case 15: return WAN_CANCELLATION;
 	}
 	/*NOTREACHED*/
 	return 0;

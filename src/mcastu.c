@@ -1030,6 +1030,31 @@ int spellnum;
 	if (canseemon(mtmp)) pline("%s looks relieved.", Monnam(mtmp));
 	dmg = 0;
 	break;
+    case SPE_REMOVE_CURSE:
+    {
+	register struct obj *obj;
+    	if (canseemon(mtmp))
+	    You("feel like someone is helping %s.", mon_nam(mtmp));
+        /* in case of cursed weapon */
+	mtmp->weapon_check = NEED_WEAPON;
+	for (obj = mtmp->minvent; obj; obj = obj->nobj)
+	{
+#ifdef GOLDOBJ
+	    /* gold isn't subject to cursing and blessing */
+	    if (obj->oclass == COIN_CLASS) continue;
+#endif
+	    if ((mtmp->iswiz ||
+	         mtmp->data->msound == MS_NEMESIS ||
+		 is_prince(mtmp->data) ||
+		 is_lord(mtmp->data)) ||
+	         obj->owornmask ||
+		 obj->otyp == LOADSTONE) {
+		    uncurse(obj);
+	    }
+	}
+	dmg = 0;
+        break;
+    }
 #endif
     default:
 	impossible("mcastu: invalid magic spell (%d)", spellnum);
@@ -1376,6 +1401,9 @@ int spellnum;
 	if ((spellnum == SPE_DRAIN_LIFE) && (Antimagic || Drain_resistance))
 	    return TRUE;
 
+	if ((spellnum == SPE_SLOW_MONSTER) && !(HFast & (TIMEOUT | INTRINSIC)))
+	    return TRUE;
+
 	if ((spellnum == SPE_TELEPORT_AWAY) && Teleport_control)
 	    return TRUE;
 
@@ -1582,6 +1610,9 @@ int spellnum;
 
 	if ((spellnum == SPE_DRAIN_LIFE) &&
 	    (resists_magm(mdef) || resists_drli(mdef)))
+	    return TRUE;
+
+	if ((spellnum == SPE_SLOW_MONSTER) && mdef->permspeed == MSLOW)
 	    return TRUE;
 
 	if ((spellnum == SPE_TELEPORT_AWAY) && control_teleport(mdef->data))
@@ -1907,8 +1938,9 @@ buzzmu(mtmp, mattk)		/* monster uses spell (ranged) */
 	{
 #ifdef COMBINED_SPELLS
 	    if (mattk->adtyp == AD_SPEL) {
-	    	if (!mtmp->mpeaceful && !mtmp->mtame && lined_up(mtmp))
+	    	if (!mtmp->mpeaceful && !mtmp->mtame && lined_up(mtmp)) {
 		    return castmu(mtmp,mattk,TRUE,(mtmp->mux==u.ux && mtmp->muy==u.uy));
+		}
 	    }
 #endif
 	    return(0);

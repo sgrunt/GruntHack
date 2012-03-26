@@ -782,7 +782,6 @@ mattacku(mtmp)
 			}
 			break;
 		case AT_MAGC:
-			res |= MM_MOVED;
 			if (range2)
 			    sum[i] = buzzmu(mtmp, mattk);
 			else {
@@ -791,6 +790,8 @@ mattacku(mtmp)
 			    else
 				sum[i] = castmu(mtmp, mattk, TRUE, FALSE);
 			}
+			if (sum[i] > 0)
+			    res |= MM_MOVED;
 			break;
 
 		default:		/* no attack */
