@@ -544,10 +544,10 @@ castmu(mtmp, mattk, thinks_it_foundyou, foundyou)
 	return(ret);
 }
 
-int FDECL(mbhitm, (struct monst *,struct obj *));
-void FDECL(mbhit,
+extern void FDECL(mbhit,
 	(struct monst *,int,int FDECL((*),(MONST_P,OBJ_P)),
 	int FDECL((*),(OBJ_P,OBJ_P)),struct obj *));
+extern boolean m_using;
 
 /* monster wizard and cleric spellcasting functions */
 /*
@@ -775,7 +775,9 @@ int spellnum;
 	tmp1 = tbx; tmp2 = tby;
 	tbx = mtmp->mux - mtmp->mx;
 	tby = mtmp->muy - mtmp->my;
+	m_using = TRUE;
 	mbhit(mtmp,rn1(8,6),mbhitm,bhito,pseudo);
+	m_using = FALSE;
 	obfree(pseudo, (struct obj *)0);
 	tbx = tmp1; tby = tmp2;
 	dmg = 0;
