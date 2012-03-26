@@ -404,10 +404,14 @@ tactics(mtmp)
 		/* if you're not around, cast healing spells */
 		if (distu(mtmp->mx,mtmp->my) > (BOLT_LIM * BOLT_LIM))
 		    if(mtmp->mhp <= mtmp->mhpmax - 8) {
-		        if (canseemon(mtmp))
+		        if (cansee(mtmp->mx, mtmp->my))
 			{
-			    pline("%s casts a spell!", Monnam(mtmp));
-			    pline("%s looks better.", Monnam(mtmp));
+			    pline("%s casts a spell!",
+			          canspotmon(mtmp) ? Monnam(mtmp) :
+				  Something);
+			    pline("%s looks better.",
+			          canspotmon(mtmp) ? Monnam(mtmp) :
+				  Something);
 			}
 			mtmp->mhp += rnd(8);
 			return(1);

@@ -131,7 +131,8 @@ struct obj *otmp;
 			if(dbldam) dmg *= 2;
 			if (is_stone(mtmp->data)) {
 				struct obj *rocks = (struct obj *)0;
-				pline("%s crumbles!", Monnam(mtmp));
+				if (canseemon(mtmp))
+				    pline("%s crumbles!", Monnam(mtmp));
 				mtmp->mhp = -1;
 				xkilled(mtmp, 2, AD_SPEL); /* no corpse */
 				if (mtmp->mhp < 1) /* i.e. didn't lifesave */
@@ -158,10 +159,12 @@ struct obj *otmp;
 			} else {
 				if (otyp == SPE_FORCE_BOLT)
 				    dmg += spell_damage_bonus();
-				hit(zap_type_text, mtmp, exclam(dmg));
+				if (canseemon(mtmp))
+				    hit(zap_type_text, mtmp, exclam(dmg));
 				(void) resist(mtmp, otmp->oclass, dmg, TELL);
 			}
-		} else miss(zap_type_text, mtmp);
+		} else if (canseemon(mtmp))
+		    miss(zap_type_text, mtmp);
 		makeknown(otyp);
 		break;
 	case WAN_SLOW_MONSTER:
@@ -3700,7 +3703,8 @@ register int dx,dy;
 		    } else {
 			if (!otmp) {
 			    /* normal non-fatal hit */
-			    hit(fltxt, mon, exclam(tmp));
+			    if (canseemon(mon))
+			        hit(fltxt, mon, exclam(tmp));
 			} else {
 			    /* some armor was destroyed; no damage done */
 			    if (canseemon(mon))
@@ -3714,7 +3718,7 @@ register int dx,dy;
 		    }
 		}
 		range -= 2;
-	    } else {
+	    } else if (canseemon(mon)) {
 		miss(fltxt,mon);
 	    }
 	} else if (sx == u.ux && sy == u.uy && range >= 0) {

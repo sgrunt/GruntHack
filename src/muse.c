@@ -912,7 +912,9 @@ struct monst *mtmp;
 		    otmp->spe--;
 		    how = WAN_TELEPORTATION;
 		} else {
-		    pline("%s casts a spell!", Monnam(mtmp));
+		    if (cansee(mtmp->mx, mtmp->my) || canseemon(mtmp))
+		        pline("%s casts a spell!",
+		            canspotmon(mtmp) ? Monnam(mtmp) : Something);
 #ifdef COMBINED_SPELLS
 	    	    mtmp->mspec_used += 
 		 	    spelltimeout(mtmp,
@@ -969,7 +971,9 @@ mon_tele:
 				mksobj(SPE_TELEPORT_AWAY, FALSE, FALSE);
 			pseudo->blessed = pseudo->cursed = 0;
 			pseudo->quan = 20L;
-		        pline("%s casts a spell!", Monnam(mtmp));
+		        if (cansee(mtmp->mx, mtmp->my) || canseemon(mtmp))
+		            pline("%s casts a spell!", 
+			        canspotmon(mtmp) ? Monnam(mtmp) : Something);
 #ifdef COMBINED_SPELLS
 	    	        mtmp->mspec_used += 
 				spelltimeout(mtmp,
@@ -1011,7 +1015,9 @@ mon_tele:
 				mksobj(SPE_POLYMORPH, FALSE, FALSE);
 			pseudo->blessed = pseudo->cursed = 0;
 			pseudo->quan = 20L;
-		        pline("%s casts a spell!", Monnam(mtmp));
+		        if (cansee(mtmp->mx, mtmp->my) || canseemon(mtmp))
+		            pline("%s casts a spell!",
+		                canspotmon(mtmp) ? Monnam(mtmp) : Something);
 #ifdef COMBINED_SPELLS
 	    	        mtmp->mspec_used += 
 				spelltimeout(mtmp,
@@ -1069,8 +1075,10 @@ mon_tele:
 		    mzapmsg(mtmp, otmp, FALSE);
 		    otmp->spe--;
 		    if (oseen) makeknown(WAN_DIGGING);
-		} else if (canspotmon(mtmp)) {
-		    pline("%s casts a spell!", Monnam(mtmp));
+		} else {
+		    if (cansee(mtmp->mx, mtmp->my) || canseemon(mtmp))
+		        pline("%s casts a spell!",
+		            canspotmon(mtmp) ? Monnam(mtmp) : Something);
 #ifdef COMBINED_SPELLS
 	    	    mtmp->mspec_used += 
 				spelltimeout(mtmp,
@@ -1887,14 +1895,16 @@ register struct obj *otmp;
 				}
 				newsym(mtmp->mx,mtmp->my);
 			} else {
-				hit(typebuf, mtmp, exclam(tmp));
+				if (cansee(mtmp->mx, mtmp->my))
+				    hit(typebuf, mtmp, exclam(tmp));
 				(void) resist(mtmp, otmp->oclass, tmp, TELL);
 			}
 			if (cansee(mtmp->mx, mtmp->my) && zap_oseen
 				&& otmp->otyp == WAN_STRIKING)
 				makeknown(WAN_STRIKING);
 		} else {
-			miss(typebuf, mtmp);
+			if (cansee(mtmp->mx, mtmp->my))
+			    miss(typebuf, mtmp);
 			if (cansee(mtmp->mx, mtmp->my) && zap_oseen
 				&& otmp->otyp == WAN_STRIKING)
 				makeknown(WAN_STRIKING);
@@ -3275,9 +3285,10 @@ boolean by_you;
 			mksobj(SPE_STONE_TO_FLESH, FALSE, FALSE);
 		pseudo->blessed = pseudo->cursed = 0;
     		mon_adjust_speed(mon, -3, (struct obj *)0);
-
+		if (cansee(mon->mx, mon->my) || canseemon(mon))
+		    pline("%s casts a spell!",
+		        canspotmon(mon) ? Monnam(mon) : Something);
 		if (canseemon(mon)) {
-			pline("%s casts a spell!", Monnam(mon));
 			if (Hallucination)
 		    pline("What a pity - %s just ruined a future piece of art!",
 			    mon_nam(mon));

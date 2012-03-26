@@ -1205,8 +1205,10 @@ actualmove:
 		        wand->spe--;
 #ifdef COMBINED_SPELLS
 		    } else {
-		    	if (canseemon(mtmp)) {
-			    pline("%s casts a spell!", Monnam(mtmp));
+		    	if (cansee(mtmp->mx, mtmp->my) || canseemon(mtmp)) {
+			    pline("%s casts a spell!",
+			          canspotmon(mtmp) ? Monnam(mtmp) :
+				  Something);
 			}
 			mtmp->mspec_used += spelltimeout(mtmp, 
 				objects[SPE_DIG].oc_level);

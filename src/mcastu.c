@@ -443,10 +443,12 @@ castmu(mtmp, mattk, thinks_it_foundyou, foundyou)
 #endif
 		
 		) {
+	    if (cansee(mtmp->mx, mtmp->my) ||
+	        canseemon(mtmp))
 	    pline("%s casts a spell at %s!",
-		canseemon(mtmp) ? Monnam(mtmp) : "Something",
-		levl[mtmp->mux][mtmp->muy].typ == WATER
-		    ? "empty water" : "thin air");
+		    canspotmon(mtmp) ? Monnam(mtmp) : "Something",
+		    levl[mtmp->mux][mtmp->muy].typ == WATER
+		        ? "empty water" : "thin air");
 	    return(0);
 	}
 
@@ -460,7 +462,9 @@ castmu(mtmp, mattk, thinks_it_foundyou, foundyou)
 		pline_The("air crackles around %s.", mon_nam(mtmp));
 	    return(0);
 	}
-	if (canspotmon(mtmp) || !is_undirected_spell(mattk->adtyp, spellnum)) {
+	if (cansee(mtmp->mx, mtmp->my) ||
+	    canseemon(mtmp) ||
+	    !is_undirected_spell(mattk->adtyp, spellnum)) {
 	    pline("%s casts a spell%s!",
 		  canspotmon(mtmp) ? Monnam(mtmp) : "Something",
 		  is_undirected_spell(mattk->adtyp, spellnum) ? "" :
@@ -2016,7 +2020,10 @@ castmm(mtmp, mdef, mattk)
 		pline_The("air crackles around %s.", mon_nam(mtmp));
 	    return(0);
 	}
-	if (canspotmon(mtmp) || canspotmon(mdef)) {
+	if (cansee(mtmp->mx, mtmp->my) ||
+	    canseemon(mtmp) ||
+	    (!is_undirected_spell(mattk->adtyp, spellnum) &&
+	     (cansee(mdef->mx, mdef->my) || canseemon(mdef)))) {
             char buf[BUFSZ];
 	    Sprintf(buf, " at ");
 	    Strcat(buf, mon_nam(mdef));
