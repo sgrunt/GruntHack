@@ -2695,7 +2695,9 @@ int spellnum;
 		tmp1 = tbx; tmp2 = tby;
 		tbx = mtmp->mx - mattk->mx;
 		tby = mtmp->my - mattk->my;
+		m_using = TRUE;
 		mbhit(mattk,rn1(8,6),mbhitm,bhito,pseudo);
+		m_using = FALSE;
 	}
 	obfree(pseudo, (struct obj *)0);
 	if (!yours) {
