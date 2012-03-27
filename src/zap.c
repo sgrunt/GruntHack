@@ -124,7 +124,10 @@ struct obj *otmp;
 	case SPE_FORCE_BOLT:
 		reveal_invis = TRUE;
 		if (resists_magm(mtmp)) {	/* match effect on player */
-			shieldeff(mtmp->mx, mtmp->my);
+			if (cansee(mtmp->mx, mtmp->my)) {
+				shieldeff(mtmp->mx, mtmp->my);
+				pline("Boing!");
+			}
 			break;	/* skip makeknown */
 		} else if (u.uswallow || rnd(20) < 10 + find_mac(mtmp)) {
 			dmg = d(2,12);

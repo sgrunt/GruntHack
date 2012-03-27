@@ -1872,8 +1872,10 @@ register struct obj *otmp;
 			stop_occupation();
 			nomul(0);
 		} else if (resists_magm(mtmp)) {
-			shieldeff(mtmp->mx, mtmp->my);
-			pline("Boing!");
+			if (cansee(mtmp->mx, mtmp->my)) {
+			    shieldeff(mtmp->mx, mtmp->my);
+			    pline("Boing!");
+			}
 		} else if (rnd(20) < 10+find_mac(mtmp)) {
 			tmp = d(2,12);
 			if (is_stone(mtmp->data)) {
