@@ -1651,10 +1651,16 @@ struct monst *magr,	/* monster that is currently deciding where to move */
  	/* Since the quest guardians are under siege, it makes sense to have 
         them fight hostiles.  (But we don't want the quest leader to be in
 	danger.) */
- 	if(ma->msound==MS_GUARDIAN && mdef->mpeaceful==FALSE)
+ 	if(ma->msound==MS_GUARDIAN &&
+	   (md->msound!=MS_GUARDIAN &&
+	    md->msound!=MS_LEADER &&
+	    mdef->mpeaceful==FALSE))
  		return ALLOW_M|ALLOW_TM;
  	/* and vice versa */
- 	if(md->msound==MS_GUARDIAN && magr->mpeaceful==FALSE)
+ 	if(md->msound==MS_GUARDIAN && 
+	   (ma->msound!=MS_GUARDIAN &&
+	    ma->msound!=MS_LEADER &&
+	    magr->mpeaceful==FALSE))
  		return ALLOW_M|ALLOW_TM;
  
  	/* elves vs. orcs */
