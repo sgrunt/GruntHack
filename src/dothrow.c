@@ -916,11 +916,11 @@ boolean thrown;
 	}
 	bhitpos.x = u.ux;
 	bhitpos.y = u.uy;
-	hitfloor(obj);
 	savequan = obj->quan;
 	obj->quan = 1L;
 	buf = killer_xname(obj, "falling", TRUE);
 	obj->quan = savequan;
+	hitfloor(obj);
 	losehp(dmg, buf, KILLED_BY);
     }
     return TRUE;
