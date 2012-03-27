@@ -4245,13 +4245,14 @@ typfnd:
 			otmp->quan = 1L;
 			u.uconduct.wisharti++;	/* KMH, conduct */
 		}
-		if (!strcmp(aname, "Grayswandir") ||
-		    !strcmp(aname, "Werebane")) {
+		if (aname &&
+		    (!strcmp(aname, "Grayswandir") ||
+		     !strcmp(aname, "Werebane"))) {
 		    otmp->omaterial = SILVER;
 		    resetmat = FALSE;
 		}
 #ifdef INVISIBLE_OBJECTS
-		if (!strcmp(aname, "Magicbane"))
+		if (aname && !strcmp(aname, "Magicbane"))
 			otmp->oinvis = FALSE;
 		else if (otmp->oinvis)
 			otmp->opresenceknown = TRUE;
