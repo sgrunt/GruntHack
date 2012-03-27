@@ -722,6 +722,32 @@ int after, udist, whappr;
 	return appr;
 }
 
+boolean
+acceptable_pet_target(mtmp, mtmp2, ranged)
+register struct monst *mtmp;
+register struct monst *mtmp2;
+boolean ranged;
+{
+    return !((!ranged &&
+                (int)mtmp2->m_lev >= (int)mtmp->m_lev+2 &&
+		!attacktype(mtmp->data, AT_EXPL)) ||
+		(!ranged &&
+		 mtmp2->data == &mons[PM_FLOATING_EYE] && rn2(10) &&
+		 mtmp->mcansee && haseyes(mtmp->data) && mtmp2->mcansee
+		 && (sees_invis(mtmp) || !mtmp2->minvis)) ||
+		(!ranged &&
+		 mtmp2->data==&mons[PM_GELATINOUS_CUBE] && rn2(10)) ||
+		(!ranged &&
+		 max_passive_dmg(mtmp2, mtmp) >= mtmp->mhp) ||
+		((mtmp->mhp*4 < mtmp->mhpmax
+		  || mtmp2->data->msound == MS_GUARDIAN
+		  || mtmp2->data->msound == MS_LEADER
+		  || always_peaceful(mtmp2->data)) &&
+		 mtmp2->mpeaceful && !Conflict) ||
+		   (!ranged && touch_petrifies(mtmp2->data) &&
+			!resists_ston(mtmp)));
+}
+
 extern boolean mconfdir;
 
 /* return 0 (no move), 1 (move) or 2 (dead) */
@@ -861,7 +887,8 @@ register int after;	/* this is extra fast monster movement */
 	    mtmp->mlstmv != monstermoves)
 	{
 	    struct monst *mon = mfind_target(mtmp);
-	    if (mon && mon != &youmonst)
+	    if (mon && (mon != &youmonst) &&
+	        acceptable_pet_target(mtmp, mon, TRUE))
 	    {
 	        int res = (mon == &youmonst) ? mattacku(mtmp)
 		                             : mattackm(mtmp, mon);
@@ -923,19 +950,7 @@ register int after;	/* this is extra fast monster movement */
 
 		    if (!mtmp2) mtmp2 = m_at(nx, ny);
 
-		    if (((int)mtmp2->m_lev >= (int)mtmp->m_lev+2 &&
-		        !attacktype(mtmp->data, AT_EXPL)) ||
-			(mtmp2->data == &mons[PM_FLOATING_EYE] && rn2(10) &&
-			 mtmp->mcansee && haseyes(mtmp->data) && mtmp2->mcansee
-			 && (sees_invis(mtmp) || !mtmp2->minvis)) ||
-			(mtmp2->data==&mons[PM_GELATINOUS_CUBE] && rn2(10)) ||
-			(max_passive_dmg(mtmp2, mtmp) >= mtmp->mhp) ||
-			((mtmp->mhp*4 < mtmp->mhpmax
-			  || mtmp2->data->msound == MS_GUARDIAN
-			  || mtmp2->data->msound == MS_LEADER) &&
-			 mtmp2->mpeaceful && !Conflict) ||
-			   (touch_petrifies(mtmp2->data) &&
-				!resists_ston(mtmp)))
+                    if (!acceptable_pet_target(mtmp, mtmp2, FALSE))
 			continue;
 
 		    if (after) return(0); /* hit only once each move */

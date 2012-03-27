@@ -441,6 +441,7 @@ E void FDECL(wary_dog, (struct monst *, BOOLEAN_P));
 
 E int FDECL(dog_nutrition, (struct monst *,struct obj *));
 E int FDECL(dog_eat, (struct monst *,struct obj *,int,int,BOOLEAN_P));
+E boolean FDECL(acceptable_pet_target,(struct monst *,struct monst *,BOOLEAN_P));
 E int FDECL(dog_move, (struct monst *,int));
 #ifdef USE_TRAMPOLI
 E void FDECL(wantdoor, (int,int,genericptr_t));

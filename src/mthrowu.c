@@ -799,6 +799,8 @@ struct monst *mtmp;
 	    mlined_up(mtmp, mtmp->mtarget, FALSE)) {
 	        int oldtbx = tbx, oldtby = tby;
 		if (!(mtmp->mtame || mtmp->mpeaceful) ||
+	            (!mtmp->mtame ||
+		      acceptable_pet_target(mtmp, mtmp->mtarget, TRUE)) &&
 		    !lined_up(mtmp) ||
 		    (sgn(mtmp->mtarget->mx-mtmp->mx) !=
 		     sgn(mtmp->mux-mtmp->mx)) ||
@@ -848,7 +850,8 @@ struct monst *mtmp;
 	    if ((mat = m_at(x, y)))
 	    {
 	        /* i > 0 ensures this is not a close range attack */
-	        if (mtmp->mtame && !mat->mtame && i > 0) {
+	        if (mtmp->mtame && !mat->mtame &&
+		    acceptable_pet_target(mtmp, mat, TRUE) && i > 0) {
 		    if ((!oldmret) ||
 		        (monstr[monsndx(mat->data)] >
 			 monstr[monsndx(oldmret->data)]))
@@ -858,12 +861,7 @@ struct monst *mtmp;
 		    || (Conflict && !resist(mtmp, RING_CLASS, 0, 0)))
 		{
 		    if (mtmp->mtame && !Conflict &&
-			((int)mat->m_lev >= (int)mtmp->m_lev+2 ||
-			 mat->mtame ||
-			 ((mtmp->mhp*4 < mtmp->mhpmax
-			   || mat->data->msound == MS_GUARDIAN
-			   || mat->data->msound == MS_LEADER) &&
-			  mat->mpeaceful)))
+		        !acceptable_pet_target(mtmp, mat, TRUE))
 		    {
 		        mret = oldmret;
 		        break; /* not willing to attack in that direction */
