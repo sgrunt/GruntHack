@@ -1989,7 +1989,8 @@ gulpmu(mtmp, mattk)	/* monster swallows you, or damage if u.uswallow */
 		        Strangled = 3;
 			tmp = 0;
 		    }
-		    water_damage(&youmonst, invent, FALSE, FALSE);
+		    if (mtmp->data == &mons[PM_WATER_ELEMENTAL])
+		        water_damage(&youmonst, invent, FALSE, FALSE);
 		    break;
 		case AD_ACID:
 		    if (Acid_resistance) {
