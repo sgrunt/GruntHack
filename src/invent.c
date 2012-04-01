@@ -3025,6 +3025,7 @@ mergable(otmp, obj)	/* returns TRUE if obj  & otmp can be merged */
 	    obj->lamplit != otmp->lamplit ||
 #ifdef INVISIBLE_OBJECTS
 		obj->oinvis != otmp->oinvis ||
+		obj->iknown != otmp->iknown ||
 #endif
 	    obj->greased != otmp->greased ||
 	    obj->oeroded != otmp->oeroded ||
@@ -3076,6 +3077,12 @@ mergable(otmp, obj)	/* returns TRUE if obj  & otmp can be merged */
 
 	/* for the moment, any additional information is incompatible */
 	if (obj->oxlth || otmp->oxlth) return FALSE;
+
+	if (obj->oprops != otmp->oprops) return FALSE;
+
+	if ((obj->oprops & (obj->oprops_known|ITEM_MAGICAL)) !=
+	    (otmp->oprops & (otmp->oprops_known|ITEM_MAGICAL)))
+	    return FALSE;
 
 	if(obj->oartifact != otmp->oartifact) return FALSE;
 
