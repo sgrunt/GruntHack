@@ -558,6 +558,10 @@ gazemm(magr, mdef, mattk)
 	struct attack *mattk;
 {
 	char buf[BUFSZ];
+	int ret;
+    
+    	/* duplicated here so that Medusa's gaze works properly */
+    	vis = (cansee(magr->mx,magr->my) && cansee(mdef->mx,mdef->my) && (canspotmon(magr) || canspotmon(mdef)));
 
 	if(vis) {
 		Sprintf(buf,"%s gazes at", Monnam(magr));
@@ -597,7 +601,10 @@ gazemm(magr, mdef, mattk)
 	    }
 	}
 
-	return(mdamagem(magr, mdef, mattk));
+	ret = mdamagem(magr, mdef, mattk);
+	if ((ret == MM_MISS) && vis)
+	    pline("but nothing happens.");
+	return ret;
 }
 
 /* Returns the same values as mattackm(). */
@@ -1015,7 +1022,7 @@ mdamagem(magr, mdef, mattk)
 		if (magr->mcan) break;
  do_stone:
 		/* may die from the acid if it eats a stone-curing corpse */
-		if (munstone(mdef, FALSE)) goto post_stone;
+		/*if (munstone(mdef, FALSE)) goto post_stone;*/
 		if (poly_when_stoned(pd)) {
 			mon_to_stone(mdef);
 			tmp = 0;
