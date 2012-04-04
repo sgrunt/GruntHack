@@ -1019,6 +1019,7 @@ E int FDECL(castum, (struct monst *,struct attack *));
 
 E void FDECL(zombify, (struct monst *));
 E int FDECL(fightm, (struct monst *));
+E int FDECL(gazemm, (struct monst *,struct monst *,struct attack *));
 E int FDECL(mattackm, (struct monst *,struct monst *));
 E int FDECL(noattacks, (struct permonst *));
 E int FDECL(sleep_monst, (struct monst *,int,int));

@@ -2680,7 +2680,15 @@ register struct monst *mtmp;
 	register int i;
 	for(i = 0; i < NATTK; i++)
 	     if(mtmp->data->mattk[i].aatyp == AT_GAZE) {
-		 (void) gazemu(mtmp, &mtmp->data->mattk[i]);
+	         struct monst *mtmp2;
+		 if (couldsee(mtmp->mx, mtmp->my))
+		     (void) gazemu(mtmp, &mtmp->data->mattk[i]);
+
+		 for (mtmp2 = fmon; mtmp2; mtmp2 = mtmp2->nmon) {
+		     if (mtmp == mtmp2) continue;
+		     if (m_cansee(mtmp, mtmp2->mx, mtmp2->my))
+		         (void) gazemm(mtmp, mtmp2, &mtmp->data->mattk[i]);
+		 }
 		 break;
 	     }
     }

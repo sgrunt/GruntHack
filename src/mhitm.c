@@ -20,7 +20,6 @@ static const char brief_feeling[] =
 STATIC_DCL char *FDECL(mon_nam_too, (char *,struct monst *,struct monst *));
 STATIC_DCL void FDECL(mrustm, (struct monst *, struct monst *, struct obj *));
 STATIC_DCL int FDECL(hitmm, (struct monst *,struct monst *,struct attack *));
-STATIC_DCL int FDECL(gazemm, (struct monst *,struct monst *,struct attack *));
 STATIC_DCL int FDECL(gulpmm, (struct monst *,struct monst *,struct attack *));
 STATIC_DCL int FDECL(explmm, (struct monst *,struct monst *,struct attack *));
 STATIC_DCL int FDECL(mdamagem, (struct monst *,struct monst *,struct attack *));
@@ -553,7 +552,7 @@ hitmm(magr, mdef, mattk)
 }
 
 /* Returns the same values as mdamagem(). */
-STATIC_OVL int
+int
 gazemm(magr, mdef, mattk)
 	register struct monst *magr, *mdef;
 	struct attack *mattk;
