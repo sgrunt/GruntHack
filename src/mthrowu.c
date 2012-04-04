@@ -755,6 +755,8 @@ struct monst *mtmp;
 
     struct monst *mat, *mret = (struct monst *)0, *oldmret = (struct monst *)0;
 
+    boolean conflicted = Conflict && !resist(mtmp, RING_CLASS, 0, 0);
+
     if (is_covetous(mtmp->data) && !mtmp->mtame)
     {
         /* find our mark and let him have it, if possible! */
@@ -772,7 +774,7 @@ struct monst *mtmp;
 		return 0;
 	}
 #endif
-    	if (!mtmp->mpeaceful &&
+    	if (!mtmp->mpeaceful && !conflicted &&
 	   ((mtmp->mstrategy & STRAT_STRATMASK) == STRAT_NONE) &&
 	    lined_up(mtmp)) {
 	    	mtmp->mtarget = &youmonst;
@@ -798,8 +800,8 @@ struct monst *mtmp;
 	if (mtmp->mtarget && mtmp->mtarget != &youmonst &&
 	    mlined_up(mtmp, mtmp->mtarget, FALSE)) {
 	        int oldtbx = tbx, oldtby = tby;
-		if (!(mtmp->mtame || mtmp->mpeaceful) ||
-	            (!mtmp->mtame ||
+		if (!((mtmp->mtame || mtmp->mpeaceful) && !conflicted) ||
+	            (!mtmp->mtame || conflicted ||
 		      acceptable_pet_target(mtmp, mtmp->mtarget, TRUE)) &&
 		    !lined_up(mtmp) ||
 		    (sgn(mtmp->mtarget->mx-mtmp->mx) !=
@@ -814,7 +816,7 @@ struct monst *mtmp;
 		}
 	    }
 
-    	if (!mtmp->mpeaceful && lined_up(mtmp)) {
+    	if (!mtmp->mpeaceful && !conflicted && lined_up(mtmp)) {
 	    	mtmp->mtarget = &youmonst;
 		mtmp->mtarget_id = youmonst.m_id;
         	return &youmonst;  /* kludge - attack the player first
@@ -840,8 +842,9 @@ struct monst *mtmp;
 	    if (!isok(x, y) || !ZAP_POS(levl[x][y].typ) || closed_door(x, y))
 	        break; /* off the map or otherwise bad */
 
-	    if ((mtmp->mpeaceful && (x == mtmp->mux && y == mtmp->muy)) ||
-	        (mtmp->mtame && x == u.ux && y == u.uy))
+	    if (!conflicted &&
+	        ((mtmp->mpeaceful && (x == mtmp->mux && y == mtmp->muy)) ||
+	        (mtmp->mtame && x == u.ux && y == u.uy)))
 	    {
 	        mret = oldmret;
 	        break; /* don't attack you if peaceful */
@@ -858,9 +861,9 @@ struct monst *mtmp;
 		    	mret = mat;
 		}
 		else if ((mm_aggression(mtmp, mat) & ALLOW_M)
-		    || (Conflict && !resist(mtmp, RING_CLASS, 0, 0)))
+		    || conflicted)
 		{
-		    if (mtmp->mtame && !Conflict &&
+		    if (mtmp->mtame && !conflicted &&
 		        !acceptable_pet_target(mtmp, mat, TRUE))
 		    {
 		        mret = oldmret;
@@ -869,7 +872,7 @@ struct monst *mtmp;
 
 		    /* Can't make some pairs work together
 		       if they hate each other on principle. */
-		    if ((Conflict ||
+		    if ((conflicted ||
 		        (!(mtmp->mtame && mat->mtame) || !rn2(5))) &&
 			i > 0) {
 		    	if ((!oldmret) ||
