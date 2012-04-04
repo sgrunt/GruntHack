@@ -3084,6 +3084,8 @@ mergable(otmp, obj)	/* returns TRUE if obj  & otmp can be merged */
 	    (otmp->oprops & (otmp->oprops_known|ITEM_MAGICAL)))
 	    return FALSE;
 
+	if(obj->omaterial != otmp->omaterial) return FALSE;
+
 	if(obj->oartifact != otmp->oartifact) return FALSE;
 
 	if(obj->known == otmp->known ||
