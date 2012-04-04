@@ -295,8 +295,10 @@ moverock()
 		    pline("However, you can easily %s.",
 			(flags.pickup && !In_sokoban(&u.uz))
 			    ? "pick it up" : "push it aside");
-		    if (In_sokoban(&u.uz))
+		    if (In_sokoban(&u.uz)) {
+		        if (yn("Do so?") != 'y') return(-1);
 			change_luck(-1);	/* Sokoban guilt */
+		    }
 		    break;
 		}
 		break;
