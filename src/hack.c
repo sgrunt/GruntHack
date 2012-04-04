@@ -66,6 +66,14 @@ moverock()
     register struct monst *mtmp;
 
     sx = u.ux + u.dx,  sy = u.uy + u.dy;	/* boulder starting position */
+
+    if(maybe_polyd(throws_rocks(youmonst.data), Race_if(PM_GIANT)) &&
+       flags.nopick) {
+         if (In_sokoban(&u.uz) && sobj_at(BOULDER, sx, sy))
+            change_luck(-1);	/* Sokoban guilt */
+        return(0);
+    }
+
     while ((otmp = sobj_at(BOULDER, sx, sy)) != 0) {
 	/* make sure that this boulder is visible as the top object */
 	if (otmp != level.objects[sx][sy]) movobj(otmp, sx, sy);
