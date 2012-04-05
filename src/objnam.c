@@ -879,8 +879,8 @@ boolean ignore_oquan;
 	Strcpy(buf, "");
 
 #ifdef INVISIBLE_OBJECTS
+	if (!Blind) obj->iknown = TRUE;
 	if (obj->oinvis && (See_invisible || obj->opresenceknown)) {
-		if (!Blind) obj->iknown = TRUE;
 		if (obj->iknown)
 		{
 			Strcat(buf,"invisible ");
