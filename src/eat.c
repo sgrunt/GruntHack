@@ -291,6 +291,9 @@ choke(food)	/* To a full belly all food is bad. (It.) */
 					  the_unique_obj(food) ||
 					 (halbackup && !Halluc_resistance))))
 					killer = (qarti &&
+#ifdef INVISIBLE_OBJECTS
+						  !food->oinvis &&
+#endif
 					          (!halbackup ||
 						   Halluc_resistance))
 						? The(killer) : the(killer);

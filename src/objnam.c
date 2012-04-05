@@ -1369,8 +1369,13 @@ nameit:
 
 	if (!strncmpi(buf, "the ", 4)) buf += 4;
 #ifdef INVISIBLE_OBJECTS
-	if (reset_invis)
+	if (reset_invis) {
+		char buf3[BUFSZ];
+		Strcpy(buf3, buf);
+		buf2[10] = '\0';
+		Strcat(buf2, buf3);
 		buf = buf2;
+	}
 #endif
 	return(buf);
 }
