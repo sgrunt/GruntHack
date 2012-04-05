@@ -650,17 +650,16 @@ gulpmm(magr, mdef, mattk)
 	 *  ender's position.
 	 */
 	remove_monster(ax, ay);
+	remove_monster_img(magr->mix, magr->miy);
 #ifdef STEED
 	if (u.usteed && magr == u.usteed) {
 	    remove_monster(dx, dy);
 	    teleds(dx, dy, FALSE);
 	} else {
 #endif
-	remove_monster(magr->mix, magr->miy);
-	newsym(magr->mix,magr->miy);	/* erase old position */
-	place_monster(magr, dx, dy);
 	newsym(ax,ay);			/* erase old position */
 	newsym(magr->mix,magr->miy);	/* erase old position */
+	place_monster(magr, dx, dy);
 #ifdef STEED
 	}
 #endif
@@ -1525,7 +1524,7 @@ msickness:
 	if((mdef->mhp -= tmp) < 1) {
 	    if (m_at(mdef->mx, mdef->my) == magr) {  /* see gulpmm() */
 		remove_monster(mdef->mx, mdef->my);
-		remove_monster(mdef->mix, mdef->miy);
+		remove_monster_img(mdef->mix, mdef->miy);
 		mdef->mhp = 1;	/* otherwise place_monster will complain */
 		place_monster(mdef, mdef->mx, mdef->my);
 		mdef->mhp = 0;
