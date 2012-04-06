@@ -601,7 +601,7 @@ char *buf;
 {
 	const char *what;
 
-	if (kickobj) what = distant_name(kickobj,doname);
+	if (kickobj) what = killer_xname(kickobj, "", TRUE);
 	else if (IS_DOOR(maploc->typ)) what = "a door";
 	else if (IS_TREE(maploc->typ)) what = "a tree";
 	else if (IS_STWALL(maploc->typ)) what = "a wall";
