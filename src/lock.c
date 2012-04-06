@@ -378,6 +378,14 @@ pick_lock(pick) /* pick a lock with a given object */
 		    pline("I don't think %s would appreciate that.", mon_nam(mtmp));
 		return(0);
 	    }
+	    if (mtmp                                    &&
+	        (mtmp->m_ap_type == M_AP_FURNITURE)     &&
+		(mtmp->mappearance == S_hcdoor ||
+			mtmp->mappearance == S_vcdoor)	&&
+		!Protection_from_shape_changers)	 {
+		stumble_onto_mimic(mtmp);
+	        return(1);
+	    }
 	    if(!IS_DOOR(door->typ)) {
 		if (is_drawbridge_wall(cc.x,cc.y) >= 0)
 		    You("%s no lock on the drawbridge.",
