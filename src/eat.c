@@ -266,6 +266,9 @@ choke(food)	/* To a full belly all food is bad. (It.) */
 		 */
 		if(food) {
 			int halbackup = HHallucination;
+			boolean knownbackup = food->known;
+			boolean dknownbackup = food->dknown;
+			food->known = food->dknown = 1;
 			HHallucination = 0;
 			You("choke over your %s.", foodword(food));
 			if (food->oclass == COIN_CLASS) {
@@ -301,6 +304,8 @@ choke(food)	/* To a full belly all food is bad. (It.) */
 				}
 			}
 			HHallucination = halbackup;
+			food->known  = knownbackup;
+			food->dknown = dknownbackup;
 		} else {
 			You("choke over it.");
 			killer = "quick snack";
