@@ -1108,13 +1108,18 @@ int spellnum;
 	if (reflects || Shock_resistance) {
 	    shieldeff(u.ux, u.uy);
 	    dmg = 0;
-	    if (reflects)
-		break;
 	} else
 	    dmg = d(8, 6);
-	if (Half_spell_damage) dmg = (dmg + 1) / 2;
-	destroy_item(WAND_CLASS, AD_ELEC);
-	destroy_item(RING_CLASS, AD_ELEC);
+	if (!reflects) {
+	    if (Half_spell_damage) dmg = (dmg + 1) / 2;
+	    destroy_item(WAND_CLASS, AD_ELEC);
+	    destroy_item(RING_CLASS, AD_ELEC);
+	}
+	if (!resists_blnd(&youmonst)) {
+	    You("are blinded by the flash!");
+	    make_blinded((long)rnd(100),FALSE);
+	    if (!Blind) Your(vision_clears);
+	}
 	break;
     }
     case CLC_CURSE_ITEMS:
@@ -2949,12 +2954,19 @@ int spellnum;
 	if (reflects || resists_elec(mtmp)) {
 	    shieldeff(u.ux, u.uy);
 	    dmg = 0;
-	    if (reflects)
-		break;
 	} else
 	    dmg = d(8, 6);
-	destroy_mitem(mtmp, WAND_CLASS, AD_ELEC);
-	destroy_mitem(mtmp, RING_CLASS, AD_ELEC);
+	if (!reflects) {
+	    destroy_mitem(mtmp, WAND_CLASS, AD_ELEC);
+	    destroy_mitem(mtmp, RING_CLASS, AD_ELEC);
+	}
+	if (!resists_blnd(mtmp)) { 
+		register unsigned rnd_tmp = rnd(50);
+		mtmp->mcansee = 0;
+		if((mtmp->mblinded + rnd_tmp) > 127)
+			mtmp->mblinded = 127;
+		else mtmp->mblinded += rnd_tmp;
+	}
 	break;
     }
     case CLC_CURSE_ITEMS:

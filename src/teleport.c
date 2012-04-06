@@ -1248,6 +1248,9 @@ random_teleport_level()
 	if (!rn2(5) || Is_knox(&u.uz))
 	    return cur_depth;
 
+	if (In_endgame(&u.uz)) /* only happens in wizmode */
+	    return cur_depth;
+
 	/* What I really want to do is as follows:
 	 * -- If in a dungeon that goes down, the new level is to be restricted
 	 *    to [top of parent, bottom of current dungeon]

@@ -438,7 +438,10 @@ mattacku(mtmp)
 		    coord cc; /* maybe we need a unexto() function? */
 		    struct obj *obj;
 
-		    You("fall from the %s!", ceiling(u.ux,u.uy));
+                    if (youmonst.data == &mons[PM_TRAPPER])
+		        You("ambush %s!", mon_nam(mtmp));
+		    else
+		        You("fall from the %s!", ceiling(u.ux,u.uy));
 		    if (enexto(&cc, u.ux, u.uy, youmonst.data)) {
 			remove_monster(mtmp->mx, mtmp->my);
 			remove_monster_img(mtmp->mix, mtmp->miy);
@@ -450,7 +453,13 @@ mattacku(mtmp)
 			set_apparxy(mtmp);
 			newsym(u.ux,u.uy);
 		    } else {
-			pline("%s is killed by a falling %s (you)!",
+		        /* this is a pathological case, so might as well
+			 * be silly about it... */
+                        if (youmonst.data == &mons[PM_TRAPPER])
+			    pline("%s dies from the shock of the ambush.",
+			          Monnam(mtmp));
+			else
+			    pline("%s is killed by a falling %s (you)!",
 					Monnam(mtmp), youmonst.data->mname);
 			killed(mtmp, AD_PHYS);
 			newsym(u.ux,u.uy);

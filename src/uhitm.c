@@ -638,6 +638,11 @@ rock1:
 			tmp = 0;
 		    else
 			tmp = rnd(2);
+		    if (obj->omaterial == SILVER
+				&& hates_silver(mdat)) {
+			tmp += rnd(20);
+			silvermsg = TRUE; silverobj = TRUE;
+		    }
 		    if (!thrown && obj == uwep && obj->otyp == BOOMERANG &&
 			    rnl(4) == 4-1) {
 			boolean more_than_1 = (obj->quan > 1L);
@@ -1371,10 +1376,10 @@ struct attack *mattk;
 		char kbuf[BUFSZ];
 
                 if (otmp->otyp == ROCK)
-		    Sprintf(kbuf, "stolen %s", singular(otmp, xname));
+		    Sprintf(kbuf, "stealing %s", an(singular(otmp, xname)));
 		else
-		    Sprintf(kbuf, "stolen %s corpse",
-		                  mons[otmp->corpsenm].mname);
+		    Sprintf(kbuf, "stealing %s corpse",
+		                  an(mons[otmp->corpsenm].mname));
 		instapetrify(kbuf);
 		break;		/* stop the theft even if hero survives */
 	    }

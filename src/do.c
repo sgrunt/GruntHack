@@ -85,6 +85,12 @@ boolean pushing;
 		
 		newsym(rx,ry);
 		if (pushing) {
+#ifdef STEED
+		    if (u.usteed)
+		    	pline("%s pushes %s into the %s.",
+			      Monnam(u.usteed), the(xname(otmp)), what);
+		    else
+#endif
 		    You("push %s into the %s.", the(xname(otmp)), what);
 		    if (flags.verbose && !Blind)
 			pline("Now you can cross it!");

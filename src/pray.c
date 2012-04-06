@@ -700,6 +700,7 @@ gcrownu()
 	obj = mksobj(class_gift, TRUE, FALSE);
 	bless(obj);
 	obj->bknown = TRUE;
+	dropy(obj);
 #ifdef INVISIBLE_OBJECTS
 	obj->opresenceknown = FALSE;
 #endif
@@ -707,7 +708,6 @@ gcrownu()
 #ifdef INVISIBLE_OBJECTS
 	obj->opresenceknown = TRUE;
 #endif
-	dropy(obj);
 	u.ugifts++;
 	/* when getting a new book for known spell, enhance
 	   currently wielded weapon rather than the book */
@@ -751,8 +751,8 @@ gcrownu()
 	    obj = mksobj(LONG_SWORD, FALSE, FALSE);
 	    obj = oname(obj, artiname(ART_VORPAL_BLADE), TRUE);
 	    obj->spe = 1;
-	    at_your_feet("A sword");
 	    dropy(obj);
+	    at_your_feet("A sword");
 	    u.ugifts++;
 	}
 	/* acquire Vorpal Blade's skill regardless of weapon or gift */
@@ -776,9 +776,9 @@ gcrownu()
 	} else if (!already_exists) {
 	    obj = mksobj(RUNESWORD, FALSE, FALSE);
 	    obj = oname(obj, artiname(ART_STORMBRINGER), TRUE);
-	    at_your_feet(An(swordbuf));
 	    obj->spe = 1;
 	    dropy(obj);
+	    at_your_feet(An(swordbuf));
 	    u.ugifts++;
 	}
 	/* acquire Stormbringer's skill regardless of weapon or gift */
@@ -1037,7 +1037,7 @@ pleased(g_align)
 		otmp->otyp = rnd_class(bases[SPBOOK_CLASS], SPE_BLANK_PAPER);
 	    }
 	    bless(otmp);
-	    place_object(otmp, u.ux, u.uy);
+	    dropy(otmp);
 #ifdef INVISIBLE_OBJECTS
 	    otmp->opresenceknown = FALSE;
 #endif

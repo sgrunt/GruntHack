@@ -548,6 +548,11 @@ boolean creation;
 		return;
 
 	m_dowear_type(mon, W_AMUL, creation, FALSE);
+
+	if (ptr == &mons[PM_KI_RIN] ||
+	    ptr == &mons[PM_COUATL])
+	    return;
+
 #ifdef TOURIST
 	/* can't put on shirt if already wearing suit */
 	if (!cantweararm(ptr) || (mon->misc_worn_check & W_ARM))

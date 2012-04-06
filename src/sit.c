@@ -60,12 +60,26 @@ dosit()
 	    goto in_water;
 	}
 
-	if(OBJ_AT(u.ux, u.uy)) {
+	trap = t_at(u.ux, u.uy);
+
+	if(OBJ_AT(u.ux, u.uy) &&
+	   (!trap ||
+	    !(trap->ttyp == PIT ||
+	      trap->ttyp == SPIKED_PIT) ||
+	      (u.utrap && u.utraptype == TT_PIT))) {
 	    register struct obj *obj;
 
 	    obj = level.objects[u.ux][u.uy];
 	    You("sit on %s.", the(xname(obj)));
-	    if (!(Is_box(obj) || obj->omaterial == CLOTH))
+	    if (obj->otyp == CORPSE &&
+	        touch_petrifies(&mons[obj->corpsenm])) {
+		char kbuf[BUFSZ];
+		Sprintf(kbuf, "Sitting on %s", an(corpse_xname(obj, TRUE)));
+		pline("%s is a fatal mistake...", kbuf);
+		kbuf[0] = 's';
+		instapetrify(kbuf);
+	    }
+	    else if (!(Is_box(obj) || obj->omaterial == CLOTH))
 		pline("It's not very comfortable...");
 
 	} else if ((trap = t_at(u.ux, u.uy)) != 0 ||
