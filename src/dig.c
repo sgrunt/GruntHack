@@ -1392,6 +1392,11 @@ int dy;
 	    if (cansee(zx, zy))
 	    	delay_output();	/* wait a little bit */
 	    if (closed_door(zx, zy) || room->typ == SDOOR) {
+	        if (In_sokoban(&u.uz) && !!(room->doormask & D_TRAPPED)) {
+		    if (!Blind && cansee(zx, zy))
+		        pline_The("door glows, then fades.");
+		    break;
+		}
 	        doors++;
 		if (*in_rooms(zx,zy,SHOPBASE)) {
 		    add_damage(zx, zy, yours ? 400L : 0L);
