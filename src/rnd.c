@@ -37,6 +37,8 @@ register int x;
 #endif /* OVL0 */
 #ifdef OVLB
 
+#define NEW_RNL
+
 int
 rnl(x)		/* 0 <= rnl(x) < x; sometimes subtracting Luck */
 register int x;	/* good luck approaches 0, bad luck approaches (x-1) */
@@ -49,6 +51,16 @@ register int x;	/* good luck approaches 0, bad luck approaches (x-1) */
 		return(0);
 	}
 #endif
+
+#ifdef NEW_RNL
+	/* The 42 is semi-empirical; it's to make rnl(100) roughly
+	 * match up between the two cases. */
+	i = RND(42*x);
+	i -= sgn(Luck)*RND((x <= 15 ? 33 : 100)*abs(Luck));
+	i /= 42;
+	if (i < 0) i = 0;
+	if (i >= x) i = x-1;
+#else
 	i = RND(x);
 
 	if (Luck && rn2(50 - Luck)) {
@@ -56,6 +68,7 @@ register int x;	/* good luck approaches 0, bad luck approaches (x-1) */
 	    if (i < 0) i = 0;
 	    else if (i >= x) i = x-1;
 	}
+#endif
 
 	return i;
 }
