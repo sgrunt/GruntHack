@@ -4200,6 +4200,7 @@ register int bodypart;
 				    (lev->doormask & (D_CLOSED|D_TRAPPED))) {
 					lev->typ = VWALL;
 					lev->doormask = D_NODOOR;
+					lev->wall_info |= W_NONDIGGABLE;
 					if (cansee(tx, ty))
 						newsym(tx, ty);
 				}
