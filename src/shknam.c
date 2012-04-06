@@ -12,7 +12,7 @@ extern const struct shclass shtypes[];
 
 #else
 
-STATIC_DCL void FDECL(mkshobj_at, (const struct shclass *,int,int));
+STATIC_DCL struct obj * FDECL(mkshobj_at, (const struct shclass *,int,int));
 STATIC_DCL void FDECL(nameshk, (struct monst *,const char * const *));
 STATIC_DCL int  FDECL(shkinit, (const struct shclass *,struct mkroom *));
 
@@ -242,7 +242,8 @@ init_shop_selection()
 }
 #endif /*0*/
 
-STATIC_OVL void
+STATIC_OVL
+struct obj * 
 mkshobj_at(shp, sx, sy)
 /* make an object of the appropriate type for a shop square */
 const struct shclass *shp;
@@ -260,12 +261,13 @@ int sx, sy;
 		mtmp->m_ap_type = M_AP_OBJECT;
 		mtmp->mappearance = STRANGE_OBJECT;
 	    }
+	    return (struct obj *)0;
 	} else {
 	    atype = get_shop_item(shp - shtypes);
 	    if (atype < 0)
-		(void) mksobj_at(-atype, sx, sy, TRUE, TRUE);
+		return mksobj_at(-atype, sx, sy, TRUE, TRUE);
 	    else
-		(void) mkobj_at(atype, sx, sy, MO_ALLOW_ARTIFACT);
+		return mkobj_at(atype, sx, sy, MO_ALLOW_ARTIFACT);
 	}
 }
 
@@ -457,6 +459,9 @@ register struct mkroom *sroom;
     char buf[BUFSZ];
     int rmno = (sroom - rooms) + ROOMOFFSET;
     const struct shclass *shp = &shtypes[shp_indx];
+    struct obj *shopobj;
+    boolean candleshop = (sroom->rtype == CANDLESHOP);
+    int candlecount = 0;
 
     /* first, try to place a shopkeeper in the room */
     if ((sh = shkinit(shp, sroom)) < 0)
@@ -499,7 +504,24 @@ register struct mkroom *sroom;
 		      (sx == sroom->hx && doors[sh].x == sx+1) ||
 		      (sy == sroom->ly && doors[sh].y == sy-1) ||
 		      (sy == sroom->hy && doors[sh].y == sy+1)) continue;
-	    mkshobj_at(shp, sx, sy);
+	    if (candleshop && candlecount < 7 &&
+	        ((sx == (sroom->hx)) || 
+		 ((sx == (sroom->hx-1)) && (doors[sh].x == sroom->hx+1))) &&
+	        ((sy == (sroom->hy)) || 
+		 ((sy == (sroom->hy-1)) && (doors[sh].y == sroom->hy+1)))) {
+		int objtyp = (rn2(82) < 32) ? WAX_CANDLE : TALLOW_CANDLE;
+		shopobj = mksobj_at(objtyp, sx, sy, TRUE, TRUE);
+		if (shopobj) {
+		    if (shopobj->quan < (7-candlecount))
+		        shopobj->quan = (7-candlecount);
+		    candlecount += shopobj->quan;
+		}
+            }
+	    else {
+	        shopobj = mkshobj_at(shp, sx, sy);
+		if (shopobj && Is_candle(shopobj))
+		    candlecount += shopobj->quan;
+	    }
 	}
 
     /*
