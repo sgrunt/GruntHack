@@ -1235,7 +1235,8 @@ boolean at_stairs, falling, portal;
 			    register xchar x, y;
 
 			    do {
-				x = (COLNO - 2 - rnd(5));
+				x = (updest.lx + 1) +
+				    rn2(updest.hx - updest.lx - 2);
 				y = rn1(ROWNO - 4, 3);
 			    } while(occupied(x, y) ||
 				    IS_WALL(levl[x][y].typ));

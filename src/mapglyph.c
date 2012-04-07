@@ -238,12 +238,16 @@ unsigned *ospecial;
 	    	mtmp = m_at(x, y);
 	    if (!mtmp)
 	    	mtmp = m_img_at(x, y);
+
+	    if (!mtmp)
+	        impossible("monster glyph at (%d, %d) with no monster",
+		           x, y);
 #endif
 
 	    mon_color(glyph);
 	    /* special case the hero for `showrace' option */
 #ifdef TEXTCOLOR
-            if (iflags.use_color && mtmp->m_ap_type == M_AP_MONSTER) {
+            if (iflags.use_color && mtmp && mtmp->m_ap_type == M_AP_MONSTER) {
 	    	color = mons[mtmp->mappearance].mcolor;
 	    } else if (iflags.use_color && (mtmp == &youmonst)
 	    	       && iflags.showrace) {
