@@ -1740,6 +1740,7 @@ void
 replmon(mtmp, mtmp2)
 register struct monst *mtmp, *mtmp2;
 {
+    register struct monst *mtmp3;
     struct obj *otmp;
 
     /* transfer the monster's inventory */
@@ -1777,6 +1778,13 @@ register struct monst *mtmp, *mtmp2;
     if (u.usteed == mtmp) u.usteed = mtmp2;
 #endif
     if (mtmp2->isshk) replshk(mtmp,mtmp2);
+
+    for (mtmp3 = fmon; mtmp3; mtmp3 = mtmp3->nmon) {
+        if (mtmp3->mtarget == mtmp) {
+	    mtmp3->mtarget = mtmp2;
+	    mtmp3->mtarget_id = mtmp2->m_id;
+	}
+    }
 
     /* discard the old monster */
     dealloc_monst(mtmp);
