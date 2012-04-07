@@ -312,28 +312,37 @@ strategy(mtmp)
 	}
 
 	if(flags.made_amulet)
-	    if((strat = target_on(M3_WANTSAMUL, mtmp)) != STRAT_NONE)
+	    if(((strat = target_on(M3_WANTSAMUL, mtmp)) & STRAT_STRATMASK)
+	       != STRAT_NONE)
 		return(strat);
 
 	if(u.uevent.invoked) {		/* priorities change once gate opened */
 
-	    if((strat = target_on(M3_WANTSARTI, mtmp)) != STRAT_NONE)
+	    if(((strat = target_on(M3_WANTSARTI, mtmp)) & STRAT_STRATMASK)
+	       != STRAT_NONE)
 		return(strat);
-	    if((strat = target_on(M3_WANTSBOOK, mtmp)) != STRAT_NONE)
+	    if(((strat = target_on(M3_WANTSBOOK, mtmp)) & STRAT_STRATMASK)
+	       != STRAT_NONE)
 		return(strat);
-	    if((strat = target_on(M3_WANTSBELL, mtmp)) != STRAT_NONE)
+	    if(((strat = target_on(M3_WANTSBELL, mtmp)) & STRAT_STRATMASK)
+	       != STRAT_NONE)
 		return(strat);
-	    if((strat = target_on(M3_WANTSCAND, mtmp)) != STRAT_NONE)
+	    if(((strat = target_on(M3_WANTSCAND, mtmp)) & STRAT_STRATMASK)
+	       != STRAT_NONE)
 		return(strat);
 	} else {
 
-	    if((strat = target_on(M3_WANTSBOOK, mtmp)) != STRAT_NONE)
+	    if(((strat = target_on(M3_WANTSBOOK, mtmp)) & STRAT_STRATMASK)
+	       != STRAT_NONE)
 		return(strat);
-	    if((strat = target_on(M3_WANTSBELL, mtmp)) != STRAT_NONE)
+	    if(((strat = target_on(M3_WANTSBELL, mtmp)) & STRAT_STRATMASK)
+	       != STRAT_NONE)
 		return(strat);
-	    if((strat = target_on(M3_WANTSCAND, mtmp)) != STRAT_NONE)
+	    if(((strat = target_on(M3_WANTSCAND, mtmp)) & STRAT_STRATMASK)
+	       != STRAT_NONE)
 		return(strat);
-	    if((strat = target_on(M3_WANTSARTI, mtmp)) != STRAT_NONE)
+	    if(((strat = target_on(M3_WANTSARTI, mtmp)) & STRAT_STRATMASK)
+	       != STRAT_NONE)
 		return(strat);
 	}
 skipchecks:
