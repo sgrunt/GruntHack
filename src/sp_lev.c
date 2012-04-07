@@ -300,6 +300,10 @@ flip_level(int flp)
 		mtmp = level.monsters[x][y];
 		level.monsters[x][y] = level.monsters[x][y2-y];
 		level.monsters[x][y2-y] = mtmp;
+
+		mtmp = level.monster_images[x][y];
+		level.monster_images[x][y] = level.monster_images[x][y2-y];
+		level.monster_images[x][y2-y] = mtmp;
 	    }
     }
     if (flp & 2) {
@@ -317,6 +321,10 @@ flip_level(int flp)
 		mtmp = level.monsters[x][y];
 		level.monsters[x][y] = level.monsters[x2-x][y];
 		level.monsters[x2-x][y] = mtmp;
+		
+		mtmp = level.monster_images[x][y];
+		level.monster_images[x][y] = level.monster_images[x2-x][y];
+		level.monster_images[x2-x][y] = mtmp;
 	    }
     }
 
@@ -2964,6 +2972,8 @@ dlb *fd;
         !In_V_tower(&u.uz)) {
             flip_level_rnd(3);
     }
+
+    vision_full_recalc = 1;
 
     return TRUE;
 }
