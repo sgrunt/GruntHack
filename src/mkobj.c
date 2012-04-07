@@ -1230,6 +1230,10 @@ boolean copyof;
 	      /* Never insert this returned pointer into mon chains! */
 	    	mnew = mtmp;
 	    }
+	    mnew->mtarget = (mnew->mpeaceful || mnew->mtame)
+	                  ? (struct monst *)0
+			  : &youmonst;
+	    mnew->mtarget_id = (mnew->mtarget) ? mnew->mtarget->m_id : 0;
 	}
 	return mnew;
 }
