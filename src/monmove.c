@@ -1163,10 +1163,12 @@ actualmove:
 	    }
 
             if (mconfdir) {
-	        chi = rn2(cnt);
-		nix = poss[chi].x;
-		niy = poss[chi].y;
-                mmoved = 1;
+	        if (cnt) {
+	            chi = rn2(cnt);
+		    nix = poss[chi].x;
+		    niy = poss[chi].y;
+                    mmoved = 1;
+		}
 	    } else for(i=0; i < cnt; i++) {
 		if (avoid && (info[i] & NOTONL)) continue;
 		nx = poss[i].x;
