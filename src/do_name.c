@@ -559,6 +559,7 @@ boolean artifact;
 	}
 	if (lth) artifact_exists(obj, name, TRUE, !artifact);
 	if (obj->oartifact) {
+	    obj->oprops = obj->oprops_known = 0L;
 	    /* can't dual-wield with artifact as secondary weapon */
 	    if (obj == uswapwep) untwoweapon();
 	    /* activate warning if you've just named your weapon "Sting" */

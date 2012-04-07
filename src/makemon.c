@@ -711,8 +711,10 @@ register struct monst *mtmp;
 		    {
 			otmp = oname(otmp, artiname(
 				rn2(2) ? ART_DEMONBANE : ART_SUNSWORD), TRUE);
-			if (!otmp->oartifact)
+			if (!otmp->oartifact) {
+			    otmp = oname(otmp, "", FALSE);
 			    create_oprop(otmp, FALSE);
+			}
 		    }
 		    bless(otmp);
 		    otmp->oerodeproof = TRUE;
