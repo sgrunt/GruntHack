@@ -922,9 +922,9 @@ register struct obj *obj;
 		pline("%s's %s burn%s", The(xname(obj)), s,
 			(Blind ? "." : " brightly!"));
 	}
-	if (!invocation_pos(u.ux, u.uy)) {
+	if (!invocation_pos(u.ux, u.uy) || On_stairs(u.ux, u.uy)) {
 		pline_The("%s %s being rapidly consumed!", s, vtense(s, "are"));
-		obj->age /= 2;
+		obj->age = (obj->age+1)/2;
 	} else {
 		if(obj->spe == 7) {
 		    if (Blind)
