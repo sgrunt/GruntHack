@@ -3910,10 +3910,7 @@ boolean *shopdamage;
 	}
 	else if(abstype == ZT_COLD && (is_pool(x,y) || is_lava(x,y))) {
 		boolean lava = is_lava(x,y);
-		boolean moat = (!lava && (lev->typ != POOL) &&
-				(lev->typ != WATER) &&
-				!Is_medusa_level(&u.uz) &&
-				!Is_waterlevel(&u.uz));
+		boolean moat = !strcmp(waterbody_name(x, y), "moat"); 
 
 		if (lev->typ == WATER) {
 		    /* For now, don't let WATER freeze. */

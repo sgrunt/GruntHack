@@ -1430,16 +1430,14 @@ dopois:
 		    } else if(u.ustuck == mtmp) {
 			if (is_pool(mtmp->mx,mtmp->my) && !Swimming
 			    && !Amphibious) {
-			    boolean moat =
-				(levl[mtmp->mx][mtmp->my].typ != POOL) &&
-				(levl[mtmp->mx][mtmp->my].typ != WATER) &&
-				!Is_medusa_level(&u.uz) &&
-				!Is_waterlevel(&u.uz);
-
 			    pline("%s drowns you...", Monnam(mtmp));
-			    killer_format = KILLED_BY_AN;
+			    killer_format =
+			        Is_waterlevel(&u.uz) ? KILLED_BY
+			                             : KILLED_BY_AN;
 			    Sprintf(buf, "%s by %s",
-				    moat ? "moat" : "pool of water",
+			            Is_waterlevel(&u.uz)
+				    ? "the Plane of Water"
+			            : waterbody_name(mtmp->mx, mtmp->my),
 				    an(mtmp->data->mname));
 			    killer = buf;
 			    done(DROWNING);
