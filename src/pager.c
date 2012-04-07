@@ -750,7 +750,8 @@ do_look(quick)
 	/* Finally, print out our explanation. */
 	if (found) {
 	    pline("%s", out_str);
-	    if (mon && (mon->misc_worn_check || MON_WEP(mon))) {
+	    if (mon && canseemon(mon) &&
+	        (mon->misc_worn_check || MON_WEP(mon))) {
 	        char buf[BUFSZ];
 		Sprintf(buf, "You see on %s:", mon_nam(mon));
 		(void) display_minventory(mon, 0, buf);
