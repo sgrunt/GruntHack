@@ -2395,8 +2395,10 @@ int spellnum;
 	if (nonliving(mtmp->data) || is_demon(mtmp->data)) {
 	    if (yours || canseemon(mtmp))
 	        pline("%s seems no deader than before.", Monnam(mtmp));
-	} else if (!(resisted = resist(mtmp, 0, 0, FALSE)) ||
-	           rn2(mons[u.umonnum].mlevel) > 12) {
+	} else if (!(resisted = (resists_magm(mtmp) ||
+	                         resist(mtmp, 0, 0, FALSE))) ||
+	           rn2(yours ? mons[u.umonnum].mlevel
+		             : mattk->m_lev) > 12) {
             mtmp->mhp = -1;
 	    if (yours) killed(mtmp, AD_SPEL);
 	    else monkilled(mtmp, "", AD_SPEL);

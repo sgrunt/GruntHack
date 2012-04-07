@@ -400,7 +400,8 @@ struct obj *otmp;
 		}
 		(void)resist(mtmp, otmp->oclass, dmg, NOTELL);
 		break;
-	case SPE_TOUCH_OF_DEATH:
+	case SPE_TOUCH_OF_DEATH: {
+		boolean resists;
 		if(mtmp->data == &mons[PM_DEATH]) {
 		    mtmp->mhpmax += mtmp->mhpmax/2;
 		    if (mtmp->mhpmax >= MAGIC_COOKIE)
@@ -408,15 +409,21 @@ struct obj *otmp;
 		    mtmp->mhp = mtmp->mhpmax;
 		    pline("%s seems stronger!", Monnam(mtmp));
 		    break;
-		} else if (nonliving(mtmp->data) || is_demon(mtmp->data) ||
-			    resists_magm(mtmp)) {	/* similar to player */
-			shieldeff(mtmp->mx, mtmp->my);
+		} else if (rn2(maybe_polyd(youmonst.data->mlevel,
+		                           u.ulevel)) <= 12 ||
+		            nonliving(mtmp->data) || is_demon(mtmp->data) ||
+			    (resists = (resists_magm(mtmp) ||
+			                resist(mtmp, 0, 0, FALSE)))) {
+			/* similar to player */
+			if (resists)
+			    shieldeff(mtmp->mx, mtmp->my);
 			pline("That didn't seem to do very much.");
 		} else {
 		    mtmp->mhp = -1;
 		    xkilled(mtmp, 1, AD_SPEL);
 		}
 		break;
+	}
 	case SPE_CAUSE_AGGRAVATION:
 		you_aggravate(mtmp);
 		break;
