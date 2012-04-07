@@ -62,7 +62,6 @@ const char *fmt, *arg;
 	show_glyph(u.ux, u.uy, objnum_to_glyph(STRANGE_OBJECT));
 	newsym(u.ux,u.uy);
 
-	You(fmt, arg);
 	/* check whether player foolishly genocided self while poly'd */
 	if ((mvitals[urole.malenum].mvflags & G_GENOD) ||
 			(urole.femalenum != NON_PM &&
@@ -71,6 +70,11 @@ const char *fmt, *arg;
 			(urace.femalenum != NON_PM &&
 			(mvitals[urace.femalenum].mvflags & G_GENOD))) {
 	    /* intervening activity might have clobbered genocide info */
+	    char buf[BUFSZ];
+	    Sprintf(buf, "As you %s", fmt);
+	    buf[strlen(buf)-1] = '\0'; /* remove the ! */
+	    Strcat(buf, ", you die.");
+	    pline(buf, arg);
 	    killer = u.ugeno_cause;
 	    killer_format = u.ugeno_fmt;
 	    if (!killer || !strstri(killer, "genocid")) {
@@ -78,7 +82,8 @@ const char *fmt, *arg;
 		killer = "self-genocide";
 	    }
 	    done(GENOCIDED);
-	}
+	} else
+	    You(fmt, arg);
 
 	if (u.twoweap && !could_twoweap(youmonst.data))
 	    untwoweapon();
