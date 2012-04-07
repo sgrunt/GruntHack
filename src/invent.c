@@ -3469,12 +3469,13 @@ const char *hdr, *txt;
 	return;
 }
 
-/* query_objlist callback: return things that could possibly be worn/wielded */
+/* query_objlist callback: return things that are worn/wielded */
 STATIC_OVL boolean
 worn_wield_only(obj)
 struct obj *obj;
 {
-    return (obj->oclass == WEAPON_CLASS
+    return is_worn(obj) &&
+               (   obj->oclass == WEAPON_CLASS
 		|| obj->oclass == ARMOR_CLASS
 		|| obj->oclass == AMULET_CLASS
 		|| obj->oclass == RING_CLASS

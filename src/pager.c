@@ -477,6 +477,7 @@ do_look(quick)
 {
     char    out_str[BUFSZ], look_buf[BUFSZ];
     const char *x_str, *firstmatch = 0;
+    struct monst *mon = 0;
     struct permonst *pm = 0;
     int     i, ans = 0;
     int     sym;		/* typed symbol or converted glyph */
@@ -741,12 +742,19 @@ do_look(quick)
 		    Sprintf(temp_buf, " [seen: %s]", monbuf);
 		    (void)strncat(out_str, temp_buf, BUFSZ-strlen(out_str)-1);
 		}
+		mon = m_at(cc.x, cc.y);
+		if (!mon) mon = m_img_at(cc.x, cc.y);
 	    }
 	}
 
 	/* Finally, print out our explanation. */
 	if (found) {
 	    pline("%s", out_str);
+	    if (mon && (mon->misc_worn_check || MON_WEP(mon))) {
+	        char buf[BUFSZ];
+		Sprintf(buf, "You see on %s:", mon_nam(mon));
+		(void) display_minventory(mon, 0, buf);
+	    }
 	    /* check the data file for information about this thing */
 	    if (found == 1 && ans != LOOK_QUICK && ans != LOOK_ONCE &&
 			(ans == LOOK_VERBOSE || (flags.help && !quick))) {
