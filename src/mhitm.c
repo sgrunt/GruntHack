@@ -760,7 +760,7 @@ register struct monst *mtmp;
     mtmp->morigdata = PM_ZOMBIE; /*it's permanent*/
     mtmp->mhp = 1; /*so they don't try to remove it*/
     if (mtmp->isshk) shkgone(mtmp);
-    (void) newcham(mtmp, &mons[PM_ZOMBIE], FALSE, vis);
+    (void) newcham(mtmp, &mons[PM_ZOMBIE], FALSE, canseemon(mtmp));
     mtmp->ispriest = mtmp->isshk = mtmp->isgd = mtmp->isminion = 0;
     set_malign(mtmp);
 }
@@ -1396,7 +1396,8 @@ msickness:
 		if (!rn2(4) && !flaming(mdef->data) &&
 				mdef->data != &mons[PM_GREEN_SLIME]) {
                     mdef->morigdata = PM_GREEN_SLIME; /*it's permanent*/
-		    (void) newcham(mdef, &mons[PM_GREEN_SLIME], FALSE, vis);
+		    (void) newcham(mdef, &mons[PM_GREEN_SLIME], FALSE, 
+		                   canseemon(mdef));
 		    set_malign(mdef);
 		    mdef->mstrategy &= ~STRAT_WAITFORU;
 		    tmp = 0;
@@ -1542,10 +1543,12 @@ msickness:
 		/* various checks similar to dog_eat and meatobj.
 		 * after monkilled() to provide better message ordering */
 		if (mdef->cham != CHAM_ORDINARY) {
-		    (void) newcham(magr, (struct permonst *)0, FALSE, vis);
+		    (void) newcham(magr, (struct permonst *)0, FALSE, 
+		                   canseemon(magr));
 		} else if (mdef->data == &mons[PM_GREEN_SLIME]) {
                     magr->morigdata = PM_GREEN_SLIME; /* it's permanent */
-		    (void) newcham(magr, &mons[PM_GREEN_SLIME], FALSE, vis);
+		    (void) newcham(magr, &mons[PM_GREEN_SLIME], FALSE,
+		                   canseemon(magr));
 		    set_malign(magr);
 		} else if (mdef->data == &mons[PM_WRAITH]) {
 		    (void) grow_up(magr, (struct monst *)0);
