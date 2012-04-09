@@ -56,7 +56,8 @@ register int x;	/* good luck approaches 0, bad luck approaches (x-1) */
 	/* The 42 is semi-empirical; it's to make rnl(100) roughly
 	 * match up between the two cases. */
 	i = RND(42*x);
-	i -= sgn(Luck)*RND((x <= 15 ? 33 : 100)*abs(Luck));
+	if (Luck)
+	    i -= sgn(Luck)*RND((x <= 15 ? 33 : 100)*abs(Luck));
 	i /= 42;
 	if (i < 0) i = 0;
 	if (i >= x) i = x-1;
