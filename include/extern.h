@@ -1340,6 +1340,7 @@ E void FDECL(Delay, (int));
 /* ### mthrowu.c ### */
 
 E int FDECL(thitu, (int,int,struct obj *,const char *));
+E int FDECL(drop_throw,(struct obj *,BOOLEAN_P,int,int));
 E int FDECL(ohitmon, (struct monst *,struct obj *,int,BOOLEAN_P));
 E boolean FDECL(thrwmu, (struct monst *));
 E boolean FDECL(thrwmm, (struct monst *, struct monst *));
@@ -2102,6 +2103,7 @@ E coord *FDECL(gettrack, (int,int));
 /* ### trap.c ### */
 
 E boolean FDECL(burnarmor,(struct monst *));
+E void FDECL(spill_container,(struct monst *, struct obj *, BOOLEAN_P));
 E boolean FDECL(rust_dmg, (struct obj *,const char *,int,BOOLEAN_P,struct monst *));
 E void FDECL(grease_protect, (struct obj *,const char *,struct monst *));
 E struct trap *FDECL(maketrap, (int,int,int));

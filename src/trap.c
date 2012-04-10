@@ -107,6 +107,39 @@ struct monst *victim;
 #undef burn_dmg
 }
 
+void
+spill_container(victim, otmp, vis)
+register struct monst *victim;
+register struct obj *otmp;
+register boolean vis;
+{
+    boolean yours = (victim == &youmonst);
+    int x = (yours) ? u.ux :
+            (victim) ? victim->mx : otmp->ox;
+    int y = (yours) ? u.uy :
+            (victim) ? victim->my : otmp->oy;
+    register struct obj *otmp2;
+    boolean showed_msg = FALSE;
+
+    if (!Is_container(otmp)) return;
+
+    while ((otmp2 = otmp->cobj)) {
+        if (!showed_msg && vis) {
+            showed_msg = TRUE;
+            pline("The contents of %s spill to the %s.",
+    	      the(xname(otmp)), surface(u.ux,u.uy));
+        }
+        obj_extract_self(otmp2);
+	if (yours && Levitation) {
+	    hitfloor(otmp2);
+        } else if (victim && levitating(victim)) {
+            drop_throw(otmp2, FALSE, x, y);
+        } else if (!flooreffects(otmp2,x,y,"fall")) {
+            place_object(otmp2, x, y);
+        }
+    }
+}
+
 /* Generic rust-armor function.  Returns TRUE if a message was printed;
  * "print", if set, means to print a message (and thus to return TRUE) even
  * if the item could not be rusted; otherwise a message is printed and TRUE is
@@ -206,6 +239,8 @@ struct monst *victim;
 		update_inventory();
 	    }
 	} else {
+	    struct obj *otmp2;
+	    boolean showed_msg = FALSE;
 	    /*if (flags.verbose) {
 		if (victim == &youmonst)
 		    Your("%s %s completely %s.", ostr,
@@ -240,6 +275,7 @@ useup:
 		        else if (otmp == uquiver) uqwepgone();
 		        else if (otmp == uswapwep) uswapwepgone();
 		    }
+		    spill_container(&youmonst, otmp, !Blind);
 		    if (otmp == uball || otmp == uchain) {
 		        boolean ball = (otmp == uball);
 		    	unpunish();
@@ -261,6 +297,8 @@ useup:
 	        pline("%s %s %s away!", buf, ostr,
 		                          vtense(ostr, action[type]));
 	    }
+	    if (victim != &youmonst)
+		spill_container(&youmonst, otmp, (vismon));
 	    if (victim && victim != &youmonst) {
 		obj_extract_self(otmp);
                 if (victim) {

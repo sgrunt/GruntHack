@@ -5,8 +5,6 @@
 #include "hack.h"
 #include "mfndpos.h" /*ALLOW_M*/
 
-STATIC_DCL int FDECL(drop_throw,(struct obj *,BOOLEAN_P,int,int));
-
 #define URETREATING(x,y) (distmin(u.ux,u.uy,x,y) > distmin(u.ux0,u.uy0,x,y))
 
 #define POLE_LIM 5	/* How far monsters can use pole-weapons */
@@ -126,7 +124,7 @@ const char *name;	/* if null, then format `obj' */
  * Returns 0 if object still exists (not destroyed).
  */
 
-STATIC_OVL int
+int
 drop_throw(obj, ohit, x, y)
 register struct obj *obj;
 boolean ohit;

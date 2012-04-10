@@ -711,6 +711,7 @@ boolean fade_scrolls;
 		    else if (target == uquiver) uqwepgone();
 		    else if (target == uswapwep) uswapwepgone();
 		}
+		spill_container(&youmonst, target, !Blind);
 		if (target == uball || target == uchain) {
 		    boolean ball = (target == uball);
 		    unpunish();
@@ -728,6 +729,8 @@ boolean fade_scrolls;
 	    	pline_The("%s away!", aobjnam(target, acid_dmg ? "corrode"
 							       : "rust"));
 	    }
+            if (victim != &youmonst)
+	        spill_container(victim, target, (vismon || visobj));
 	    if (victim && victim != &youmonst) {
 		obj_extract_self(target);
 		if (target->owornmask) {
