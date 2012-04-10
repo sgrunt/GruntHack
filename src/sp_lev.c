@@ -161,6 +161,7 @@ flip_level(int flp)
     for (mtmp = fmon; mtmp; mtmp = mtmp->nmon) {
 	if (flp & 1) {
 	    mtmp->my = y2 - mtmp->my;
+	    mtmp->miy = y2 - mtmp->miy;
 	    if (mtmp->ispriest)
 		EPRI(mtmp)->shrpos.y = y2 - EPRI(mtmp)->shrpos.y;
 	    else if (mtmp->isshk) {
@@ -172,6 +173,7 @@ flip_level(int flp)
 	}
 	if (flp & 2) {
 	    mtmp->mx = x2 - mtmp->mx;
+	    mtmp->mix = x2 - mtmp->mix;
 	    if (mtmp->ispriest)
 		EPRI(mtmp)->shrpos.x = x2 - EPRI(mtmp)->shrpos.x;
 	    else if (mtmp->isshk) {
