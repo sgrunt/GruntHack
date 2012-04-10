@@ -1406,7 +1406,8 @@ int dy;
 		    room->typ = DOOR;
 		else if (cansee(zx, zy))
 		    pline_The("door is razed!");
-		watch_dig((struct monst *)0, zx, zy, TRUE);
+		if (yours)
+		    watch_dig((struct monst *)0, zx, zy, TRUE);
 		room->doormask = D_NODOOR;
 		unblock_point(zx,zy); /* vision */
 		digdepth -= 2;
