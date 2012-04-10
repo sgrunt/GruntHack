@@ -2507,6 +2507,16 @@ uchar aatyp;
 		    passive_obj(mon, (struct obj*)0, &(ptr->mattk[i]));
 	    }
 	    break;
+	  case AD_FIRE:
+	    if(mhit && !mon->mcan) {
+		if (aatyp == AT_KICK) {
+		    if (uarmf)
+			(void)rust_dmg(uarmf, xname(uarmf), 0, TRUE, &youmonst);
+		} else if (aatyp == AT_WEAP || aatyp == AT_CLAW ||
+			   aatyp == AT_MAGC || aatyp == AT_TUCH)
+		    passive_obj(mon, (struct obj*)0, &(ptr->mattk[i]));
+	    }
+	    break;
 	  case AD_MAGM:
 	    /* wrath of gods for attacking Oracle */
 	    if(Antimagic) {
@@ -2669,6 +2679,11 @@ struct attack *mattk;		/* null means we find one internally */
 	case AD_CORR:
 	    if(!mon->mcan) {
 		erode_obj(obj, TRUE, FALSE);
+	    }
+	    break;
+	case AD_FIRE:
+	    if (!mon->mcan) {
+	        (void) rust_dmg(obj, xname(obj), 0, TRUE, &youmonst);
 	    }
 	    break;
 	case AD_ENCH:
