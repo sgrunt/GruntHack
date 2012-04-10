@@ -2639,8 +2639,25 @@ struct obj *box;	/* null for floor trap */
 	}
 	if (!box && burn_floor_paper(u.ux, u.uy, see_it, TRUE) && !see_it)
 	    You("smell paper burning.");
-	if (is_ice(u.ux, u.uy))
+	if (is_ice(u.ux, u.uy)) {
+	    struct trap *tt = (struct trap *)0;
+	    int xbak = 0, ybak = 0;
+	    if (!box) {
+	        tt = t_at(u.ux, u.uy);
+		if (tt) {
+		    xbak = tt->tx;
+		    ybak = tt->ty;
+		    tt->tx = tt->ty = 0; 
+		} else {
+		    impossible("dofiretrap: no tt and no box?");
+		}
+	    }
 	    melt_ice(u.ux, u.uy);
+	    if (tt) {
+	        tt->tx = xbak;
+		tt->ty = ybak;
+	    }
+	}
 }
 
 STATIC_OVL void
