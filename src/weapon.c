@@ -772,7 +772,7 @@ tryagain:
 				mon_nam(mon), xname(obj));
 			} else {
 			    pline("%s tries to wield %s.", Monnam(mon),
-				doname(obj));
+				singular(obj,doname));
 			    pline("%s %s %s!",
 				  s_suffix(Monnam(mon)),
 				  xname(mw_tmp), welded_buf);
@@ -786,7 +786,7 @@ tryagain:
 		setmnotwielded(mon, mw_tmp);
 		mon->weapon_check = NEED_WEAPON;
 		if (canseemon(mon) && !creation) {
-		    pline("%s wields %s%s", Monnam(mon), doname(obj),
+		    pline("%s wields %s%s", Monnam(mon), singular(obj, doname),
 		          mon->mtame ? "." : "!");
 		    if (obj->cursed && obj->otyp != CORPSE) {
 			pline("%s %s to %s %s!",

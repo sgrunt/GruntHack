@@ -2347,6 +2347,8 @@ dlb *fd;
 
 	flip_level_rnd(3);
 
+	vision_full_recalc = 1;
+
 	return TRUE;
 }
 
