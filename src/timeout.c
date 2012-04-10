@@ -185,10 +185,6 @@ nh_timeout()
 		u.uluck++;
 	}
 	if(u.uinvulnerable) return; /* things past this point could kill you */
-	if(Stoned) stoned_dialogue();
-	if(Slimed) slime_dialogue();
-	if(Vomiting) vomiting_dialogue();
-	if(Strangled) choke_dialogue();
 	if(u.mtimedone && !--u.mtimedone) {
 		if (Unchanging)
 			u.mtimedone = rnd(100*youmonst.data->mlevel + 1);
@@ -216,7 +212,13 @@ nh_timeout()
 	}
 #endif
 
-	for(upp = u.uprops; upp < u.uprops+SIZE(u.uprops); upp++)
+	for(upp = u.uprops; upp < u.uprops+SIZE(u.uprops); upp++) {
+	    if (upp->intrinsic) {
+	        if (upp == &u.uprops[STONED]) stoned_dialogue();
+	        if (upp == &u.uprops[SLIMED]) slime_dialogue();
+	        if (upp == &u.uprops[VOMITING]) vomiting_dialogue();
+	        if (upp == &u.uprops[STRANGLED]) choke_dialogue();
+	    }
 	    if((upp->intrinsic & TIMEOUT) && !(--upp->intrinsic & TIMEOUT)) {
 		switch(upp - u.uprops){
 		case STONED:
@@ -403,6 +405,7 @@ nh_timeout()
 			see_monsters();
 			break;
 		}
+	    }
 	}
 
 	run_timers();
