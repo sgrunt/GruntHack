@@ -438,8 +438,15 @@ int
 max_passive_dmg(mdef, magr)
     register struct monst *mdef, *magr;
 {
-    int	i, dmg = 0;
+    int	i, n = 0, dmg = 0;
     uchar adtyp;
+
+    for(i = 0; i < NATTK; i++) {
+        if((magr->data->mattk[i].aatyp == AT_NONE) ||
+	   (magr->data->mattk[i].aatyp == AT_BOOM)) break;
+
+	n++;
+    }
 
     for(i = 0; i < NATTK; i++)
 	if(mdef->data->mattk[i].aatyp == AT_NONE ||
@@ -455,7 +462,7 @@ max_passive_dmg(mdef, magr)
 		dmg *= mdef->data->mattk[i].damd;
 	    } else dmg = 0;
 
-	    return dmg;
+	    return n * dmg;
 	}
     return 0;
 }
