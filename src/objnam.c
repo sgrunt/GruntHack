@@ -1113,7 +1113,7 @@ boolean ignore_oquan;
 			else if(is_cloak(obj))
 				Strcat(buf,"cloak");
 			else if(is_helmet(obj))
-				Strcat(buf,"helmet");
+				Strcat(buf,helmet_name(obj));
 			else if(is_shield(obj))
 				Strcat(buf,"shield");
 			else

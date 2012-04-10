@@ -1973,7 +1973,9 @@ struct obj *obj;
 	pline_The("gold hits the %s, then falls back on top of your %s.",
 		    ceiling(u.ux,u.uy), body_part(HEAD));
 		    /* some self damage? */
-		    if(uarmh) pline("Fortunately, you are wearing a helmet!");
+		    if(uarmh)
+		        pline("Fortunately, you are wearing a %s!",
+			      helmet_name(uarmh));
 		}
 		bhitpos.x = u.ux;
 		bhitpos.y = u.uy;

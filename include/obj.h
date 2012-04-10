@@ -221,6 +221,10 @@ struct obj {
 				|| (otmp)->otyp == DWARVISH_ROUNDSHIELD)
 #define is_gnomish_armor(otmp)	(FALSE)
 
+#define helmet_name(otmp) (is_metallic(otmp) && \
+                           otmp->otyp != DWARVISH_HELM && \
+			   otmp->otyp != ELVEN_HELM ? "helmet" : "hat")
+
 				
 /* Eggs and other food */
 #define MAX_EGG_HATCH_TIME 200	/* longest an egg can remain unhatched */

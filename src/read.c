@@ -1340,7 +1340,9 @@ register struct obj	*sobj;
 				if (helmet) {
 				    if(is_metallic(helmet)) {
 					if (canspotmon(mtmp))
-					    pline("Fortunately, %s is wearing a hard helmet.", mon_nam(mtmp));
+					    pline("Fortunately, %s is wearing a hard %s.",
+					          mon_nam(mtmp),
+					          helmet_name(helmet));
 					else if (flags.soundok)
 					    You_hear("a clanging sound.");
 					if (mdmg > 2) mdmg = 2;
@@ -1383,7 +1385,8 @@ register struct obj	*sobj;
 			dmg = dmgval(otmp2, &youmonst) * otmp2->quan;
 			if (uarmh && !sobj->cursed) {
 			    if(is_metallic(uarmh)) {
-				pline("Fortunately, you are wearing a hard helmet.");
+				pline("Fortunately, you are wearing a hard %s.",
+				      helmet_name(uarmh));
 				if (dmg > 2) dmg = 2;
 			    } else if (flags.verbose) {
 				Your("%s does not protect you.",
@@ -2247,7 +2250,8 @@ boolean your_inv;
 		switch(rn2(5)) {
 			case 0:
 			    if (uarmh)
-			        rust_dmg(uarmh, "helmet", rnd(3), FALSE,
+			        rust_dmg(uarmh, helmet_name(uarmh), rnd(3),
+				         FALSE,
 			        &youmonst);
 			    break;
 			case 1:
@@ -2388,7 +2392,7 @@ boolean your_inv;
 			case 0:
 			    item = which_armor(mon, W_ARMH);
 			    if (item)
-			        rust_dmg(item, "helmet", rnd(3), FALSE,
+			        rust_dmg(item, helmet_name(item), rnd(3), FALSE,
 			        mon);
 			    break;
 			case 1:

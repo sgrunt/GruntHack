@@ -687,7 +687,8 @@ break_armor()
 		     shk_your(yourbuf, otmp), xname(otmp));
 	    } else {
 		if (donning(otmp)) cancel_don();
-		Your("helmet falls to the %s!", surface(u.ux, u.uy));
+		Your("%s falls to the %s!",
+		     helmet_name(otmp), surface(u.ux, u.uy));
 		(void) Helmet_off();
 		dropx(otmp);
 	    }
@@ -709,7 +710,8 @@ break_armor()
 	}
 	if ((otmp = uarmh) != 0) {
 	    if (donning(otmp)) cancel_don();
-	    Your("helmet falls to the %s!", surface(u.ux, u.uy));
+	    Your("%s falls to the %s!",
+	         helmet_name(otmp), surface(u.ux, u.uy));
 	    (void) Helmet_off();
 	    dropx(otmp);
 	}

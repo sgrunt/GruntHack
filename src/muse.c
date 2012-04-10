@@ -2291,7 +2291,8 @@ struct monst *mtmp;
 				if (helmet) {
 				    if(is_metallic(helmet)) {
 					if (canspotmon(mtmp2))
-					    pline("Fortunately, %s is wearing a hard helmet.", mon_nam(mtmp2));
+					    pline("Fortunately, %s is wearing a hard %s.", mon_nam(mtmp2),
+					          helmet_name(helmet));
 					else if (flags.soundok)
 					    You_hear("a clanging sound.");
 					if (mdmg > 2) mdmg = 2;
@@ -2337,7 +2338,8 @@ struct monst *mtmp;
 			dmg = dmgval(otmp2, &youmonst) * otmp2->quan;
 			if (uarmh) {
 			    if(is_metallic(uarmh)) {
-				pline("Fortunately, you are wearing a hard helmet.");
+				pline("Fortunately, you are wearing a hard %s.",
+				      helmet_name(uarmh));
 				if (dmg > 2) dmg = 2;
 			    } else if (flags.verbose) {
 				Your("%s does not protect you.",
