@@ -102,6 +102,7 @@ boolean restore;
 			} else if (otmp->otyp == AMULET_OF_YENDOR) {
 			    /* no longer the real Amulet */
 			    otmp->otyp = FAKE_AMULET_OF_YENDOR;
+			    otmp->omaterial = PLASTIC;
 			    curse(otmp);
 			} else if (otmp->otyp == CANDELABRUM_OF_INVOCATION) {
 			    if (otmp->lamplit)
@@ -110,15 +111,32 @@ boolean restore;
 			    otmp->age = 50L;  /* assume used */
 			    if (otmp->spe > 0)
 				otmp->quan = (long)otmp->spe;
+			    otmp->omaterial = WAX;
 			    otmp->spe = 0;
 			    otmp->owt = weight(otmp);
 			    curse(otmp);
 			} else if (otmp->otyp == BELL_OF_OPENING) {
 			    otmp->otyp = BELL;
+			    otmp->omaterial = COPPER;
 			    curse(otmp);
 			} else if (otmp->otyp == SPE_BOOK_OF_THE_DEAD) {
 			    otmp->otyp = SPE_BLANK_PAPER;
 			    curse(otmp);
+			} else if (otmp->otyp == STATUE) {
+			    struct permonst *mptr = &mons[otmp->corpsenm];
+			    /* same unique monster check as for corpses */
+			    if (otmp->oattached == OATTACHED_MONST &&
+			        ((otmp->corpsenm == PM_WIZARD_OF_YENDOR) ||
+	                         (otmp->corpsenm == PM_MEDUSA) ||
+		                 (mptr->msound == MS_NEMESIS) ||
+				 (mptr->msound == MS_LEADER) ||
+		                 (otmp->corpsenm == PM_VLAD_THE_IMPALER))) {
+			 	struct monst *mon = get_mtraits(otmp, FALSE);
+				if (mon) {
+				    mon->morigdata = PM_DOPPELGANGER;
+				    mon->cham = CHAM_DOPPELGANGER;
+				}
+			    }
 			}
 		}
 	}
