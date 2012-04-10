@@ -906,7 +906,10 @@ register struct obj *obj;
 		return;
 	}
 	if(u.uswallow || obj->cursed) {
-		if (!Blind)
+		if (Blind)
+		    pline_The("%s %s seem to have lit.", s,
+		              obj->spe > 1L ? "don't" : "doesn't");
+		else
 		    pline_The("%s %s for a moment, then %s.",
 			      s, vtense(s, "flicker"), vtense(s, "die"));
 		return;
@@ -1116,8 +1119,13 @@ struct obj *obj;
 	if (obj->cursed && !rn2(2) &&
 		(obj->otyp == OIL_LAMP || obj->otyp == MAGIC_LAMP ||
 		 obj->otyp == BRASS_LANTERN || !obj->oerodeproof)) {
-		pline("%s for a moment, then %s.",
-		      Tobjnam(obj, "flicker"), otense(obj, "die"));
+		if (Blind)
+			pline("%s %s seem to have lit.",
+			     Yname2(obj),
+			     obj->quan > 1L ? "don't" : "doesn't");
+		else
+			pline("%s for a moment, then %s.",
+		      		Tobjnam(obj, "flicker"), otense(obj, "die"));
 	} else {
 		if(obj->otyp == OIL_LAMP || obj->otyp == MAGIC_LAMP ||
 				obj->otyp == BRASS_LANTERN) {
