@@ -122,6 +122,8 @@ register xchar x, y;
 	register boolean clumsy = FALSE;
 	register struct monst *mon = m_at(x, y);
 	register int i, j;
+	coord bypos;
+	boolean canmove = TRUE;
 
 	bhitpos.x = x;
 	bhitpos.y = y;
@@ -196,25 +198,31 @@ register xchar x, y;
 		clumsy = TRUE;
 doit:
 	You("kick %s.", mon_nam(mon));
+	if (!enexto(&bypos, u.ux, u.uy, mon->data) ||
+	    (abs(bypos.x - u.ux) > 1) ||
+	    (abs(bypos.y - u.uy) > 1))
+	    canmove = FALSE;
 	if(!rn2(clumsy ? 3 : 4) && (clumsy || !bigmonst(mon->data)) &&
 	   mon->mcansee && !mon->mtrapped && !thick_skinned(mon->data) &&
 	   mon->data->mlet != S_EEL && haseyes(mon->data) && mon->mcanmove &&
 	   !mon->mstun && !mon->mconf && !mon->msleeping &&
 	   mon->data->mmove >= 12) {
-		if(!nohands(mon->data) && !rn2(martial() ? 5 : 3)) {
+		if(!canmove ||
+		   (!nohands(mon->data) && !rn2(martial() ? 5 : 3))) {
 		    pline("%s blocks your %skick.", Monnam(mon),
 				clumsy ? "clumsy " : "");
 		    (void) passive(mon, FALSE, 1, AT_KICK);
 		    return;
 		} else {
-		    mnexto(mon);
+		    rloc_to(mon, bypos.x, bypos.y);
 		    if(mon->mx != x || mon->my != y) {
 			if(glyph_is_invisible(levl[x][y].glyph)) {
 			    unmap_object(x, y);
 			    newsym(x, y);
 			}
 			pline("%s %s, %s evading your %skick.", Monnam(mon),
-				(can_teleport(mon->data) ? "teleports" :
+				(can_teleport(mon->data) &&
+				 !level.flags.noteleport ? "teleports" :
 				 levitating(mon) ? "floats" :
 				 is_flyer(mon->data) ? "swoops" :
 				 (nolimbs(mon->data) || slithy(mon->data)) ?
