@@ -983,12 +983,12 @@ glovecheck:		(void) rust_dmg(uarmg, "gauntlets", 1, TRUE, &youmonst);
 		    	if ((trflags & RECURSIVETRAP) != 0)
 			    Sprintf(verbbuf, "and %s fall",
 				x_monnam(u.usteed,
-				    u.usteed->mnamelth ? ARTICLE_NONE : ARTICLE_THE,
+				    ARTICLE_THE_OR_NONE,
 				    (char *)0, SUPPRESS_SADDLE, FALSE));
 			else
 			    Sprintf(verbbuf,"lead %s",
 				x_monnam(u.usteed,
-					 u.usteed->mnamelth ? ARTICLE_NONE : ARTICLE_THE,
+					 ARTICLE_THE_OR_NONE,
 				 	 "poor", SUPPRESS_SADDLE, FALSE));
 		    } else
 #endif

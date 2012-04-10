@@ -357,6 +357,7 @@ E const int  materialclr[];
 #define ARTICLE_THE	1
 #define ARTICLE_A	2
 #define ARTICLE_YOUR	3
+#define ARTICLE_THE_OR_NONE 4
 
 /* Monster name suppress masks */
 #define SUPPRESS_IT		0x01

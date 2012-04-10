@@ -755,6 +755,9 @@ register struct monst *mtmp;
 int article;
 /* ARTICLE_NONE, ARTICLE_THE, ARTICLE_A: obvious
  * ARTICLE_YOUR: "your" on pets, "the" on everything else
+ * ARTICLE_THE_OR_NONE: "the" for unnamed pets, nothing for named pets
+ *   (this is here because we don't know if hallucination will kick in
+ *    or not until we reach this function)
  *
  * If the monster would be referred to as "it" or if the monster has a name
  * _and_ there is no adjective, "invisible", "saddled", etc., override this
@@ -787,6 +790,10 @@ boolean called;
 	    article = ARTICLE_THE;
 
 	do_hallu = Hallucination && !(suppress & SUPPRESS_HALLUCINATION);
+	if (article == ARTICLE_THE_OR_NONE)
+	   article = (!mtmp->mnamelth || do_hallu)
+	           ? ARTICLE_THE
+		   : ARTICLE_NONE;
 	do_invis = mtmp->minvis && !(suppress & SUPPRESS_INVISIBLE);
 	do_it = !canspotmon(mtmp) && 
 	    article != ARTICLE_YOUR &&
