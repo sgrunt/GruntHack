@@ -215,17 +215,21 @@ const char *verb;
 		    }
 		}
 		if (*verb && !trap_player) {
-			if (Blind) {
-				if ((x == u.ux) && (y == u.uy))
-					You_hear("a CRASH! beneath you.");
-				else
-					You_hear("the boulder %s.", verb);
+			if (Blind && couldsee(x, y)) {
+				if (flags.soundok) {
+					if ((x == u.ux) && (y == u.uy))
+						You_hear("a CRASH! beneath you.");
+					else
+						You_hear("a nearby CRASH!");
+				}
 			} else if (cansee(x, y)) {
 				pline_The("boulder %s%s.",
 				    t->tseen ? "" : "triggers and ",
 				    t->ttyp == TRAPDOOR ? "plugs a trap door" :
 				    t->ttyp == HOLE ? "plugs a hole" :
 				    "fills a pit");
+			} else if (flags.soundok) {
+				You_hear("a distant CRASH!");
 			}
 		}
 		if (!trap_player) { /* done above if player */
