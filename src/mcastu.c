@@ -2721,8 +2721,8 @@ int spellnum;
 	{
 		int n = rnd(8) + 1;
 		coord pos;
-		pos.x = mattk->mx;
-		pos.y = mattk->my;
+		pos.x = mtmp->mx;
+		pos.y = mtmp->my;
 		while(n--) {
 		    explode(pos.x, pos.y,
 			    spellnum - SPE_MAGIC_MISSILE + 10,
