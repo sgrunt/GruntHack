@@ -199,8 +199,9 @@ register xchar x, y;
 doit:
 	You("kick %s.", mon_nam(mon));
 	if (!enexto(&bypos, u.ux, u.uy, mon->data) ||
-	    (abs(bypos.x - u.ux) > 1) ||
-	    (abs(bypos.y - u.uy) > 1))
+	    !((can_teleport(mon->data) && !level.flags.noteleport) ||
+	      ((abs(bypos.x - u.ux) <= 1) &&
+	       (abs(bypos.y - u.uy) <= 1))))
 	    canmove = FALSE;
 	if(!rn2(clumsy ? 3 : 4) && (clumsy || !bigmonst(mon->data)) &&
 	   mon->mcansee && !mon->mtrapped && !thick_skinned(mon->data) &&
