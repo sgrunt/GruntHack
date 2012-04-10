@@ -431,6 +431,9 @@ boolean wakeup_msg;
 	/* early wakeup from combat won't be possible until next monster turn */
 	u.usleep = monstermoves;
 	nomovemsg = wakeup_msg ? "You wake up." : You_can_move_again;
+	see_monsters();
+	see_objects();
+	vision_full_recalc = 1;
 }
 
 /* Attach an egg hatch timeout to the given egg. */

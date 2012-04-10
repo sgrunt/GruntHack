@@ -25,6 +25,7 @@
  * monsters that are hiding or mimicing other monsters.
  */
 #define tp_sensemon(mon) (	/* The hero can always sense a monster IF:  */\
+    !unconscious() && \
     (!mindless(mon->data)) &&	/* 1. the monster has a brain to sense AND  */\
       ((Blind && Blind_telepat) ||	/* 2a. hero is blind and telepathic OR	    */\
 				/* 2b. hero is using a telepathy inducing   */\
@@ -33,7 +34,9 @@
 	(distu(mon->mx, mon->my) <= (BOLT_LIM * BOLT_LIM))))		      \
 )
 
-#define sensemon(mon) (tp_sensemon(mon) || Detect_monsters || MATCH_WARN_OF_MON(mon))
+#define sensemon(mon) (!unconscious() && \
+                       (tp_sensemon(mon) || Detect_monsters || \
+		        MATCH_WARN_OF_MON(mon)))
 
 /*
  * mon_warning() is used to warn of any dangerous monsters in your

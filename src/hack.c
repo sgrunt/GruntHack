@@ -2227,6 +2227,8 @@ void
 unmul(msg_override)
 const char *msg_override;
 {
+        boolean previously_unconscious = unconscious();
+
 	multi = 0;	/* caller will usually have done this already */
 	if (msg_override) nomovemsg = msg_override;
 	else if (!nomovemsg) nomovemsg = You_can_move_again;
@@ -2235,6 +2237,12 @@ const char *msg_override;
 	u.usleep = 0;
 	if (afternmv) (*afternmv)();
 	afternmv = 0;
+
+	if (previously_unconscious ^ unconscious()) {
+	    see_monsters();
+	    see_objects();
+	    vision_full_recalc = 1;
+	}
 }
 
 #endif /* OVL2 */

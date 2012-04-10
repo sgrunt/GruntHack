@@ -102,8 +102,9 @@
 #define Blindfolded		(ublindf && ublindf->otyp != LENSES)
 #endif
 		/* ...means blind because of a cover */
-#define Blind	((Blinded || Blindfolded || !haseyes(youmonst.data)) && \
-		 !(ublindf && ublindf->oartifact == ART_EYES_OF_THE_OVERWORLD))
+#define Blind	(unconscious() || \
+                 ((Blinded || Blindfolded || !haseyes(youmonst.data)) && \
+		 !(ublindf && ublindf->oartifact == ART_EYES_OF_THE_OVERWORLD)))
 		/* ...the Eyes operate even when you really are blind
 		    or don't have any eyes */
 
