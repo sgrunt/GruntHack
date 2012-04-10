@@ -2575,7 +2575,8 @@ floorfood(verb,corpsecheck)	/* get food from floor or pack */
 			(Flying && !Breathless))) ||
 			(ttmp && ttmp->tseen && 
 			 (ttmp->ttyp == PIT || ttmp->ttyp == SPIKED_PIT) &&
-			 (!u.utrap || (u.utrap && u.utraptype != TT_PIT))))
+			 (!u.utrap || (u.utrap && u.utraptype != TT_PIT)) &&
+			 !Passes_walls))
 	    goto skipfloor;
 
 	if (feeding && metallivorous(youmonst.data)) {

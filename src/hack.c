@@ -2033,7 +2033,8 @@ dopickup()
 		 * in pits.
 		 */
 		if ((traphere->ttyp == PIT || traphere->ttyp == SPIKED_PIT) &&
-		     (!u.utrap || (u.utrap && u.utraptype != TT_PIT))) {
+		     (!u.utrap || (u.utrap && u.utraptype != TT_PIT)) &&
+		     !Passes_walls) {
 			You("cannot reach the bottom of the pit.");
 			return(0);
 		}
