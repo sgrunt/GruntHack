@@ -2956,6 +2956,10 @@ struct obj *obj;			/* object tossed/used */
 			break;
 		}
 
+	    if(fhito) {
+		if(bhitpile(obj,fhito,bhitpos.x,bhitpos.y))
+		    range--;
+	    }
 	    if ((mtmp = m_at(bhitpos.x, bhitpos.y)) != 0) {
 		notonhead = (bhitpos.x != mtmp->mx ||
 			     bhitpos.y != mtmp->my);
@@ -3003,10 +3007,7 @@ struct obj *obj;			/* object tossed/used */
 		    newsym(x, y);
 		}
 	    }
-	    if(fhito) {
-		if(bhitpile(obj,fhito,bhitpos.x,bhitpos.y))
-		    range--;
-	    } else {
+	    if (!fhito) {
 		if(weapon == KICKED_WEAPON &&
 		      ((obj->oclass == COIN_CLASS &&
 			 OBJ_AT(bhitpos.x, bhitpos.y)) ||
