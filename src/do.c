@@ -1606,6 +1606,9 @@ struct obj *corpse;
     char *cname, cname_buf[BUFSZ];
     struct obj *container = (struct obj *)0;
     int container_where = 0;
+#ifdef INVISIBLE_OBJECTS
+    boolean vis = !corpse->oinvis || See_invisible;
+#endif
     
     where = corpse->where;
     is_uwep = corpse == uwep;
@@ -1634,7 +1637,11 @@ struct obj *corpse;
 		break;
 
 	    case OBJ_FLOOR:
-		if (cansee(mtmp->mx, mtmp->my))
+		if (cansee(mtmp->mx, mtmp->my)
+#ifdef INVISIBLE_OBJECTS
+		    && vis
+#endif
+		)
 		    pline("%s rises from the dead!", chewed ?
 			  Adjmonnam(mtmp, "bite-covered") : Monnam(mtmp));
 		break;
