@@ -144,8 +144,19 @@ int shotlimit;
 		if (obj->otyp == ORCISH_ARROW && uwep &&
 				uwep->otyp == ORCISH_BOW) multishot++;
 		break;
+	    case PM_GNOME:
+		if (obj->otyp == CROSSBOW_BOLT && uwep &&
+				uwep->otyp == CROSSBOW) multishot++;
+		break;
 	    default:
 		break;	/* No bonus */
+	    }
+	    /* require high strength for crossbow vollies */
+	    if (uwep && uwep->otyp == CROSSBOW) {
+	        int cap = (Race_if(PM_GNOME) ? 16 : 18);
+		if (ACURR(A_STR) < cap)
+		   multishot -= ((cap + 1 - ACURR(A_STR)) / 2);
+		if (multishot < 1) multishot = 1;
 	    }
 	}
 
@@ -1053,7 +1064,11 @@ boolean twoweap; /* used to restore twoweapon mode if wielded weapon returns */
 			return;
 		}
 	} else {
-		urange = (int)(ACURRSTR)/2;
+		urange =
+		         (uwep && uwep->otyp == CROSSBOW &&
+			  ammo_and_launcher(obj, uwep))
+		         ? 12 /* truncated 25 / 2 */
+			 : (int)(ACURRSTR)/2;
 		/* balls are easy to throw or at least roll */
 		/* also, this insures the maximum range of a ball is greater
 		 * than 1, so the effects from throwing attached balls are
