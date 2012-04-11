@@ -946,7 +946,7 @@ struct obj **optr;
 {
 	register struct obj *obj = *optr;
 	register struct obj *otmp;
-	const char *s = (obj->quan != 1) ? "candles" : "candle";
+	const char *s;
 	char qbuf[QBUFSZ];
 
 	if(u.uswallow) {
@@ -977,9 +977,9 @@ struct obj **optr;
 		if ((long)otmp->spe + obj->quan > 7L)
 		    obj = splitobj(obj, 7L - (long)otmp->spe);
 		else *optr = 0;
+		s = (obj->quan != 1) ? "candles" : "candle";
 		You("attach %ld%s %s to %s.",
-		    obj->quan, !otmp->spe ? "" : " more",
-		    s, the(xname(otmp)));
+		    obj->quan, !otmp->spe ? "" : " more", s, the(xname(otmp)));
 		if (!otmp->spe || otmp->age > obj->age)
 		    otmp->age = obj->age;
 		otmp->spe += (int)obj->quan;
