@@ -3131,7 +3131,7 @@ coord *cc;
 {
 	xchar new_x, new_y;
 	if (!getdir(prompt)) {
-		pline(Never_mind);
+		/*pline(Never_mind);*/ /* done in getdir */
 		return 0;
 	}
 	new_x = x + u.dx;
