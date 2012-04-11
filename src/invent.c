@@ -1065,6 +1065,8 @@ register const char *let,*word;
 		    return((struct obj *)0);
 		}
 		if(ilet == '-') {
+			if (!allownone)
+				pline(Never_mind);
 			return(allownone ? &zeroobj : (struct obj *) 0);
 		}
 		if(ilet == def_oc_syms[COIN_CLASS]) {
