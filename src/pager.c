@@ -172,6 +172,8 @@ lookat(x, y, buf, monbuf)
 		int ways_seen = 0, normal = 0, xraydist;
 		boolean useemon = (boolean) canseemon(mtmp);
                 boolean image = (x == mtmp->mix && y == mtmp->miy);
+		boolean onlyimage = (image) &&
+		                    ((x != mtmp->mx) || (y != mtmp->my));
 
 		xraydist = (u.xray_range<0) ? -1 : u.xray_range * u.xray_range;
 		/* normal vision */
@@ -189,15 +191,15 @@ lookat(x, y, buf, monbuf)
 		    image && see_with_infrared(mtmp))
 		    ways_seen++;
 		/* telepathy */
-		if (tp_sensemon(mtmp) && !image)
+		if (tp_sensemon(mtmp) && !onlyimage)
 		    ways_seen++;
 		/* xray */
-		if (useemon && xraydist > 0 && !image &&
+		if (useemon && xraydist > 0 && !onlyimage &&
 			distu(mtmp->mx, mtmp->my) <= xraydist)
 		    ways_seen++;
-		if (Detect_monsters && !image)
+		if (Detect_monsters && !onlyimage)
 		    ways_seen++;
-		if (MATCH_WARN_OF_MON(mtmp) && !image)
+		if (MATCH_WARN_OF_MON(mtmp) && !onlyimage)
 		    ways_seen++;
 
 		if (ways_seen > 1 || !normal ||
@@ -216,21 +218,21 @@ lookat(x, y, buf, monbuf)
 			Strcat(monbuf, "infravision");
 			if (ways_seen-- > 1) Strcat(monbuf, ", ");
 		    }
-		    if (tp_sensemon(mtmp) && !image) {
+		    if (tp_sensemon(mtmp) && !onlyimage) {
 			Strcat(monbuf, "telepathy");
 			if (ways_seen-- > 1) Strcat(monbuf, ", ");
 		    }
-		    if (useemon && xraydist > 0 && !image &&
+		    if (useemon && xraydist > 0 && !onlyimage &&
 			    distu(mtmp->mx, mtmp->my) <= xraydist) {
 			/* Eyes of the Overworld */
 			Strcat(monbuf, "astral vision");
 			if (ways_seen-- > 1) Strcat(monbuf, ", ");
 		    }
-		    if (Detect_monsters && !image) {
+		    if (Detect_monsters && !onlyimage) {
 			Strcat(monbuf, "monster detection");
 			if (ways_seen-- > 1) Strcat(monbuf, ", ");
 		    }
-		    if (MATCH_WARN_OF_MON(mtmp) && !image) {
+		    if (MATCH_WARN_OF_MON(mtmp) && !onlyimage) {
 		    	char wbuf[BUFSZ];
 			if (Hallucination)
 				Strcat(monbuf, "paranoid delusion");
