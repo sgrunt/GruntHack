@@ -704,10 +704,7 @@ newsym(x,y)
 	    see_it = mon && (worm_tail
 		? (!mon->minvis || See_invisible)
 		: (mon_visible(mon) && (image || !displaced(mon))) || 
-		   (!image && (
-		   (u.xray_range > 0 &&
-		    dist2(u.ux, u.uy, x, y) <= u.xray_range*u.xray_range) || 
-		   tp_sensemon(mon) || MATCH_WARN_OF_MON(mon))));
+		   (!image && (tp_sensemon(mon) || MATCH_WARN_OF_MON(mon))));
 	    if (mon && (see_it || (!worm_tail && Detect_monsters))) {
 		if (mon->mtrapped) {
 		    struct trap *trap = t_at(x, y);
