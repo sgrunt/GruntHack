@@ -2568,6 +2568,7 @@ uchar aatyp;
 			else {
 			    You("are frozen by %s gaze!",
 				  s_suffix(mon_nam(mon)));
+			    nomovemsg = 0; /* default: "You can move again." */
 			    nomul2((ACURR(A_WIS) > 12 || rn2(4)) ? -tmp : -127,
 			           "paralyzed");
 			}

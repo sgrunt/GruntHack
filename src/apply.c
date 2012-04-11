@@ -634,6 +634,7 @@ struct obj *obj;
 			      "Yow!  The mirror stares back!" :
 			      "Yikes!  You've frozen yourself!");
 			nomul2(-rnd((MAXULEV+6) - u.ulevel), "paralyzed");
+			nomovemsg = 0; /* default: "You can move again." */
 			} else You("stiffen momentarily under your gaze.");
 		    } else if (youmonst.data->mlet == S_VAMPIRE)
 			You("don't have a reflection.");

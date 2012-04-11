@@ -382,6 +382,7 @@ gotobj:
 				  equipname(otmp));
 			named++;
 			/* the following is to set multi for later on */
+			nomovemsg = "You finish disrobing.";
 			nomul2(-armordelay, "disrobing");
 			remove_worn_item(otmp, TRUE);
 			otmp->cursed = curssv;

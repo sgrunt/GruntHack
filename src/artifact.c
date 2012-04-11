@@ -1140,7 +1140,7 @@ char *hittee;			/* target's name: "you" or mon_nam(mdef) */
 		resisted = TRUE;
 	    } else {
 		nomul2(-3, "scared");
-		nomovemsg = "";
+		nomovemsg = "You regain your composure.";
 		if (magr && magr == u.ustuck && sticks(youmonst.data)) {
 		    u.ustuck = (struct monst *)0;
 		    You("release %s!", mon_nam(magr));
@@ -1640,7 +1640,7 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 		           artilist[otmp->oartifact].name, hittee);
         	if (youdefend) {
         	    nomul2(-3, "scared");
-        	    nomovemsg = "";
+        	    nomovemsg = "You regain your composure.";
         	    if (magr && magr == u.ustuck && sticks(youmonst.data)) {
         	        u.ustuck = (struct monst *)0;
         	        You("release %s!", mon_nam(magr));

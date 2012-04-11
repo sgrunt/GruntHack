@@ -1320,6 +1320,7 @@ do_storms()
 	pline("Kaboom!!!  Boom!!  Boom!!");
 	if(!u.uinvulnerable) {
 	    stop_occupation();
+	    nomovemsg = 0; /* default: "You can move again." */
 	    nomul2(-3, "disoriented by thunder");
 	}
     } else

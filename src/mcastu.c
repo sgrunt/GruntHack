@@ -1196,12 +1196,14 @@ int spellnum;
 	    if (multi >= 0)
 		You("stiffen briefly.");
 	    nomul2(-1, "paralyzed");
+	    nomovemsg = 0; /* default: "You can move again." */
 	} else {
 	    if (multi >= 0)
 		You("are frozen in place!");
 	    dmg = 4 + (int)mtmp->m_lev;
 	    if (Half_spell_damage) dmg = (dmg + 1) / 2;
 	    nomul2(-dmg, "paralyzed");
+	    nomovemsg = 0; /* default: "You can move again." */
 	}
 	dmg = 0;
 	break;

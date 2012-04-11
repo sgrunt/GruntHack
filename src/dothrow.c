@@ -680,6 +680,7 @@ hurtle(dx, dy, range, verbose)
 
     if(!range || (!dx && !dy) || u.ustuck) return; /* paranoia */
 
+    nomovemsg = "";
     nomul2(-range, "flying uncontrollably");
     if (verbose)
 	You("%s in the opposite direction.", range > 1 ? "hurtle" : "float");

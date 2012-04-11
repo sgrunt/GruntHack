@@ -4161,6 +4161,7 @@ boolean disarm;
 			if (yours) {
 				if (!Free_action) {                        
 				pline("Suddenly you are frozen in place!");
+				nomovemsg = 0; /* default: "You can move again." */
 				nomul2(-d(5, 6), "paralyzed");
 				exercise(A_DEX, FALSE);
 				nomovemsg = You_can_move_again;

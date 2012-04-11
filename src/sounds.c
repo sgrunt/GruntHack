@@ -628,6 +628,7 @@ register struct monst *mtmp;
 	    pline("%s rattles noisily.", Monnam(mtmp));
 	    You("freeze for a moment.");
 	    nomul2(-2, "paralyzed");
+	    nomovemsg = 0; /* default: "You can move again." */
 	    break;
 	case MS_LAUGH:
 	    {

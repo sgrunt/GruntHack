@@ -866,7 +866,7 @@ struct obj *obj;
     }
     You("peer into %s...", the(xname(obj)));
     nomul2(-rnd(10), "crystal-gazing");
-    nomovemsg = "";
+    nomovemsg = "You finish your crystal-gazing.";
     if (obj->spe <= 0)
 	pline_The("vision is unclear.");
     else {

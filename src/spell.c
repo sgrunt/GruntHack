@@ -337,6 +337,7 @@ learn(VOID_ARGS)
 	    (void) confused_book(book);
 	    book = 0;			/* no longer studying */
 	    nomul2(delay, "reading a book");	/* remaining delay is uninterrupted */
+	    nomovemsg = "You're finally able to put the book down.";
 	    delay = 0;
 	    return(0);
 	}
@@ -475,6 +476,7 @@ register struct obj *spellbook;
 		    boolean gone = cursed_book(spellbook);
 
 		    nomul2(delay, "misunderstanding a book");	/* study time */
+		    nomovemsg = 0; /* default: "You can move again." */
 		    delay = 0;
 		    if(gone || !rn2(3)) {
 			if (!gone) pline_The("spellbook crumbles to dust!");
@@ -490,6 +492,7 @@ register struct obj *spellbook;
 			spellbook->in_use = FALSE;
 		    }
 		    nomul2(delay, "reading a book");
+		    nomovemsg = "You're finally able to put the book down.";
 		    delay = 0;
 		    return(1);
 		}
