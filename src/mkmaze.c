@@ -1163,6 +1163,17 @@ register int fd;
 	was_waterlevel = TRUE;
 }
 
+int
+waterbody_prefix(x, y)
+xchar x,y;
+{
+	return (Is_waterlevel(&u.uz) ||
+		is_lava(x, y) ||
+	        !strcmp(waterbody_name(x, y), "water"))
+		? KILLED_BY
+		: KILLED_BY_AN;
+}
+
 const char *waterbody_name(x, y)
 xchar x,y;
 {
