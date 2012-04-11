@@ -1484,10 +1484,7 @@ register struct obj *obj;
 		; /* early exit */
 	else if(exist_artifact(obj->otyp, (tmp = ONAME(obj)))) {
 		if(do_dknown || do_known) {
-			if(!strncmp(tmp, "The ", 4) || !strncmp(tmp, "the ", 4))
-				Sprintf(eos(bp), " [%s]", tmp);
-			else
-				Sprintf(eos(bp), " [the %s]", tmp);
+			Sprintf(eos(bp), " [%s]", tmp);
 		}
 		else
 		; /* if already known as an artifact, don't bother showing the base type */
