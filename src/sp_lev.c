@@ -292,6 +292,13 @@ flip_level(int flp)
 	    for (y = 0; y <= (y2 / 2); y++) {
 
 		trm = levl[x][y];
+		if ((trm.drawbridgemask & DB_DIR) == DB_NORTH) {
+		    trm.drawbridgemask &= ~DB_DIR;
+		    trm.drawbridgemask |= DB_SOUTH;
+		} else if ((trm.drawbridgemask & DB_DIR) == DB_SOUTH) {
+		    trm.drawbridgemask &= ~DB_DIR;
+		    trm.drawbridgemask |= DB_NORTH;
+		}
 		levl[x][y] = levl[x][y2-y];
 		levl[x][y2-y] = trm;
 
@@ -313,6 +320,13 @@ flip_level(int flp)
 	    for (y = 0; y <= y2; y++) {
 
 		trm = levl[x][y];
+		if ((trm.drawbridgemask & DB_DIR) == DB_WEST) {
+		    trm.drawbridgemask &= ~DB_DIR;
+		    trm.drawbridgemask |= DB_EAST;
+		} else if ((trm.drawbridgemask & DB_DIR) == DB_EAST) {
+		    trm.drawbridgemask &= ~DB_DIR;
+		    trm.drawbridgemask |= DB_WEST;
+		}
 		levl[x][y] = levl[x2-x][y];
 		levl[x2-x][y] = trm;
 
