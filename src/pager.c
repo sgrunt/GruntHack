@@ -178,7 +178,7 @@ lookat(x, y, buf, monbuf)
 		xraydist = (u.xray_range<0) ? -1 : u.xray_range * u.xray_range;
 		/* normal vision */
 		if ((mtmp->wormno ? worm_known(mtmp) :
-		    (image && cansee(x, y))) &&
+		    (image && couldsee(x, y) && cansee(x, y))) &&
 			mon_visible(mtmp) && !mtmp->minvis) {
 		    ways_seen++;
 		    normal++;
