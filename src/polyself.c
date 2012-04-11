@@ -106,6 +106,8 @@ const char *fmt, *arg;
 #ifdef INVISIBLE_OBJECTS
         see_objects();
 #endif
+	
+	if (!uarmg) selftouch("No longer petrify-resistant, you");
 }
 
 void
@@ -790,7 +792,6 @@ const char *reason;
 	    killer = kbuf;
 	    done(DIED);
 	}
-	if (!uarmg) selftouch("No longer petrify-resistant, you");
 	nomul(0);
 
 	flags.botl = 1;
