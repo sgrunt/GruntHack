@@ -1337,9 +1337,9 @@ struct mkroom	*croom;
 		obj_extract_self(obj);
 		(void) add_to_container(otmp, obj);
 	    }
-	    otmp->owt = weight(otmp);
 	    mongone(was);
-	}
+	} else if (otmp->otyp == STATUE || otmp->otyp == CORPSE)
+	    otmp->owt = weight(otmp);
 
 #ifdef RECORD_ACHIEVE
         /* Nasty hack here: try to determine if this is the Mines or Sokoban
