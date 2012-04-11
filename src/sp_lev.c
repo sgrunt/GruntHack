@@ -1096,7 +1096,8 @@ struct mkroom	*croom;
 	    mtmp = makemon(pm, x, y, racemask ? NO_MINVENT : NO_MM_FLAGS);
 
 	if (mtmp) {
-	    if (racemask)
+	    if (!pm) pm = mtmp->data;
+	    if (racemask && is_racial(pm))
 	    {
 	        mtmp->mrace = mtmp->morigrace = racemask;
 		set_mon_data(mtmp, pm, 0);
