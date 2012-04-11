@@ -1226,12 +1226,12 @@ dorub()
 	if (uwep->otyp == MAGIC_LAMP) {
 	    if (uwep->spe > 0 && !rn2(3)) {
 		check_unpaid_usage(uwep, TRUE);		/* unusual item use */
-		djinni_from_bottle(uwep);
 		makeknown(MAGIC_LAMP);
 		uwep->otyp = OIL_LAMP;
 		uwep->spe = 0; /* for safety */
 		uwep->age = rn1(500,1000);
 		if (uwep->lamplit) begin_burn(uwep, TRUE);
+		djinni_from_bottle(uwep);
 		update_inventory();
 	    } else if (rn2(2) && !Blind)
 		You("see a puff of smoke.");
