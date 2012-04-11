@@ -37,8 +37,8 @@
                                  is_floater(mon->data) || \
 				 (mon)->mlevitating > 0)
 #define waterwalking(mon)       (((mon)->mintrinsics & MR2_WATERWALK) != 0)
-#define mbreathing(mon)         (((mon)->mintrinsics & MR2_MAGBREATH) != 0) || \
-                                 breathless(mon->data)
+#define mbreathing(mon)         ((((mon)->mintrinsics & MR2_MAGBREATH) != 0) ||\
+                                 breathless(mon->data))
 #define displaced(mon)		(((mon)->mintrinsics & MR2_DISPLACED) != 0 || \
                                  is_displaced(mon->data))
 #define is_strong(mon)          (((mon)->mintrinsics & MR2_STRENGTH) != 0 || \
