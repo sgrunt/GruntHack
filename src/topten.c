@@ -166,22 +166,7 @@ struct toptenentry *tt;
 #undef TTFIELDS
 		tt->points = 0;
 	else {
-		/* Check for backwards compatibility */
-		if (tt->ver_major < 3 ||
-				(tt->ver_major == 3 && tt->ver_minor < 3)) {
-			int i;
-
-		    if (fscanf(rfile, fmt32,
-				tt->plrole, tt->plgend,
-				tt->name, tt->death) != 4)
-			tt->points = 0;
-		    tt->plrole[1] = '\0';
-		    if ((i = str2role(tt->plrole)) >= 0)
-			Strcpy(tt->plrole, roles[i].filecode);
-		    Strcpy(tt->plrace, "?");
-		    Strcpy(tt->plgend, (tt->plgend[0] == 'M') ? "Mal" : "Fem");
-		    Strcpy(tt->plalign, "?");
-		} else if (fscanf(rfile, fmt33,
+		if (fscanf(rfile, fmt33,
 				tt->plrole, tt->plrace, tt->plgend,
 				tt->plalign, tt->name, tt->death) != 6)
 			tt->points = 0;
@@ -217,16 +202,6 @@ struct toptenentry *tt;
 		tt->points, tt->deathdnum, tt->deathlev,
 		tt->maxlvl, tt->hp, tt->maxhp, tt->deaths,
 		tt->deathdate, tt->birthdate, tt->uid);
-	if (tt->ver_major < 3 ||
-			(tt->ver_major == 3 && tt->ver_minor < 3))
-#ifdef NO_SCAN_BRACK
-		(void) fprintf(rfile,"%c%c %s %s\n",
-#else
-		(void) fprintf(rfile,"%c%c %s,%s\n",
-#endif
-			tt->plrole[0], tt->plgend[0],
-			onlyspace(tt->name) ? "_" : tt->name, tt->death);
-	else
 #ifdef NO_SCAN_BRACK
 		(void) fprintf(rfile,"%s %s %s %s %s %s\n",
 #else
