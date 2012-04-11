@@ -111,7 +111,12 @@ unsigned *ospecial;
 	ch = showsyms[(offset % MAXEXPCHARS) + S_explode1];
 	explode_color(offset / MAXEXPCHARS);
     } else if ((offset = (glyph - GLYPH_CMAP_OFF)) >= 0) {	/* cmap */
-	ch = showsyms[offset];
+	ch =
+#ifdef REINCARNATION
+	     (offset == S_darkroom) && (Is_rogue_level(&u.uz))
+	         ? showsyms[S_stone] :
+#endif
+		 showsyms[offset];
 #ifdef ROGUE_COLOR
 	if (HAS_ROGUE_IBM_GRAPHICS && iflags.use_color) {
 	    if (offset >= S_vwall && offset <= S_hcdoor)
