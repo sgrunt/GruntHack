@@ -373,7 +373,8 @@ m_throw(mon, x, y, dx, dy, range, obj, verbose)
 
 	singleobj->owornmask = 0; /* threw one of multiple weapons in hand? */
 
-	if (singleobj->cursed && (dx || dy) && !rn2(7)) {
+	if ((singleobj->cursed || singleobj->greased) &&
+	    (dx || dy) && !rn2(7)) {
 	    if(canseemon(mon) && flags.verbose) {
 		if(is_ammo(singleobj))
 		    pline("%s misfires!", Monnam(mon));
