@@ -515,7 +515,7 @@ boolean artif;
 
 		if (artif && !rn2(20))
 		    otmp = mk_artifact(otmp, (aligntyp)A_NONE);
-		else if (!rn2(100))
+		else if (rn2(100) < (level_difficulty() / 2))
 		    otmp = create_oprop(otmp, TRUE);
 		break;
 	case FOOD_CLASS:
