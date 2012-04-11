@@ -516,7 +516,7 @@ struct attack *uattk;
 	orig_uwep = uwep;
 	malive = known_hitum(mon, uwep, &mhit, uattk);
 	(void) passive(mon, mhit, malive, AT_WEAP);
-	if (malive && u.twoweap && !override_confirmation &&
+	if (malive && u.twoweap && !override_confirmation && multi >= 0 &&
 	    m_at(x, y) == mon)
 	{
 		if (!Upolyd) {
