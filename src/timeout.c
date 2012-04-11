@@ -1048,6 +1048,8 @@ long timeout;
 
 			if (menorah) {
 			    obj->spe = 0;
+			    obj->owt = weight(obj); /* no more candles */
+			    (void) encumber_msg();
 			} else {
 			    obj_extract_self(obj);
 			    obfree(obj, (struct obj *)0);
