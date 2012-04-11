@@ -3161,7 +3161,10 @@ const char *s;
 #ifdef REDO
 		savech(dirsym);
 #endif
-		if(dirsym == '\033') return 0; /*escape*/
+		if(dirsym == DOESCAPE) {
+			pline(Never_mind);
+			return 0; /*escape*/
+		}
 
 		if(dirsym == '.' || dirsym == 's') {
 			u.dx = u.dy = u.dz = 0;

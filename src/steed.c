@@ -56,9 +56,18 @@ use_saddle(otmp)
 		return 0;
 	}
 
+	if (u.uswallow) {
+		pline("That's hard to do from your current position.");
+		return 0;
+	}
+
+	if (Underwater) {
+		pline("You're joking! In this weather?");
+		return 0;
+	}
+
 	/* Select an animal */
-	if (u.uswallow || Underwater || !getdir((char *)0)) {
-	    pline(Never_mind);
+	if (!getdir((char *)0)) {
 	    return 0;
 	}
 	if (!u.dx && !u.dy) {
