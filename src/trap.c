@@ -1469,6 +1469,7 @@ int style;
 	int dist;
 	int tmp;
 	int delaycnt = 0;
+	int damage = 0;
 
 	otmp = sobj_at(otyp, x1, y1);
 	/* Try the other side too, for rolling boulder traps */
@@ -1577,9 +1578,10 @@ int style;
 		} else if (bhitpos.x == u.ux && bhitpos.y == u.uy) {
 			if (multi) nomul(0);
 			if (thitu(9 + singleobj->spe,
-				  dmgval(singleobj, &youmonst),
-				  singleobj, (char *)0))
+				  0, singleobj, (char *)0)) {
+			    damage = dmgval(singleobj, &youmonst);
 			    stop_occupation();
+			}
 		}
 		if (style == ROLL) {
 		    if (down_gate(bhitpos.x, bhitpos.y) != -1) {
@@ -1712,6 +1714,29 @@ int style;
 		singleobj->otrapped = 0;
 		place_object(singleobj, x2,y2);
 		newsym(x2,y2);
+	}
+
+	if (damage) {
+	    char *knm, knmbuf[BUFSZ];
+	    if (curmonst == &youmonst) /* is this possible? */
+	        Sprintf(knmbuf, "%s own %s", uhis(),
+			singleobj->otyp == CORPSE
+			? corpse_xname(singleobj, FALSE)
+			: killer_xname(singleobj, "", FALSE)),
+		knm = knmbuf;
+	    else if (curmonst && curmonst != &youmonst)
+	        Sprintf(knmbuf, "%s %s", 
+	            s_suffix(done_in_name(curmonst)),
+		    	singleobj->otyp == CORPSE
+			? corpse_xname(singleobj, FALSE)
+			: killer_xname(singleobj, "", FALSE)),
+		knm = knmbuf;
+	    else
+	        knm = strcpy(knmbuf, killer_xname(singleobj, "", TRUE));
+	    losehp(damage, knm, KILLED_BY);
+	}
+
+	if (!used_up) {
 		return 1;
 	} else
 		return 2;
