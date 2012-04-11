@@ -951,6 +951,8 @@
 
           #sit Sit down.
 
+          #tip Empty a container (on the floor or in your inventory).
+
           #turn
                Turn undead.
 
@@ -980,8 +982,6 @@
 
           M-2  #twoweapon (unless the number_pad option is enabled)
 
-          M-a  #adjust
-
 
 
           GruntHack 0.2                                      March 15, 2012
@@ -993,6 +993,8 @@
           GruntHack Guidebook                                            16
 
 
+
+          M-a  #adjust
 
           M-c  #chat
 
@@ -1046,8 +1048,6 @@
 
           N    Name an item or type of object.  Same as ``#name'' or ``M-
                n''.
-
-
 
 
           GruntHack 0.2                                      March 15, 2012

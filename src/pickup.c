@@ -2627,4 +2627,69 @@ boolean creation;
 	return (putstuff && !creation);
 }
 
+int
+dotip()
+{
+    register struct obj *cobj, *nobj;
+    register int c = -1;
+    coord cc;
+    struct monst *mtmp;
+    char qbuf[BUFSZ];
+    const char tools[] = {TOOL_CLASS, 0};
+
+    if (check_capacity((char *)0)) {
+	/* "Can't do that while carrying so much stuff." */
+	return 0;
+    }
+    cc.x = u.ux; cc.y = u.uy;
+
+lootcont:
+
+    if (container_at(cc.x, cc.y, FALSE)) {
+	if (able_to_loot(cc.x, cc.y));
+	for (cobj = level.objects[cc.x][cc.y]; cobj; cobj = nobj) {
+	    nobj = cobj->nexthere;
+
+	    if (Is_container(cobj)) {
+		Sprintf(qbuf, "There is %s here; tip it?",
+			safe_qbuf("", sizeof("There is  here, tip it?"),
+			     doname(cobj), an(simple_typename(cobj->otyp)),
+			     "a container"));
+		c = ynq(qbuf);
+		if (c == 'q') return 0;
+		if (c == 'n') continue;
+		
+		You("tip %s over.", the(xname(cobj)));
+
+		if (cobj->otyp == BAG_OF_TRICKS) {
+		    while (cobj->spe) {
+		        bagotricks(cobj);
+		    }
+		    return 1;
+		}
+
+		spill_container((struct monst *)0, cobj, FALSE, !Blind);
+		return 1;
+	    }
+	}
+    }
+    cobj = getobj(tools, "empty");
+    if(!cobj) return 0;
+
+    /* TODO: empty out other items, like potions? */
+    if (!Is_container(cobj)) {
+        pline("That isn't a container.");
+	return 0;
+    }
+
+    You("tip %s over.", the(xname(cobj)));
+    if (cobj->otyp == BAG_OF_TRICKS) {
+	while (cobj->spe) {
+    	    bagotricks(cobj);
+	}
+    } else
+        spill_container(&youmonst, cobj, FALSE, !Blind);
+    return 1;
+}
+
 /*pickup.c*/

@@ -108,9 +108,10 @@ struct monst *victim;
 }
 
 void
-spill_container(victim, otmp, vis)
+spill_container(victim, otmp, broken, vis)
 register struct monst *victim;
 register struct obj *otmp;
+register boolean broken;
 register boolean vis;
 {
     boolean yours = (victim == &youmonst);
@@ -122,6 +123,11 @@ register boolean vis;
     boolean showed_msg = FALSE;
 
     if (!Is_container(otmp)) return;
+
+    if (!broken && otmp->olocked) {
+	container_impact_dmg(otmp);
+	return;
+    }
 
     while ((otmp2 = otmp->cobj)) {
         if (!showed_msg && vis) {
@@ -275,7 +281,7 @@ useup:
 		        else if (otmp == uquiver) uqwepgone();
 		        else if (otmp == uswapwep) uswapwepgone();
 		    }
-		    spill_container(&youmonst, otmp, !Blind);
+		    spill_container(&youmonst, otmp, TRUE, !Blind);
 		    if (otmp == uball || otmp == uchain) {
 		        boolean ball = (otmp == uball);
 		    	unpunish();
@@ -298,7 +304,7 @@ useup:
 		                          vtense(ostr, action[type]));
 	    }
 	    if (victim != &youmonst)
-		spill_container(&youmonst, otmp, (vismon));
+		spill_container(victim, otmp, TRUE, (vismon));
 	    if (victim && victim != &youmonst) {
 		obj_extract_self(otmp);
                 if (victim) {

@@ -78,6 +78,7 @@ extern int NDECL(dowhatdoes); /**/
 extern int NDECL(dohelp); /**/
 extern int NDECL(dohistory); /**/
 extern int NDECL(doloot); /**/
+extern int NDECL(dotip); /**/
 extern int NDECL(dodrink); /**/
 extern int NDECL(dodip); /**/
 extern int NDECL(dosacrifice); /**/
@@ -1983,6 +1984,7 @@ struct ext_func_tab extcmdlist[] = {
 #ifdef STICKY_COMMAND
 	{"sticky", "set 'sticky' inventory slots", dosticky, IFBURIED, AUTOCOMPLETE},
 #endif /* STICKY_COMMAND */
+	{"tip", "empty a container", dotip, !IFBURIED, AUTOCOMPLETE},
 	{"turn", "turn undead", doturn, IFBURIED, AUTOCOMPLETE},
 	{"twoweapon", "toggle two-weapon combat", dotwoweapon, !IFBURIED, AUTOCOMPLETE},
 	{"untrap", "untrap something", dountrap, !IFBURIED, AUTOCOMPLETE},

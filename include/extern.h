@@ -1586,6 +1586,7 @@ E const char *FDECL(safe_qbuf, (const char *,unsigned,
 				const char *,const char *,const char *));
 E boolean FDECL(is_autopickup_exception, (struct obj *, BOOLEAN_P));
 E int FDECL(m_stash_stuff, (struct monst *,BOOLEAN_P));
+E int NDECL(dotip);
 
 /* ### pline.c ### */
 
@@ -2104,7 +2105,7 @@ E coord *FDECL(gettrack, (int,int));
 /* ### trap.c ### */
 
 E boolean FDECL(burnarmor,(struct monst *));
-E void FDECL(spill_container,(struct monst *, struct obj *, BOOLEAN_P));
+E void FDECL(spill_container,(struct monst *,struct obj *,BOOLEAN_P,BOOLEAN_P));
 E boolean FDECL(rust_dmg, (struct obj *,const char *,int,BOOLEAN_P,struct monst *));
 E void FDECL(grease_protect, (struct obj *,const char *,struct monst *));
 E struct trap *FDECL(maketrap, (int,int,int));

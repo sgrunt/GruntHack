@@ -721,6 +721,8 @@ Ride (or stop riding) a monster.
 Rub a lamp or a stone.
 .lp #sit
 Sit down.
+.lp #tip
+Empty a container (on the floor or in your inventory).
 .lp #turn
 Turn undead.
 .lp #twoweapon
