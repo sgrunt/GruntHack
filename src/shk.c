@@ -2864,7 +2864,7 @@ move_on:
 			    pay(-offer, shkp);
 			    shk_names_obj(shkp, obj, (sell_how != SELL_NORMAL) ?
 				    (!ltmp && cltmp && only_partially_your_contents) ?
-			    	    "sold some items inside %s for %ld gold pieces%s.%s" :
+			    	    "sold some items inside %s for %ld gold piece%s.%s" :
 				    "sold %s for %ld gold piece%s.%s" :
 	       "relinquish %s and receive %ld gold piece%s in compensation.%s",
 				    offer, "");
