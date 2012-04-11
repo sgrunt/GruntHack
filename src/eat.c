@@ -550,6 +550,7 @@ register int pm;
 		}
 	    case PM_GREEN_SLIME:
 		if (!Slimed && !Unchanging && !flaming(youmonst.data) &&
+		        levl[u.ux][u.uy].typ != LAVAPOOL &&
 			youmonst.data != &mons[PM_GREEN_SLIME]) {
 		    You("don't feel very well.");
 		    if (!Slimed) {

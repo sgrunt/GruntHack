@@ -308,6 +308,14 @@ moveloop()
 		    /* vision while buried done here */
 		    else if (u.uburied) under_ground(0);
 
+		    if (!u.umoved &&
+		        (Is_waterlevel(&u.uz) || !(Flying || Levitation))) {
+			if (Underwater)
+			    (void) drown();
+			else if (is_lava(u.ux, u.uy))
+			    (void) lava_effects();
+		    }
+
 		    /* when immobile, count is in turns */
 		    if(multi < 0) {
 			if (++multi == 0) {	/* finished yet? */

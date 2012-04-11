@@ -3072,7 +3072,7 @@ drown()
 	int i, x, y;
 
 	/* happily wading in the same contiguous pool */
-	if (u.uinwater && is_pool(u.ux-u.dx,u.uy-u.dy) &&
+	if (u.uinwater && (!u.umoved || is_pool(u.ux-u.dx,u.uy-u.dy)) &&
 	    (Swimming || Amphibious)) {
 		/* water effects on objects every now and then */
 		if (!rn2(5)) inpool_ok = TRUE;

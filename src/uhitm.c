@@ -1667,7 +1667,8 @@ zombie:
 		    pline("%s doesn't seem harmed.", Monnam(mdef));
 		    tmp = 0;
 		    if (!Unchanging && mdef->data == &mons[PM_GREEN_SLIME]) {
-			if (!Slimed) {
+			if (!Slimed &&
+			    levl[u.ux][u.uy].typ != LAVAPOOL) {
 			    You("suck in some slime and don't feel very well.");
 			    if (!Slimed) {
 			    	u.uslime_fmt = KILLED_BY;
@@ -2077,7 +2078,8 @@ register struct attack *mattk;
 			    if (mdef->data == &mons[PM_GREEN_SLIME]) {
 				Sprintf(msgbuf, "%s isn't sitting well with you.",
 					The(mdef->data->mname));
-				if (!Unchanging) {
+				if (!Unchanging &&
+				    levl[u.ux][u.uy].typ != LAVAPOOL) {
 					if (!Slimed) {
 			    		    u.uslime_fmt = KILLED_BY;
 					    Sprintf(u.uslime_cause,

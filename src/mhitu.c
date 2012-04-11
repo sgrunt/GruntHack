@@ -1747,7 +1747,8 @@ do_rust:
 	    	if (!showed_msg)
 		    hitmsg(mtmp, mattk);
 		if (!uncancelled) break;
-		if (flaming(youmonst.data)) {
+		if (flaming(youmonst.data) ||
+		    levl[u.ux][u.uy].typ == LAVAPOOL) {
 		    pline_The("slime burns away!");
 		    dmg = 0;
 		} else if (Unchanging ||
