@@ -2317,10 +2317,16 @@ register struct monst *mtmp;
 	unsigned appear, ap_type;
 	int s_sym;
 	struct obj *otmp;
+	struct trap *tt;
 	int mx, my;
+	boolean above_pit = FALSE;
 
 	if (!mtmp) return;
 	mx = mtmp->mx; my = mtmp->my;
+	tt = t_at(mx, my);
+	above_pit = !(!tt ||
+	             ((tt->ttyp == PIT)  || (tt->ttyp == SPIKED_PIT) ||
+		      (tt->ttyp == HOLE) || (tt->ttyp == TRAPDOOR)));
 	typ = levl[mx][my].typ;
 					/* only valid for INSIDE of room */
 	roomno = levl[mx][my].roomno - ROOMOFFSET;
@@ -2335,8 +2341,12 @@ register struct monst *mtmp;
 	if (OBJ_AT(mx, my)) {
 		ap_type = M_AP_OBJECT;
 		appear = level.objects[mx][my]->otyp;
-	} else if (IS_DOOR(typ) || IS_WALL(typ) ||
-		   typ == SDOOR || typ == SCORR) {
+	} else if (
+#ifdef REINCARNATION
+		   !Is_rogue_level(&u.uz) &&
+#endif
+	           (IS_DOOR(typ) || IS_WALL(typ) ||
+		   typ == SDOOR || typ == SCORR)) {
 		ap_type = M_AP_FURNITURE;
 		/*
 		 *  If there is a wall to the left that connects to this
@@ -2357,10 +2367,10 @@ register struct monst *mtmp;
 
 		if(!mtmp->minvis || See_invisible)
 		    block_point(mx,my);	/* vision */
-	} else if (level.flags.is_maze_lev && rn2(2)) {
+	} else if (level.flags.is_maze_lev && !above_pit && rn2(2)) {
 		ap_type = M_AP_OBJECT;
 		appear = STATUE;
-	} else if (roomno < 0) {
+	} else if ((roomno < 0) && !above_pit) {
 		ap_type = M_AP_OBJECT;
 		appear = BOULDER;
 		if(!mtmp->minvis || See_invisible)
@@ -2368,7 +2378,7 @@ register struct monst *mtmp;
 	} else if (rt == ZOO || rt == VAULT) {
 		ap_type = M_AP_OBJECT;
 		appear = GOLD_PIECE;
-	} else if (rt == DELPHI) {
+	} else if ((rt == DELPHI) && !above_pit) {
 		if (rn2(2)) {
 			ap_type = M_AP_OBJECT;
 			appear = STATUE;
@@ -2393,16 +2403,18 @@ register struct monst *mtmp;
 				s_sym = syms[rn2((int)sizeof(syms)-2) + 2];
 			goto assign_sym;
 		}
-	} else {
+	} else while(1) {
 		s_sym = syms[rn2((int)sizeof(syms))];
 assign_sym:
-		if (s_sym >= MAXOCLASSES) {
+		if ((s_sym >= MAXOCLASSES) && !above_pit) {
 			ap_type = M_AP_FURNITURE;
 			appear = s_sym == MAXOCLASSES ? S_upstair : S_dnstair;
+			break;
 		} else if (s_sym == COIN_CLASS) {
 			ap_type = M_AP_OBJECT;
 			appear = GOLD_PIECE;
-		} else {
+			break;
+		} else if (s_sym < MAXOCLASSES) {
 			ap_type = M_AP_OBJECT;
 			if (s_sym == S_MIMIC_DEF) {
 				appear = STRANGE_OBJECT;
@@ -2412,6 +2424,7 @@ assign_sym:
 				/* make sure container contents are free'ed */
 				obfree(otmp, (struct obj *) 0);
 			}
+			break;
 		}
 	}
 	mtmp->m_ap_type = ap_type;
