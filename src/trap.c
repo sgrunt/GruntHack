@@ -2044,7 +2044,9 @@ register struct monst *mtmp;
 				pline("%s %s on the %s!", A_gush_of_water_hits,
 				    mon_nam(mtmp), mbodypart(mtmp, HEAD));
 			    target = which_armor(mtmp, W_ARMH);
-			    (void) rust_dmg(target, helmet_name(target), 1,
+			    (void) rust_dmg(target,
+			                    target ? helmet_name(target)
+					           : "helmet", 1,
 			                    TRUE, mtmp);
 			    break;
 			case 1:
