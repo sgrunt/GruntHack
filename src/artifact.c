@@ -310,7 +310,7 @@ boolean allow_detrimental;
 	        objects[otmp->otyp].oc_material >= IRON &&
 		rn2(5))
 		otmp->omaterial = SILVER,
-		otmp->owt = weight(obj);
+		otmp->owt = weight(otmp);
 	}
 	
 	if (otmp->oprops & (ITEM_FUMBLING|ITEM_HUNGER|ITEM_AGGRAVATE) &&
