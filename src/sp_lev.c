@@ -366,6 +366,16 @@ flip_level(int flp)
 		level.monster_images[x2-x][y] = mtmp;
 	    }
     }
+		   
+    /* vibrating square */
+    if (Invocation_lev(&u.uz)) {
+    	if (flp & 1) {
+		inv_pos.y = y2 - inv_pos.y;
+	}
+	if (flp & 2) {
+		inv_pos.x = x2 - inv_pos.x;
+	}
+    }
 
     wall_extends(1, 0, COLNO-1, ROWNO-1);
 }
