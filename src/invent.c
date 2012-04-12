@@ -509,7 +509,10 @@ useupall(obj)
 struct obj *obj;
 {
 	setnotworn(obj);
-	freeinv(obj);
+	if (obj->where == OBJ_INVENT)
+	    freeinv(obj);
+	else
+	    obj_extract_self(obj);
 	obfree(obj, (struct obj *)0);	/* deletes contents also */
 }
 
