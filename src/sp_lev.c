@@ -300,6 +300,13 @@ flip_level(int flp)
 		    trm.drawbridgemask |= DB_NORTH;
 		}
 		levl[x][y] = levl[x][y2-y];
+		if ((levl[x][y].drawbridgemask & DB_DIR) == DB_NORTH) {
+		    levl[x][y].drawbridgemask &= ~DB_DIR;
+		    levl[x][y].drawbridgemask |= DB_SOUTH;
+		} else if ((levl[x][y].drawbridgemask & DB_DIR) == DB_SOUTH) {
+		    levl[x][y].drawbridgemask &= ~DB_DIR;
+		    levl[x][y].drawbridgemask |= DB_NORTH;
+		}
 		levl[x][y2-y] = trm;
 
 		otmp = level.objects[x][y];
@@ -326,6 +333,14 @@ flip_level(int flp)
 		} else if ((trm.drawbridgemask & DB_DIR) == DB_EAST) {
 		    trm.drawbridgemask &= ~DB_DIR;
 		    trm.drawbridgemask |= DB_WEST;
+		}
+		levl[x][y] = levl[x2-x][y];
+		if ((levl[x][y].drawbridgemask & DB_DIR) == DB_WEST) {
+		    levl[x][y].drawbridgemask &= ~DB_DIR;
+		    levl[x][y].drawbridgemask |= DB_EAST;
+		} else if ((levl[x][y].drawbridgemask & DB_DIR) == DB_EAST) {
+		    levl[x][y].drawbridgemask &= ~DB_DIR;
+		    levl[x][y].drawbridgemask |= DB_WEST;
 		}
 		levl[x][y] = levl[x2-x][y];
 		levl[x2-x][y] = trm;
