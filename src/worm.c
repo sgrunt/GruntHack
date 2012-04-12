@@ -789,6 +789,7 @@ int y;
 
     while (curr) {
         curr->wy = y - curr->wy;
+        curr->wiy = y - curr->wiy;
         curr = curr->nseg;
     }
 }
@@ -802,6 +803,7 @@ int x;
 
     while (curr) {
         curr->wx = x - curr->wx;
+        curr->wix = x - curr->wix;
         curr = curr->nseg;
     }
 }
