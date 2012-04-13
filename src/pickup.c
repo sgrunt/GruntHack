@@ -2582,6 +2582,11 @@ boolean creation;
 
 
 		if (creation) {
+			/* exception: balrogs are generated with two weapons */
+			if (mon->data == &mons[PM_BALROG] &&
+			    obj->otyp == BULLWHIP)
+			    continue;
+
 			/* at creation time, this is a junk item we don't need,
 			 * so presumably they got rid of it */
 			if (obj->oclass == WEAPON_CLASS ||

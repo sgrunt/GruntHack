@@ -1146,6 +1146,10 @@ struct mkroom	*croom;
 	    if (!pm) pm = mtmp->data;
 	    if (racemask && is_racial(pm))
 	    {
+	        if (!(pm->mflags2 & racemask)) {
+		    /* probably giant/ettin */
+		    racemask = (pm->mflags2 & M2_RACEMASK);
+		}
 	        mtmp->mrace = mtmp->morigrace = racemask;
 		set_mon_data(mtmp, pm, 0);
 		mtmp->morigdata = monsndx(pm);
@@ -1173,6 +1177,13 @@ struct mkroom	*croom;
 	    	mon_wield_item(mtmp, TRUE);
 
 		newsym(x, y);
+	    } else if (racemask) {
+	        impossible("race %d for %s?",
+		           racemask, pm->mname);
+		m_initweap(mtmp);
+		m_initinv(mtmp);
+	    	m_dowear(mtmp, TRUE);
+	    	mon_wield_item(mtmp, TRUE);
 	    }
 
 	    /* handle specific attributes for some special monsters */
