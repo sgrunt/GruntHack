@@ -107,7 +107,12 @@ const char *fmt, *arg;
         see_objects();
 #endif
 	
-	if (!uarmg) selftouch("No longer petrify-resistant, you");
+	if (!uarmg) {
+	    char kbuf[BUFSZ];
+	    Sprintf(kbuf, "returning to %s form while wielding",
+	            urace.adj);
+	    selftouch("No longer petrify-resistant, you", kbuf);
+	}
 }
 
 void
@@ -348,7 +353,17 @@ boolean forcecontrol;
 		newman();
 	else if(!polymon(mntmp)) return;
 
-	if (!uarmg) selftouch("No longer petrify-resistant, you");
+	if (!uarmg) {
+	    char kbuf[BUFSZ];
+	    if (Upolyd) {
+	        Sprintf(kbuf, "polymorphing into %s while wielding",
+		        an(mons[u.umonnum].mname));
+	    } else {
+	        Sprintf(kbuf, "returning to %s form while wielding",
+		        urace.adj);
+	    }
+	    selftouch("No longer petrify-resistant, you", kbuf);
+	}
 
  made_change:
 	new_light = Upolyd ? emits_light(youmonst.data) : 0;

@@ -74,7 +74,7 @@ dosit()
 	    if (obj->otyp == CORPSE &&
 	        touch_petrifies(&mons[obj->corpsenm])) {
 		char kbuf[BUFSZ];
-		Sprintf(kbuf, "Sitting on %s", an(corpse_xname(obj, TRUE)));
+		Sprintf(kbuf, "sitting on %s", an(corpse_xname(obj, TRUE)));
 		pline("%s is a fatal mistake...", kbuf);
 		kbuf[0] = 's';
 		instapetrify(kbuf);

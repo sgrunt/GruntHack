@@ -2118,7 +2118,7 @@ E void FDECL(seetrap, (struct trap *));
 E int FDECL(mintrap, (struct monst *));
 E void FDECL(instapetrify, (const char *));
 E void FDECL(minstapetrify, (struct monst *,BOOLEAN_P));
-E void FDECL(selftouch, (const char *));
+E void FDECL(selftouch, (const char *,const char *));
 E void FDECL(mselftouch, (struct monst *,const char *,BOOLEAN_P));
 E void NDECL(float_up);
 E void FDECL(fill_pit, (int,int));

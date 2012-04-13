@@ -538,7 +538,7 @@ register struct obj *obj;
 
 	    You("grab %s with your bare %s.",
 		    the(corpse_xname(obj, FALSE)), body_part(HAND));
-	    Sprintf(kbuf, "%s",
+	    Sprintf(kbuf, "dropping %s without gloves",
 	    	type_is_pname(&mons[obj->corpsenm])
 		? corpse_xname(obj, TRUE)
 		: an(corpse_xname(obj, TRUE)));
@@ -1055,6 +1055,9 @@ boolean at_stairs, falling, portal;
 	boolean new = FALSE;	/* made a new level? */
 	struct monst *mtmp;
 	char whynot[BUFSZ];
+	
+	boolean at_trapdoor = ((t_at(u.ux, u.uy)) &&
+	                       (t_at(u.ux, u.uy))->ttyp == TRAPDOOR);
 
 	if (dunlev(newlevel) > dunlevs_in_dungeon(newlevel))
 		newlevel->dlevel = dunlevs_in_dungeon(newlevel);
@@ -1286,7 +1289,8 @@ boolean at_stairs, falling, portal;
 		    else
 #endif
 			losehp(rnd(3), "falling downstairs", KILLED_BY);
-		    selftouch("Falling, you");
+		    selftouch("Falling, you",
+		              "falling downstairs while wielding");
 		} else if (u.dz && at_ladder)
 		    You("climb down the ladder.");
 	    }
@@ -1310,8 +1314,13 @@ boolean at_stairs, falling, portal;
 				dndest.nhx, dndest.nhy,
 				LR_DOWNTELE, (d_level *) 0);
 	    if (falling) {
+	        register struct trap *ttrap;
+		char kbuf[BUFSZ];
+		ttrap = t_at(u.ux, u.uy);
+		Sprintf(kbuf, "falling through a %s while wielding",
+		        at_trapdoor ? "trap door" : "hole");
 		if (Punished) ballfall();
-		selftouch("Falling, you");
+		selftouch("Falling, you", kbuf);
 	    }
 	}
 

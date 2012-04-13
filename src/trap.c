@@ -1081,7 +1081,8 @@ glovecheck:		(void) rust_dmg(uarmg, "gauntlets", 1, TRUE, &youmonst);
 		    ballfall();
 		    placebc();
 		}
-		selftouch("Falling, you");
+		selftouch("Falling, you",
+		          "falling into a pit while wielding");
 		vision_full_recalc = 1;	/* vision limits change */
 		exercise(A_STR, FALSE);
 		exercise(A_DEX, FALSE);
@@ -2424,8 +2425,9 @@ boolean byplayer;
 }
 
 void
-selftouch(arg)
+selftouch(arg, deathtype)
 const char *arg;
+const char *deathtype;
 {
 	char kbuf[BUFSZ];
 
@@ -2436,7 +2438,8 @@ const char *arg;
 			&& !Stone_resistance) {
 		pline("%s touch the %s.", arg,
 		        corpse_xname(uwep, FALSE));
-		Sprintf(kbuf, "%s corpse", an(mons[uwep->corpsenm].mname));
+		Sprintf(kbuf, "%s %s corpse", deathtype,
+		        an(mons[uwep->corpsenm].mname));
 		instapetrify(kbuf);
 	}
 	/* Or your secondary weapon, if wielded */
@@ -2446,7 +2449,8 @@ const char *arg;
 			touch_petrifies(&mons[uswapwep->corpsenm]) && !Stone_resistance){
 		pline("%s touch the %s.", arg,
 		        xname(uwep));
-		Sprintf(kbuf, "%s corpse", an(mons[uswapwep->corpsenm].mname));
+		Sprintf(kbuf, "%s %s corpse", deathtype,
+		        an(mons[uswapwep->corpsenm].mname));
 		instapetrify(kbuf);
 	}
 }
@@ -2626,7 +2630,8 @@ long hmask, emask;     /* might cancel timeout */
 #ifdef STEED
 			    if (u.usteed) dismount_steed(DISMOUNT_FELL);
 #endif
-			    selftouch("As you fall, you");
+			    selftouch("As you fall, you",
+			              "being blown into");
 			}
 		    }
 		}

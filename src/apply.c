@@ -2389,9 +2389,11 @@ struct obj *obj;
 				polymon(PM_STONE_GOLEM))) {
 			char kbuf[BUFSZ];
 
-			Sprintf(kbuf, "%s corpse",
-				an(mons[otmp->corpsenm].mname));
-			pline("Snatching %s is a fatal mistake.", kbuf);
+			Sprintf(kbuf, "snatching %s corpse from %s",
+				an(mons[otmp->corpsenm].mname),
+				done_in_name(mtmp));
+			pline("Snatching %s corpse is a fatal mistake.",
+			      an(mons[otmp->corpsenm].mname));
 			instapetrify(kbuf);
 		    }
 		    otmp = hold_another_object(otmp, "You drop %s!",

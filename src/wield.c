@@ -136,7 +136,8 @@ struct obj *wep;
 
 	    You("wield %s in your bare %s.",
 		the(corpse_xname(wep, FALSE)), makeplural(body_part(HAND)));
-	    Sprintf(kbuf, "%s corpse", an(mons[wep->corpsenm].mname));
+	    Sprintf(kbuf, "wielding %s corpse without gloves",
+	            an(mons[wep->corpsenm].mname));
 	    instapetrify(kbuf);
 	} else if (uarms && bimanual(wep))
 	    You("cannot wield a two-handed %s while wearing a shield.",
@@ -499,7 +500,8 @@ can_twoweapon()
 
 		You("wield %s with your bare %s.",
 		    the(corpse_xname(uswapwep, FALSE)), body_part(HAND));
-		Sprintf(kbuf, "%s corpse", an(mons[uswapwep->corpsenm].mname));
+		Sprintf(kbuf, "wielding %s corpse without gloves",
+		        an(mons[uswapwep->corpsenm].mname));
 		instapetrify(kbuf);
 	} else if (Glib || uswapwep->cursed) {
 		if (!Glib)
