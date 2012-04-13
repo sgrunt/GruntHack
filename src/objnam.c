@@ -907,14 +907,21 @@ boolean ignore_oquan;
 	    ) obj->dknown = TRUE;
 	    if (Role_if(PM_PRIEST)) obj->bknown = TRUE;
 	    /* wizards sense magical auras */
-	    if (Role_if(PM_WIZARD) && obj->oprops & ITEM_PROP_MASK)
+	    if (Role_if(PM_WIZARD) &&
+	        ((obj->oprops & ITEM_PROP_MASK) ||
+		 ( objects[obj->otyp].oc_magic &&
+		  !objects[obj->otyp].oc_name_known)))
 		obj->oprops_known |= ITEM_MAGICAL;
 	    if (obj_is_pname(obj))
 	        goto nameit;
 	}
 
 	if (obj->oprops_known & ITEM_MAGICAL &&
-	    !(obj->oprops_known & ~ITEM_MAGICAL))
+	    (((obj->oprops && !(obj->oprops_known & ~ITEM_MAGICAL)) &&
+	      (!objects[obj->otyp].oc_magic ||
+	       !objects[obj->otyp].oc_name_known)) ||
+	       (!obj->oprops && objects[obj->otyp].oc_magic &&
+	        !objects[obj->otyp].oc_name_known)))
 	    Strcat(buf, "magical ");
 
 	switch (obclass) {
@@ -1035,8 +1042,6 @@ boolean ignore_oquan;
 			break;
 		}
 		
-		tmp = !!strstri(buf, "of");
-		
 		if(obclass == ARMOR_CLASS &&
 		   (objects[typ].oc_armcat == ARM_BOOTS ||
 		    objects[typ].oc_armcat == ARM_GLOVES))
@@ -1103,7 +1108,7 @@ boolean ignore_oquan;
 		if(nn) {
 		    Strcat(buf, actualn);
 		    propnames(buf, obj->oprops, obj->oprops_known, FALSE,
-		              tmp);
+		              !!strstri(actualn, " of "));
 		}
 		else if(un) {
 			if(is_boots(obj))
@@ -1119,13 +1124,13 @@ boolean ignore_oquan;
 			else
 				Strcat(buf,"armor");
 		        propnames(buf, obj->oprops, obj->oprops_known, FALSE,
-		                  tmp);
+		                  FALSE);
 			Strcat(buf, " called ");
 			Strcat(buf, un);
 		} else {
 		    Strcat(buf, dn);
 		    propnames(buf, obj->oprops, obj->oprops_known, FALSE,
-		              tmp);
+		              !!strstri(dn, " of "));
 		}
 		break;
 	    case FOOD_CLASS:
