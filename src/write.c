@@ -40,6 +40,7 @@ register struct obj *otmp;
 		return(12);
 /*		break; */
 	case SCR_IDENTIFY:
+	case SCR_DETECT_MAGIC:
 		return(14);
 /*		break; */
 	case SCR_ENCHANT_ARMOR:

@@ -1433,6 +1433,12 @@ register struct obj	*sobj;
 						8+4*bcsign(sobj));
 		break;
 	}
+	case SCR_DETECT_MAGIC:
+		if(magic_detect(sobj))
+		    return 1;
+
+		known = TRUE;
+		break;
 	default:
 		impossible("What weird effect is this? (%u)", sobj->otyp);
 	}
