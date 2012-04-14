@@ -172,7 +172,7 @@ struct monst *victim;
 	char buf[BUFSZ];
 
 	if (victim)
-	    Sprintf(buf, s_suffix(mon_nam(victim)));
+	    Sprintf(buf, "%s", s_suffix(mon_nam(victim)));
 	else
 	    Sprintf(buf, "the");
 
@@ -245,8 +245,6 @@ struct monst *victim;
 		update_inventory();
 	    }
 	} else {
-	    struct obj *otmp2;
-	    boolean showed_msg = FALSE;
 	    /*if (flags.verbose) {
 		if (victim == &youmonst)
 		    Your("%s %s completely %s.", ostr,
@@ -483,7 +481,7 @@ boolean td;	/* td == TRUE : trap door or hole */
 	    dont_fall = "are jerked back by your pet!";
 	}
 	if (dont_fall) {
-	    You(dont_fall);
+	    You("%s", dont_fall);
 	    /* hero didn't fall through, but any objects here might */
 	    impact_drop((struct obj *)0, u.ux, u.uy, 0, TRUE);
 	    if (!td) {
@@ -2768,7 +2766,7 @@ domagictrap()
 	  if (!resists_blnd(&youmonst)) {
 		You("are momentarily blinded by a flash of light!");
 		make_blinded((long)rn1(5,10),FALSE);
-		if (!Blind) Your(vision_clears);
+		if (!Blind) Your("%s", vision_clears);
 	  } else if (!Blind) {
 		You("see a flash of light!");
 	  }  else

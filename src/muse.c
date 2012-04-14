@@ -261,7 +261,7 @@ struct obj *obj;
 		    m_useup(mon, obj);
 		    mtmp = makemon(&mons[PM_GHOST], cc.x, cc.y, NO_MM_FLAGS);
 		    if (!mtmp) {
-			if (vis) pline(empty);
+			if (vis) pline("%s", empty);
 		    } else {
 			if (vis) {
 			    pline("As %s opens the bottle, an enormous %s emerges!",
@@ -285,7 +285,7 @@ struct obj *obj;
 		m_useup(mon, obj);
 		mtmp = makemon(&mons[PM_DJINNI], cc.x, cc.y, NO_MM_FLAGS);
 		if (!mtmp) {
-		    if (vis) pline(empty);
+		    if (vis) pline("%s", empty);
 		} else {
 		    int what = (mon->mtame) ? rnl(5) : 4-rnl(5);
 		    if (blessed && ((mon->mtame) ? 4-rnl(5) : rnl(5)))
@@ -477,7 +477,7 @@ find_defensive(mtmp)
 struct monst *mtmp;
 {
 	register struct obj *obj = 0;
-	struct trap *t;
+	struct trap *t = (struct trap *)0;
 	int x=mtmp->mx, y=mtmp->my;
 	boolean stuck = (mtmp == u.ustuck);
 	boolean immobile = (mtmp->data->mmove == 0);
@@ -2380,7 +2380,7 @@ struct monst *mtmp;
 		m_useup(mtmp, otmp);
 		return 2;
 	      }
-/*#endif	/* 0 */
+/*#endif*/	/* 0 */
 	case MUSE_POT_PARALYSIS:
 	case MUSE_POT_BLINDNESS:
 	case MUSE_POT_CONFUSION:

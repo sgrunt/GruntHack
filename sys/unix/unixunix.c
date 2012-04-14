@@ -268,7 +268,7 @@ int wt;
 		(void) setgid(getgid());
 		(void) setuid(getuid());
 #ifdef CHDIR
-		(void) chdir(getenv("HOME"));
+		if(chdir(getenv("HOME")));
 #endif
 		return(1);
 	}

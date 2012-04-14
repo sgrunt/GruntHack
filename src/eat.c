@@ -462,7 +462,7 @@ boolean message;
 	occupation = 0; /* do this early, so newuhs() knows we're done */
 	newuhs(FALSE);
 	if (nomovemsg) {
-		if (message) pline(nomovemsg);
+		if (message) pline("%s", nomovemsg);
 		nomovemsg = 0;
 	} else if (message)
 		You("finish eating %s.", food_xname(victual.piece, TRUE));
@@ -1255,7 +1255,7 @@ struct obj *obj;
 	} else if(!rn2(4) && !Blind) {
 		pline("Everything suddenly goes dark.");
 		make_blinded((long)d(2,10),FALSE);
-		if (!Blind) Your(vision_clears);
+		if (!Blind) Your("%s", vision_clears);
 	} else if(!rn2(3)) {
 		const char *what, *where;
 		if (!Blind)
@@ -1290,8 +1290,8 @@ eatcorpse(otmp)		/* called when a corpse is selected as food */
 	long rotted = 0L;
 	boolean uniq = !!(mons[mnum].geno & G_UNIQ);
 	int retcode = 0;
-	boolean stoneable = (touch_petrifies(&mons[mnum]) ||
-			     (mnum == PM_MEDUSA) && !Stone_resistance &&
+	boolean stoneable = ((touch_petrifies(&mons[mnum]) ||
+			     (mnum == PM_MEDUSA)) && !Stone_resistance &&
 				!poly_when_stoned(youmonst.data));
 
 	/* KMH, conduct */

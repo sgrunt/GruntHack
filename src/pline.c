@@ -325,7 +325,7 @@ impossible VA_DECL(const char *, s)
 	    char pbuf[BUFSZ];
 	    Vsprintf(pbuf,s,VA_ARGS);
 	    paniclog("impossible", pbuf);
-	    pline(pbuf);
+	    pline("%s", pbuf);
 	}
 	pline("Program in disorder - perhaps you'd better #save or #quit.");
 	program_state.in_impossible = 0;

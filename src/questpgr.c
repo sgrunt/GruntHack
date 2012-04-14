@@ -362,9 +362,9 @@ struct qtmsg *qt_msg;
 	long	size;
 
 	for (size = 0; size < qt_msg->size; size += (long)strlen(in_line)) {
-	    (void) dlb_fgets(in_line, 80, msg_file);
+	    if(dlb_fgets(in_line, 80, msg_file));
 	    convert_line();
-	    pline(out_line);
+	    pline("%s", out_line);
 	}
 
 }
@@ -378,7 +378,7 @@ int how;
 	winid datawin = create_nhwindow(how);
 
 	for (size = 0; size < qt_msg->size; size += (long)strlen(in_line)) {
-	    (void) dlb_fgets(in_line, 80, msg_file);
+	    if(dlb_fgets(in_line, 80, msg_file));
 	    convert_line();
 	    putstr(datawin, 0, out_line);
 	}

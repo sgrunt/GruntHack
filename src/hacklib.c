@@ -467,7 +467,7 @@ setrandom()
 	FILE *fptr = NULL;
 	fptr = fopen("/dev/urandom","r");
 	if (fptr)
-		fread((void *)&rnd, sizeof(int),1,fptr);
+		if(fread((void *)&rnd, sizeof(int),1,fptr));
 	fclose(fptr);
 #endif
   

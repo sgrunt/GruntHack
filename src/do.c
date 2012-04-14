@@ -168,7 +168,7 @@ const char *verb;
 			if (!passes_walls(mtmp->data) && 
 			    !throws_rocks(mtmp->data)) {
 			    if (hmon(mtmp, obj, TRUE) && !is_whirly(mtmp->data))
-				/* return FALSE;	/* still alive */
+				/*return FALSE;*/	/* still alive */
 				;
 			    if (!DEADMONSTER(mtmp)) {
 				mtmp->mtrapped = 0;
@@ -204,7 +204,7 @@ const char *verb;
 			    losehp(rnd(15), buf,
 				   NO_KILLER_PREFIX);
 			    u.uburied = buriedbak;
-			    /* return FALSE;	/* player remains trapped */
+			    /* return FALSE;*/	/* player remains trapped */
 			    You("are buried by the boulder!");
 			    trap_player = TRUE;
 			    u.utrap = 0;
@@ -1314,9 +1314,7 @@ boolean at_stairs, falling, portal;
 				dndest.nhx, dndest.nhy,
 				LR_DOWNTELE, (d_level *) 0);
 	    if (falling) {
-	        register struct trap *ttrap;
 		char kbuf[BUFSZ];
-		ttrap = t_at(u.ux, u.uy);
 		Sprintf(kbuf, "falling through a %s while wielding",
 		        at_trapdoor ? "trap door" : "hole");
 		if (Punished) ballfall();
@@ -1426,7 +1424,7 @@ boolean at_stairs, falling, portal;
 		Sprintf(buf, mesg, !Blind ? "looks" : "seems");
 		mesg = buf;
 	    }
-	    if (mesg) pline(mesg);
+	    if (mesg) pline("%s", mesg);
 	}
 
 #ifdef REINCARNATION
@@ -1579,7 +1577,7 @@ deferred_goto()
 	    int typmask = u.utotype; /* save it; goto_level zeroes u.utotype */
 
 	    assign_level(&dest, &u.utolev);
-	    if (dfr_pre_msg) pline(dfr_pre_msg);
+	    if (dfr_pre_msg) pline("%s", dfr_pre_msg);
 	    goto_level(&dest, !!(typmask&1), !!(typmask&2), !!(typmask&4));
 	    if (typmask & 0200) {	/* remove portal */
 		struct trap *t = t_at(u.ux, u.uy);
@@ -1589,7 +1587,7 @@ deferred_goto()
 		    newsym(u.ux, u.uy);
 		}
 	    }
-	    if (dfr_post_msg) pline(dfr_post_msg);
+	    if (dfr_post_msg) pline("%s", dfr_post_msg);
 	}
 	u.utotype = 0;		/* our caller keys off of this */
 	if (dfr_pre_msg)

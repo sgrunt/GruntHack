@@ -565,7 +565,7 @@ m_throw(mon, x, y, dx, dy, range, obj, verbose)
 	if (blindinc) {
 		u.ucreamed += blindinc;
 		make_blinded(Blinded + (long)blindinc, FALSE);
-		if (!Blind) Your(vision_clears);
+		if (!Blind) Your("%s", vision_clears);
 	}
 }
 
@@ -810,13 +810,13 @@ struct monst *mtmp;
 	    mlined_up(mtmp, mtmp->mtarget, FALSE)) {
 	        int oldtbx = tbx, oldtby = tby;
 		if (!((mtmp->mtame || mtmp->mpeaceful) && !conflicted) ||
-	            (!mtmp->mtame || conflicted ||
-		      acceptable_pet_target(mtmp, mtmp->mtarget, TRUE)) &&
-		    !lined_up(mtmp) ||
-		    (sgn(mtmp->mtarget->mx-mtmp->mx) !=
-		     sgn(mtmp->mux-mtmp->mx)) ||
-		    (sgn(mtmp->mtarget->my-mtmp->my) !=
-		     sgn(mtmp->muy-mtmp->my)))
+	            ((!mtmp->mtame || conflicted ||
+		       acceptable_pet_target(mtmp, mtmp->mtarget, TRUE)) &&
+		     (!lined_up(mtmp) ||
+		      (sgn(mtmp->mtarget->mx-mtmp->mx) !=
+		       sgn(mtmp->mux-mtmp->mx)) ||
+		      (sgn(mtmp->mtarget->my-mtmp->my) !=
+		       sgn(mtmp->muy-mtmp->my)))))
 		{
 		    tbx = oldtbx;
 		    tby = oldtby;
@@ -1259,6 +1259,8 @@ lined_up(mtmp)		/* is mtmp in position to use ranged attack? */
 		tby = rn1(3,-1);
             } while (tbx == 0 && tby == 0);
 	}
+
+	return retval;
 }
 
 boolean

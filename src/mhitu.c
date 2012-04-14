@@ -126,41 +126,41 @@ register struct attack *mattk;
 			case 3:
 	                    if(uleft && uleft->otyp == RIN_PROTECTION)
 			        tmp -= uleft->spe,
-				sprintf(buf, xname(uleft));
+				Sprintf(buf, "%s", xname(uleft));
 			    break;
 			case 4:
 	                    if(uright && uright->otyp == RIN_PROTECTION)
 			        tmp -= uright->spe,
-				sprintf(buf, xname(uright));
+				Sprintf(buf, "%s", xname(uright));
 			    break;
 			case 5:
 	                    if (uarms) tmp -= ARM_BONUS(uarms),
-			               Sprintf(buf, xname(uarms));
+			               Sprintf(buf, "%s", xname(uarms));
 			    break;
 			case 6:
 	                    if(uarmc) tmp -= ARM_BONUS(uarmc),
-			              Sprintf(buf, xname(uarmc));
+			              Sprintf(buf, "%s", xname(uarmc));
 			    break;
 		        case 7:
 	                    if(uarm) tmp -= ARM_BONUS(uarm),
-			             Sprintf(buf, xname(uarm));
+			             Sprintf(buf, "%s", xname(uarm));
 			    break;
 			case 8:
 	                    if(uarmh) tmp -= ARM_BONUS(uarmh),
-			              Sprintf(buf, xname(uarmh));
+			              Sprintf(buf, "%s", xname(uarmh));
 			    break;
 			case 9:
 #ifdef TOURIST
 	                    if(uarmu) tmp -= ARM_BONUS(uarmu),
-			              Sprintf(buf, xname(uarmu));
+			              Sprintf(buf, "%s", xname(uarmu));
 #endif
 			case 10:
 	                    if(uarmg) tmp -= ARM_BONUS(uarmg),
-			              Sprintf(buf, xname(uarmg));
+			              Sprintf(buf, "%s", xname(uarmg));
 			    break;
 			case 11:
 	                    if(uarmf) tmp -= ARM_BONUS(uarmf),
-			              Sprintf(buf, xname(uarmf));
+			              Sprintf(buf, "%s", xname(uarmf));
 			    break;
 			    break;
 			default: break;
@@ -753,8 +753,8 @@ mattacku(mtmp)
 			     */
 			    if ((mtmp->weapon_check == NEED_WEAPON ||
 				!MON_WEP(mtmp) ||
-				(is_launcher(MON_WEP(mtmp))) &&
-				 !(MON_WEP(mtmp))->cursed)) {
+				(is_launcher(MON_WEP(mtmp)) &&
+				 !(MON_WEP(mtmp))->cursed))) {
 				mtmp->weapon_check = NEED_HTH_WEAPON;
 				/* mon_wield_item resets weapon_check as
 				 * appropriate */
@@ -1219,7 +1219,7 @@ physical:
 		if (can_blnd(mtmp, &youmonst, mattk->aatyp, (struct obj*)0)) {
 		    if (!Blind) pline("%s blinds you!", Monnam(mtmp));
 		    make_blinded(Blinded+(long)dmg,FALSE);
-		    if (!Blind) Your(vision_clears);
+		    if (!Blind) Your("%s", vision_clears);
 		}
 		dmg = 0;
 		break;
@@ -2020,7 +2020,7 @@ gulpmu(mtmp, mattk)	/* monster swallows you, or damage if u.uswallow */
 			if(!Blind) {
 			    You_cant("see in here!");
 			    make_blinded((long)tmp,FALSE);
-			    if (!Blind) Your(vision_clears);
+			    if (!Blind) Your("%s", vision_clears);
 			} else
 			    /* keep him blind until disgorged */
 			    make_blinded(Blinded+1,FALSE);
@@ -2142,7 +2142,7 @@ common:
 		    if (mon_visible(mtmp) || (rnd(tmp /= 2) > u.ulevel)) {
 			You("are blinded by a blast of light!");
 			make_blinded((long)tmp, FALSE);
-			if (!Blind) Your(vision_clears);
+			if (!Blind) Your("%s", vision_clears);
 		    } else if (flags.verbose)
 			You("get the impression it was not terribly bright.");
 		}
@@ -2270,7 +2270,7 @@ gazemu(mtmp, mattk)	/* monster gazes at you */
 		    /* not blind at this point implies you're wearing
 		       the Eyes of the Overworld; make them block this
 		       particular stun attack too */
-		    if (!Blind) Your(vision_clears);
+		    if (!Blind) Your("%s", vision_clears);
 		    else make_stunned((long)d(1,3),TRUE);
 		}
 		break;

@@ -832,7 +832,6 @@ boolean ignore_oquan;
 	register const char *un = (hallu) ? 0 : ocl->oc_uname;
 	register int objknown = (hallu) ? rn2(2) : obj->known; 
 	
-	boolean tmp = FALSE;
 #ifdef INVISIBLE_OBJECTS
 	boolean reset_invis = FALSE;
 	register char *buf2;
@@ -1483,7 +1482,7 @@ register struct obj *obj;
 	boolean do_known = dump_ID_flag && !obj->known;
 	boolean do_dknown = dump_ID_flag && !obj->dknown;
 	boolean do_bknown = dump_ID_flag && !obj->bknown;
-	boolean do_rknown = dump_ID_flag && !obj->rknown;
+	/*boolean do_rknown = dump_ID_flag && !obj->rknown;*/
 	
 	if(!dump_ID_flag)
 		; /* early exit */
@@ -2114,7 +2113,7 @@ boolean prefix;
 
     Sprintf(buf, "%s%s%s", adj, strlen(adj) > 0 ? " " : "", xname(obj));
     if (obj->quan == 1L && prefix)
-    	Sprintf(buf, obj_is_pname(obj) ? the(buf) : an(buf));
+    	Sprintf(buf, "%s", obj_is_pname(obj) ? the(buf) : an(buf));
 
     objects[obj->otyp].oc_name_known = save_ocknown;
     objects[obj->otyp].oc_uname = save_ocuname;

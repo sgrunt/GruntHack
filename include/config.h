@@ -361,7 +361,7 @@ typedef unsigned char	uchar;
 
 #define TAME_RANGED_ATTACKS /* tame monsters use ranged attacks */
 #define ATTACK_PETS         /* monsters attack pets directly */
-/*#define TAME_SUMMONING      /* tame spellcasters can summon tame monsters
+/*#define TAME_SUMMONING*/    /* tame spellcasters can summon tame monsters */
                               /* (including you) */
 #define YOUMONST_SPELL      /* you can cast monster spells in the form
                                of a monster */
@@ -386,7 +386,7 @@ typedef unsigned char	uchar;
 
 #define INVISIBLE_OBJECTS   /* allow invisible objects */
 
-/*#define DGAMELAUNCH /* compiled for dgamelaunch */
+/*#define DGAMELAUNCH*/ /* compiled for dgamelaunch */
 
 #ifdef DGAMELAUNCH
 #define SIMPLE_MAIL

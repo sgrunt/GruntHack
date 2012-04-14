@@ -382,7 +382,7 @@ savestateinlock()
 		    return;
 		}
 
-		(void) read(fd, (genericptr_t) &hpid, sizeof(hpid));
+		if(read(fd, (genericptr_t) &hpid, sizeof(hpid)));
 		if (hackpid != hpid) {
 		    Sprintf(whynot,
 			    "Level #0 pid (%d) doesn't match ours (%d)!",
@@ -400,11 +400,11 @@ savestateinlock()
 		    done(TRICKED);
 		    return;
 		}
-		(void) write(fd, (genericptr_t) &hackpid, sizeof(hackpid));
+		if(write(fd, (genericptr_t) &hackpid, sizeof(hackpid)));
 		if (flags.ins_chkpt) {
 		    int currlev = ledger_no(&u.uz);
 
-		    (void) write(fd, (genericptr_t) &currlev, sizeof(currlev));
+		    if(write(fd, (genericptr_t) &currlev, sizeof(currlev)));
 		    save_savefile_name(fd);
 		    store_version(fd);
 #ifdef STORE_PLNAME_IN_FILE

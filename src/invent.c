@@ -1064,12 +1064,12 @@ register const char *let,*word;
 		}
 		if(index(quitchars,ilet)) {
 		    if(flags.verbose)
-			pline(Never_mind);
+			pline("%s", Never_mind);
 		    return((struct obj *)0);
 		}
 		if(ilet == '-') {
 			if (!allownone)
-				pline(Never_mind);
+				pline("%s", Never_mind);
 			return(allownone ? &zeroobj : (struct obj *) 0);
 		}
 		if(ilet == def_oc_syms[COIN_CLASS]) {
@@ -1131,7 +1131,7 @@ register const char *let,*word;
 		    }
 		    if(ilet == '\033') {
 			if(flags.verbose)
-			    pline(Never_mind);
+			    pline("%s", Never_mind);
 			return((struct obj *)0);
 		    }
 		    /* they typed a letter (not a space) at the prompt */
@@ -2881,7 +2881,7 @@ boolean picked_some;
 	    	!can_reach_floor())
 #endif
 	    ) {
-		if (dfeature) pline(fbuf);
+		if (dfeature) pline("%s", fbuf);
 		read_engr_at(u.ux, u.uy); /* Eric Backus */
 		if (!skip_objects && (Blind || !dfeature))
 		    You("%s no objects here.", verb);
@@ -2890,14 +2890,14 @@ boolean picked_some;
 	/* we know there is something here */
 
 	if (skip_objects) {
-	    if (dfeature) pline(fbuf);
+	    if (dfeature) pline("%s", fbuf);
 	    read_engr_at(u.ux, u.uy); /* Eric Backus */
 	    There("are %s%s objects here.",
 		  (obj_cnt <= 10) ? "several" : "many",
 		  picked_some ? " more" : "");
 	} else if (!otmp->nexthere) {
 	    /* only one object */
-	    if (dfeature) pline(fbuf);
+	    if (dfeature) pline("%s", fbuf);
 	    read_engr_at(u.ux, u.uy); /* Eric Backus */
 #ifdef INVISIBLE_OBJECTS
 	    if (otmp->oinvis && !See_invisible) {
@@ -3337,7 +3337,8 @@ boolean unpaid,showsym;
 #ifdef SHOWSYM
 	if (oclass && showsym)
 	    Sprintf(eos(invbuf), ocsymformat,
-		    iflags.menu_tab_sep ? "\t" : "  ", def_oc_syms[let]);
+		    iflags.menu_tab_sep ? "\t" : "  ",
+		    def_oc_syms[(unsigned)let]);
 #endif
 	return invbuf;
 }
@@ -3408,7 +3409,7 @@ doorganize()	/* inventory organizer by Del Lamb */
 		Sprintf(qbuf, "Adjust letter to what [%s]?",buf);
 		let = yn_function(qbuf, (char *)0, '\0');
 		if(index(quitchars,let)) {
-			pline(Never_mind);
+			pline("%s", Never_mind);
 			return(0);
 		}
 		if (let == '@' || !letter(let))

@@ -1567,8 +1567,6 @@ mfndpos(mon, poss, info, flag)
 {
 	register int cnt = 0;
 	boolean wantpool = mon->data->mlet == S_EEL;
-	coord tmpposs;
-	long tmpinfo = 0;
 	int x = mon->mx, y = mon->my;
 	register xchar nx, ny;
 	int maxx, maxy;
@@ -2985,7 +2983,7 @@ struct monst *mon;
 				You("cannot polymorph %s into that.", mon_nam(mon));
 			else break;
 		} while(++tries < 5);
-		if (tries==5) pline(thats_enough_tries);
+		if (tries==5) pline("%s", thats_enough_tries);
 	}
 #endif /*WIZARD*/
 	if (mndx == NON_PM) mndx = rn1(SPECIAL_PM - LOW_PM, LOW_PM);

@@ -1118,7 +1118,7 @@ int spellnum;
 	if (!resists_blnd(&youmonst)) {
 	    You("are blinded by the flash!");
 	    make_blinded((long)rnd(100),FALSE);
-	    if (!Blind) Your(vision_clears);
+	    if (!Blind) Your("%s", vision_clears);
 	}
 	break;
     }
@@ -1185,7 +1185,7 @@ int spellnum;
 		  (num_eyes == 1) ?
 		  body_part(EYE) : makeplural(body_part(EYE)));
 	    make_blinded(Half_spell_damage ? 100L : 200L, FALSE);
-	    if (!Blind) Your(vision_clears);
+	    if (!Blind) Your("%s", vision_clears);
 	    dmg = 0;
 	} else
 	    impossible("no reason for monster to cast blindness spell?");
@@ -2017,7 +2017,7 @@ castmm(mtmp, mdef, mattk)
 	    if (canseemon(mtmp) && couldsee(mtmp->mx, mtmp->my))
 	    {
                 char buf[BUFSZ];
-		Sprintf(buf, Monnam(mtmp));
+		Sprintf(buf, "%s", Monnam(mtmp));
 
 		if (is_undirected_spell(mattk->adtyp, spellnum))
 	            pline("%s points all around, then curses.", buf);

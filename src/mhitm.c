@@ -209,7 +209,6 @@ mattackm(magr, mdef)
 		    tmp,	/* amour class difference */
 		    strike,	/* hit this attack */
 		    attk,	/* attack attempted this time */
-		    struck = 0,	/* hit at least once */
 		    res[NATTK],	/* results of all attacks */
 		    finalres = 0;
     struct attack   *mattk, alt_attk;
@@ -486,7 +485,6 @@ mattackm(magr, mdef)
 	if (res[i] & MM_AGR_DIED)  return finalres;
 	/* return if aggressor can no longer attack */
 	if (!magr->mcanmove || magr->msleeping) return finalres;
-	if (res[i] & MM_HIT) struck = 1;	/* at least one hit */
     }
 
     return(finalres);
@@ -1020,8 +1018,6 @@ mdamagem(magr, mdef, mattk)
 	    case AD_STON:
 		if (magr->mcan) break;
  do_stone:
-		/* may die from the acid if it eats a stone-curing corpse */
-		/*if (munstone(mdef, FALSE)) goto post_stone;*/
 		if (poly_when_stoned(pd)) {
 			mon_to_stone(mdef);
 			tmp = 0;
@@ -1030,7 +1026,7 @@ mdamagem(magr, mdef, mattk)
 		if (!resists_ston(mdef)) {
 			if (vis) pline("%s turns to stone!", Monnam(mdef));
 			monstone(mdef);
- post_stone:		if (mdef->mhp > 0) return MM_MISS;
+ 			if (mdef->mhp > 0) return MM_MISS;
 			else if (mdef->mtame && !vis)
 			    You(brief_feeling, "peculiarly sad");
 			return (MM_DEF_DIED | (grow_up(magr,mdef) ?

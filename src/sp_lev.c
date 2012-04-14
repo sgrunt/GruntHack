@@ -62,7 +62,7 @@ STATIC_DCL boolean FDECL(create_subroom, (struct mkroom *, XCHAR_P, XCHAR_P,
 #define XLIM	4
 #define YLIM	3
 
-#define Fread	(void)dlb_fread
+#define Fread(a,b,c,d)	if(dlb_fread(a,b,c,d))
 #define Fgetc	(schar)dlb_fgetc
 #define New(type)		(type *) alloc(sizeof(type))
 #define NewTab(type, size)	(type **) alloc(sizeof(type *) * (unsigned)size)
@@ -1178,7 +1178,7 @@ struct mkroom	*croom;
 
 		newsym(x, y);
 	    } else if (racemask) {
-	        impossible("race %d for %s?",
+	        impossible("race %ld for %s?",
 		           racemask, pm->mname);
 		m_initweap(mtmp);
 		m_initinv(mtmp);

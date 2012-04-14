@@ -1926,7 +1926,7 @@ register struct obj *obj;
 		return 0;
 	}
 
-	Sprintf(namebuf, doname(obj));
+	Sprintf(namebuf, "%s", doname(obj));
 
 	freeinv(obj);
 
@@ -2638,7 +2638,6 @@ dotip()
     register struct obj *cobj, *nobj;
     register int c = -1;
     coord cc;
-    struct monst *mtmp;
     char qbuf[BUFSZ];
     const char tools[] = {TOOL_CLASS, 0};
 
@@ -2647,8 +2646,6 @@ dotip()
 	return 0;
     }
     cc.x = u.ux; cc.y = u.uy;
-
-lootcont:
 
     if (container_at(cc.x, cc.y, FALSE)) {
 	if (able_to_loot(cc.x, cc.y));

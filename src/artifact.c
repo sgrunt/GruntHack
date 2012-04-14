@@ -690,7 +690,7 @@ long wp_mask;
 	    else u.xray_range = -1;
 	    vision_full_recalc = 1;
 	}
-	if ((spfx & SPFX_REFLECT) && ((wp_mask & W_WEP|W_SWAPWEP))) {
+	if ((spfx & SPFX_REFLECT) && ((wp_mask & (W_WEP|W_SWAPWEP)))) {
 	    if (on) EReflecting |= wp_mask;
 	    else EReflecting &= ~wp_mask;
 	}
@@ -1602,7 +1602,7 @@ int dieroll; /* needed for Magicbane and vorpal blades */
             if (!spec_dbon_applies) {
 	        if (realizes_damage)
 	            pline("%s hits %s%s",
-	                  artilist[otmp->oartifact].name, hittee,
+	                  artilist[(unsigned)otmp->oartifact].name, hittee,
 		          youdefend ? "!" : ".");
 	    }
 	    else if (dieroll == 1)
@@ -1610,7 +1610,7 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	        if (realizes_damage)
 		    /* we know it's an artifact by now, so... */
                     pline("%s slays %s!",
-		           artilist[otmp->oartifact].name, hittee);
+		           artilist[(unsigned)otmp->oartifact].name, hittee);
 
 		*dmgptr = 2 * mdef->mhp + FATAL_DAMAGE_MODIFIER;
 	    }
@@ -1618,7 +1618,7 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	    {
 	        if (realizes_damage)
                     pline("%s roars as it sears %s!",
-		           artilist[otmp->oartifact].name, hittee);
+		           artilist[(unsigned)otmp->oartifact].name, hittee);
 
 	        (void) cancel_monst(mdef, otmp, youattack, FALSE, FALSE);
 	    }
@@ -1626,7 +1626,7 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	    {
 	        if (realizes_damage)
                     pline("%s howls as it sears %s!",
-		           artilist[otmp->oartifact].name, hittee);
+		           artilist[(unsigned)otmp->oartifact].name, hittee);
 	        if (youdefend)
 	            make_stunned((HStun + 3), FALSE);
 	        else if (realizes_damage)
@@ -1637,7 +1637,7 @@ int dieroll; /* needed for Magicbane and vorpal blades */
 	    } else if (dieroll <= 10) {
 	        if (realizes_damage)
                     pline("%s screams as it sears %s!",
-		           artilist[otmp->oartifact].name, hittee);
+		           artilist[(unsigned)otmp->oartifact].name, hittee);
         	if (youdefend) {
         	    nomul2(-3, "scared");
         	    nomovemsg = "You regain your composure.";
@@ -1650,7 +1650,7 @@ int dieroll; /* needed for Magicbane and vorpal blades */
         	}
 	    } else if (realizes_damage)
                 pline("%s sears %s!",
-	            artilist[otmp->oartifact].name, hittee);
+	            artilist[(unsigned)otmp->oartifact].name, hittee);
 	    if (mdef->data->mlet == S_TROLL)
 	        mdef->mcan = 1; /* trollsbane; prevent troll from reviving */
             return realizes_damage;
@@ -1691,7 +1691,7 @@ arti_invoke(obj)
 			return invoke_amulet(obj);
 #endif
 	else
-	    pline(nothing_happens);
+	    pline("%s", nothing_happens);
 	return 1;
     }
 

@@ -43,8 +43,8 @@ dlb *fp;
 {
 	char line[BUFSZ];
 
-	(void) dlb_fgets(line, sizeof line, fp); /* skip "don't edit" comment */
-	(void) dlb_fgets(line, sizeof line, fp);
+	if(dlb_fgets(line, sizeof line, fp)); /* skip "don't edit" comment */
+	if(dlb_fgets(line, sizeof line, fp));
 	if (sscanf(line, "%6lx\n", &true_rumor_size) == 1 &&
 	    true_rumor_size > 0L) {
 	    (void) dlb_fseek(fp, 0L, SEEK_CUR);
@@ -112,12 +112,12 @@ boolean exclude_cookie;
 			return strcpy(rumor_buf, "Oops...");
 		}
 		(void) dlb_fseek(rumors, beginning + tidbit, SEEK_SET);
-		(void) dlb_fgets(line, sizeof line, rumors);
+		if(dlb_fgets(line, sizeof line, rumors));
 		if (!dlb_fgets(line, sizeof line, rumors) ||
 		    (adjtruth > 0 && dlb_ftell(rumors) > true_rumor_end)) {
 			/* reached end of rumors -- go back to beginning */
 			(void) dlb_fseek(rumors, beginning, SEEK_SET);
-			(void) dlb_fgets(line, sizeof line, rumors);
+			if(dlb_fgets(line, sizeof line, rumors));
 		}
 		if ((endp = index(line, '\n')) != 0) *endp = 0;
 		Strcat(rumor_buf, xcrypt(line, xbuf));
@@ -188,13 +188,13 @@ dlb *fp;
 	int cnt = 0;
 
 	/* this assumes we're only called once */
-	(void) dlb_fgets(line, sizeof line, fp); /* skip "don't edit" comment*/
-	(void) dlb_fgets(line, sizeof line, fp);
+	if(dlb_fgets(line, sizeof line, fp)); /* skip "don't edit" comment*/
+	if(dlb_fgets(line, sizeof line, fp));
 	if (sscanf(line, "%5d\n", &cnt) == 1 && cnt > 0) {
 	    oracle_cnt = (unsigned) cnt;
 	    oracle_loc = (long *) alloc((unsigned)cnt * sizeof (long));
 	    for (i = 0; i < cnt; i++) {
-		(void) dlb_fgets(line, sizeof line, fp);
+		if(dlb_fgets(line, sizeof line, fp));
 		(void) sscanf(line, "%5lx\n", &oracle_loc[i]);
 	    }
 	}

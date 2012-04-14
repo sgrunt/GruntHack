@@ -1010,7 +1010,7 @@ wandeffect:
 		break;
 	case SPE_JUMPING:
 		if (!jump(max(role_skill,1)))
-			pline(nothing_happens);
+			pline("%s", nothing_happens);
 		break;
 	case SPE_FLAME_SPHERE:
 	case SPE_FREEZE_SPHERE:
@@ -1050,7 +1050,7 @@ wandeffect:
 		} else if (heardcount) {
 			if (flags.soundok) You_hear("crackling.");
 		} else {
-			pline(nothing_happens);
+			pline("%s", nothing_happens);
 		}
 		break;
 	}

@@ -10,7 +10,7 @@
 #endif
 
 #if defined(WHEREIS_FILE) && defined(UNIX)
-#include <sys/types.h> /* whereis-file chmod() */
+#include <sys/stat.h> /* whereis-file chmod() */
 #endif
 
 #include <ctype.h>
@@ -643,7 +643,7 @@ touch_whereis()
   Sprintf(whereis_file,"whereis/%s.whereis",plname);
 #endif
   Sprintf(whereis_work,
-         "depth=%d:dnum=%d:hp=%d:maxhp=%d:turns=%d:score=%ld:role=%s:race=%s:gender=%s:align=%s:conduct=0x%lx:amulet=%d\n",
+         "depth=%d:dnum=%d:hp=%d:maxhp=%d:turns=%ld:score=%ld:role=%s:race=%s:gender=%s:align=%s:conduct=0x%lx:amulet=%d\n",
          depth(&u.uz),
          u.uz.dnum,
          u.uhp,
@@ -668,7 +668,7 @@ touch_whereis()
     mode_t whereismode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
     chmod(fqname(whereis_file, LEVELPREFIX, 2), whereismode);
 #endif
-    fwrite(whereis_work,strlen(whereis_work),1,fp);
+    if(fwrite(whereis_work,strlen(whereis_work),1,fp));
     fclose(fp);
   }
 
@@ -927,7 +927,7 @@ void
 save_savefile_name(fd)
 int fd;
 {
-	(void) write(fd, (genericptr_t) SAVEF, sizeof(SAVEF));
+	if(write(fd, (genericptr_t) SAVEF, sizeof(SAVEF)));
 }
 #endif
 
@@ -2677,7 +2677,7 @@ livelog_write_string(buffer)
                     aligns[1-u.ualign.type].filecode,
                     moves, (long)u.ubirthday, (long)time(NULL), msgbuf);
 
-           fprintf(livelogfile, tmpbuf);
+           fprintf(livelogfile, "%s", tmpbuf);
            (void) fclose(livelogfile);
        }
        unlock_file(LIVELOGFILE);
