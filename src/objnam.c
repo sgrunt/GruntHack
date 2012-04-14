@@ -2111,7 +2111,7 @@ boolean prefix;
     save_ocuname = objects[obj->otyp].oc_uname;
     objects[obj->otyp].oc_uname = 0;	/* avoid "foo called bar" */
 
-    Sprintf(buf, "%s%s%s", adj, strlen(adj) > 0 ? " " : "", xname(obj));
+    Sprintf(buf, "%s%s%s", adj, strlen(adj) > 0 ? " " : "", cxname(obj));
     if (obj->quan == 1L && prefix)
     	Sprintf(buf, "%s", obj_is_pname(obj) ? the(buf) : an(buf));
 
