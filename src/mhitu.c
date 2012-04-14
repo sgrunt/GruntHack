@@ -1922,6 +1922,11 @@ gulpmu(mtmp, mattk)	/* monster swallows you, or damage if u.uswallow */
 		}
 
 		if (touch_petrifies(youmonst.data) && !resists_ston(mtmp)) {
+			expels(mtmp, mtmp->data, FALSE);
+			remove_monster(mtmp->mx, mtmp->my);
+			remove_monster_img(mtmp->mix, mtmp->miy);
+			place_monster(mtmp, u.ux, u.uy);
+			if (Punished) placebc();
 			minstapetrify(mtmp, TRUE);
 			if (mtmp->mhp > 0) return 0;
 			else return 2;
