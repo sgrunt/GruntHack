@@ -1463,12 +1463,12 @@ domove()
 		remove_monster(x, y);
 		remove_monster_img(mtmp->mix, mtmp->miy);
 		place_monster(mtmp, u.ux0, u.uy0);
+		You("%s %s.", mtmp->mtame ? "displace" : "frighten",
+		    pnambuf);
 
 		/* check for displacing it into pools and traps */
 		switch (minliquid(mtmp) ? 2 : mintrap(mtmp)) {
 		case 0:
-		    You("%s %s.", mtmp->mtame ? "displaced" : "frightened",
-			pnambuf);
 		    break;
 		case 1:		/* trapped */
 		case 3:		/* changed levels */
