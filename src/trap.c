@@ -1307,8 +1307,10 @@ glovecheck:		(void) rust_dmg(uarmg, "gauntlets", 1, TRUE, &youmonst);
 		newsym(u.ux,u.uy);		/* update trap symbol */
 		losehp(rnd(16), "land mine", KILLED_BY_AN);
 		/* fall recursively into the pit... */
-		if ((trap = t_at(u.ux, u.uy)) != 0) dotrap(trap, RECURSIVETRAP);
-		fill_pit(u.ux, u.uy);
+		if ((trap = t_at(u.ux, u.uy)) != 0) {
+		    dotrap(trap, RECURSIVETRAP);
+		    fill_pit(u.ux, u.uy);
+		} else spoteffects(FALSE);
 		break;
 	    }
 	    case ROLLING_BOULDER_TRAP: {
@@ -1437,6 +1439,8 @@ void
 blow_up_landmine(trap)
 struct trap *trap;
 {
+	int x = trap->tx;
+        int y = trap->ty;
 	(void)scatter(trap->tx, trap->ty, 4,
 		MAY_DESTROY | MAY_HIT | MAY_FRACTURE | VIS_EFFECTS,
 		(struct obj *)0);
@@ -1444,11 +1448,16 @@ struct trap *trap;
 	wake_nearto(trap->tx, trap->ty, 400);
 	if (IS_DOOR(levl[trap->tx][trap->ty].typ))
 	    levl[trap->tx][trap->ty].doormask = D_BROKEN;
-	/* TODO: destroy drawbridge if present */
-	/* caller may subsequently fill pit, e.g. with a boulder */
-	trap->ttyp = PIT;		/* explosion creates a pit */
-	trap->madeby_u = FALSE;		/* resulting pit isn't yours */
-	seetrap(trap);			/* and it isn't concealed */
+	if (!IS_DRAWBRIDGE(levl[trap->tx][trap->ty].typ)) {
+	    trap->ttyp = PIT;		/* explosion creates a pit */
+	    trap->madeby_u = FALSE;	/* resulting pit isn't yours */
+	    seetrap(trap);		/* and it isn't concealed */
+	} else {
+	    deltrap(trap);
+	}
+	if (find_drawbridge(&x, &y)) {
+	    destroy_drawbridge(x, y);
+	}
 }
 
 #endif /* OVLB */
@@ -2303,6 +2312,7 @@ glovecheck:		    target = which_armor(mtmp, W_ARMG);
 			break;
 
 		case LANDMINE:
+		{
 			if(rn2(3))
 				break; /* monsters usually don't set it off */
 			if(is_flyer(mptr)) {
@@ -2325,21 +2335,26 @@ glovecheck:		    target = which_armor(mtmp, W_ARMG);
 			if (!in_sight)
 				pline("Kaablamm!  You hear an explosion in the distance!");
 			blow_up_landmine(trap);
-			if (thitm(0, mtmp, (struct obj *)0, rnd(16), FALSE))
+			if (DEADMONSTER(mtmp))
+			    trapkilled = TRUE;
+			else if (thitm(0, mtmp, (struct obj *)0, rnd(16), FALSE))
 				trapkilled = TRUE;
 			else {
 				/* monsters recursively fall into new pit */
 				if (mintrap(mtmp) == 2) trapkilled=TRUE;
 			}
 			/* a boulder may fill the new pit, crushing monster */
-			fill_pit(trap->tx, trap->ty);
+			if((t_at(mtmp->mx, mtmp->my)))
+			    fill_pit(mtmp->mx, mtmp->my);
+			else if (!DEADMONSTER(mtmp))
+			    minliquid(mtmp);
 			if (mtmp->mhp <= 0) trapkilled = TRUE;
 			if (unconscious()) {
 				multi = -1;
 				nomovemsg="The explosion awakens you!";
 			}
 			break;
-
+                }
 		case POLY_TRAP:
 		    if (resists_magm(mtmp)) {
 			shieldeff(mtmp->mx, mtmp->my);
