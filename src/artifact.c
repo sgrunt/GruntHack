@@ -21,6 +21,7 @@ extern boolean notonhead;	/* for long worms */
 #define get_artifact(o) \
 		(((o)&&(o)->oartifact) ? &artilist[(int) (o)->oartifact] : 0)
 
+STATIC_DCL int FDECL(racial_obj_for_skill, (int));
 STATIC_DCL int FDECL(spec_applies, (const struct artifact *,struct monst *));
 STATIC_DCL int FDECL(arti_invoke, (struct obj*));
 STATIC_DCL boolean FDECL(Mb_hit, (struct monst *magr,struct monst *mdef,
@@ -181,6 +182,52 @@ make_artif: if (by_align) otmp = mksobj((int)a->otyp, TRUE, FALSE);
 }
 
 /*
+ * Given a skill, find an appropriate type of object based on the
+ * player's race and role.
+ * Return the object type if one is found, or 0 otherwise.
+ */
+STATIC_OVL int
+racial_obj_for_skill(skill)
+int skill;
+{
+    switch(skill)
+    {
+        case P_DAGGER:
+	    if (Race_if(PM_ELF)) return ELVEN_DAGGER;
+	    if (Race_if(PM_ORC)) return ORCISH_DAGGER;
+	    if (Role_if(PM_WIZARD)) return ATHAME;
+	    break;
+	case P_KNIFE:
+	    if (Role_if(PM_HEALER)) return SCALPEL;
+	    break;
+	case P_SHORT_SWORD:
+	    if (Race_if(PM_ELF)) return ELVEN_SHORT_SWORD;
+	    if (Race_if(PM_ORC)) return ORCISH_SHORT_SWORD;
+	    if (Race_if(PM_DWARF)) return DWARVISH_SHORT_SWORD;
+	    if (Role_if(PM_SAMURAI)) return SHORT_SWORD; /* wakizashi */
+	    break;
+	case P_BROAD_SWORD:
+	    if (Race_if(PM_ELF)) return ELVEN_BROADSWORD;
+	    break;
+	case P_LONG_SWORD:
+	    if (Role_if(PM_SAMURAI)) return KATANA;
+	    break;
+	case P_TWO_HANDED_SWORD:
+	    if (Role_if(PM_SAMURAI)) return TSURUGI;
+	    break;
+	case P_BOW:
+	    if (Race_if(PM_ELF)) return rn2(2) ? ELVEN_BOW : ELVEN_ARROW;
+	    if (Race_if(PM_ORC)) return rn2(2) ? ORCISH_BOW : ORCISH_ARROW;
+	    if (Role_if(PM_SAMURAI)) return rn2(2) ? YUMI : YA;
+	    break;
+	default:
+	    break;
+    }
+
+    return 0;
+}
+
+/*
  * Create an item with special properties, or grant the item those properties.
  */
 struct obj *
@@ -202,8 +249,8 @@ boolean allow_detrimental;
 	    ccount = 0;
 	    for (i = P_FIRST_WEAPON; i < P_LAST_WEAPON; i++)
 	    {
-	    	if (P_MAX_SKILL(i) >= threshold &&
-		    P_SKILL(i) >= min(threshold, P_BASIC))
+	    	if (P_MAX_SKILL(i) >= max(threshold, P_BASIC) &&
+		    P_SKILL(i) >= threshold)
 		   candidates[ccount++] = i;
 		if (ccount >= 128) break;
 	    }
@@ -213,6 +260,8 @@ boolean allow_detrimental;
 	    }
 	    skill = candidates[rn2(ccount)];
 	    ccount = 0;
+	    if ((type = racial_obj_for_skill(skill)))
+	        break;
 	    for (i = ARROW; i <= CROSSBOW; i++)
 	    {
 	        if (abs(objects[i].oc_skill) == skill)
@@ -907,20 +956,8 @@ int tmp;
 	        (attacks(AD_COLD, otmp) &&
 		((yours) ? (!Cold_resistance) : (!resists_cold(mon)))))
 	    {
-		int tmp;
-
 	        spec_dbon_applies = TRUE;
-
-	        if (bigmonst(mon->data))
-	            tmp = rnd(objects[otmp->otyp].oc_wldam);
-	        else
-		    tmp = rnd(objects[otmp->otyp].oc_wsdam);
-
-		tmp += otmp->spe;
-
-		if (tmp < 1) tmp = 1;  /* be nice, somehow ;) */
-
-		return tmp;
+		return rnd(6);
             }	
 	    if ((props & ITEM_DRLI) &&
 	        ((yours) ? (!Drain_resistance) : (!resists_drli(mon))))
