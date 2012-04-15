@@ -357,6 +357,21 @@ mattackm(magr, mdef)
 		    tmp -= hitval(otmp, mdef);
 		if (strike) {
 		    res[i] = hitmm(magr, mdef, mattk) | MM_MOVED;
+		    if((res[i] & ~MM_MOVED) == MM_HIT &&
+		        otmp && (otmp->otyp == CORPSE ||
+		                otmp->otyp == ROCK) &&
+			otmp->corpsenm &&
+			touch_petrifies(&mons[otmp->corpsenm]) &&
+			!resists_ston(mdef)) {
+			if (poly_when_stoned(mdef->data)) {
+			    mon_to_stone(mdef);
+			} else {
+			    mdef->mstone = 5;
+			    mdef->mstonebyu = FALSE;
+			}
+			break;
+		    }
+
 		    if(((pd == &mons[PM_BLACK_PUDDING]) ||
 		        (pd == &mons[PM_BROWN_PUDDING]))
 		       && otmp && objects[otmp->otyp].oc_skill != WHACK 
@@ -376,7 +391,7 @@ mattackm(magr, mdef)
 			    mtmp2->mhpmax >>= 1;
 			    if (mtmp2->mhp > mtmp2->mhpmax)
 			        mtmp2->mhp = mtmp2->mhpmax;
-			                        }
+                        }
 		    }
 		} else
 		    missmm(magr, mdef, mattk);
@@ -1024,13 +1039,17 @@ mdamagem(magr, mdef, mattk)
 			break;
 		}
 		if (!resists_ston(mdef)) {
-			if (vis) pline("%s turns to stone!", Monnam(mdef));
+			/*if (vis) pline("%s turns to stone!", Monnam(mdef));
 			monstone(mdef);
  			if (mdef->mhp > 0) return MM_MISS;
 			else if (mdef->mtame && !vis)
 			    You(brief_feeling, "peculiarly sad");
 			return (MM_DEF_DIED | (grow_up(magr,mdef) ?
-							0 : MM_AGR_DIED));
+							0 : MM_AGR_DIED));*/
+			if (!mdef->mstone) {
+			    mdef->mstone = 5;
+			    mdef->mstonebyu = FALSE;
+			}
 		}
 		tmp = (mattk->adtyp == AD_STON ? 0 : 1);
 		break;

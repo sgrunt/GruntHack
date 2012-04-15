@@ -285,7 +285,8 @@ register struct monst *mtmp;
 	if(!mtmp->mcanmove) {
 		tmp += 4;
 		if(!rn2(10)) {
-			mtmp->mcanmove = 1;
+		        if (!mtmp->mstone || mtmp->mstone > 2)
+			    mtmp->mcanmove = 1;
 			mtmp->mfrozen = 0;
 		}
 	}
@@ -837,9 +838,13 @@ rock2:
 				obj->dknown ? the(mons[obj->corpsenm].mname) :
 				an(mons[obj->corpsenm].mname),
 				(obj->quan > 1) ? makeplural(withwhat) : withwhat);
-			    if (!munstone(mon, TRUE))
-				minstapetrify(mon, TRUE);
+			    /*if (!munstone(mon, TRUE))
+				minstapetrify(mon, TRUE);*/
 			    if (resists_ston(mon)) break;
+			    if (!mon->mstone) {
+			        mon->mstone = 5;
+				mon->mstonebyu = TRUE;
+			    }
 			    /* note: hp may be <= 0 even if munstoned==TRUE */
 			    return (boolean) (mon->mhp > 0);
 #if 0
@@ -880,9 +885,13 @@ rock2:
 				plur(cnt));
 			    obj->known = 1;	/* (not much point...) */
 			    useup_eggs(obj);
-			    if (!munstone(mon, TRUE))
-				minstapetrify(mon, TRUE);
+			    /*if (!munstone(mon, TRUE))
+				minstapetrify(mon, TRUE);*/
 			    if (resists_ston(mon)) break;
+			    if (!mon->mstone) {
+			        mon->mstone = 5;
+				mon->mstonebyu = TRUE;
+			    }
 			    return (boolean) (mon->mhp > 0);
 			} else {	/* ordinary egg(s) */
 			    const char *eggp =

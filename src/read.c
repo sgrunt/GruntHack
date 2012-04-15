@@ -975,7 +975,8 @@ register struct obj	*sobj;
 		    if(cansee(mtmp->mx,mtmp->my)) {
 			if(confused || sobj->cursed) {
 			    mtmp->mflee = mtmp->mfrozen = mtmp->msleeping = 0;
-			    mtmp->mcanmove = 1;
+			    if (!mtmp->mstone || mtmp->mstone > 2)
+			        mtmp->mcanmove = 1;
 			} else
 			    if (! resist(mtmp, sobj->oclass, 0, NOTELL))
 				monflee(mtmp, 0, FALSE, FALSE);

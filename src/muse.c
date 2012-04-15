@@ -1195,7 +1195,8 @@ mon_tele:
 		    if(m_cansee(mtmp, mtmp2->mx,mtmp2->my)) {
 			if(mtmp->mconf || otmp->cursed) {
 			    mtmp2->mflee = mtmp2->mfrozen = mtmp2->msleeping = 0;
-			    mtmp2->mcanmove = 1;
+			    if (!mtmp->mstone || mtmp->mstone > 2)
+			        mtmp2->mcanmove = 1;
 			} else
 			    if (! resist(mtmp2, otmp->oclass, 0, NOTELL))
 				monflee(mtmp2, 0, FALSE, FALSE);
@@ -3321,7 +3322,7 @@ boolean by_you;
 		register struct obj *pseudo =
 			mksobj(SPE_STONE_TO_FLESH, FALSE, FALSE);
 		pseudo->blessed = pseudo->cursed = 0;
-    		mon_adjust_speed(mon, -3, (struct obj *)0);
+/*    		mon_adjust_speed(mon, -3, (struct obj *)0);*/
 		if (cansee(mon->mx, mon->my) || canseemon(mon))
 		    pline("%s casts a spell!",
 		        canspotmon(mon) ? Monnam(mon) : Something);
@@ -3366,7 +3367,7 @@ boolean stoning;
 
     /* give a "<mon> is slowing down" message and also remove
        intrinsic speed (comparable to similar effect on the hero) */
-    mon_adjust_speed(mon, -3, (struct obj *)0);
+    /* mon_adjust_speed(mon, -3, (struct obj *)0); */
 
     if (canseemon(mon)) {
 	long save_quan = obj->quan;

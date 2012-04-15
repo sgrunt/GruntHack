@@ -391,6 +391,11 @@ register struct monst *mtmp;
 	    }
 	}
 
+	if (mtmp->mstone && munstone(mtmp, mtmp->mstonebyu)) {
+	    mtmp->mstone = 0;
+	    return(1); /* this is its move */
+	}
+
 	/* some monsters teleport */
 	if (mtmp->mflee && !rn2(40) && can_teleport(mdat) && !mtmp->iswiz &&
 	    !level.flags.noteleport) {

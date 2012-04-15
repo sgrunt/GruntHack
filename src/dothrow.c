@@ -1276,7 +1276,8 @@ boolean mon_notices;
 	if (!mon->mcanmove || !mon->data->mmove) {
 	    tmp += 4;
 	    if (mon_notices && mon->data->mmove && !rn2(10)) {
-		mon->mcanmove = 1;
+	        if (!mon->mstone || mon->mstone > 2)
+		    mon->mcanmove = 1;
 		mon->mfrozen = 0;
 	    }
 	}

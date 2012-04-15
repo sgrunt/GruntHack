@@ -1032,7 +1032,8 @@ boolean verbosely;
 		      shkp->msleeping ? "wakes up" : "can move again");
 	    shkp->msleeping = 0;
 	    shkp->mfrozen = 0;
-	    shkp->mcanmove = 1;
+	    if (!shkp->mstone || shkp->mstone > 2)
+	        shkp->mcanmove = 1;
 	}
 }
 

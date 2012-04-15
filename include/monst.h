@@ -114,6 +114,8 @@ struct monst {
 	Bitfield(iswiz,1);	/* is the Wizard of Yendor */
 	Bitfield(wormno,5);	/* at most 31 worms on any level */
 #define MAX_NUM_WORMS	32	/* should be 2^(wormno bitfield size) */
+	Bitfield(mstone,3);	/* monster is turning to stone */
+	Bitfield(mstonebyu,1);  /* you caused the monster to start stoning */
 
 	long mstrategy;		/* for monsters with mflag3: current strategy */
 #define STRAT_ARRIVE	0x40000000L	/* just arrived on current level */

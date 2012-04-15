@@ -259,8 +259,12 @@ boolean verbose;  /* give message(s) even when you can't see what happened */
 		touch_petrifies(&mons[otmp->corpsenm]) &&
 		!resists_ston(mtmp))
 	    {
-	        if (!munstone(mtmp, TRUE))
-		    minstapetrify(mtmp, (curmonst == &youmonst));
+	        /*if (!munstone(mtmp, TRUE))
+		    minstapetrify(mtmp, (curmonst == &youmonst));*/
+		if (!mtmp->mstone) {
+		    mtmp->mstone = 5;
+		    mtmp->mstonebyu = (curmonst == &youmonst);
+		}
 	        goto dropobj;
 	    }
 

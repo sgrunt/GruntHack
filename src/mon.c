@@ -647,6 +647,53 @@ mcalcdistress()
     for (mtmp = fmon; mtmp; mtmp = mtmp->nmon) {
 	if (DEADMONSTER(mtmp)) continue;
 
+	if (mtmp->mstone > 0) {
+	    if (resists_ston(mtmp)) {
+	        mtmp->mstone = 0;
+	    } else if (poly_when_stoned(mtmp->data)) {
+	        mtmp->mstone = 0;
+	        mon_to_stone(mtmp);
+	    } else {
+	        switch(mtmp->mstone--) {
+	            case 5:
+		        /* "<mon> is slowing down.";
+		         * also removes intrinsic speed */
+		        mon_adjust_speed(mtmp, -3, (struct obj *)0);
+		        break;
+		    case 4:
+		        if (canseemon(mtmp))
+			    pline("%s %s are stiffening.",
+			          s_suffix(Monnam(mtmp)),
+				  nolimbs(mtmp->data) ? "extremities"
+				                      : "limbs");
+			break;
+		    case 3:
+		        if (canseemon(mtmp))
+			    pline("%s %s have turned to stone.",
+			          s_suffix(Monnam(mtmp)),
+				  nolimbs(mtmp->data) ? "extremities"
+				                      : "limbs");
+			mtmp->mcanmove = 0;
+			break;
+		    case 2:
+		        if (canseemon(mtmp))
+			    pline("%s has turned to stone.", Monnam(mtmp)),
+			mtmp->mcanmove = 0;
+			break;
+		    case 1:
+		        if (canseemon(mtmp))
+			    pline("%s is a statue.", Monnam(mtmp));
+			if (mtmp->mstonebyu) {
+			    stoned = TRUE;
+			    xkilled(mtmp, 0, AD_STON);
+			} else monstone(mtmp);
+		}
+	    }
+	    if (!mtmp->mstone && !mtmp->mfrozen)
+	        mtmp->mcanmove = 1;
+	    if (DEADMONSTER(mtmp)) continue;
+	}
+
 	if (mtmp->mlevitating > 0) {
 	    mtmp->mlevitating--;
 	    if (!levitating(mtmp) && canseemon(mtmp))
@@ -722,7 +769,8 @@ mcalcdistress()
 	/* gradually time out temporary problems */
 	if (mtmp->mblinded && !--mtmp->mblinded)
 	    mtmp->mcansee = 1;
-	if (mtmp->mfrozen && !--mtmp->mfrozen)
+	if (mtmp->mfrozen && !--mtmp->mfrozen &&
+	    (!mtmp->mstone || mtmp->mstone > 2))
 	    mtmp->mcanmove = 1;
 	if (mtmp->mfleetim && !--mtmp->mfleetim)
 	    mtmp->mflee = 0;
@@ -991,10 +1039,12 @@ meatmetal(mtmp)
 				mon_to_stone(mtmp);
 				ptr = mtmp->data;
 			    } else if (!resists_ston(mtmp)) {
-				if (canseemon(mtmp))
+				/*if (canseemon(mtmp))
 				    pline("%s turns to stone!", Monnam(mtmp));
 				monstone(mtmp);
-				ptr = (struct permonst *)0;
+				ptr = (struct permonst *)0;*/
+				mtmp->mstone = 5;
+				mtmp->mstonebyu = FALSE;
 			    }
 			} else if (heal) {
 			    mtmp->mhp = mtmp->mhpmax;
@@ -1915,7 +1965,8 @@ int how;
 			pline_The("medallion crumbles to dust!");
 		}
 		m_useup(mtmp, lifesave);
-		mtmp->mcanmove = 1;
+		if (!mtmp->mstone || mtmp->mstone > 2)
+		    mtmp->mcanmove = 1;
 		mtmp->mfrozen = 0;
 		if (mtmp->mtame && !mtmp->isminion) {
 			wary_dog(mtmp, FALSE);
