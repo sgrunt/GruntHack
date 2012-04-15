@@ -297,6 +297,18 @@ boolean ghostly;
 			}
 		}
 
+		if (ghostly) {
+		        /* these cases are from makemon.c */
+		        mtmp->mpeaceful = peace_minded(mtmp);
+			if (is_unicorn(mtmp->data) &&
+			    sgn(u.ualign.type) == sgn(mtmp->data->maligntyp))
+			    mtmp->mpeaceful = TRUE;
+			else if (mtmp->data->mlet == S_ORC &&
+			         Race_if(PM_ELF))
+		            mtmp->mpeaceful = FALSE;
+			set_malign(mtmp);
+		}
+
 		if (mtmp->isshk) restshk(mtmp, ghostly);
 		if (mtmp->ispriest) restpriest(mtmp, ghostly);
 
