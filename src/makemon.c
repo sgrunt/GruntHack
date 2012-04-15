@@ -51,13 +51,16 @@ boolean
 is_home_elemental(ptr)
 register struct permonst *ptr;
 {
-	if (ptr->mlet == S_ELEMENTAL)
+	if (ptr->mlet == S_ELEMENTAL) {
+	    if (Is_astralevel(&u.uz) &&
+	        ptr != &mons[PM_STALKER]) return TRUE;
 	    switch (monsndx(ptr)) {
 		case PM_AIR_ELEMENTAL: return Is_airlevel(&u.uz);
 		case PM_FIRE_ELEMENTAL: return Is_firelevel(&u.uz);
 		case PM_EARTH_ELEMENTAL: return Is_earthlevel(&u.uz);
 		case PM_WATER_ELEMENTAL: return Is_waterlevel(&u.uz);
 	    }
+	}
 	return FALSE;
 }
 
@@ -1828,6 +1831,8 @@ rndmonst()
 		if (upper && !isupper(def_monsyms[(int)(ptr->mlet)])) continue;
 #endif
 		if (elemlevel && wrong_elem_type(ptr)) continue;
+		if (Is_astralevel(&u.uz) &&
+		    ptr == &mons[PM_STALKER]) continue;
 		if (uncommon(mndx)) continue;
 		if (Inhell && (ptr->geno & G_NOHELL)) continue;
 		ct = (int)(ptr->geno & G_FREQ) + align_shift(ptr);
@@ -1935,6 +1940,7 @@ int	spc;
 		last < SPECIAL_PM; last++)
 	    if (!(mvitals[last].mvflags & G_GONE) && !(mons[last].geno & mask)
 		&& !is_placeholder(&mons[last])
+		&& (!Is_astralevel(&u.uz) || last != PM_STALKER)
 		&& (mons[last].mlet == class || 
 		    (is_racial(&mons[last]) &&
 		     (mons[last].mflags2 & racemask)))) {

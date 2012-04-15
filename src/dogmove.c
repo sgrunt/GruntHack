@@ -828,6 +828,7 @@ register int after;	/* this is extra fast monster movement */
 	if (Conflict && !resist(mtmp, RING_CLASS, 0, 0)) {
 	    allowflags |= ALLOW_U;
 	    if (!has_edog) {
+	    	struct permonst *pm;
 		coord mm;
 		/* Guardian angel refuses to be conflicted; rather,
 		 * it disappears, angrily, and sends in some nasties
@@ -839,10 +840,11 @@ register int after;	/* this is extra fast monster movement */
 		mongone(mtmp);
 		i = rnd(4);
 		while(i--) {
+		    pm = &mons[astral_minion_type()];
 		    mm.x = u.ux;
 		    mm.y = u.uy;
-		    if(enexto(&mm, mm.x, mm.y, &mons[PM_ANGEL]))
-			(void) mk_roamer(&mons[PM_ANGEL], u.ualign.type,
+		    if(enexto(&mm, mm.x, mm.y, pm))
+			(void) mk_roamer(pm, u.ualign.type,
 					 mm.x, mm.y, FALSE);
 		}
 		return(2);

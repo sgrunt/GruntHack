@@ -11,6 +11,15 @@
 /* this matches the categorizations shown by enlightenment */
 #define ALGN_SINNED	(-4)	/* worse than strayed */
 
+#define roamer_type(ptr)	((ptr) == &mons[PM_ALIGNED_PRIEST] || \
+				 (ptr) == &mons[PM_ANGEL] || \
+				 (ptr) == &mons[PM_AIR_ELEMENTAL] || \
+				 (ptr) == &mons[PM_FIRE_ELEMENTAL] || \
+				 (ptr) == &mons[PM_WATER_ELEMENTAL] || \
+				 (ptr) == &mons[PM_EARTH_ELEMENTAL] || \
+				 (ptr) == &mons[PM_NALFESHNEE] || \
+				 (ptr) == &mons[PM_PIT_FIEND])
+
 #ifdef OVLB
 
 STATIC_DCL boolean FDECL(histemple_at,(struct monst *,XCHAR_P,XCHAR_P));
@@ -252,17 +261,16 @@ char *pname;		/* caller-supplied output buffer */
 
 	Strcpy(pname, "the ");
 	if (mon->minvis) Strcat(pname, "invisible ");
-	if (mon->ispriest || mon->data == &mons[PM_ALIGNED_PRIEST] ||
-					mon->data == &mons[PM_ANGEL]) {
+	if (mon->ispriest || roamer_type(mon->data)) {
 		/* use epri */
-		if (mon->mtame && mon->data == &mons[PM_ANGEL])
+		if (mon->mtame && mon->data != &mons[PM_ALIGNED_PRIEST] &&
+		                  mon->data != &mons[PM_HIGH_PRIEST])
 			Strcat(pname, "guardian ");
 		if (mon->data != &mons[PM_ALIGNED_PRIEST] &&
 				mon->data != &mons[PM_HIGH_PRIEST]) {
 			Strcat(pname, what);
 			Strcat(pname, " ");
-		}
-		if (mon->data != &mons[PM_ANGEL]) {
+		} else {
 			if (!mon->ispriest && EPRI(mon)->renegade)
 				Strcat(pname, "renegade ");
 			if (mon->data == &mons[PM_HIGH_PRIEST])
@@ -538,7 +546,7 @@ boolean peaceful;
 	register struct monst *roamer;
 	register boolean coaligned = (u.ualign.type == alignment);
 
-	if (ptr != &mons[PM_ALIGNED_PRIEST] && ptr != &mons[PM_ANGEL])
+	if (!roamer_type(ptr))
 		return((struct monst *)0);
 	
 	if (MON_AT(x, y)) (void) rloc(m_at(x, y), FALSE);	/* insurance */
@@ -564,8 +572,7 @@ void
 reset_hostility(roamer)
 register struct monst *roamer;
 {
-	if(!(roamer->isminion && (roamer->data == &mons[PM_ALIGNED_PRIEST] ||
-				  roamer->data == &mons[PM_ANGEL])))
+	if(!(roamer->isminion && roamer_type(roamer->data))) 
 	        return;
 
 	if(EPRI(roamer)->shralign != u.ualign.type) {

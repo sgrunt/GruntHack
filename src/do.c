@@ -1476,9 +1476,27 @@ boolean at_stairs, falling, portal;
 #endif
 }
 
+int
+astral_minion_type()
+{
+    switch (u.ualign.type) {
+        case A_LAWFUL: return PM_ANGEL;
+	case A_NEUTRAL: switch(rn2(4)) {
+	    case 0: return PM_AIR_ELEMENTAL;
+	    case 1: return PM_FIRE_ELEMENTAL;
+	    case 2: return PM_EARTH_ELEMENTAL;
+	    case 3: return PM_WATER_ELEMENTAL;
+	}
+	case A_CHAOTIC: return rn2(2) ? PM_NALFESHNEE : PM_PIT_FIEND;
+    }
+
+    return PM_LICHEN; /* if you can ever trigger this, I want to see it */
+}
+
 STATIC_OVL void
 final_level()
 {
+	struct permonst *pm;
 	struct monst *mtmp;
 	struct obj *otmp;
 	coord mm;
@@ -1498,8 +1516,9 @@ final_level()
 	    for (i = rnd(4); i > 0; --i) {
 		mm.x = u.ux;
 		mm.y = u.uy;
-		if (enexto(&mm, mm.x, mm.y, &mons[PM_ANGEL]))
-		    (void) mk_roamer(&mons[PM_ANGEL], u.ualign.type,
+		pm = &mons[astral_minion_type()];
+		if (enexto(&mm, mm.x, mm.y, pm))
+		    (void) mk_roamer(pm, u.ualign.type,
 				     mm.x, mm.y, FALSE);
 	    }
 
@@ -1507,13 +1526,15 @@ final_level()
 	    pline("A voice whispers: \"Thou hast been worthy of me!\"");
 	    mm.x = u.ux;
 	    mm.y = u.uy;
-	    if (enexto(&mm, mm.x, mm.y, &mons[PM_ANGEL])) {
-		if ((mtmp = mk_roamer(&mons[PM_ANGEL], u.ualign.type,
+	    pm = &mons[astral_minion_type()];
+	    if (enexto(&mm, mm.x, mm.y, pm)) {
+		if ((mtmp = mk_roamer(pm, u.ualign.type,
 				      mm.x, mm.y, TRUE)) != 0) {
 		    if (!Blind)
-			pline("An angel appears near you.");
+			pline("%s appears near you.", An(pm->mname));
 		    else
-			You_feel("the presence of a friendly angel near you.");
+			You_feel("the presence of %s near you.",
+			         an(pm->mname));
 		    /* guardian angel -- the one case mtame doesn't
 		     * imply an edog structure, so we don't want to
 		     * call tamedog().
