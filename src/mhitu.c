@@ -2110,6 +2110,9 @@ boolean ufound;
 	register boolean not_affected = defends((int)mattk->adtyp, uwep);
 
 	hitmsg(mtmp, mattk);
+	remove_monster(mtmp->mx, mtmp->my);
+	remove_monster_img(mtmp->mix, mtmp->miy);
+	newsym(mtmp->mx, mtmp->my);
 
 	switch (mattk->adtyp) {
 	    case AD_COLD:
@@ -2170,6 +2173,7 @@ common:
 	    ugolemeffects((int)mattk->adtyp, tmp);
 	}
     }
+    place_monster(mtmp, mtmp->mx, mtmp->my);
     mondead(mtmp, (int)mattk->adtyp);
     wake_nearto(mtmp->mx, mtmp->my, 7*7);
     if (mtmp->mhp > 0) return(0);
