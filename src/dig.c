@@ -1651,6 +1651,9 @@ long timeout;	/* unused */
 	    if ((mtmp = m_at(x, y)) && mtmp->mundetected &&
 	    	 hides_under(mtmp->data)) {
 		 mtmp->mundetected = 0;
+	    } else if (Upolyd && x == u.ux && y == u.uy &&
+	               u.uundetected && hides_under(youmonst.data)) {
+                 u.uundetected = 0;
 	    }
 	} else if (in_invent) {
 	    if (flags.verbose) {
