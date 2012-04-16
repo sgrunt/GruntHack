@@ -1164,17 +1164,20 @@ struct mkroom	*croom;
 		if (is_mplayer(pm)) {
 		    if (mtmp->m_lev < 1) mtmp->m_lev = 1;
 		    if (mtmp->m_lev > 30) mtmp->m_lev = 30;
+		    mtmp->mhpmax = mtmp->mhp = mplayer_hp(mtmp);
+		} else {
+	    	    mtmp->mhpmax = mtmp->mhp =
+		        (mtmp->m_lev == 0) ? rnd(2) :
+		        d((int)mtmp->m_lev, 8);
+		    if (mtmp->mhpmax < 1)
+		        mtmp->mhpmax = mtmp->mhp = 1;
 		}
-	    	mtmp->mhpmax = mtmp->mhp =
-		    (mtmp->m_lev == 0) ? rnd(2) :
-		    d((int)mtmp->m_lev, 8);
-		if (mtmp->mhpmax < 1)
-		   mtmp->mhpmax = mtmp->mhp = 1;
 
 		m_initweap(mtmp);
 		m_initinv(mtmp);
 	    	m_dowear(mtmp, TRUE);
 	    	mon_wield_item(mtmp, TRUE);
+		m_stash_stuff(mtmp, TRUE);
 
 		newsym(x, y);
 	    } else if (racemask) {
@@ -1184,6 +1187,7 @@ struct mkroom	*croom;
 		m_initinv(mtmp);
 	    	m_dowear(mtmp, TRUE);
 	    	mon_wield_item(mtmp, TRUE);
+		m_stash_stuff(mtmp, TRUE);
 	    }
 
 	    /* handle specific attributes for some special monsters */

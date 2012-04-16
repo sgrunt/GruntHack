@@ -211,34 +211,34 @@ extern struct trobj Wishing[];
 extern struct trobj Money[];
 
 struct trobj Level20Kit1[] = {
-	{ SILVER_DRAGON_SCALE_MAIL, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
-	{ GAUNTLETS_OF_POWER, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
-	{ CLOAK_OF_MAGIC_RESISTANCE, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
-	{ SPEED_BOOTS, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
-	{ HELMET, (3|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
+	{ SILVER_DRAGON_SCALE_MAIL, (4|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ GAUNTLETS_OF_POWER, (4|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ CLOAK_OF_MAGIC_RESISTANCE, (4|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ SPEED_BOOTS, (4|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ HELMET, (4|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
 	{ AMULET_OF_LIFE_SAVING, 0, AMULET_CLASS, 1, UNDEF_BLESS },
-	{ LONG_SWORD, (5|RND_SPE), WEAPON_CLASS, 1, 1 },
+	{ LONG_SWORD, (6|RND_SPE), WEAPON_CLASS, 1, 1 },
 	{ BAG_OF_HOLDING, 0, TOOL_CLASS, 1, 1 }, 
 	{ 0, 0, 0, 0, 0 }
 };
 
 struct trobj Level20Kit2[] = {
-	{ GRAY_DRAGON_SCALE_MAIL, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
-	{ GAUNTLETS_OF_POWER, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
-	{ JUMPING_BOOTS, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
-	{ ROBE, (3|RND_SPE), ARMOR_CLASS, 1, 1 },
-	{ HELM_OF_BRILLIANCE, (3|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
+	{ GRAY_DRAGON_SCALE_MAIL, (4|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ GAUNTLETS_OF_POWER, (4|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ JUMPING_BOOTS, (4|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ ROBE, (4|RND_SPE), ARMOR_CLASS, 1, 1 },
+	{ HELM_OF_BRILLIANCE, (4|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
 	{ AMULET_OF_REFLECTION, 0, AMULET_CLASS, 1, UNDEF_BLESS },
-	{ LONG_SWORD, (5|RND_SPE), WEAPON_CLASS, 1, 1 },
+	{ LONG_SWORD, (6|RND_SPE), WEAPON_CLASS, 1, 1 },
 	{ BAG_OF_HOLDING, 0, TOOL_CLASS, 1, 1 },
 	{ 0, 0, 0, 0, 0 }
 };
 
 struct trobj Level10Kit[] = {
-	{ ARMOR, (1|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
-	{ HELMET, (1|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
-	{ HIGH_BOOTS, (1|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
-	{ GLOVES, (1|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
+	{ ARMOR, (2|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
+	{ HELMET, (2|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
+	{ HIGH_BOOTS, (2|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
+	{ GLOVES, (2|RND_SPE), ARMOR_CLASS, 1, UNDEF_BLESS },
 	{ SACK, 0, TOOL_CLASS, 1, UNDEF_BLESS },
 	{ 0, 0, 0, 0, 0 }
 };
@@ -260,6 +260,62 @@ struct inv_sub { short race_pm, item_otyp, subs_otyp; };
 extern struct inv_sub inv_subs[];
 
 extern int FDECL(isqrt,(int));
+
+int
+mplayer_hp(mtmp)
+register struct monst *mtmp;
+{
+    const struct Role *monrole = (struct Role *)0;
+    const struct Race *monrace = &races[0];
+    int i, hp = 0;
+
+    if (mtmp->m_lev == 0) {
+        impossible("setting HP for a 0-level player monster");
+        return rnd(4);
+    }
+
+    for (i = 0; roles[i].name.m != (const char *)0; i++) {
+        if (roles[i].malenum == monsndx(mtmp->data) ||
+	    (roles[i].femalenum != NON_PM &&
+	     roles[i].femalenum == monsndx(mtmp->data))) {
+	     monrole = &roles[i];
+	     break;
+	}
+    }
+
+    if (!monrole) {
+        impossible("trying to set HP for a player monster without a role");
+	return d(mtmp->m_lev, 8);
+    }
+
+    /* If no race is found here, assume it's human... */
+    for (i = 0; races[i].noun != (char *)0; i++) {
+        if (races[i].selfmask == mtmp->mrace) {
+	    monrace = &races[i];
+	    break;
+	}
+    }
+
+    hp = monrole->hpadv.infix + monrace->hpadv.infix;
+    if (monrole->hpadv.inrnd > 0) hp += rnd(monrole->hpadv.inrnd);
+    if (monrace->hpadv.inrnd > 0) hp += rnd(monrace->hpadv.inrnd);
+
+    for (i = 1; i < mtmp->m_lev; i++) {
+        if (i < monrole->xlev) {
+	    hp += monrole->hpadv.lofix + monrace->hpadv.lofix;
+	    if (monrole->hpadv.lornd > 0) hp += rnd(monrole->hpadv.lornd);
+	    if (monrace->hpadv.lornd > 0) hp += rnd(monrace->hpadv.lornd);
+	} else {
+	    hp += monrole->hpadv.hifix + monrace->hpadv.hifix;
+	    if (monrole->hpadv.hirnd > 0) hp += rnd(monrole->hpadv.hirnd);
+	    if (monrace->hpadv.hirnd > 0) hp += rnd(monrace->hpadv.hirnd);
+	}
+    }
+
+    /* TODO: fake constitution bonuses, simulated potions, etc. */
+
+    return hp;
+}
 
 /**
  * mashup of ini_inv from u_init.c to give mplayers items
@@ -394,11 +450,11 @@ unsigned short chance;
 				{
 				    obj->spe = (trop->trspe & ~RND_SPE);
 				    if (trop->trspe & RND_SPE) {
-				      obj->spe -= 2;
-				      obj->spe += rn2(5);
-				      if (sgn(trop->trspe & ~RND_SPE) !=
+				      obj->spe--;
+				      obj->spe += rn2(3);
+				      /*if (sgn(trop->trspe & ~RND_SPE) !=
 				          sgn(obj->spe))
-					  obj->spe = 0;
+					  obj->spe = 0;*/
 				    }
 				}
 				if (trop->trbless != UNDEF_BLESS)
@@ -1493,6 +1549,8 @@ register int	mmflags;
 	    /* adult dragons */
 	    mtmp->mhpmax = mtmp->mhp = (int) (In_endgame(&u.uz) ?
 		(8 * mtmp->m_lev) : (4 * mtmp->m_lev + d((int)mtmp->m_lev, 4)));
+	} else if (is_mplayer(ptr)) {
+	    mtmp->mhpmax = mtmp->mhp = mplayer_hp(mtmp);
 	} else if (!mtmp->m_lev) {
 	    mtmp->mhpmax = mtmp->mhp = rnd(4);
 	} else {
