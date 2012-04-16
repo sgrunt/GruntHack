@@ -374,13 +374,15 @@ register struct monst *mtmp;
 #endif
 	}
 	else if (mtmp->mpeaceful) Strcat(info, ", peaceful");
+	if (mtmp->mstone)	  Strcat(info, ", solidifying");
+	if (mtmp->msick & 2)      Strcat(info, ", zombifying");
+	else if (mtmp->msick & 1) Strcat(info, ", dying from illness");
 	if (mtmp->meating)	  Strcat(info, ", eating");
 	if (mtmp->mcan)		  Strcat(info, ", cancelled");
 	if (mtmp->mconf)	  Strcat(info, ", confused");
 	if (mtmp->mblinded || !mtmp->mcansee)
 				  Strcat(info, ", blind");
 	if (mtmp->mstun)	  Strcat(info, ", stunned");
-	if (mtmp->msick)	  Strcat(info, ", ill");
 	if (mtmp->msleeping)	  Strcat(info, ", asleep");
 #if 0	/* unfortunately mfrozen covers temporary sleep and being busy
 	   (donning armor, for instance) as well as paralysis */
