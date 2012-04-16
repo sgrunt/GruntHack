@@ -1836,6 +1836,8 @@ rndmonst()
 		if (uncommon(mndx)) continue;
 		if (Inhell && (ptr->geno & G_NOHELL)) continue;
 		ct = (int)(ptr->geno & G_FREQ) + align_shift(ptr);
+		if (!is_mplayer(ptr))
+		    ct *= 5;
 		if (ct < 0 || ct > 127)
 		    panic("rndmonst: bad count [#%d: %d]", mndx, ct);
 		rndmonst_state.choice_count += ct;
@@ -1960,7 +1962,8 @@ int	spc;
 	    if(num && toostrongrace(classes[i], racemask, maxmlev) 
 	       && mons[classes[i]].mlevel != mons[classes[i-1]].mlevel
 	       && rn2(2)) break;
-	    num += mons[classes[i]].geno & G_FREQ;
+	    num += (is_mplayer(&mons[classes[i]]) ? 1 : 10)
+	           * (mons[classes[i]].geno & G_FREQ);
 	}
 
 	if(!num) return((struct permonst *) 0);
@@ -1971,7 +1974,8 @@ int	spc;
 	for(num = rnd(num); num > 0; i++)
 	    {
 		/* skew towards lower value monsters at lower exp. levels */
-		num -= mons[classes[i]].geno & G_FREQ;
+	        num -= (is_mplayer(&mons[classes[i]]) ? 1 : 10)
+	               * (mons[classes[i]].geno & G_FREQ);
 		if (num && adj_lev(&mons[classes[i]]) > (u.ulevel*2)) {
 		    /* but not when multiple monsters are same level */
 		    if (mons[classes[i]].mlevel != mons[classes[i]+1].mlevel)
