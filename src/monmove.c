@@ -144,11 +144,15 @@ struct monst *mtmp;
 	if (mtmp->isshk || mtmp->isgd || mtmp->iswiz || !mtmp->mcansee ||
 	    is_mplayer(mtmp->data) ||
 	    mtmp->mpeaceful ||
+	    mtmp->data->msound == MS_LEADER ||
+	    mtmp->data->msound == MS_GUARDIAN ||
+	    mtmp->data->msound == MS_NEMESIS ||
 	    (mtmp->data->mlet == S_HUMAN &&
 	     (!(is_racial(mtmp->data) || is_were(mtmp->data)) ||
 	       (mtmp->mrace & (M2_HUMAN|M2_ELF)))) ||
 	    is_lminion(mtmp) || mtmp->data == &mons[PM_ANGEL] ||
-	    is_rider(mtmp->data) || mtmp->data == &mons[PM_MINOTAUR])
+	    is_demon(mtmp->data) ||
+	    is_rider(mtmp->data) /*|| mtmp->data == &mons[PM_MINOTAUR]*/)
 		return(FALSE);
 
 	return (boolean)(sobj_at(SCR_SCARE_MONSTER, x, y)
