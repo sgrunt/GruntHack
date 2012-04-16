@@ -1877,7 +1877,7 @@ struct permonst *mptr;	/* reflects mtmp->data _prior_ to mtmp's death */
 	    del_light_source(LS_MONSTER, (genericptr_t)mtmp);
 	newsym(mtmp->mx,mtmp->my);
 	newsym(mtmp->mix,mtmp->miy);
-	unstuck(mtmp);
+	unstuck(mtmp, mtmp->data);
 	fill_pit(mtmp->mx, mtmp->my);
 
     	for(mtmp2 = fmon; mtmp2; mtmp2 = mtmp2->nmon) {
@@ -2314,13 +2314,13 @@ int how;
 }
 
 void
-unstuck(mtmp)
+unstuck(mtmp, mdat)
 register struct monst *mtmp;
+register struct permonst *mdat;
 {
 	if(u.ustuck == mtmp) {
 		if(u.uswallow){
 			register int i;	
-			register struct permonst *mdat = mtmp->data;
 			u.ux = mtmp->mx;
 			u.uy = mtmp->my;
 			u.uswallow = 0;
@@ -3204,7 +3204,7 @@ boolean msg;		/* "The oldmon turns into a newmon!" */
 				swallowed(0);
 			}
 		} else if (!sticks(mdat) && !sticks(youmonst.data))
-			unstuck(mtmp);
+			unstuck(mtmp, olddata);
 	}
 
 #ifndef DCC30_BUG

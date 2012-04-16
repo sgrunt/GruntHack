@@ -228,7 +228,7 @@ boolean fleemsg;
 	    if (u.uswallow)
 		expels(mtmp, mtmp->data, TRUE);
 	    else if (!sticks(youmonst.data)) {
-		unstuck(mtmp);	/* monster lets go when fleeing */
+		unstuck(mtmp, mtmp->data); /* monster lets go when fleeing */
 		You("get released!");
 	    }
 	}

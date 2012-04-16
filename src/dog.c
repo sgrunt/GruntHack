@@ -805,7 +805,7 @@ register struct obj *obj;
 	    if (u.uswallow)
 		expels(mtmp, mtmp->data, TRUE);
 	    else if (!(Upolyd && sticks(youmonst.data)))
-		unstuck(mtmp);
+		unstuck(mtmp, mtmp->data);
 	}
 
 	/* feeding it treats makes it tamer */

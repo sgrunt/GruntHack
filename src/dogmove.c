@@ -853,7 +853,7 @@ register int after;	/* this is extra fast monster movement */
 	}
 	if (!Conflict && !mtmp->mconf &&
 	    mtmp == u.ustuck && !sticks(youmonst.data)) {
-	    unstuck(mtmp);	/* swallowed case handled above */
+	    unstuck(mtmp, mtmp->data);	/* swallowed case handled above */
 	    You("get released!");
 	}
 

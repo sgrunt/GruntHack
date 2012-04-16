@@ -336,7 +336,7 @@ boolean message;
 			}
 		}
 	}
-	unstuck(mtmp);	/* ball&chain returned in unstuck() */
+	unstuck(mtmp, mdat);	/* ball&chain returned in unstuck() */
 	mnexto(mtmp);
 	newsym(u.ux,u.uy);
 	spoteffects(TRUE);

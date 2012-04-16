@@ -1199,7 +1199,7 @@ E void FDECL(mondied, (struct monst *,int));
 E void FDECL(mongone, (struct monst *));
 E void FDECL(monstone, (struct monst *));
 E void FDECL(monkilled, (struct monst *,const char *,int));
-E void FDECL(unstuck, (struct monst *));
+E void FDECL(unstuck, (struct monst *,struct permonst *));
 E void FDECL(killed, (struct monst *,int));
 E void FDECL(xkilled, (struct monst *,int,int));
 E void FDECL(mon_to_stone, (struct monst*));
