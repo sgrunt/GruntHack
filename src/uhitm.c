@@ -842,8 +842,13 @@ rock2:
 				minstapetrify(mon, TRUE);*/
 			    if (resists_ston(mon)) break;
 			    if (!mon->mstone) {
-			        mon->mstone = 5;
-				mon->mstonebyu = TRUE;
+			        if (poly_when_stoned(mon->data)) {
+				    mon_to_stone(mon);
+				    mon->mstone = 0;
+				} else {
+			            mon->mstone = 5;
+				    mon->mstonebyu = TRUE;
+				}
 			    }
 			    /* note: hp may be <= 0 even if munstoned==TRUE */
 			    return (boolean) (mon->mhp > 0);
@@ -889,8 +894,13 @@ rock2:
 				minstapetrify(mon, TRUE);*/
 			    if (resists_ston(mon)) break;
 			    if (!mon->mstone) {
-			        mon->mstone = 5;
-				mon->mstonebyu = TRUE;
+			        if (poly_when_stoned(mon->data)) {
+				    mon_to_stone(mon);
+				    mon->mstone = 0;
+				} else {
+			            mon->mstone = 5;
+				    mon->mstonebyu = TRUE;
+				}
 			    }
 			    return (boolean) (mon->mhp > 0);
 			} else {	/* ordinary egg(s) */

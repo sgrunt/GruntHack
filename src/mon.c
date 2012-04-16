@@ -1037,6 +1037,7 @@ meatmetal(mtmp)
 			} else if (mstone) {
 			    if (poly_when_stoned(ptr)) {
 				mon_to_stone(mtmp);
+				mtmp->mstone = 0;
 				ptr = mtmp->data;
 			    } else if (!resists_ston(mtmp)) {
 				/*if (canseemon(mtmp))

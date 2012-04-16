@@ -261,7 +261,10 @@ boolean verbose;  /* give message(s) even when you can't see what happened */
 	    {
 	        /*if (!munstone(mtmp, TRUE))
 		    minstapetrify(mtmp, (curmonst == &youmonst));*/
-		if (!mtmp->mstone) {
+		if (poly_when_stoned(mtmp->data)) {
+		    mon_to_stone(mtmp);
+		    mtmp->mstone = 0;
+		} else if (!mtmp->mstone) {
 		    mtmp->mstone = 5;
 		    mtmp->mstonebyu = (curmonst == &youmonst);
 		}

@@ -365,7 +365,8 @@ mattackm(magr, mdef)
 			!resists_ston(mdef)) {
 			if (poly_when_stoned(mdef->data)) {
 			    mon_to_stone(mdef);
-			} else {
+			    mdef->mstone = 0;
+			} else if (!mdef->mstone) {
 			    mdef->mstone = 5;
 			    mdef->mstonebyu = FALSE;
 			}
@@ -1035,6 +1036,7 @@ mdamagem(magr, mdef, mattk)
  do_stone:
 		if (poly_when_stoned(pd)) {
 			mon_to_stone(mdef);
+			mdef->mstone = 0;
 			tmp = 0;
 			break;
 		}
