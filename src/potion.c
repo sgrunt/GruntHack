@@ -172,6 +172,7 @@ boolean talk;
 	boolean u_could_see, can_see_now;
 	int eyecnt;
 	char buf[BUFSZ];
+	NhRegion *region;
 
 	/* we need to probe ahead in case the Eyes of the Overworld
 	   are or will be overriding blindness */
@@ -183,6 +184,9 @@ boolean talk;
 	if (u.usleep) talk = FALSE;
 
 	if (can_see_now && !u_could_see) {	/* regaining sight */
+	    if ((region = visible_region_at(u.ux, u.uy)) &&
+	        region->inside_f == 0)
+		talk = FALSE;
 	    if (talk) {
 		if (Hallucination)
 		    pline("Far out!  Everything is all cosmic again!");
