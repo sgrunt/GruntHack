@@ -668,7 +668,7 @@ struct monst *mtmp;
 		&& !mtmp->mconf)
 	{
 		/* todo: more spells here */
-		if (mtmp->m_lev >= 11 && !rn2(3))
+		if (mtmp->m_lev >= 11 && !rn2(3) && mfind_target(mtmp))
 		{
 			m.defensive = (struct obj *)0;
 			m.has_defense = MUSE_SPE_POLYMORPH;
@@ -676,8 +676,7 @@ struct monst *mtmp;
 		}
 		if (mtmp->m_lev >= 11 && rn2(3))
 		{
-			if (!mon_has_amulet(mtmp) ||
-			    ((mtmp->mtarget || mfind_target(mtmp)))) { 
+			if (!mon_has_amulet(mtmp) || mfind_target(mtmp)) { 
 				m.defensive = (struct obj *)0;
 				m.has_defense = (mon_has_amulet(mtmp))
 					? MUSE_SPE_TELEPORT_AWAY
