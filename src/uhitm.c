@@ -2672,7 +2672,7 @@ struct attack *mattk;		/* null means we find one internally */
 	/* if caller hasn't specified an object, use uwep, uswapwep or uarmg */
 	if (!obj) {
 	    obj = (u.twoweap && uswapwep && !rn2(2)) ? uswapwep : uwep;
-	    if (!obj && mattk->adtyp == AD_ENCH)
+	    if (!obj/* && mattk->adtyp == AD_ENCH*/)
 		obj = uarmg;		/* no weapon? then must be gloves */
 	    if (!obj) return;		/* no object to affect */
 	}
