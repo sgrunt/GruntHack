@@ -571,6 +571,9 @@ newgame()
 	if(iflags.news) display_file(NEWS, FALSE);
 #endif
 	load_qtlist();	/* load up the quest text info */
+#ifdef WIZARD
+	read_wizkit();  /* after qtlist so that game doesn't crash */
+#endif
 /*	quest_init();*/	/* Now part of role_init() */
 
 	mklev();
