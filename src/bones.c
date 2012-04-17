@@ -240,7 +240,7 @@ make_mon_traits_for_bones()
 	mon->morigdata = Role_switch;
 	mon->m_lev = (u.ulevel ? u.ulevel : 1);
 	mon->female = flags.female;
-	mon->mhp = u.uhp;
+	mon->mhp = (u.uhp < 1) ? 1 : u.uhp;
 	mon->mhpmax = u.uhpmax;
 	/* todo: more intrinsics? */
 	mon->minvis = mon->perminvis = !!Invisible;
