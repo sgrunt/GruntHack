@@ -601,7 +601,8 @@ int thrown;
 	    /* So do silver rings.  Note: rings are worn under gloves, so you
 	     * don't get both bonuses.
 	     */
-	    if (uarmg && uarmg->omaterial == SILVER) {
+	    if (uarmg && uarmg->omaterial == SILVER &&
+	        hates_silver(mdat)) {
 	        Strcpy(saved_oname, cxname(uarmg));
 		tmp += rnd(20);
 	        silvermsg = TRUE;
