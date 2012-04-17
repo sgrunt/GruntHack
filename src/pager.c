@@ -745,7 +745,7 @@ do_look(quick)
 		    (void)strncat(out_str, temp_buf, BUFSZ-strlen(out_str)-1);
 		}
 		mon = m_at(cc.x, cc.y);
-		if (!mon) mon = m_img_at(cc.x, cc.y);
+		if (!mon || !sensemon(mon)) mon = m_img_at(cc.x, cc.y);
 	    }
 	}
 
