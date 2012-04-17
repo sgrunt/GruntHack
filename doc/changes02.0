@@ -73,6 +73,9 @@ Bug fixes:
 * Visibility of monsters spawning on top edge of map is calculated properly.
 * Otherwise-identical objects with different properties or materials no
   longer incorrectly merge.
+* Reviving a statue made from a racial monster now restores the type of
+  monster correctly.
+* Around 30% of bugs from vanilla have now been fixed.
 
 Display-related:
 * showrace has been split into showrace (with the vanilla showrace behaviour of
@@ -107,6 +110,8 @@ Player-related:
   push it.
 * If the player is a giant, moving onto a boulder square in Sokoban is
   prompted for rather than always occurring if the boulder is blocked.
+* There is now a #tip command for emptying out containers on the floor or
+  in your inventory.
 
 Monster-related:
 * The beholder's remaining gaze attacks have been implemented; thus the
@@ -140,6 +145,12 @@ Monster-related:
 * Stunned and confused monsters now wobble as the player does in the same
   circumstances.
 * Medusa's passive gaze attack now affects all monsters.
+* Farlooking at a monster will reveal equipment they are currently wearing
+  or wielding.
+* Monsters with passive fire attacks now deal passive fire damage to
+  objects.
+* Monster petrification is now a gradual process for cases where it would
+  be a gradual process for the player under the same circumstances.
 
 Object-related:
 * Objects can now be invisible, with many associated side effects.
@@ -159,6 +170,14 @@ Object-related:
   is now more consistent.
 * At least seven candles are now guaranteed to be generated in a lighting
   store.
+* Crossbows now fire a set range regardless of strength; they require
+  high strength to fire mulitple shots.
+* Items with abnormal magical properties are now generated more frequently
+  at lower dungeon levels.
+* New item: scroll of detect magic. It acts as object detection for
+  magical items (including those with abnormal magical properties), and
+  sets the 'magical' flag for those objects as though the player was a
+  wizard.
 
 There are some subtle changes that are not listed here.  You are encouraged
 to explore the game to find some of them.
