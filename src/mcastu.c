@@ -1079,6 +1079,10 @@ int spellnum;
 	return;
     }
 
+    if (!is_undirected_spell(AD_CLRC, spellnum) &&
+        (mtmp->mux != u.ux || mtmp->muy != u.uy))
+	return;
+
     switch (spellnum) {
     case CLC_GEYSER:
 	/* this is physical damage, not magical damage */
@@ -2124,16 +2128,17 @@ castmm(mtmp, mdef, mattk)
 	    case AD_SPEL:	/* wizard spell */
 	    case AD_CLRC:       /* clerical spell */
 	    {
-	        /*aggravation is a special case;*/
-		/*it's undirected but should still target the*/
-		/*victim so as to aggravate you*/
+	        /* aggravation and create insects are special cases; */
+		/* they're undirected but should still target the */
+		/* victim so as not to mistakenly effect you */
 	        if (is_undirected_spell(mattk->adtyp, spellnum)
 #ifndef COMBINED_SPELLS
-		&& (mattk->adtyp != AD_SPEL
-		    || (spellnum != MGC_AGGRAVATION &&
-		      spellnum != MGC_SUMMON_MONS))
+		&& ((mattk->adtyp != AD_SPEL
+		     || (spellnum != MGC_AGGRAVATION &&
+		       spellnum != MGC_SUMMON_MONS)))
 #endif
-		      )
+		&& ((mattk->adtyp != AD_CLRC)
+		    || (spellnum != CLC_INSECTS)) )
 		{
 		    if (mattk->adtyp == AD_SPEL)
 		        cast_wizard_spell(mtmp, dmg, spellnum);
