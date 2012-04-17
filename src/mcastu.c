@@ -749,6 +749,8 @@ int spellnum;
 #else
     case MGC_PSI_BOLT:
 #endif
+	if (mtmp->mux != u.ux || mtmp->muy != u.uy) break;
+
 	/* prior to 3.4.0 Antimagic was setting the damage to 1--this
 	   made the spell virtually harmless to players with magic res. */
 	if (Antimagic) {
