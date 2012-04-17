@@ -894,8 +894,8 @@
                Talk to someone.
 
           #conduct
-               List which challenges you have adhered to.  See the section
-               below entitled ``Conduct'' for details.
+               List status of voluntary challenges.  See the section below
+               entitled ``Conduct'' for details.
 
           #dip Dip an object into something.
 
@@ -2622,7 +2622,7 @@
             point in setting this with the `O' command.
 
           null
-            Send padding nulls to the terminal (default off).
+            Send padding nulls to the terminal (default on).
 
           number_pad
             Use the number keys to move instead of [yuhjklbn] (default 0 or

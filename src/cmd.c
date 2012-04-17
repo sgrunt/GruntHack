@@ -1964,9 +1964,9 @@ struct ext_func_tab extcmdlist[] = {
 
 	{"adjust", "adjust inventory letters", doorganize, IFBURIED, AUTOCOMPLETE},
 	{"chat", "talk to someone", dotalk, IFBURIED, AUTOCOMPLETE},	/* converse? */
-	{"conduct", "list which challenges you have adhered to", doconduct, IFBURIED, AUTOCOMPLETE},
+	{"conduct", "list status of voluntary challenges", doconduct, IFBURIED, AUTOCOMPLETE},
 	{"dip", "dip an object into something", dodip, !IFBURIED, AUTOCOMPLETE},
-	{"enhance", "advance or check weapons skills", enhance_weapon_skill, IFBURIED, AUTOCOMPLETE},
+	{"enhance", "advance or check weapon and spell skills", enhance_weapon_skill, IFBURIED, AUTOCOMPLETE},
 	{"force", "force a lock", doforce, !IFBURIED, AUTOCOMPLETE},
 	{"invoke", "invoke an object's powers", doinvoke, IFBURIED, AUTOCOMPLETE},
 	{"jump", "jump to a location", dojump, !IFBURIED, AUTOCOMPLETE},
