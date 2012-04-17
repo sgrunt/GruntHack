@@ -1220,6 +1220,9 @@ boolean twoweap; /* used to restore twoweapon mode if wielded weapon returns */
 		    pline_The("%s explodes!", xname(obj));
 		    thrownobj = (struct obj*)0;
 		    obfree(obj, (struct obj *)0);
+		    
+		    if (stack)
+		    	stack->oprops_known |= ITEM_DETONATIONS;
 
                     explode(bhitpos.x, bhitpos.y, ZT_SPELL_O_FIRE,
 		            dmg, obj->oclass, EXPL_FIERY);
@@ -1500,6 +1503,9 @@ register struct obj   *obj;
                     int dmg = d(4, 4);
 		    pline_The("%s explodes!", xname(obj));
 		    obfree(obj, (struct obj *)0);
+
+		    if (stack)
+		    	stack->oprops_known |= ITEM_DETONATIONS;
 
                     explode(bhitpos.x, bhitpos.y, ZT_SPELL_O_FIRE,
 		            dmg, obj->oclass, EXPL_FIERY);

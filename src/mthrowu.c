@@ -168,6 +168,9 @@ int x,y;
                                 int dmg = d(4, 4);
                 		pline_The("%s explodes!", xname(obj));
                 	        obfree(obj, (struct obj *)0);
+		    
+		    		if (stack)
+				   stack->oprops_known |= ITEM_DETONATIONS;
                 
 /* ZT_SPELL(ZT_FIRE) = ZT_SPELL(AD_FIRE-1) = 10+(2-1) = 11 */
 #define ZT_SPELL_O_FIRE 11 /* value kludge, see zap.c */
