@@ -729,8 +729,15 @@ register struct obj *obj;
 				mon_adjust_speed(mtmp, 2, (struct obj *)0); /* MFAST */
 			}
 		} else {
+		    unsigned m_id = 0;
+		    if (obj->oxlth &&
+			    obj->oattached == OATTACHED_M_ID) {
+                            (void) memcpy((genericptr_t)&m_id,
+                                    (genericptr_t)obj->oextra, sizeof(m_id));
+		    }
 		    if (obj->oxlth && (obj->oattached == OATTACHED_MONST)) {
 			    coord xy;
+			    m_id = get_mtraits(obj, FALSE)->m_id;
 			    xy.x = x; xy.y = y;
 		    	    mtmp = montraits(obj, &xy);
 		    	    if (mtmp && mtmp->mtame && !mtmp->isminion)
@@ -739,27 +746,26 @@ register struct obj *obj;
  		            mtmp = makemon(&mons[montype], x, y,
 				       NO_MINVENT|MM_NOWAIT|MM_NOCOUNTBIRTH);
 		    if (mtmp) {
-			if (obj->oxlth && (obj->oattached == OATTACHED_M_ID)) {
-			    unsigned m_id;
-			    struct monst *ghost;
-			    (void) memcpy((genericptr_t)&m_id,
-				    (genericptr_t)obj->oextra, sizeof(m_id));
-			    ghost = find_mid(m_id, FM_FMON);
-		    	    if (ghost && ghost->data == &mons[PM_GHOST]) {
-		    		    int x2, y2;
-		    		    x2 = ghost->mx; y2 = ghost->my;
-		    		    if (ghost->mtame)
-		    		    	savetame = ghost->mtame;
-		    		    if (canseemon(ghost))
-		    		  	pline("%s is suddenly drawn into its former body!",
-						Monnam(ghost));
-				    mondead(ghost, AD_SPEL);
-				    recorporealization = TRUE;
-				    newsym(x2, y2);
-			    }
-			    /* don't mess with obj->oxlth here */
-			    obj->oattached = OATTACHED_NOTHING;
+			struct monst *ghost;
+			unsigned old_id = mtmp->m_id;
+			mtmp->m_id = 0;
+			ghost = find_mid(m_id, FM_FMON);
+			mtmp->m_id = old_id;
+		    	if (ghost && ghost->data == &mons[PM_GHOST]) {
+		    	    int x2, y2;
+		    	    x2 = ghost->mx; y2 = ghost->my;
+		    	    if (ghost->mtame)
+		    	    	savetame = ghost->mtame;
+		    	    if (canseemon(ghost))
+		    	  	pline("%s is suddenly drawn into its former body!",
+					Monnam(ghost));
+			    mondead(ghost, AD_SPEL);
+			    recorporealization = TRUE;
+			    newsym(x2, y2);
 			}
+			if (obj->oxlth &&
+			    obj->oattached == OATTACHED_MONST)
+			    obj->oattached = OATTACHED_NOTHING;
 			/* Monster retains its name */
 			if (obj->onamelth)
 			    mtmp = christen_monst(mtmp, ONAME(obj));

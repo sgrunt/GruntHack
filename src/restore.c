@@ -1041,8 +1041,12 @@ boolean ghostly;
     for (otmp = fobj; otmp; otmp = otmp->nobj) {
 	if (ghostly && otmp->oattached == OATTACHED_MONST && otmp->oxlth) {
 	    struct monst *mtmp = (struct monst *)otmp->oextra;
+	    int nid;
 
-	    mtmp->m_id = 0;
+	    if (lookup_id_mapping(mtmp->m_id, &nid))
+	        mtmp->m_id = nid;
+	    else
+	        mtmp->m_id = 0;
 	    mtmp->mpeaceful = mtmp->mtame = 0;	/* pet's owner died! */
 	}
 	if (ghostly && otmp->oattached == OATTACHED_M_ID) {

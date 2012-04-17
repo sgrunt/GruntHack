@@ -122,6 +122,7 @@ E void NDECL(drag_down);
 /* ### bones.c ### */
 
 E boolean NDECL(can_make_bones);
+E struct monst *NDECL(make_mon_traits_for_bones);
 E void FDECL(savebones, (struct obj *,BOOLEAN_P));
 E int NDECL(getbones);
 

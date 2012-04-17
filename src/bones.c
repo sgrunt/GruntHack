@@ -59,12 +59,16 @@ struct obj *ochain;
 boolean restore;
 {
 	struct obj *otmp;
+	struct monst *mtmp;
 
 	for (otmp = ochain; otmp; otmp = otmp->nobj) {
 		if (otmp->cobj)
 		    resetobjs(otmp->cobj,restore);
 
-		if (((otmp->otyp != CORPSE || otmp->corpsenm < SPECIAL_PM)
+		if (((otmp->otyp != CORPSE ||
+		      !((!(mtmp = get_mtraits(otmp, FALSE)) &&
+		          otmp->corpsenm >= PM_ARCHEOLOGIST) ||
+		        (mtmp && mtmp->mnum >= PM_ARCHEOLOGIST)))
 			&& otmp->otyp != STATUE)
 			&& (!otmp->oartifact ||
 			   (restore && (exist_artifact(otmp->otyp, ONAME(otmp))
@@ -221,6 +225,31 @@ can_make_bones()
 	return TRUE;
 }
 
+struct monst *
+make_mon_traits_for_bones()
+{
+	struct monst *mon =
+	    makemon(&mons[Role_switch], u.ux, u.uy,
+	            MM_NONAME|NO_MINVENT|MM_NOCOUNTBIRTH);
+
+	if (!mon) return (struct monst *)0;
+
+	mon->mrace = mon->morigrace = urace.selfmask;
+	set_mon_data(mon, (flags.female && urole.femalenum != NON_PM)
+	             ? &mons[urole.femalenum] : &mons[urole.malenum], 0);
+	mon->morigdata = Role_switch;
+	mon->m_lev = (u.ulevel ? u.ulevel : 1);
+	mon->female = flags.female;
+	mon->mhp = u.uhp;
+	mon->mhpmax = u.uhpmax;
+	/* todo: more intrinsics? */
+	mon->minvis = mon->perminvis = !!Invisible;
+	mon->permspeed = (Fast) ? MFAST : 0;
+	mon->mburied = u.uburied;
+
+	return mon;
+}
+
 /* save bones and possessions of a deceased adventurer */
 void
 savebones(corpse, actual)
@@ -290,11 +319,20 @@ boolean actual;
 		struct obj *otmp;
 
 		/* embed your possessions in your statue */
-		otmp = mk_named_object(STATUE, &mons[u.umonnum],
-				       u.ux, u.uy, plname);
+		/*otmp = mk_named_object(STATUE, &mons[u.umonnum],
+				       u.ux, u.uy, plname);*/
+		in_mklev = TRUE;
+		mtmp = make_mon_traits_for_bones();
+		in_mklev = FALSE;
+		if (!mtmp) return;	/* couldn't create montraits */
+		otmp = mkcorpstat(STATUE, mtmp, &mons[Race_switch], u.ux, u.uy,
+		                  TRUE);
+
+		mongone(mtmp);
 
 		drop_upon_death((struct monst *)0, otmp);
 		if (!otmp) return;	/* couldn't make statue */
+		otmp = oname(otmp, plname, FALSE);
 		mtmp = (struct monst *)0;
 	} else if (u.ugrave_arise < LOW_PM) {
 		/* drop everything */
@@ -303,8 +341,7 @@ boolean actual;
 		 * on your location
 		 */
 		in_mklev = TRUE;
-		mtmp = makemon(&mons[Race_switch], u.ux, u.uy,
-			MM_NONAME|NO_MINVENT);
+		mtmp = make_mon_traits_for_bones(); 
 		if (!mtmp) {
 			mtmp = makemon(&mons[PM_GHOST], u.ux, u.uy,
 				MM_NONAME|NO_MINVENT);
@@ -314,22 +351,21 @@ boolean actual;
 		}
 		in_mklev = FALSE;
 		if (mtmp) {
-			mtmp->mrace = urace.selfmask;
-			mtmp->morigrace = urace.selfmask;
 			mtmp = christen_monst(mtmp, plname);
-			if (corpse) 
-				corpse = obj_attach_mid(corpse, mtmp->m_id); 
+			if (corpse && get_mtraits(corpse, FALSE)) { 
+				/* is this a bad idea? */
+				(get_mtraits(corpse, FALSE))->m_id =
+					mtmp->m_id;
+			}
 		}
 		if (corpse && u.uburied)
 			bury_an_obj(corpse);
 	} else {
 		/* give your possessions to the monster you become */
 		in_mklev = TRUE;
-		mtmp = makemon(&mons[Race_switch], u.ux, u.uy,
-			NO_MM_FLAGS|NO_MINVENT);
+		mtmp = make_mon_traits_for_bones(); 
 		in_mklev = FALSE;
 		if (mtmp) {
-			mtmp->mrace = urace.selfmask;
 			set_mon_data(mtmp, &mons[u.ugrave_arise], 0);
 		} else {
 			mtmp = makemon(&mons[u.ugrave_arise], u.ux, u.uy,

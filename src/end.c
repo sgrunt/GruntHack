@@ -1001,12 +1001,24 @@ die:
 			}
 		} 
 		if (!corpse) {
-			corpse = mk_named_object(CORPSE, &mons[mnum],
-					       u.ux, u.uy, plname);
+			struct monst *mtmp;
+			in_mklev = TRUE;
+			mtmp = make_mon_traits_for_bones();
+			in_mklev = FALSE;
+			/*corpse = mk_named_object(CORPSE, &mons[mnum],
+					       u.ux, u.uy, plname);*/
+			if (mtmp) {
+				corpse = mkcorpstat(CORPSE, mtmp,
+						    &mons[mnum],
+						    u.ux, u.uy, TRUE);
+				if (corpse) {
+					corpse = oname(corpse, plname, FALSE);
 #ifdef INVISIBLE_OBJECTS
-			if (corpse)
-				corpse->oinvis = !!Invisible;
+					corpse->oinvis = !!Invisible;
 #endif
+				}
+				mongone(mtmp);
+			}
 		}
 		Sprintf(pbuf, "%s, %s%s", plname,
 			killer_format == NO_KILLER_PREFIX ? "" :
