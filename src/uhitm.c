@@ -603,7 +603,7 @@ int thrown;
 	     */
 	    if (uarmg && uarmg->omaterial == SILVER &&
 	        hates_silver(mdat)) {
-	        Strcpy(saved_oname, cxname(uarmg));
+	        Strcpy(saved_oname, "silver gloves");
 		tmp += rnd(20);
 	        silvermsg = TRUE;
 		silverobj = TRUE;
