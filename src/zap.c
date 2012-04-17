@@ -3121,6 +3121,8 @@ struct obj *obj;			/* object tossed/used */
 	return (struct monst *)0;
 }
 
+extern struct obj *stack;
+
 struct monst *
 boomhit(dx, dy, visible)
 int dx, dy;
@@ -3158,6 +3160,7 @@ boolean visible;
 			bhitpos.y -= dy;
 			break;
 		}
+		stack = (struct obj *)0;
 		if(bhitpos.x == u.ux && bhitpos.y == u.uy) { /* ct == 9 */
 			if(!visible || FUMBLED || rn2(20) >= ACURR(A_DEX)) {
 				/* we hit ourselves */

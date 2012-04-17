@@ -31,6 +31,8 @@ STATIC_OVL NEARDATA const char *breathwep[] = {
 				"strange breath #9"
 };
 
+extern struct obj *stack;
+
 /* hero is hit by something other than a monster */
 int
 thitu(tlev, dam, obj, name)
@@ -85,6 +87,9 @@ const char *name;	/* if null, then format `obj' */
 			if(Blind || !flags.verbose) You("are hit!");
 			else You("are hit by %s%s", onm, exclam(dam));
 		}
+
+		if (stack)
+	        	stack->oprops_known |= obj->oprops_known;
 	    
 	        if (obj && (obj->otyp == CORPSE ||
 	            (obj->otyp == ROCK && obj->corpsenm != 0)) &&
@@ -349,6 +354,8 @@ m_throw(mon, x, y, dx, dy, range, obj, verbose)
 	struct obj *singleobj;
 	char sym = obj->oclass;
 	int hitu, blindinc = 0;
+
+	stack = obj;
 
 	bhitpos.x = x;
 	bhitpos.y = y;
@@ -650,6 +657,7 @@ struct monst *mtmp;
 	    hitv += 8 + otmp->spe;
 	    if (dam < 1) dam = 1;
 
+            stack = (struct obj *)0;
 	    (void) thitu(hitv, dam, otmp, (char *)0);
 	    stop_occupation();
 	    return TRUE;

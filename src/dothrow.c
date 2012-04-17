@@ -27,6 +27,7 @@ static NEARDATA const char bullets[] =
 	{ ALLOW_COUNT, COIN_CLASS, ALL_CLASSES, GEM_CLASS, 0 };
 
 struct obj *thrownobj = 0;	/* tracks an object until it lands */
+struct obj *stack = 0;
 
 extern boolean notonhead;	/* for long worms */
 
@@ -189,6 +190,7 @@ int shotlimit;
 		if (otmp->owornmask)
 		    remove_worn_item(otmp, FALSE);
 	    }
+	    stack = obj;
 	    freeinv(otmp);
 	    throwit(otmp, wep_mask, twoweap);
 	}
@@ -890,6 +892,9 @@ boolean thrown;
 	    /* need a fake die roll here; rn1(18,2) avoids 1 and 20 */
 	    artimsg = artifact_hit((struct monst *)0, &youmonst,
 				   obj, &dmg, rn1(18,2));
+
+	if (stack)
+	    stack->oprops_known |= obj->oprops_known;
 
 	if (!dmg) {	/* probably wasn't a weapon; base damage on weight */
 	    dmg = (int) obj->owt / 100;

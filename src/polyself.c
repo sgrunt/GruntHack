@@ -841,6 +841,8 @@ dobreathe()
 	return(1);
 }
 
+extern struct obj *stack;
+
 int
 dospit()
 {
@@ -850,6 +852,7 @@ dospit()
 	otmp = mksobj(u.umonnum==PM_COBRA ? BLINDING_VENOM : ACID_VENOM,
 			TRUE, FALSE);
 	otmp->spe = 1; /* to indicate it's yours */
+	stack = (struct obj *)0;
 	throwit(otmp, 0L, FALSE);
 	return(1);
 }

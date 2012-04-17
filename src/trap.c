@@ -706,6 +706,8 @@ struct obj *objchn, *saddle;
 }
 #endif /*STEED*/
 
+extern struct obj *stack;
+
 void
 dotrap(trap, trflags)
 register struct trap *trap;
@@ -779,6 +781,7 @@ unsigned trflags;
 		else
 #endif
 		curmonst = (struct monst *)0;
+		stack = (struct obj *)0;
 		if (thitu(8, dmgval(otmp, &youmonst), otmp, "arrow")) {
 		    obfree(otmp, (struct obj *)0);
 		} else {
@@ -812,6 +815,7 @@ unsigned trflags;
 		else
 #endif
 		curmonst = (struct monst *)0;
+		stack = (struct obj *)0;
 		if (thitu(7, dmgval(otmp, &youmonst), otmp, "little dart")) {
 		    if (otmp->opoisoned)
 			poisoned("dart", A_CON, "little dart", -10);
@@ -1358,6 +1362,7 @@ struct obj *otmp;
 
 	in_sight = !Blind;
 	curmonst = (struct monst *)0;
+	stack = (struct obj *)0;
 	switch (tt) {
 		case ARROW_TRAP:
 			if(!otmp) {
@@ -1551,6 +1556,8 @@ int style;
 			}
 #endif
 	}
+	
+	stack = (struct obj *)0;
 
 	/* Set the object in motion */
 	while(dist-- > 0 && !used_up) {
@@ -1870,6 +1877,7 @@ register struct monst *mtmp;
 	register struct monst *curmonstbak = curmonst;
 
 	curmonst = (struct monst *)0;
+	stack = (struct obj *)0;
 
 	if (!trap) {
 	    mtmp->mtrapped = 0;	/* perhaps teleported? */

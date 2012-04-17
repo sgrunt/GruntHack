@@ -418,6 +418,8 @@ struct scatter_chain {
 	boolean stopped;		/* flag for in-motion/stopped	*/
 };
 
+extern struct obj *stack;
+
 /*
  * scflags:
  *	VIS_EFFECTS	Add visual effects to display
@@ -554,6 +556,7 @@ struct obj *obj;			/* only scatter this obj        */
 				        bigmonst(youmonst.data),
 					Race_if(PM_OGRE) ||
 					Race_if(PM_GIANT))) hitvalu++;
+				    stack = (struct obj *)0;
 				    hitu = thitu(hitvalu,
 						 dmgval(stmp->obj, &youmonst),
 						 stmp->obj, (char *)0);

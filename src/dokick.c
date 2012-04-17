@@ -406,6 +406,8 @@ struct obj *obj;
 	}
 }
 
+extern struct obj *stack;
+
 STATIC_OVL int
 kick_object(x, y)
 xchar x, y;
@@ -572,6 +574,7 @@ xchar x, y;
 		    kickobj->where == OBJ_MINVENT && kickobj->ocarry == mon)
 		return 1;	/* alert shk caught it */
 	    notonhead = (mon->mx != bhitpos.x || mon->my != bhitpos.y);
+	    stack = (struct obj *)0;
 	    if (isgold ? ghitm(mon, kickobj) :	/* caught? */
 		    thitmonst(mon, kickobj))	/* hit && used up? */
 		return(1);
