@@ -2533,7 +2533,7 @@ dounpaid()
 
 	pline("%s", xprname(otmp, distant_name(otmp, doname),
 			    marker ? otmp->invlet : CONTAINED_SYM,
-			    TRUE, unpaid_cost(otmp), 0L));
+			    TRUE, 0, 0L));
 	return;
     }
 
