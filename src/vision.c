@@ -178,7 +178,7 @@ does_block(x,y,lev)
 	  ((mon->m_ap_type == M_AP_FURNITURE &&
 	  (mon->mappearance == S_hcdoor || mon->mappearance == S_vcdoor)) ||
 	  (mon->m_ap_type == M_AP_OBJECT && mon->mappearance == BOULDER
-#ifdef INVISIBLE_OBJECT
+#ifdef INVISIBLE_OBJECTS
 	  && !mon->minvis
 #endif
 	   )))
