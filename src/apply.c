@@ -619,7 +619,8 @@ struct obj *obj;
 			&& (!obj->oinvis || See_invisible)
 #endif
 		)
-			pline_The("mirror fogs up and doesn't reflect!");
+			pline_The("%s fogs up and doesn't reflect!",
+			          simple_typename(obj->otyp));
 		return 1;
 	}
 	if(!u.dx && !u.dy && !u.dz) {
@@ -630,9 +631,11 @@ struct obj *obj;
 		) {
 		    if (u.umonnum == PM_FLOATING_EYE) {
 			if (!Free_action) {
-			pline(Hallucination ?
-			      "Yow!  The mirror stares back!" :
-			      "Yikes!  You've frozen yourself!");
+			if(Hallucination)
+			      pline("Yow!  The %s stares back!",
+			            simple_typename(obj->otyp));
+			else
+			      pline("Yikes!  You've frozen yourself!");
 			nomul2(-rnd((MAXULEV+6) - u.ulevel), "paralyzed");
 			nomovemsg = 0; /* default: "You can move again." */
 			} else You("stiffen momentarily under your gaze.");
@@ -696,17 +699,19 @@ struct obj *obj;
 	mlet = mtmp->data->mlet;
 	if (mtmp->msleeping) {
 		if (vis)
-		    pline ("%s is too tired to look at your mirror.",
-			    Monnam(mtmp));
+		    pline ("%s is too tired to look at your %s.",
+			    Monnam(mtmp), simple_typename(obj->otyp));
 	} else if (!mtmp->mcansee) {
 	    if (vis)
 		pline("%s can't see anything right now.", Monnam(mtmp));
+	} else if (!mtmp->mcanmove
 #ifdef INVISIBLE_OBJECTS
-	} else if (obj->oinvis && !sees_invis(mtmp)) {
-		if (vis && !Blind && (!obj->oinvis || See_invisible))
-			pline("%s doesn't seem to notice the mirror.",
-				Monnam(mtmp));
+	           || (obj->oinvis && !sees_invis(mtmp))
 #endif
+		   ) {
+		if (vis && !Blind && (!obj->oinvis || See_invisible))
+			pline("%s doesn't seem to notice the %s.",
+				Monnam(mtmp), simple_typename(obj->otyp));
 	/* some monsters do special things */
 	} else if (mlet == S_VAMPIRE || mlet == S_GHOST) {
 	    if (vis)
@@ -738,9 +743,10 @@ struct obj *obj;
 	} else if(!mtmp->mcan && !mtmp->minvis && (mlet == S_NYMPH
 				     || mtmp->data==&mons[PM_SUCCUBUS])) {
 		if (vis) {
-		    pline ("%s admires herself in your mirror.", Monnam(mtmp));
+		    pline ("%s admires herself in your %s.", Monnam(mtmp),
+		           simple_typename(obj->otyp));
 		    pline ("She takes it!");
-		} else pline ("It steals your mirror!");
+		} else pline ("It steals your %s!", simple_typename(obj->otyp));
 		setnotworn(obj); /* in case mirror was wielded */
 		freeinv(obj);
 		(void) mpickobj(mtmp,obj);
