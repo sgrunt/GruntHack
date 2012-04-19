@@ -2208,7 +2208,7 @@ struct obj *obj;
     if (Stunned || (Confusion && !rn2(5))) confdir();
     rx = u.ux + u.dx;
     ry = u.uy + u.dy;
-    mtmp = m_at(rx, ry);
+    mtmp = (isok(rx, ry)) ? m_at(rx, ry) : (struct monst *)0;
 
     /* fake some proficiency checks */
     proficient = 0;
@@ -2289,6 +2289,13 @@ struct obj *obj;
 	 *
 	 */
 	const char *wrapped_what = (char *)0;
+
+	if (!isok(rx, ry)) {
+	    pline("%s", 
+	          Is_airlevel(&u.uz) ? "You snap your whip through thin air."
+		                     : msg_snap);
+	    return 1;
+	}
 
 	if (mtmp) {
 	    if (bigmonst(mtmp->data)) {
