@@ -416,7 +416,7 @@ xchar x, y;
 	register struct monst *mon, *shkp;
 	struct trap *trap;
 	char bhitroom;
-	boolean costly, isgold, slide = FALSE;
+	boolean costly, isgold, slide = FALSE, air = FALSE;
 
 	/* if a pile, the "top" object gets kicked */
 	kickobj = level.objects[x][y];
@@ -471,7 +471,9 @@ xchar x, y;
 	    /* you're in the water too; significantly reduce range */
 	    range = range / 3 + 1;	/* {1,2}=>1, {3,4,5}=>2, {6,7,8}=>3 */
 	} else {
-	    if (is_ice(x, y)) range += rnd(3),  slide = TRUE;
+	    if (is_ice(x, y) ||
+	        (air = IS_AIR(levl[x][y].typ)))
+		range += rnd(3),  slide = TRUE;
 	    if (kickobj->greased) range += rnd(3),  slide = TRUE;
 	}
 
@@ -558,8 +560,10 @@ xchar x, y;
 	if (kickobj->quan > 1L && !isgold) kickobj = splitobj(kickobj, 1L);
 
 	if (slide && !Blind)
-	    pline("Whee!  %s %s across the %s.", Doname2(kickobj),
-		  otense(kickobj, "slide"), surface(x,y));
+	    pline("Whee!  %s %s %s the %s.", Doname2(kickobj),
+		  otense(kickobj, air ? "fly" : "slide"),
+		  air ? "through" : "across",
+		  air && Is_waterlevel(&u.uz) ? "bubble" : surface(x,y));
 
 	obj_extract_self(kickobj);
 	(void) snuff_candle(kickobj);
