@@ -2635,9 +2635,13 @@ long hmask, emask;     /* might cancel timeout */
 			      "splashed down" : sokoban_trap ? "crashed" :
 			      "hit the ground");
 		    else {
-			if (!sokoban_trap)
-			    You("float gently to the %s.",
-				surface(u.ux, u.uy));
+			if (!sokoban_trap) {
+			    if (Flying)
+			        You("lose some altitude.");
+			    else
+			        You("float gently to the %s.",
+				    surface(u.ux, u.uy));
+			}
 			else {
 			    /* Justification elsewhere for Sokoban traps
 			     * is based on air currents. This is
@@ -2657,6 +2661,8 @@ long hmask, emask;     /* might cancel timeout */
 		    }
 		}
 	    }
+	    stop_occupation();
+	    if (multi > 0) nomul(0);
 	}
 
 	/* can't rely on u.uz0 for detecting trap door-induced level change;
