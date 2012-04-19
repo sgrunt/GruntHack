@@ -1108,6 +1108,14 @@ struct obj *obj;
 				aobjnam(obj, (char *)0), surface(u.ux,u.uy));
 		u_wipe_engr(3);
 	} else {
+	        struct trap *t = t_at(u.ux, u.uy);
+		if (t &&
+		    (t->ttyp == HOLE ||
+		     (t->ttyp == TRAPDOOR && t->tseen))) {
+		    pline("There's already a %s in the floor here.",
+		          t->ttyp == HOLE ? "hole" : "trap door");
+		    return(0);
+		}
 		if (digging.pos.x != u.ux || digging.pos.y != u.uy ||
 			!on_level(&digging.level, &u.uz) || !digging.down) {
 		    digging.chew = FALSE;
@@ -1122,6 +1130,10 @@ struct obj *obj;
 		    if (*u.ushops) shopdig(0);
 		} else
 		    You("continue %s downward.", verbing);
+		if (t && t->ttyp == TRAPDOOR) {
+		    spoteffects(TRUE); /* trigger the trap */
+		    return(1);
+		}
 		did_dig_msg = FALSE;
 		set_occupation(dig, verbing, 0);
 	}
