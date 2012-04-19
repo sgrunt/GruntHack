@@ -17,6 +17,7 @@ STATIC_DCL void FDECL(restfakecorr,(struct monst *));
 STATIC_DCL boolean FDECL(in_fcorridor, (struct monst *,int,int));
 STATIC_DCL void FDECL(move_gold,(struct obj *,int));
 STATIC_DCL void FDECL(wallify_vault,(struct monst *));
+STATIC_DCL boolean FDECL(find_guard_dest, (struct monst *,xchar *, xchar *));
 
 STATIC_OVL boolean
 clear_fcorr(grd, forceshow)
@@ -146,6 +147,45 @@ char *array;
 	return('\0');
 }
 
+STATIC_OVL
+boolean
+find_guard_dest(guard, rx, ry)
+struct monst *guard;
+xchar *rx;
+xchar *ry;
+{
+    register int x, y, dd, lx = 0, ly = 0;
+    for(dd = 2; (dd < ROWNO || dd < COLNO); dd++) {
+      for(y = u.uy-dd; y <= u.uy+dd; ly = y, y++) {
+	if(y < 0 || y > ROWNO-1) continue;
+	for(x = u.ux-dd; x <= u.ux+dd; lx = x, x++) {
+	  if(y != u.uy-dd && y != u.uy+dd && x != u.ux-dd)
+	    x = u.ux+dd;
+	  if(x < 1 || x > COLNO-1) continue;
+	  if(guard && ((x == guard->mx && y == guard->my) ||
+	               (guard->isgd && in_fcorridor(guard, x, y)))) continue;
+	  if(levl[x][y].typ == CORR) {
+	    if(x < u.ux) lx = x + 1;
+	    else if(x > u.ux) lx = x - 1;
+	    else lx = x;
+	    if(y < u.uy) ly = y + 1;
+	    else if(y > u.uy) ly = y - 1;
+	    else ly = y;
+	    if(levl[lx][ly].typ != STONE && levl[lx][ly].typ != CORR)
+	      goto incr_radius;
+	    *rx = x;
+	    *ry = y;
+	    return TRUE;
+          }
+        }
+      }
+incr_radius: ;
+    }
+    impossible("Not a single corridor on this level??");
+    tele();
+    return FALSE;
+}
+
 void
 invault()
 {
@@ -166,39 +206,14 @@ invault()
     guard = findgd();
     if(++u.uinvault % 30 == 0 && !guard) { /* if time ok and no guard now. */
 	char buf[BUFSZ];
-	register int x, y, dd, gx, gy;
-	int lx = 0, ly = 0;
+	register int x, y, gx, gy;
+	xchar rx, ry;
 #ifdef GOLDOBJ
         long umoney;
 #endif
 	/* first find the goal for the guard */
-	for(dd = 2; (dd < ROWNO || dd < COLNO); dd++) {
-	  for(y = u.uy-dd; y <= u.uy+dd; ly = y, y++) {
-	    if(y < 0 || y > ROWNO-1) continue;
-	    for(x = u.ux-dd; x <= u.ux+dd; lx = x, x++) {
-	      if(y != u.uy-dd && y != u.uy+dd && x != u.ux-dd)
-		x = u.ux+dd;
-	      if(x < 1 || x > COLNO-1) continue;
-	      if(levl[x][y].typ == CORR) {
-		  if(x < u.ux) lx = x + 1;
-		  else if(x > u.ux) lx = x - 1;
-		  else lx = x;
-		  if(y < u.uy) ly = y + 1;
-		  else if(y > u.uy) ly = y - 1;
-		  else ly = y;
-		  if(levl[lx][ly].typ != STONE && levl[lx][ly].typ != CORR)
-		      goto incr_radius;
-		  goto fnd;
-	      }
-	    }
-	  }
-incr_radius: ;
-	}
-	impossible("Not a single corridor on this level??");
-	tele();
-	return;
-fnd:
-	gx = x; gy = y;
+	if (!find_guard_dest((struct monst *)0, &rx, &ry)) return;
+	gx = rx; gy = ry;
 
 	/* next find a good place for a door in the wall */
 	x = u.ux; y = u.uy;
@@ -473,7 +488,7 @@ gd_move(grd)
 register struct monst *grd;
 {
 	int x, y, nx, ny, m, n;
-	int dx, dy, gx, gy, fci;
+	int dx, dy, gx = 0, gy = 0, fci;
 	uchar typ;
 	struct fakecorridor *fcp;
 	register struct egd *egrd = EGD(grd);
@@ -741,11 +756,22 @@ proceed:
 	if (cansee(nx,ny))
 	    newsym(nx,ny);
 
-	fcp = &(egrd->fakecorr[egrd->fcend]);
-	if(egrd->fcend++ == FCSIZ) panic("fakecorr overflow");
-	fcp->fx = nx;
-	fcp->fy = ny;
-	fcp->ftyp = typ;
+        if ((nx != gx || ny != gy) ||
+	    (grd->mx != gx || grd->my != gy)) {
+	    fcp = &(egrd->fakecorr[egrd->fcend]);
+	    if(egrd->fcend++ == FCSIZ) panic("fakecorr overflow");
+	    fcp->fx = nx;
+	    fcp->fy = ny;
+	    fcp->ftyp = typ;
+	} else if (!egrd->gddone) {
+	    /* We're stuck, so try to find a new destination. */
+	    if (!find_guard_dest(grd, &egrd->gdx, &egrd->gdy) ||
+	        (egrd->gdx == gx && egrd->gdy == gy)) {
+		pline("%s, confused, disappears.", Monnam(grd));
+	        disappear_msg_seen = TRUE;
+		goto cleanup;
+	    } else goto nextpos;
+	}
 newpos:
 	if(egrd->gddone) {
 		/* The following is a kludge.  We need to keep    */
