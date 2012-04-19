@@ -3191,6 +3191,9 @@ boolean from_user;
 			    !strstri(bp, " wand") &&
 			    !strstri(bp, " pieces") && /* gold pieces */
 			    !strstri(bp, " dragon scale mail") &&
+#ifdef WIZARD
+			    !strstri(bp, "iron bars") &&
+#endif
 			    !strstri(bp, "Platinum Yendorian Express Card"))
 			{
 			    objmaterial = i;
