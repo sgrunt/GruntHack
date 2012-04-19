@@ -545,6 +545,11 @@ boolean verbosely;
 	}
 	obj->owornmask = 0L;
     }
+    /* Loadstones don't autocurse on player death drop,
+     * so they don't do that here either. */
+    if (!DEADMONSTER(mon) && obj->otyp == LOADSTONE && !obj->cursed)
+        curse(obj);
+
     if (mon->mburied) {
 	place_object(obj, omx, omy);
 	stackobj(obj);
