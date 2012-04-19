@@ -8,7 +8,7 @@
 STATIC_DCL struct monst *NDECL(findgd);
 
 #define g_monnam(mtmp) \
-	x_monnam(mtmp, ARTICLE_NONE, (char *)0, SUPPRESS_IT, FALSE)
+	x_monnam(mtmp, ARTICLE_THE, (char *)0, SUPPRESS_IT, FALSE)
 
 #ifdef OVLB
 
@@ -23,8 +23,9 @@ clear_fcorr(grd, forceshow)
 register struct monst *grd;
 register boolean forceshow;
 {
-	register int fcx, fcy, fcbeg;
+	register int fcx, fcy, fcbeg, oldtyp;
 	register struct monst *mtmp;
+	register boolean showmsg = FALSE;
 
 	if (!on_level(&(EGD(grd)->gdlevel), &u.uz)) return TRUE;
 
@@ -35,10 +36,14 @@ register boolean forceshow;
 				   EGD(grd)->gddone)
 			forceshow = TRUE;
 		if((u.ux == fcx && u.uy == fcy && grd->mhp > 0)
-			|| (!forceshow && couldsee(fcx,fcy))
-			|| (Punished && !carried(uball)
-				&& uball->ox == fcx && uball->oy == fcy))
+			|| (!forceshow && couldsee(fcx,fcy)))
 			return FALSE;
+			
+		if ((Punished && !carried(uball)
+			&& uball->ox == fcx && uball->oy == fcy)) {
+			unplacebc();
+			placebc();
+		}
 
 		if ((mtmp = m_at(fcx,fcy)) != 0) {
 			if(mtmp->isgd) return(FALSE);
@@ -47,13 +52,26 @@ register boolean forceshow;
 			    (void) rloc(mtmp, FALSE);
 			}
 		}
+		oldtyp = levl[fcx][fcy].typ;
 		levl[fcx][fcy].typ = EGD(grd)->fakecorr[fcbeg].ftyp;
+		if(!ACCESSIBLE(levl[fcx][fcy].typ) &&
+		   ACCESSIBLE(oldtyp)) {
+		    register struct trap *t = t_at(fcx, fcy);
+		    if (couldsee(fcx, fcy)) showmsg = TRUE;
+		    if (t) deltrap(t);
+		    levl[fcx][fcy].lit = FALSE;
+		    block_point(fcx,fcy);
+		}
 		map_location(fcx, fcy, 1);	/* bypass vision */
-		if(!ACCESSIBLE(levl[fcx][fcy].typ)) block_point(fcx,fcy);
 		EGD(grd)->fcbeg++;
 	}
 	if(grd->mhp <= 0) {
-	    pline_The("corridor disappears.");
+	    if (showmsg) {
+	        if (!Blind)
+	            pline_The("corridor disappears.");
+		else
+		    You_feel("claustrophobic.");
+	    }
 	    if(IS_ROCK(levl[u.ux][u.uy].typ)) You("are encased in rock.");
 	}
 	return(TRUE);
@@ -136,6 +154,7 @@ invault()
 #endif
     struct monst *guard;
     int trycount, vaultroom = (int)vault_occupied(u.urooms);
+    boolean messages = TRUE; 
 
     if(!vaultroom) {
 	u.uinvault = 0;
@@ -238,17 +257,28 @@ fnd:
 
 	reset_faint();			/* if fainted - wake up */
 	if (canspotmon(guard))
-	    pline("Suddenly one of the Vault's %s enters!",
-		  makeplural(g_monnam(guard)));
+	    pline("Suddenly one of the Vault's guards enters!");
+	else if (flags.soundok)
+	    You_hear("someone else enter the Vault.");
 	else
-	    pline("Someone else has entered the Vault.");
+	    messages = FALSE;
 	newsym(guard->mx,guard->my);
-	if (youmonst.m_ap_type == M_AP_OBJECT || u.uundetected) {
+	if (youmonst.m_ap_type == M_AP_OBJECT || u.uundetected || u.uburied) {
 	    if (youmonst.m_ap_type == M_AP_OBJECT &&
 			youmonst.mappearance != GOLD_PIECE)
 	    	verbalize("Hey! Who left that %s in here?", mimic_obj_name(&youmonst));
 	    /* You're mimicking some object or you're hidden. */
-	    pline("Puzzled, %s turns around and leaves.", mhe(guard));
+	    if (messages)
+	        pline("Puzzled, %s turns around and leaves.", mhe(guard));
+	    mongone(guard);
+	    return;
+	}
+	if (u.uswallow) {
+	    if ((!u.ustuck->minvis ||
+	         sees_invis(guard)))
+	        verbalize("How did that %s get in here?", m_monnam(u.ustuck));
+	    if (messages)
+	        pline("Puzzled, %s turns around and leaves.", mhe(guard));
 	    mongone(guard);
 	    return;
 	}
@@ -423,7 +453,7 @@ struct monst *grd;
 
 	if(movedgold || fixed) {
 	    if(in_fcorridor(grd, grd->mx, grd->my) || cansee(grd->mx, grd->my))
-		pline_The("%s whispers an incantation.", g_monnam(grd));
+		pline("%s whispers an incantation.", g_monnam(grd));
 	    else You_hear("a distant chant.");
 	    if(movedgold)
 		pline("A mysterious force moves the gold into the vault.");
@@ -526,9 +556,8 @@ letknow:
 			You_hear("the shrill sound of a guard's whistle.");
 		    else
 			You(um_dist(grd->mx, grd->my, 2) ?
-			    "see an angry %s approaching." :
-			    "are confronted by an angry %s.",
-			    g_monnam(grd));
+			    "see an angry guard approaching." :
+			    "are confronted by an angry guard.");
 		    return(-1);
 		} else {
 		    verbalize("Well, begone.");
@@ -544,7 +573,7 @@ letknow:
 		  !egrd->gddone && !in_fcorridor(grd, u.ux, u.uy) &&
 		  levl[egrd->fakecorr[0].fx][egrd->fakecorr[0].fy].typ
 				 == egrd->fakecorr[0].ftyp) {
-		pline_The("%s, confused, disappears.", g_monnam(grd));
+		pline("%s, confused, disappears.", g_monnam(grd));
 		disappear_msg_seen = TRUE;
 		goto cleanup;
 	    }
@@ -574,10 +603,12 @@ letknow:
 		goldincorridor = TRUE;
 	    }
 	if(goldincorridor && !egrd->gddone) {
+		boolean yours = FALSE;
 		x = grd->mx;
 		y = grd->my;
 		if (m == u.ux && n == u.uy) {
 		    struct obj *gold = g_at(m,n);
+		    yours = TRUE;
 		    /* Grab the gold from between the hero's feet.  */
 #ifndef GOLDOBJ
 		    grd->mgold += gold->quan;
@@ -602,9 +633,14 @@ letknow:
 		    place_monster(grd, m, n);
 		    mpickgold(grd);	/* does a newsym */
 		}
-		if(cansee(m,n))
-		    pline("%s%s picks up the gold.", Monnam(grd),
+		if(cansee(m,n)) {
+		    if (yours) {
+		        pline("%s%s picks up the gold.", Monnam(grd),
 				grd->mpeaceful ? " calms down and" : "");
+		    } else {
+		        pline("%s picks up some gold.", Monnam(grd));
+		    }
+		}
 		if(x != grd->mx || y != grd->my) {
 		    remove_monster(grd->mx, grd->my);
 		    remove_monster_img(grd->mix, grd->miy);
@@ -732,7 +768,7 @@ cleanup:
 		if(!semi_dead && (in_fcorridor(grd, u.ux, u.uy) ||
 				     cansee(x, y))) {
 		    if (!disappear_msg_seen && see_guard)
-			pline("Suddenly, the %s disappears.", g_monnam(grd));
+			pline("Suddenly, %s disappears.", g_monnam(grd));
 		    return(1);
 		}
 		return(-2);
