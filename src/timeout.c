@@ -38,6 +38,7 @@ stoned_dialogue()
 		nomul2(-3, "turning to stone");
 	exercise(A_DEX, FALSE);
 	stop_occupation();
+	if (multi > 0) nomul(0);
 }
 
 /* He is getting sicker and sicker prior to vomiting */
