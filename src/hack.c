@@ -78,7 +78,10 @@ moverock()
         /* There's a boulder at (sx, sy), so make sure the point
 	 * stays blocked. This should only happen where there's
 	 * multiple boulders on a tile. */
-        block_point(sx, sy);
+#ifdef INVISIBLE_OBJECTS
+	if (!otmp->oinvis)
+#endif
+            block_point(sx, sy);
 
 	/* make sure that this boulder is visible as the top object */
 	if (otmp != level.objects[sx][sy]) movobj(otmp, sx, sy);
@@ -149,7 +152,8 @@ moverock()
 		    if (rn2(10)) {
 			obj_extract_self(otmp);
 			place_object(otmp, rx, ry);
-			unblock_point(sx, sy);
+			if (!vis_boulder_at(sx, sy))
+			    unblock_point(sx, sy);
 			newsym(sx, sy);
 			pline("KAABLAMM!!!  %s %s land mine.",
 			      Tobjnam(otmp, "trigger"),

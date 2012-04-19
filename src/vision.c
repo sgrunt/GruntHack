@@ -159,7 +159,6 @@ does_block(x,y,lev)
     int x, y;
     register struct rm    *lev;
 {
-    struct obj   *obj;
     struct monst *mon;
 
     /* Features that block . . */
@@ -172,12 +171,7 @@ does_block(x,y,lev)
 	return 1;
 
     /* Boulders block light. */
-    for (obj = level.objects[x][y]; obj; obj = obj->nexthere)
-	if (obj->otyp == BOULDER
-#ifdef INVISIBLE_OBJECT
-		&& (!obj->oinvis)
-#endif
-	) return 1;
+    if (vis_boulder_at(x, y)) return 1;
 
     /* Mimics mimicing a door or boulder block light. */
     if ((mon = m_at(x,y)) && (!mon->minvis || See_invisible) &&
@@ -2601,6 +2595,22 @@ do_clear_area(scol,srow,range,func,arg)
 			(*func)(x, y, arg);
 	    }
 	}
+}
+
+boolean
+vis_boulder_at(x, y)
+xchar x;
+xchar y;
+{
+    struct obj *otmp = level.objects[x][y];
+    for (; otmp; otmp = otmp->nexthere) {
+        if (otmp->otyp == BOULDER
+#ifdef INVISIBLE_OBJECTS
+            && !otmp->oinvis
+#endif
+	    ) return TRUE;
+    }
+    return FALSE;
 }
 
 /*vision.c*/

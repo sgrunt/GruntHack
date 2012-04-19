@@ -1484,9 +1484,12 @@ register struct obj *otmp;
 
     if (otmp->where != OBJ_FLOOR)
 	panic("remove_object: obj not on floor");
-    if (otmp->otyp == BOULDER) unblock_point(x,y); /* vision */
     extract_nexthere(otmp, &level.objects[x][y]);
     extract_nobj(otmp, &fobj);
+    if (otmp->otyp == BOULDER &&
+        !vis_boulder_at(x, y)) {
+    	unblock_point(x,y); /* vision */
+    }
     if (otmp->timed) obj_timer_checks(otmp,x,y,0);
 }
 

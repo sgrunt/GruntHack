@@ -2265,6 +2265,7 @@ E void FDECL(unblock_point, (int,int));
 E boolean FDECL(clear_path, (int,int,int,int));
 E void FDECL(do_clear_area, (int,int,int,
 			     void (*)(int,int,genericptr_t),genericptr_t));
+E boolean FDECL(vis_boulder_at, (xchar, xchar));
 
 #ifdef VMS
 

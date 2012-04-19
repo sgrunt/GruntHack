@@ -1287,7 +1287,7 @@ register struct monst *mtmp;
 			     mtmp->mx, mtmp->my, TRUE, FALSE);
 	}
 	newsym(mtmp->mx, mtmp->my);
-	if (!sobj_at(BOULDER, mtmp->mx, mtmp->my))
+	if (!vis_boulder_at(mtmp->mx, mtmp->my))
 	    unblock_point(mtmp->mx, mtmp->my);	/* vision */
 
 	return FALSE;

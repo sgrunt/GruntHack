@@ -1124,7 +1124,8 @@ set_mimic_blocking()
 	if (mon->minvis &&
 	   ((mon->m_ap_type == M_AP_FURNITURE &&
 	     (mon->mappearance == S_vcdoor || mon->mappearance == S_hcdoor)) ||
-	    (mon->m_ap_type == M_AP_OBJECT && mon->mappearance == BOULDER))) {
+	    (mon->m_ap_type == M_AP_OBJECT && mon->mappearance == BOULDER
+	    ))) {
 	    if(See_invisible)
 		block_point(mon->mx, mon->my);
 	    else
