@@ -5,6 +5,7 @@
 #define NEED_VARARGS /* Uses ... */	/* comment line for pre-compiled headers */
 #include "hack.h"
 #include "epri.h"
+#include "emin.h"
 #ifdef WIZARD
 #include "edog.h"
 #endif
@@ -352,14 +353,17 @@ register struct monst *mtmp;
 	aligntyp alignment;
 	char info[BUFSZ], monnambuf[BUFSZ];
 
-	if (mtmp->ispriest || mtmp->data == &mons[PM_ALIGNED_PRIEST]
-				|| mtmp->data == &mons[PM_ANGEL])
+	if (mtmp->ispriest ||
+	    (mtmp->isminion && roamer_type(mtmp->data)))
 		alignment = EPRI(mtmp)->shralign;
-	else
+	else if (mtmp->isminion)
+		alignment = EMIN(mtmp)->min_align;
+	else {
 		alignment = mtmp->data->maligntyp;
-	alignment = (alignment > 0) ? A_LAWFUL :
-		(alignment < 0) ? A_CHAOTIC :
-		A_NEUTRAL;
+		alignment = (alignment > 0) ? A_LAWFUL :
+			(alignment < 0) ? A_CHAOTIC :
+			A_NEUTRAL;
+	}
 
 	info[0] = 0;
 	if (mtmp->mtame) {	  Strcat(info, ", tame");

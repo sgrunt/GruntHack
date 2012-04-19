@@ -2321,7 +2321,8 @@ struct monst *mtmp;
 
 	if (mtmp->ispriest || mtmp->isminion) {
 		/* some monsters have individual alignments; check them */
-		if (mtmp->ispriest)
+		if (mtmp->ispriest ||
+		    (mtmp->isminion && roamer_type(mtmp->data)))
 			mal = EPRI(mtmp)->shralign;
 		else if (mtmp->isminion)
 			mal = EMIN(mtmp)->min_align;

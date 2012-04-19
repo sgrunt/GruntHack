@@ -11,15 +11,6 @@
 /* this matches the categorizations shown by enlightenment */
 #define ALGN_SINNED	(-4)	/* worse than strayed */
 
-#define roamer_type(ptr)	((ptr) == &mons[PM_ALIGNED_PRIEST] || \
-				 (ptr) == &mons[PM_ANGEL] || \
-				 (ptr) == &mons[PM_AIR_ELEMENTAL] || \
-				 (ptr) == &mons[PM_FIRE_ELEMENTAL] || \
-				 (ptr) == &mons[PM_WATER_ELEMENTAL] || \
-				 (ptr) == &mons[PM_EARTH_ELEMENTAL] || \
-				 (ptr) == &mons[PM_NALFESHNEE] || \
-				 (ptr) == &mons[PM_PIT_FIEND])
-
 #ifdef OVLB
 
 STATIC_DCL boolean FDECL(histemple_at,(struct monst *,XCHAR_P,XCHAR_P));

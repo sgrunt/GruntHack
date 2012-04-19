@@ -206,6 +206,16 @@
 				 (ptr)->mlet == S_VORTEX || \
 				 (ptr) == &mons[PM_MANES])
 
+/* What types of monsters can be Astral Plane minions? */
+#define roamer_type(ptr)	((ptr) == &mons[PM_ALIGNED_PRIEST] || \
+				 (ptr) == &mons[PM_ANGEL] || \
+				 (ptr) == &mons[PM_AIR_ELEMENTAL] || \
+				 (ptr) == &mons[PM_FIRE_ELEMENTAL] || \
+				 (ptr) == &mons[PM_WATER_ELEMENTAL] || \
+				 (ptr) == &mons[PM_EARTH_ELEMENTAL] || \
+				 (ptr) == &mons[PM_NALFESHNEE] || \
+				 (ptr) == &mons[PM_PIT_FIEND])
+
 /* Used for conduct with corpses, tins, and digestion attacks */
 /* G_NOCORPSE monsters might still be swallowed as a purple worm */
 /* Maybe someday this could be in mflags... */
