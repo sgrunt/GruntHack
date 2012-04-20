@@ -1046,6 +1046,7 @@ boolean your_fault;
 		if (Upolyd && u.umonnum == PM_WATER_ELEMENTAL)
 		{
 		    pline("BOOM!  The potion explodes!");
+		    wake_nearby();
 		    losehp(rnd(10), "potion of acid", KILLED_BY_AN);
 		}
 		else if (!Acid_resistance) {
@@ -1174,6 +1175,7 @@ boolean your_fault;
 	        if (mon->data == &mons[PM_WATER_ELEMENTAL])
 		{
 		    pline("BOOM!  The potion explodes!");
+		    wake_nearby();
 		    mon->mhp -= rnd(10); 
 		    if (mon->mhp < 1) {
 			if (your_fault)
@@ -1575,6 +1577,7 @@ register struct obj *obj;
 		if (obj->otyp == POT_ACID) {
 			pline("It boils vigorously!");
 			You("are caught in the explosion!");
+			wake_nearby();
 			losehp(rnd(10), "elementary chemistry", KILLED_BY);
 			makeknown(obj->otyp);
 			update_inventory();
@@ -1831,6 +1834,7 @@ dodip()
 		/* KMH, balance patch -- acid is particularly unstable */
 		if (obj->cursed || obj->otyp == POT_ACID || !rn2(10)) {
 			pline("BOOM!  They explode!");
+			wake_nearby();
 			exercise(A_STR, FALSE);
 			if (!breathless(youmonst.data) || haseyes(youmonst.data))
 				potionbreathe(obj);
