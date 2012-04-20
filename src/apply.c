@@ -2490,7 +2490,7 @@ use_pole (obj)
 	cc.x = u.ux;
 	cc.y = u.uy;
 	if (getpos(&cc, TRUE, "the spot to hit") < 0)
-	    return 0;	/* user pressed ESC */
+	    return res;	/* user pressed ESC */
 
 	/* Calculate range */
 	typ = uwep_skill_type();
@@ -2516,6 +2516,8 @@ use_pole (obj)
 	/* Attack the monster there */
 	if ((mtmp = m_at(cc.x, cc.y)) != (struct monst *)0) {
 	    int oldhp = mtmp->mhp;
+	    
+	    if (attack_checks(mtmp, obj)) return res;
 
 	    bhitpos = cc;
 	    check_caitiff(mtmp);
