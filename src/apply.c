@@ -971,10 +971,6 @@ struct obj **optr;
 		You(no_elbow_room);
 		return;
 	}
-	if(Underwater) {
-		pline("Sorry, fire and water don't mix.");
-		return;
-	}
 
 	otmp = carrying(CANDELABRUM_OF_INVOCATION);
 	if(!otmp || otmp->spe == 7) {
@@ -1116,7 +1112,10 @@ struct obj *obj;
 	char buf[BUFSZ];
 
 	if(Underwater) {
-		pline("This is not a diving lamp.");
+		pline(obj->otyp == WAX_CANDLE ||
+		      obj->otyp == TALLOW_CANDLE
+		      ? "Sorry, fire and water don't mix."
+		      : "This is not a diving lamp.");
 		return;
 	}
 	if(obj->lamplit) {
