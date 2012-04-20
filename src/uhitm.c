@@ -2039,6 +2039,15 @@ register struct attack *mattk;
 	    for (otmp = mdef->minvent; otmp; otmp = otmp->nobj)
 		(void) snuff_lit(otmp);
 
+	    /* KMH, conduct */
+	    if (mattk->adtyp == AD_DGST) {
+		u.uconduct.food++;
+		if (!vegan(mdef->data))
+		     u.uconduct.unvegan++;
+		if (!vegetarian(mdef->data))
+		     violated_vegetarian();
+	    }
+
 	    if(!touch_petrifies(mdef->data) || Stone_resistance) {
 #ifdef LINT	/* static char msgbuf[BUFSZ]; */
 		char msgbuf[BUFSZ];
@@ -2064,13 +2073,6 @@ register struct attack *mattk;
 			    dam = 0;
 			    break;
 			}
-
-			/* KMH, conduct */
-			u.uconduct.food++;
-			if (!vegan(mdef->data))
-			     u.uconduct.unvegan++;
-			if (!vegetarian(mdef->data))
-			     violated_vegetarian();
 
 			/* Use up amulet of life saving */
 			if (!!(otmp = mlifesaver(mdef))) m_useup(mdef, otmp);
