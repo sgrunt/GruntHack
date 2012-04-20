@@ -350,7 +350,6 @@ flip_level(int flp)
 		    levl[x][y].drawbridgemask &= ~DB_DIR;
 		    levl[x][y].drawbridgemask |= DB_WEST;
 		}
-		levl[x][y] = levl[x2-x][y];
 		levl[x2-x][y] = trm;
 
 		otmp = level.objects[x][y];
