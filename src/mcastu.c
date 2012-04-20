@@ -948,6 +948,10 @@ int spellnum;
 			}
 	
 			set_malign(mpet);
+			if (mtmp->mtarget) {
+			    mpet->mtarget = mtmp->mtarget;
+			    mpet->mtarget_id = mpet->mtarget->m_id;
+			}
 			if (canspotmon(mpet)) {
 				seencount++;
 				/*pline("%s appears from nowhere!", Amonnam(mpet));*/
@@ -1489,6 +1493,12 @@ int spellnum;
 	    return TRUE;
 
 	if (spellnum == SPE_CREATE_MONSTER && mtmp->mtame)
+	    return TRUE;
+
+	if (((spellnum == SPE_FLAME_SPHERE) ||
+	     (spellnum == SPE_FREEZE_SPHERE) ||
+	     (spellnum == SPE_SHOCK_SPHERE)) &&
+	    !mfind_target(mtmp))
 	    return TRUE;
 
 #ifndef TAME_SUMMONING
