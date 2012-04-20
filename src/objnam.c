@@ -1939,7 +1939,7 @@ end_descr:
 			Strcat(bp, " (alternate weapon; not wielded)");
 	}
 	if(obj->owornmask & W_QUIVER) Strcat(bp, " (in quiver)");
-	{
+	if (obj->oclass != COIN_CLASS) {
 		xchar ox, oy; 
 		boolean on_floor = get_obj_location(
 			obj, &ox, &oy, BURIED_TOO|CONTAINED_TOO);
