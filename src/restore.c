@@ -443,10 +443,6 @@ unsigned int *stuckid, *steedid;	/* STEED */
 	migrating_mons = restmonchn(fd, FALSE);
 	mread(fd, (genericptr_t) mvitals, sizeof(mvitals));
 
-	/* this comes after inventory has been loaded */
-	for(otmp = invent; otmp; otmp = otmp->nobj)
-		if(otmp->owornmask)
-			setworn(otmp, otmp->owornmask);
 	/* reset weapon so that player will get a reminder about "bashing"
 	   during next fight when bare-handed or wielding an unconventional
 	   item; for pick-axe, we aren't able to distinguish between having
@@ -472,6 +468,13 @@ unsigned int *stuckid, *steedid;	/* STEED */
 	if (u.usteed)
 		mread(fd, (genericptr_t) steedid, sizeof (*steedid));
 #endif
+	restlevelstate(*stuckid, *steedid);
+
+	/* this comes after monsters have been loaded */
+	for(otmp = invent; otmp; otmp = otmp->nobj)
+		if(otmp->owornmask)
+			setworn(otmp, otmp->owornmask);
+
 	mread(fd, (genericptr_t) pl_character, sizeof pl_character);
 
 	mread(fd, (genericptr_t) pl_fruit, sizeof pl_fruit);
@@ -613,7 +616,7 @@ register int fd;
 		restoring = FALSE;
 		return(0);
 	}
-	restlevelstate(stuckid, steedid);
+	/*restlevelstate(stuckid, steedid);*/ /* done in restgamestate */
 #ifdef INSURANCE
 	savestateinlock();
 #endif
