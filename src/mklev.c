@@ -1544,6 +1544,7 @@ int dist;
     case 4: /* pools (aka a wide moat) */
     case 5:
 	lev->typ = LAVAPOOL; /* MOAT; */
+	if (m_at(x, y)) (void) minliquid(m_at(x, y));
 	/* No kelp! */
 	break;
     default:
