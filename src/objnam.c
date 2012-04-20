@@ -1953,6 +1953,11 @@ end_descr:
 			    (obj->unpaid) ? unpaid_cost(obj) :
 			    (shkp)        ? get_cost(obj, shkp) : 0L;
 
+			if (!obj->unpaid && shkp &&
+			    Has_contents(obj))
+			    quotedprice +=
+			        contained_cost(obj, shkp, 0L, FALSE, FALSE);
+
 			if (Has_contents(obj) &&
 			    on_floor &&
 		            costly_spot(ox, oy) && shkp)
