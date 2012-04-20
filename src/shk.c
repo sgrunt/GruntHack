@@ -42,7 +42,6 @@ STATIC_DCL char *FDECL(mon_owns, (char *,struct obj *));
 STATIC_DCL void FDECL(clear_unpaid,(struct obj *));
 STATIC_DCL long FDECL(check_credit, (long, struct monst *));
 STATIC_DCL void FDECL(pay, (long, struct monst *));
-STATIC_DCL long FDECL(get_cost, (struct obj *, struct monst *));
 STATIC_DCL long FDECL(set_cost, (struct obj *, struct monst *));
 STATIC_DCL const char *FDECL(shk_embellish, (struct obj *, long));
 STATIC_DCL long FDECL(cost_per_charge, (struct monst *,struct obj *,BOOLEAN_P));
@@ -1946,7 +1945,7 @@ const int matprice[] = {
 };
 
 /* calculate the value that the shk will charge for [one of] an object */
-STATIC_OVL long
+long
 get_cost(obj, shkp)
 register struct obj *obj;
 register struct monst *shkp;	/* if angry, impose a surcharge */
