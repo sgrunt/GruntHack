@@ -1623,7 +1623,8 @@ boolean reflection_skip;
 			}
 		    }
 		    nomore(MUSE_FIRE_HORN);
-		    if(obj->otyp == FIRE_HORN) {
+		    if(obj->otyp == FIRE_HORN &&
+		       can_blow_instrument(mtmp->data)) {
 		        if (obj->spe > 0) {
 			    m.offensive = obj;
 			    m.has_offense = MUSE_FIRE_HORN;
@@ -1650,7 +1651,8 @@ boolean reflection_skip;
 			}
 		    }
 		    nomore(MUSE_FROST_HORN);
-		    if(obj->otyp == FROST_HORN) {
+		    if(obj->otyp == FROST_HORN &&
+		       can_blow_instrument(mtmp->data)) {
 		        if (obj->spe > 0) {
 			    m.offensive = obj;
 			    m.has_offense = MUSE_FROST_HORN;
@@ -3164,7 +3166,8 @@ struct obj *obj;
 	    if (typ == UNICORN_HORN)
 		return (boolean)(!obj->cursed && !is_unicorn(mon->data));
 	    if (typ == FROST_HORN || typ == FIRE_HORN)
-		return (obj->spe > 0);
+		return (obj->spe > 0) &&
+		       can_blow_instrument(mon->data);
 	    if (typ == SKELETON_KEY || typ == LOCK_PICK || typ == CREDIT_CARD)
 	    	return TRUE;
 	    if (typ == BAG_OF_HOLDING || typ == OILSKIN_SACK || typ == SACK ||

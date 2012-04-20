@@ -18,8 +18,8 @@ STATIC_DCL int FDECL(use_camera, (struct obj *));
 STATIC_DCL int FDECL(use_towel, (struct obj *));
 STATIC_DCL boolean FDECL(its_dead, (int,int,int *));
 STATIC_DCL int FDECL(use_stethoscope, (struct obj *));
-STATIC_DCL void FDECL(use_whistle, (struct obj *));
-STATIC_DCL void FDECL(use_magic_whistle, (struct obj *));
+STATIC_DCL int FDECL(use_whistle, (struct obj *));
+STATIC_DCL int FDECL(use_magic_whistle, (struct obj *));
 STATIC_DCL void FDECL(use_leash, (struct obj *));
 STATIC_DCL int FDECL(use_mirror, (struct obj *));
 STATIC_DCL void FDECL(use_bell, (struct obj **));
@@ -310,19 +310,29 @@ use_stethoscope(obj)
 
 static const char whistle_str[] = "produce a %s whistling sound.";
 
-STATIC_OVL void
+STATIC_OVL int
 use_whistle(obj)
 struct obj *obj;
 {
+	if (Upolyd && !can_blow_instrument(youmonst.data)) {
+	    You("are incapable of blowing the whistle!");
+	    return 0;
+	}
 	You(whistle_str, obj->cursed ? "shrill" : "high");
 	wake_nearby();
+	return 1;
 }
 
-STATIC_OVL void
+STATIC_OVL int
 use_magic_whistle(obj)
 struct obj *obj;
 {
 	register struct monst *mtmp, *nextmon;
+	
+	if (Upolyd && !can_blow_instrument(youmonst.data)) {
+	    You("are incapable of blowing the whistle!");
+	    return 0;
+	}
 
 	if(obj->cursed && !rn2(2)) {
 		You("produce a high-pitched humming noise.");
@@ -346,6 +356,7 @@ struct obj *obj;
 		}
 		if (pet_cnt > 0) makeknown(obj->otyp);
 	}
+	return 1;
 }
 
 boolean
@@ -2972,10 +2983,10 @@ doapply()
 		break;
 #endif
 	case MAGIC_WHISTLE:
-		use_magic_whistle(obj);
+		res = use_magic_whistle(obj);
 		break;
 	case TIN_WHISTLE:
-		use_whistle(obj);
+		res = use_whistle(obj);
 		break;
 	case EUCALYPTUS_LEAF:
 		/* MRKR: Every Australian knows that a gum leaf makes an */
