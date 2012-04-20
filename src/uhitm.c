@@ -778,9 +778,9 @@ rock1:
 	    } else if(obj->oclass == POTION_CLASS) {
 		if (obj->quan > 1L)
 		    obj = splitobj(obj, 1L);
-		else
+		else if (obj == uwep)
 		    setuwep((struct obj *)0);
-		freeinv(obj);
+		obj_extract_self(obj);
 		potionhit(mon, obj, TRUE);
 		if (mon->mhp <= 0) return FALSE;	/* killed */
 		hittxt = TRUE;
