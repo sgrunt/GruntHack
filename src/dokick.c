@@ -15,7 +15,7 @@ static NEARDATA const char *gate_str;
 extern boolean notonhead;	/* for long worms */
 
 STATIC_DCL void FDECL(kickdmg, (struct monst *, BOOLEAN_P));
-STATIC_DCL void FDECL(kick_monster, (XCHAR_P, XCHAR_P));
+STATIC_DCL boolean FDECL(kick_monster, (XCHAR_P, XCHAR_P));
 STATIC_DCL int FDECL(kick_object, (XCHAR_P, XCHAR_P));
 STATIC_DCL char *FDECL(kickstr, (char *));
 STATIC_DCL void FDECL(otransit_msg, (struct obj *, BOOLEAN_P, long));
@@ -115,7 +115,7 @@ register boolean clumsy;
 	    use_skill(kick_skill, 1);
 }
 
-STATIC_OVL void
+STATIC_OVL boolean 
 kick_monster(x, y)
 register xchar x, y;
 {
@@ -127,7 +127,7 @@ register xchar x, y;
 
 	bhitpos.x = x;
 	bhitpos.y = y;
-	if (attack_checks(mon, (struct obj *)0)) return;
+	if (attack_checks(mon, (struct obj *)0)) return FALSE;
 	setmangry(mon);
 
 	/* Kick attacks by kicking monsters are normal attacks, not special.
@@ -167,7 +167,7 @@ register xchar x, y;
 		    (void)passive(mon, 0, 1, AT_KICK);
 		}
 	    }
-	    return;
+	    return TRUE;
 	}
 
 	if(Levitation && !rn2(3) && verysmall(mon->data) &&
@@ -175,7 +175,7 @@ register xchar x, y;
 		pline("Floating in the air, you miss wildly!");
 		exercise(A_DEX, FALSE);
 		(void) passive(mon, FALSE, 1, AT_KICK);
-		return;
+		return TRUE;
 	}
 
 	i = -inv_weight();
@@ -186,7 +186,7 @@ register xchar x, y;
 			if(martial() && !rn2(2)) goto doit;
 			Your("clumsy kick does no damage.");
 			(void) passive(mon, FALSE, 1, AT_KICK);
-			return;
+			return TRUE;
 		}
 		if(i < j/10) clumsy = TRUE;
 		else if(!rn2((i < j/5) ? 2 : 3)) clumsy = TRUE;
@@ -213,7 +213,7 @@ doit:
 		    pline("%s blocks your %skick.", Monnam(mon),
 				clumsy ? "clumsy " : "");
 		    (void) passive(mon, FALSE, 1, AT_KICK);
-		    return;
+		    return TRUE;
 		} else {
 		    rloc_to(mon, bypos.x, bypos.y);
 		    if(mon->mx != x || mon->my != y) {
@@ -231,11 +231,13 @@ doit:
 				clumsy ? "easily" : "nimbly",
 				clumsy ? "clumsy " : "");
 			(void) passive(mon, FALSE, 1, AT_KICK);
-			return;
+			return TRUE;
 		    }
 		}
 	}
 	kickdmg(mon, clumsy);
+
+	return TRUE;
 }
 
 /*
@@ -744,9 +746,6 @@ dokick()
 		}
 	}
 
-	wake_nearby();
-	u_wipe_engr(2);
-
 	maploc = &levl[x][y];
 
 	/* The next five tests should stay in    */
@@ -755,13 +754,19 @@ dokick()
 
 	if(MON_AT(x, y)) {
 		struct permonst *mdat;
+		boolean ret;
 
 		mtmp = m_at(x, y);
 		mdat = mtmp->data;
 		if (!mtmp->mpeaceful || !canspotmon(mtmp))
 		    flags.forcefight = TRUE; /* attack even if invisible */
-		kick_monster(x, y);
+		ret = kick_monster(x, y);
 		flags.forcefight = FALSE;
+		if (!ret) return(0);
+
+		wake_nearby();
+		u_wipe_engr(2);
+
 		/* see comment in attack_checks() */
 		if (!DEADMONSTER(mtmp) &&
 		    (!canspotmon(mtmp) || displaced_image(mtmp))&&
@@ -783,6 +788,10 @@ dokick()
 		}
 		return(1);
 	}
+
+	wake_nearby();
+	u_wipe_engr(2);
+
 	if (glyph_is_invisible(levl[x][y].glyph)) {
 		unmap_object(x, y);
 		newsym(x, y);
