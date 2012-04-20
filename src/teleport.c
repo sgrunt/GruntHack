@@ -105,6 +105,8 @@ struct permonst *mdat;
 	return enexto_core(cc, xx, yy, mdat, 0);
 }
 
+extern struct monst zeromonst;
+
 boolean
 enexto_core(cc, xx, yy, mdat, entflags)
 coord *cc;
@@ -116,7 +118,7 @@ unsigned entflags;
     coord good[MAX_GOOD], *good_ptr;
     int x, y, range, i;
     int xmin, xmax, ymin, ymax;
-    struct monst fakemon;	/* dummy monster */
+    struct monst fakemon = zeromonst;	/* dummy monster */
 
     if (!mdat) {
 #ifdef DEBUG
