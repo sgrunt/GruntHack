@@ -437,7 +437,8 @@ m_throw(mon, x, y, dx, dy, range, obj, verbose)
 
 		    if (singleobj->oclass == GEM_CLASS &&
 			    singleobj->otyp <= LAST_GEM+9 /* 9 glass colors */
-			    && is_unicorn(youmonst.data)) {
+			    && is_unicorn(youmonst.data)
+			    && multi >= 0) {
 			if (singleobj->otyp > LAST_GEM) {
 			    You("catch the %s.", xname(singleobj));
 			    You("are not interested in %s junk.",
