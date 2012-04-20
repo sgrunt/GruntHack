@@ -1611,20 +1611,20 @@ int id_limit;
     while (id_limit) {
 	Sprintf(buf, "What would you like to identify %s?",
 		first ? "first" : "next");
-	n = query_objlist(buf, invent, SIGNAL_NOMENU|USE_INVLET|INVORDER_SORT,
-		&pick_list, PICK_ANY, not_fully_identified);
+	n = query_objlist(buf, invent, SIGNAL_NOMENU|USE_INVLET|INVORDER_SORT
+	        |SIGNAL_ESCAPE, &pick_list, PICK_ANY, not_fully_identified);
 
 	if (n > 0) {
 	    if (n > id_limit) n = id_limit;
 	    for (i = 0; i < n; i++, id_limit--)
 		(void) identify(pick_list[i].item.a_obj);
+	    first = 0;
 	    free((genericptr_t) pick_list);
 	    mark_synch(); /* Before we loop to pop open another menu */
-	} else {
-	    if (n < 0) pline("That was all.");
+	} else if (n < 0) {
+	    if (n == -1) pline("That was all.");
 	    id_limit = 0; /* Stop now */
 	}
-	first = 0;
     }
 }
 

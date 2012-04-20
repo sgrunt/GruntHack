@@ -170,6 +170,7 @@ NEARDATA extern coord bhitpos;	/* place where throw or zap hits or stops */
 #define INVORDER_SORT	  0x8	/* sort objects by packorder */
 #define SIGNAL_NOMENU	  0x10	/* return -1 rather than 0 if none allowed */
 #define FEEL_COCKATRICE   0x20  /* engage cockatrice checks and react */
+#define SIGNAL_ESCAPE     0x40  /* return -2 if menu is escaped */
 
 /* Flags to control query_category() */
 /* BY_NEXTHERE used by query_category() too, so skip 0x01 */
