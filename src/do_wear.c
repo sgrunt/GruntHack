@@ -1342,7 +1342,7 @@ dotakeoff()
 	    || iflags.paranoid_remove
 #endif
 	    )
-		otmp = getobj(clothes, "take off");
+		otmp = getobj(clothes, "take off", FALSE);
 	if (otmp == 0) return(0);
 	if (!(otmp->owornmask & W_ARMOR)) {
 		You("are not wearing that.");
@@ -1395,7 +1395,7 @@ doremring()
 #ifdef PARANOID
 	    || iflags.paranoid_remove
 #endif
-	    ) otmp = getobj(accessories, "remove");
+	    ) otmp = getobj(accessories, "remove", FALSE);
 	if(!otmp) return(0);
 	if(!(otmp->owornmask & (W_RING | W_AMUL | W_TOOL))) {
 		You("are not wearing that.");
@@ -1687,7 +1687,7 @@ dowear()
 		return(0);
 	}
 
-	otmp = getobj(clothes, "wear");
+	otmp = getobj(clothes, "wear", FALSE);
 	if(!otmp) return(0);
 
 	if (!canwearobj(otmp,&mask,TRUE)) return(0);
@@ -1748,7 +1748,7 @@ doputon()
 			ublindf->otyp==LENSES ? "some lenses" : "a blindfold");
 		return(0);
 	}
-	otmp = getobj(accessories, "put on");
+	otmp = getobj(accessories, "put on", FALSE);
 	if(!otmp) return(0);
 	if(otmp->owornmask & (W_RING | W_AMUL | W_TOOL)) {
 		already_wearing(c_that_);

@@ -1166,7 +1166,7 @@ dosacrifice()
     }
 
     if (In_endgame(&u.uz)) {
-	if (!(otmp = getobj(sacrifice_types, "sacrifice"))) return 0;
+	if (!(otmp = getobj(sacrifice_types, "sacrifice", FALSE))) return 0;
     } else {
 	if (!(otmp = floorfood("sacrifice", 1))) return 0;
     }

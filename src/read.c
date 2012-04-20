@@ -46,7 +46,7 @@ doread()
 
 	known = FALSE;
 	if(check_capacity((char *)0)) return (0);
-	scroll = getobj(readable, "read");
+	scroll = getobj(readable, "read", FALSE);
 	if(!scroll) return(0);
 
 	/* outrumor has its own blindness check */
@@ -1198,7 +1198,7 @@ register struct obj	*sobj;
 		}
 		known = TRUE;
 		pline("This is a charging scroll.");
-		otmp = getobj(all_count, "charge");
+		otmp = getobj(all_count, "charge", FALSE);
 		if (!otmp) break;
 		recharge(otmp, sobj->cursed ? -1 : (sobj->blessed ? 1 : 0),
 			 &youmonst);

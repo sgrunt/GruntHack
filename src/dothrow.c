@@ -227,7 +227,7 @@ dothrow()
 	}
 
 	if(check_capacity((char *)0)) return(0);
-	obj = getobj(uslinging() ? bullets : toss_objs, "throw");
+	obj = getobj(uslinging() ? bullets : toss_objs, "throw", FALSE);
 	/* it is also possible to throw food */
 	/* (or jewels, or iron balls... ) */
 

@@ -380,7 +380,7 @@ dodrink()
 		}
 	}
 
-	otmp = getobj(beverages, "drink");
+	otmp = getobj(beverages, "drink", FALSE);
 	if(!otmp) return(0);
 	otmp->in_use = TRUE;		/* you've opened the stopper */
 
@@ -1676,7 +1676,7 @@ dodip()
 	char qbuf[QBUFSZ], Your_buf[BUFSZ];
 
 	allowall[0] = ALL_CLASSES; allowall[1] = '\0';
-	if(!(obj = getobj(allowall, "dip")))
+	if(!(obj = getobj(allowall, "dip", FALSE)))
 		return(0);
 
 	here = levl[u.ux][u.uy].typ;
@@ -1719,9 +1719,9 @@ dodip()
 
 #ifdef PARANOID
 	Sprintf(qbuf, "dip %s into", strlen(objname) < 50? objname: "it");
-	if(!(potion = getobj(beverages, qbuf)))
+	if(!(potion = getobj(beverages, qbuf, FALSE)))
 #else
-	if(!(potion = getobj(beverages, "dip into")))
+	if(!(potion = getobj(beverages, "dip into", FALSE)))
 #endif
 		return(0);
 	if (potion == obj && potion->quan == 1L) {

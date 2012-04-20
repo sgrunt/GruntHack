@@ -639,7 +639,7 @@ ddocall()
 		savech(ch);
 #endif
 		allowall[0] = ALL_CLASSES; allowall[1] = '\0';
-		obj = getobj(allowall, "name");
+		obj = getobj(allowall, "name", TRUE);
 		if(obj) do_oname(obj);
 		break;
 #ifdef NEW_CALL_MENU
@@ -651,7 +651,7 @@ ddocall()
 #ifdef REDO
 		savech(ch);
 #endif
-		obj = getobj(callable, "call");
+		obj = getobj(callable, "call", TRUE);
 		if (obj) {
 			/* behave as if examining it in inventory;
 			   this might set dknown if it was picked up

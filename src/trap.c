@@ -3567,7 +3567,7 @@ struct trap *ttmp;
 	boolean bad_tool;
 	int fails;
 
-	obj = getobj(oil, "untrap with");
+	obj = getobj(oil, "untrap with", FALSE);
 	if (!obj) return 0;
 
 	bad_tool = (obj->cursed ||

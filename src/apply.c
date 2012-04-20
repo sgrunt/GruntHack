@@ -1228,7 +1228,7 @@ static NEARDATA const char cuddly[] = { TOOL_CLASS, GEM_CLASS, 0 };
 int
 dorub()
 {
-	struct obj *obj = getobj(cuddly, "rub");
+	struct obj *obj = getobj(cuddly, "rub", FALSE);
 
 	if (obj && obj->oclass == GEM_CLASS) {
 	    if (is_graystone(obj)) {
@@ -1856,7 +1856,7 @@ struct obj *obj;
 			dropx(obj);
 			return;
 		}
-		otmp = getobj(lubricables, "grease");
+		otmp = getobj(lubricables, "grease", FALSE);
 		if (!otmp) return;
 		if ((otmp->owornmask & WORN_ARMOR) && uarmc) {
 			Strcpy(buf, xname(uarmc));
@@ -1939,7 +1939,7 @@ struct obj *tstone;
     choices = (tstone->otyp == TOUCHSTONE && tstone->dknown &&
 		objects[TOUCHSTONE].oc_name_known) ? justgems : allowall;
     Sprintf(stonebuf, "rub on the stone%s", plur(tstone->quan));
-    if ((obj = getobj(choices, stonebuf)) == 0)
+    if ((obj = getobj(choices, stonebuf, FALSE)) == 0)
 	return;
 #ifndef GOLDOBJ
     if (obj->oclass == COIN_CLASS) {
@@ -2902,7 +2902,7 @@ doapply()
 	if (carrying(CREAM_PIE) || carrying(EUCALYPTUS_LEAF))
 		add_class(class_list, FOOD_CLASS);
 
-	obj = getobj(class_list, "use or apply");
+	obj = getobj(class_list, "use or apply", FALSE);
 	if(!obj) return 0;
 
 	if (u.uburied && obj->otyp != PICK_AXE &&

@@ -2677,7 +2677,7 @@ dotip()
 	    }
 	}
     }
-    cobj = getobj(tools, "empty");
+    cobj = getobj(tools, "empty", FALSE);
     if(!cobj) return 0;
 
     /* TODO: empty out other items, like potions? */

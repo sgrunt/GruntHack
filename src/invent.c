@@ -17,6 +17,7 @@ STATIC_DCL boolean FDECL(only_here, (struct obj *));
 STATIC_DCL void FDECL(compactify,(char *));
 STATIC_DCL boolean FDECL(taking_off, (const char *));
 STATIC_DCL boolean FDECL(putting_on, (const char *));
+STATIC_DCL struct obj *FDECL(getobj_from_floor, (const char *,const char *));
 STATIC_PTR int FDECL(ckunpaid,(struct obj *));
 STATIC_PTR int FDECL(ckvalidcat,(struct obj *));
 #ifdef OVLB
@@ -823,6 +824,46 @@ getnextgetobj()
 	return NULL;
 }
 
+static
+struct obj *
+getobj_from_floor(let, word)
+register const char *let,*word;
+{
+    boolean all = FALSE;
+    char buf[BUFSZ];
+    int n = 0, traverse_how = 0;
+    menu_item *pick_list = (menu_item *)0;
+    struct obj *objchain;
+    add_valid_menu_class(0);
+    while (*let != '\0') {
+        if (*let != ALLOW_COUNT) {
+	    if (*let == ALL_CLASSES) {
+	        all = TRUE;
+		break;
+	    }
+	    else
+	        add_valid_menu_class(*let);
+	}
+	let++;
+    }
+    Sprintf(buf, "What do you want to %s?", word);
+    if (!u.uswallow) {
+        objchain = level.objects[u.ux][u.uy];
+	traverse_how = BY_NEXTHERE;
+    } else {
+        objchain = u.ustuck->minvent;
+    }
+    n = query_objlist(buf, objchain, traverse_how|INVORDER_SORT|SIGNAL_ESCAPE,
+                      &pick_list, PICK_ONE, all ? allow_all : allow_category);
+    if (n > 0) {
+        struct obj *retval = pick_list[0].item.a_obj;
+	free((genericptr_t) pick_list);
+        return retval;
+    } else if (n == -2)
+        return &zeroobj;
+    return (struct obj *)0;
+}
+
 
 /*
  * getobj returns:
@@ -835,10 +876,12 @@ getnextgetobj()
 #endif
  */
 struct obj *
-getobj(let,word)
+getobj(let,word,allowfloor)
 register const char *let,*word;
+register boolean allowfloor;
 {
 	register struct obj *otmp;
+	register const char *origlet = let;
 	register char ilet;
 	char buf[BUFSZ], qbuf[QBUFSZ];
 	char lets[BUFSZ], altlets[BUFSZ], *ap;
@@ -858,7 +901,6 @@ register const char *let,*word;
 	long dummymask;
 
 	if(nextgetobj) return getnextgetobj();
-
 
 	if(*let == ALLOW_COUNT) let++, allowcnt = 1;
 #ifndef GOLDOBJ
@@ -895,10 +937,12 @@ register const char *let,*word;
 	    useboulder = TRUE;
 
 	if(allownone) *bp++ = '-';
+	if(allowfloor) *bp++ = ',';
 #ifndef GOLDOBJ
 	if(allowgold) *bp++ = def_oc_syms[COIN_CLASS];
 #endif
 	if(bp > buf && bp[-1] == '-') *bp++ = ' ';
+	/* should be last to allow it to be cleared quickly */
 	ap = altlets;
 
 	ilet = 'a';
@@ -1030,6 +1074,13 @@ register const char *let,*word;
 #else
 	if(!foo && !allowall && !allownone) {
 #endif
+		if (allowfloor) {
+		    struct obj *floorobj = getobj_from_floor(origlet, word);
+		    if (floorobj &&
+		        floorobj != &zeroobj) return floorobj;
+		    if (floorobj == &zeroobj) /* escaped */
+		        return (struct obj *)0;
+		}
 		You("don't have anything %sto %s.",
 			foox ? "else " : "", word);
 		return((struct obj *)0);
@@ -1071,6 +1122,16 @@ register const char *let,*word;
 			if (!allownone)
 				pline("%s", Never_mind);
 			return(allownone ? &zeroobj : (struct obj *) 0);
+		}
+		if(ilet == ',' && allowfloor) {
+		    struct obj *floorobj = getobj_from_floor(origlet, word);
+		    if (floorobj &&
+		        floorobj != &zeroobj) return floorobj;
+		    if (!floorobj) {
+		    	pline("There's nothing on the %s here that you can %s.",
+			      surface(u.ux, u.uy), word);
+		    }
+		    continue;
 		}
 		if(ilet == def_oc_syms[COIN_CLASS]) {
 			if (!usegold &&
@@ -3381,7 +3442,7 @@ doorganize()	/* inventory organizer by Del Lamb */
 	if (!flags.invlet_constant) reassign();
 	/* get a pointer to the object the user wants to organize */
 	allowall[0] = ALL_CLASSES; allowall[1] = '\0';
-	if (!(obj = getobj(allowall,"adjust"))) return(0);
+	if (!(obj = getobj(allowall,"adjust",FALSE))) return(0);
 
 	/* initialize the list with all upper and lower case letters */
 	for (let = 'a', ix = 0;  let <= 'z';) alphabet[ix++] = let++;

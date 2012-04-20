@@ -1975,7 +1975,7 @@ dozap()
 	int	damage;
 
 	if(check_capacity((char *)0)) return(0);
-	obj = getobj(zap_syms, "zap");
+	obj = getobj(zap_syms, "zap", FALSE);
 	if(!obj) return(0);
 
 	check_unpaid(obj);

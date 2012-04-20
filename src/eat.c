@@ -2657,10 +2657,10 @@ floorfood(verb,corpsecheck)	/* get food from floor or pack */
 #ifdef ASTR_ESC
 	otmp = getobj(sacrificing ? (const char *)sacrifice_types : 
 					feeding ? (const char *)allobj :
-					(const char *)comestibles, verb);
+					(const char *)comestibles, verb, FALSE);
 #else
 	otmp = getobj(feeding ? (const char *)allobj :
-				(const char *)comestibles, verb);
+				(const char *)comestibles, verb, FALSE);
 #endif
 	if (corpsecheck && otmp)
 		/* Kludge to allow Amulet of Yendor to be sacrificed on non-High altars */

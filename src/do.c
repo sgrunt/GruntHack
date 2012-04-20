@@ -42,7 +42,7 @@ dodrop()
 #endif
 
 	if (*u.ushops) sellobj_state(SELL_DELIBERATE);
-	result = drop(getobj(&drop_types[i], "drop"));
+	result = drop(getobj(&drop_types[i], "drop", FALSE));
 	if (*u.ushops) sellobj_state(SELL_NORMAL);
 	reset_occupations();
 
