@@ -252,12 +252,26 @@ lookat(x, y, buf, monbuf)
 
 	if (!otmp || otmp->otyp != glyph_to_obj(glyph)) {
 	    if (glyph_to_obj(glyph) != STRANGE_OBJECT) {
+#ifdef INVISIBLE_OBJECTS
+	        struct monst *mtmp = m_at(x, y);
+		boolean invis =
+		    (mtmp &&
+		     mtmp->m_ap_type == M_AP_OBJECT &&
+		     mtmp->mappearance == glyph_to_obj(glyph) &&
+		     mtmp->minvis);
+#endif
 		otmp = mksobj(glyph_to_obj(glyph), FALSE, FALSE);
 		if (otmp->oclass == COIN_CLASS)
 		    otmp->quan = 2L; /* to force pluralization */
 		else if (otmp->otyp == SLIME_MOLD)
 		    otmp->spe = current_fruit;	/* give the fruit a type */
+#ifdef INVISIBLE_OBJECTS
+		Sprintf(buf, "%s%s",
+		        invis ? "invisible " : "",
+			distant_name(otmp, xname));
+#else
 		Strcpy(buf, distant_name(otmp, xname));
+#endif
 		dealloc_obj(otmp);
 	    }
 	} else
