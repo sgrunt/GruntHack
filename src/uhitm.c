@@ -1872,6 +1872,18 @@ zombie:
 			if ((otmp2 = which_armor(mdef, W_ARMU)) != 0)
 			    m_useup(mdef, otmp2);
 #endif
+			if (is_rider(mdef->data)) {
+			    pline("%s is disintegrated!", Monnam(mdef));
+			    pline("%s body reintegrates before your %s!",
+				  s_suffix(Monnam(mdef)),
+				  (eyecount(youmonst.data) == 1) ?
+				  	body_part(EYE) :
+					makeplural(body_part(EYE)));
+			    pline("%s resurrects!", Monnam(mdef));
+			    mdef->mhp = mdef->mhpmax;
+
+			    return(MM_HIT);
+			}
 			die = TRUE;
 
 			if (canseemon(mdef)) {
