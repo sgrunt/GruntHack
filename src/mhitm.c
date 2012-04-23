@@ -1041,13 +1041,15 @@ mdamagem(magr, mdef, mattk)
 			break;
 		}
 		if (!resists_ston(mdef)) {
-			/*if (vis) pline("%s turns to stone!", Monnam(mdef));
-			monstone(mdef);
- 			if (mdef->mhp > 0) return MM_MISS;
-			else if (mdef->mtame && !vis)
-			    You(brief_feeling, "peculiarly sad");
-			return (MM_DEF_DIED | (grow_up(magr,mdef) ?
-							0 : MM_AGR_DIED));*/
+			if (mattk->aatyp == AT_GAZE) {
+			    if (vis) pline("%s turns to stone!", Monnam(mdef));
+			    monstone(mdef);
+ 			    if (mdef->mhp > 0) return MM_MISS;
+			    else if (mdef->mtame && !vis)
+			        You(brief_feeling, "peculiarly sad");
+			    return (MM_DEF_DIED | (grow_up(magr,mdef) ?
+							0 : MM_AGR_DIED));
+			}
 			if (!mdef->mstone) {
 			    mdef->mstone = 5;
 			    mdef->mstonebyu = FALSE;
