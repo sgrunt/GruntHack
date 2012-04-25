@@ -967,8 +967,9 @@ unsigned trflags;
 		    case 0:
 			pline("%s you on the %s!", A_gush_of_water_hits,
 				    body_part(HEAD));
-			(void) rust_dmg(uarmh, helmet_name(uarmh), 1, TRUE,
-			                &youmonst);
+			(void) rust_dmg(uarmh,
+			                uarmh ? helmet_name(uarmh) : "helmet",
+					1, TRUE, &youmonst);
 			break;
 		    case 1:
 			pline("%s your left %s!", A_gush_of_water_hits,
