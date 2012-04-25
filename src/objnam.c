@@ -2105,6 +2105,9 @@ boolean prefix;
     struct obj save_obj;
     unsigned save_ocknown;
     char buf[BUFSZ], *save_ocuname;
+    int halbackup = HHallucination;
+
+    HHallucination = 0;
 
     /* remember original settings for core of the object;
        oname and oattached extensions don't matter here--since they
@@ -2132,13 +2135,18 @@ boolean prefix;
     save_ocuname = objects[obj->otyp].oc_uname;
     objects[obj->otyp].oc_uname = 0;	/* avoid "foo called bar" */
 
-    Sprintf(buf, "%s%s%s", adj, strlen(adj) > 0 ? " " : "", cxname(obj));
+    Sprintf(buf, "%s%s%s%s", adj, strlen(adj) > 0 ? " " : "",
+            halbackup && !Halluc_resistance
+	    ? "hallucinogen-distorted "
+	    : "", cxname(obj));
     if (obj->quan == 1L && prefix)
     	Sprintf(buf, "%s", obj_is_pname(obj) ? the(buf) : an(buf));
 
     objects[obj->otyp].oc_name_known = save_ocknown;
     objects[obj->otyp].oc_uname = save_ocuname;
     *obj = save_obj;	/* restore object's core settings */
+
+    HHallucination = halbackup;
 
     return (char *)strdup(buf);
 }
