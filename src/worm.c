@@ -394,7 +394,7 @@ cutworm(worm, x, y, weap)
      */
 
     /* Sometimes the tail end dies. */
-    if (rn2(3) || !(new_wnum = get_wormno())) {
+    if (rn2(3) || !(new_wnum = get_wormno()) || !worm->m_lev) {
     	cutwormtail(worm, new_tail);
 	return;
     }
