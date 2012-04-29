@@ -1201,13 +1201,18 @@ register struct obj	*sobj;
 		    flags.botl = 1;
 		    break;
 		}
-		known = TRUE;
 		pline("This is a charging scroll.");
+
+		cval = sobj->cursed ? -1 : (sobj->blessed ? 1 : 0);
+		if (!objects[sobj->otyp].oc_name_known) more_experienced(0,10);
+		useup(sobj);
+		makeknown(SCR_CHARGING);
+
 		otmp = getobj(all_count, "charge", FALSE);
-		if (!otmp) break;
-		recharge(otmp, sobj->cursed ? -1 : (sobj->blessed ? 1 : 0),
-			 &youmonst);
-		break;
+		if (!otmp) return 1;
+		recharge(otmp, cval); 
+		return 1;
+
 	case SCR_MAGIC_MAPPING:
 		if (level.flags.nommap) {
 		    Your("mind is filled with crazy lines!");
