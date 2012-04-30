@@ -416,6 +416,7 @@ int	mntmp;
 	if (youmonst.m_ap_type) {
 	    /* stop mimicking immediately */
 	    if (multi < 0) unmul("");
+	    youmonst.m_ap_type = M_AP_NOTHING;
 	} else if (mons[mntmp].mlet != S_MIMIC) {
 	    /* as in polyman() */
 	    youmonst.m_ap_type = M_AP_NOTHING;
