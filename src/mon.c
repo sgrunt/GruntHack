@@ -856,10 +856,12 @@ mcalcdistress()
     }
 }
 
+static struct monst *nmtmp = (struct monst *)0;
+
 int
 movemon()
 {
-    register struct monst *mtmp, *nmtmp;
+    register struct monst *mtmp;
     register boolean somebody_can_move = FALSE;
 #if 0
     /* part of the original warning code which was replaced in 3.3.1 */
@@ -1829,6 +1831,9 @@ register struct monst *mtmp, *mtmp2;
     if (u.usteed == mtmp) u.usteed = mtmp2;
 #endif
     if (mtmp2->isshk) replshk(mtmp,mtmp2);
+
+    if (nmtmp == mtmp)
+        nmtmp = mtmp2;
 
     for (mtmp3 = fmon; mtmp3; mtmp3 = mtmp3->nmon) {
         if (mtmp3->mtarget == mtmp) {
