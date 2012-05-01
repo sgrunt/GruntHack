@@ -1568,21 +1568,30 @@ register struct obj   *obj;
 	    }
 
 	} else if ((otyp == EGG || otyp == CREAM_PIE ||
-		    otyp == BLINDING_VENOM || otyp == ACID_VENOM) &&
-		(guaranteed_hit || ACURR(A_DEX) > rnd(25))) {
-	    (void) hmon(mon, obj, 1);
-	    return 1;	/* hmon used it up */
+		    otyp == BLINDING_VENOM || otyp == ACID_VENOM)) {
+	    if ((guaranteed_hit || ACURR(A_DEX) > rnd(25))) {
+	        (void) hmon(mon, obj, 1);
+	        return 1;	/* hmon used it up */
+	    }
+	    tmiss(obj, mon);
+	    return 0;
 
-	} else if (obj->oclass == POTION_CLASS &&
-		(guaranteed_hit || ACURR(A_DEX) > rnd(25))) {
-	    potionhit(mon, obj, TRUE);
-	    return 1;
+	} else if (obj->oclass == POTION_CLASS) {
+	    if ((guaranteed_hit || ACURR(A_DEX) > rnd(25))) {
+	        potionhit(mon, obj, TRUE);
+	        return 1;
+	    }
+	    tmiss(obj, mon);
+	    return 0;
 
-	} else if (obj->oclass == SCROLL_CLASS &&
-		(guaranteed_hit || ACURR(A_DEX) > rnd(25))) {
-	    if (!scrollhit(mon, obj, TRUE, FALSE))
-	        return 0;    
-	    return 1;
+	} else if (obj->oclass == SCROLL_CLASS) {
+	    if ((guaranteed_hit || ACURR(A_DEX) > rnd(25))) {
+	        if (!scrollhit(mon, obj, TRUE, FALSE))
+	            return 0;    
+		return 1;
+	    }
+	    tmiss(obj, mon);
+	    return 0;
 
 	} else if (befriend_with_obj(mon->data, obj) ||
 		   (mon->mtame && dogfood(mon, obj) <= ACCFOOD)) {
