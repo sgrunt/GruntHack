@@ -1556,6 +1556,12 @@ no_unwear:
 		} else Norep("%s is furious!", Monnam(shkp));
 	    }
 	}
+	if (obj_location == OBJ_FLOOR && obj->otyp != BOULDER &&
+		otmp->otyp == BOULDER) {
+	    int x = otmp->ox, y = otmp->oy;
+	    obj_extract_self(otmp);
+	    place_object(otmp, x, y);
+	}
 	delobj(obj);
 	return otmp;
 }
