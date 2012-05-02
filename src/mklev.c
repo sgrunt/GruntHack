@@ -742,7 +742,8 @@ makelevel()
 	else if (u_depth > 9 && !rn2(5) &&
 	   !(mvitals[PM_KILLER_BEE].mvflags & G_GONE)) mkroom(BEEHIVE);
 	else if (u_depth > 11 && !rn2(6)) mkroom(MORGUE);
-	else if (u_depth > 12 && !rn2(8)) mkroom(ANTHOLE);
+	else if (u_depth > 12 && !rn2(8) && antholemon(&lev->z)) 
+            mkroom(ANTHOLE);
 	else if (u_depth > 14 && !rn2(4) &&
 	   !(mvitals[PM_SOLDIER].mvflags & G_GONE)) mkroom(BARRACKS);
 	else if (u_depth > 15 && !rn2(6)) mkroom(SWAMP);
