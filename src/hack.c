@@ -1222,11 +1222,80 @@ domove()
 	       !flags.nopick))) { 
 		boolean expl = (Upolyd && attacktype(youmonst.data, AT_EXPL));
 	    	char buf[BUFSZ];
-		Sprintf(buf,"a vacant spot on the %s", surface(x,y));
-		You("%s %s.",
-		    expl ? "explode at" : "attack",
-		    !Underwater ? "thin air" :
-		    is_pool(x,y) ? "empty water" : buf);
+		boolean hitsomething = FALSE, ouch = FALSE;
+		struct obj *boulder = (sobj_at(BOULDER, x, y));
+		if (!boulder) boulder = sobj_at(STATUE, x, y);
+		if (boulder) {
+		    hitsomething = TRUE;
+		    if (uwep && (is_pick(uwep) || is_axe(uwep)) &&
+		        use_pick_axe2(uwep))
+		        ;
+		    else if (uwep) {
+			ouch = !rn2(3);
+		        pline("%s whack the %s.",
+				uwep->omaterial == IRON
+				? "Sparks fly as you" : "You",
+				boulder->otyp == STATUE ? "statue" : "boulder");
+			if (ouch)
+			    Sprintf(killer_buf, "hitting %s",
+			            killer_xname(boulder, "", FALSE));
+		    } else {
+		        pline("You %s the %s.",
+			      Role_if(PM_MONK) ? "strike" : "bash",
+			      boulder->otyp == STATUE ? "statue" : "boulder");
+			if(FALSE) {
+			    if(Is_airlevel(&u.uz))
+				hurtle(-u.dx, -u.dy, 1, TRUE);
+			} else {
+			    ouch = TRUE;
+			    Sprintf(killer_buf, "hitting %s",
+			            killer_xname(boulder, "", FALSE));
+			}
+		    }
+                }
+		if (!hitsomething && 
+		    ((levl[x][y].typ == STAIRS) ||
+		     ((levl[x][y].typ == LADDER) &&
+		       (levl[x][y].ladder != LA_DOWN)) ||
+		     IS_STWALL(levl[x][y].typ) ||
+		     (levl[x][y].typ == DOOR &&
+		      !!(levl[x][y].doormask & (D_CLOSED|D_LOCKED)))))
+		{
+		    hitsomething = TRUE;
+		    if (uwep && (is_pick(uwep) || is_axe(uwep)) &&
+		        use_pick_axe2(uwep))
+		        ;
+	            else {
+		        ouch = (uwep) ? !rn2(3) : TRUE;
+		        pline("%s %s the %s.",
+		              uwep && uwep->omaterial == IRON
+			      ? "Sparks fly as you" : "You",
+			      uwep ? "whack" :
+			      Role_if(PM_MONK) ? "strike" : "bash",
+		              levl[x][y].typ == STAIRS ? "stairs" :
+			      levl[x][y].typ == LADDER ? "ladder" :
+			      levl[x][y].typ == DOOR ? "door" : "wall");
+		        Sprintf(killer_buf, "hitting %s", 
+		                levl[x][y].typ == STAIRS ? "the stairs" :
+			        levl[x][y].typ == LADDER ? "a ladder" :
+				levl[x][y].typ == DOOR ? "a door" : "a wall");
+		    }
+		}
+		if (ouch) {
+		    if (uwep) {
+		        pline("%s %s violently!",
+		              Yname2(uwep), otense(uwep, "vibrate"));
+		    } else {
+		      pline("Ouch!  That hurts!");
+		    }
+		    losehp(2, killer_buf, KILLED_BY);
+		} else if (!hitsomething) {
+		    Sprintf(buf,"a vacant spot on the %s", surface(x,y));
+		    You("%s %s.",
+		        expl ? "explode at" : "attack",
+		        !Underwater ? "thin air" :
+		        is_pool(x,y) ? "empty water" : buf);
+		}
 
 		if (m_img_at(x, y))
 		    displace_mon(m_img_at(x, y));
