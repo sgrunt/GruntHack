@@ -468,7 +468,7 @@ doforce()		/* try to force a chest with your weapon */
 	    return(0);
 	}
 
-	picktyp = is_blade(uwep);
+	picktyp = is_blade(uwep) && (uwep->otyp != DWARVISH_MATTOCK);
 	if(xlock.usedtime && xlock.box && picktyp == xlock.picktyp) {
 	    You("resume your attempt to force the lock.");
 	    set_occupation(forcelock, "forcing the lock", 0);
