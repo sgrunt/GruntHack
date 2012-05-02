@@ -652,6 +652,7 @@ boolean is_pet;		/* If true, pet should keep wielded/worn items */
 				continue;
 			}
 		}
+	        if (otmp == wep) setmnotwielded(mtmp, otmp);
 		mdrop_obj(mtmp, otmp, is_pet && flags.verbose);
 	}
 
