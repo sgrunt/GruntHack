@@ -2459,14 +2459,10 @@ xkilled(mtmp, dest, how)
 		redisp = TRUE;
 	}
 #endif
-	if((!accessible(x, y) && !is_pool(x, y)) ||
-	   (x == u.ux && y == u.uy)) {
-	    /* might be mimic in wall or corpse in lava or on player's spot */
-	    redisp = TRUE;
-	    if(wasinside) spoteffects(TRUE);
-	} else if(x != u.ux || y != u.uy) {
+	{
 		/* might be here after swallowed */
-		if (!rn2(6) && !(mvitals[mndx].mvflags & G_NOCORPSE)
+		if (((x != u.ux) || (y != u.uy)) &&
+		     !rn2(6) && !(mvitals[mndx].mvflags & G_NOCORPSE)
 #ifdef KOPS
 					&& mdat->mlet != S_KOP
 #endif
@@ -2492,6 +2488,12 @@ xkilled(mtmp, dest, how)
 		 */
 		if (corpse_chance(mtmp, (struct monst *)0, FALSE))
 			(void) make_corpse(mtmp);
+	}
+	if((!accessible(x, y) && !is_pool(x, y)) ||
+	   (x == u.ux && y == u.uy)) {
+	    /* might be mimic in wall or corpse in lava or on player's spot */
+	    redisp = TRUE;
+	    if(wasinside) spoteffects(TRUE);
 	}
 	if(redisp) newsym(x,y);
 cleanup:
