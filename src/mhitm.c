@@ -1414,7 +1414,7 @@ msickness:
 		break;
 	    case AD_SLIM:
 		if (cancelled) break;	/* physical damage only */
-		if (!rn2(4) && !flaming(mdef->data) &&
+		if (!rn2(4) && !flaming(mdef->data) && !unsolid(mdef->data) &&
 				mdef->data != &mons[PM_GREEN_SLIME]) {
                     mdef->morigdata = PM_GREEN_SLIME; /*it's permanent*/
 		    (void) newcham(mdef, &mons[PM_GREEN_SLIME], FALSE, 

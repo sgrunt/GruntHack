@@ -1692,7 +1692,8 @@ zombie:
 		if (notonhead || !has_head(mdef->data)) {
 		    pline("%s doesn't seem harmed.", Monnam(mdef));
 		    tmp = 0;
-		    if (!Unchanging && mdef->data == &mons[PM_GREEN_SLIME]) {
+		    if (!Unchanging && !unsolid(youmonst.data) &&
+		        mdef->data == &mons[PM_GREEN_SLIME]) {
 			if (!Slimed &&
 			    levl[u.ux][u.uy].typ != LAVAPOOL) {
 			    You("suck in some slime and don't feel very well.");
@@ -1793,7 +1794,7 @@ zombie:
 		break;
 	    case AD_SLIM:
 		if (negated) break;	/* physical damage only */
-		if (!rn2(4) && !flaming(mdef->data) &&
+		if (!rn2(4) && !flaming(mdef->data) && !unsolid(mdef->data) &&
 				mdef->data != &mons[PM_GREEN_SLIME]) {
 		    You("turn %s into slime.", mon_nam(mdef));
 		    mdef->morigdata = PM_GREEN_SLIME; /* permanent */
@@ -2119,6 +2120,7 @@ register struct attack *mattk;
 				Sprintf(msgbuf, "%s isn't sitting well with you.",
 					The(mdef->data->mname));
 				if (!Unchanging &&
+				    !unsolid(youmonst.data) &&
 				    levl[u.ux][u.uy].typ != LAVAPOOL) {
 					if (!Slimed) {
 			    		    u.uslime_fmt = KILLED_BY;

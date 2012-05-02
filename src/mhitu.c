@@ -1758,7 +1758,7 @@ do_rust:
 		    levl[u.ux][u.uy].typ == LAVAPOOL) {
 		    pline_The("slime burns away!");
 		    dmg = 0;
-		} else if (Unchanging ||
+		} else if (Unchanging || unsolid(youmonst.data) ||
 				youmonst.data == &mons[PM_GREEN_SLIME]) {
 		    You("are unaffected.");
 		    dmg = 0;
