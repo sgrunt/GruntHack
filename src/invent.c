@@ -1069,6 +1069,14 @@ register boolean allowfloor;
 		compactify(bp);
 	*ap = '\0';
 
+	if (!strncmp(word, "rub on the stone", 16)) {
+	    allowall = TRUE;
+	    usegold = TRUE;
+#ifndef GOLDOBJ
+	    allowgold = !!(u.ugold > 0);
+#endif
+	}
+
 #ifndef GOLDOBJ
 	if(!foo && !allowall && !allowgold && !allownone) {
 #else
