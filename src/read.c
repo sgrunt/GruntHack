@@ -248,8 +248,11 @@ struct obj *obj;
 	if (obj->oclass == WAND_CLASS) return TRUE;
 	/* known && !uname is possible after amnesia/mind flayer */
 	if (obj->oclass == RING_CLASS)
-	    return (boolean)(objects[obj->otyp].oc_charged &&
-			(obj->known || objects[obj->otyp].oc_uname));
+	    return (boolean)((objects[obj->otyp].oc_charged &&
+                              (objects[obj->otyp].oc_name_known ||
+                               obj->known)) ||
+                             (objects[obj->otyp].oc_uname &&
+                              !objects[obj->otyp].oc_name_known));
 	if (is_weptool(obj))	/* specific check before general tools */
 	    return FALSE;
 	if (obj->oclass == TOOL_CLASS)
