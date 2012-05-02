@@ -856,8 +856,20 @@ dodown()
 		if (float_down(I_SPECIAL|TIMEOUT, W_ARTI))
 		    return (1);   /* came down, so moved */
 	    }
-	    floating_above(stairs_down ? "stairs" : ladder_down ?
-			   "ladder" : surface(u.ux, u.uy));
+	    if (levl[u.ux][u.uy].seenv &&
+	        (glyph_to_cmap(levl[u.ux][u.uy].glyph) != S_stone)) {
+	        boolean known_stairs =
+		    stairs_down &&
+		    (glyph_to_cmap(levl[u.ux][u.uy].glyph) == S_dnstair);
+		boolean known_ladder =
+		    ladder_down &&
+		    (glyph_to_cmap(levl[u.ux][u.uy].glyph) == S_dnladder);
+	        floating_above(known_stairs ? "stairs" :
+		               known_ladder ?  "ladder" :
+			       surface(u.ux, u.uy));
+	        pline("%d", levl[u.ux][u.uy].glyph);
+	    } else
+	        You("are floating high in the air.");
 	    return (0);   /* didn't move */
 	}
 	if (!stairs_down && !ladder_down) {
