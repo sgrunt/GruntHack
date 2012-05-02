@@ -2401,7 +2401,11 @@ xkilled(mtmp, dest, how)
 	if (dest & 1) {
 	    const char *verb = nonliving(mtmp->data) ? "destroy" : "kill";
 
-	    if (!wasinside && !canspotmon(mtmp))
+	    if (!wasinside &&
+#ifdef STEED
+		(mtmp != u.usteed) &&
+#endif
+	        !canspotmon(mtmp))
 		You("%s it!", verb);
 	    else {
 		You("%s %s!", verb,
