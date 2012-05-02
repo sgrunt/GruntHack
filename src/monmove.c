@@ -228,6 +228,8 @@ int fleetime;
 boolean first;
 boolean fleemsg;
 {
+        if(DEADMONSTER(mtmp)) return;
+
 	if (u.ustuck == mtmp) {
 	    if (u.uswallow)
 		expels(mtmp, mtmp->data, TRUE);
