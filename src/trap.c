@@ -204,20 +204,27 @@ struct monst *victim;
 		else if (vismon)
 		    pline("%s %s %s not affected.", buf, ostr,
 			  vtense(ostr, "are"));
+	        return(TRUE);
 	    }
-	} else if (erosion < MAX_ERODE) {
-	    if (grprot && otmp->greased) {
-		grease_protect(otmp,ostr,victim);
-	    } else if (otmp->oerodeproof || (otmp->blessed && !rnl(4))) {
-		if (flags.verbose) {
-		    if (victim == &youmonst)
-			pline("Somehow, your %s %s not affected.",
-			      ostr, vtense(ostr, "are"));
-		    else if (vismon)
-			pline("Somehow, %s %s %s not affected.",
-			      buf, ostr, vtense(ostr, "are"));
-		}
-	    } else if (type == 0 && otmp->omaterial == PAPER) {
+	    return(FALSE);
+	}
+	if (grprot && otmp->greased) {
+	    grease_protect(otmp,ostr,victim);
+	    return(TRUE);
+	}
+	if (otmp->oerodeproof || (otmp->blessed && !rnl(4))) {
+	    if (flags.verbose) {
+	        if (victim == &youmonst)
+		    pline("Somehow, your %s %s not affected.",
+			  ostr, vtense(ostr, "are"));
+	    else if (vismon)
+		pline("Somehow, %s %s %s not affected.",
+		      buf, ostr, vtense(ostr, "are"));
+	    }
+	    return(TRUE);
+	}
+	if (erosion < MAX_ERODE) {
+	    if (type == 0 && otmp->omaterial == PAPER) {
 	        buf[0] = highc(buf[0]);
 	        if (victim == &youmonst)
 	            Your("%s %s!", ostr, vtense(ostr, "ignite"));
