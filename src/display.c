@@ -543,7 +543,8 @@ feel_location(x, y)
 	} else if ((boulder = sobj_at(BOULDER,x,y)) != 0) {
 	    map_object(boulder, 1);
 	} else if (IS_DOOR(lev->typ)) {
-	    map_background(x, y, 1);
+	    if (lev->seenv)
+	        map_background(x, y, 1);
 	} else if (IS_ROOM(lev->typ) || IS_POOL(lev->typ)) {
 	    /*
 	     * An open room or water location.  Normally we wouldn't touch
@@ -572,18 +573,18 @@ feel_location(x, y)
 	    if (lev->glyph == objnum_to_glyph(BOULDER)) {
 		if (lev->typ != ROOM && lev->seenv) {
 		    map_background(x, y, 1);
-		} else {
+		} else if (lev->seenv) {
 		    lev->glyph = (!lev->waslit) ? cmap_to_glyph(S_darkroom) : cmap_to_glyph(S_room);
 		    show_glyph(x,y,lev->glyph);
 		}
-	    } else if ((lev->glyph >= cmap_to_glyph(S_stone) &&
+	    } else if ((lev->glyph > cmap_to_glyph(S_stone) &&
 			lev->glyph < cmap_to_glyph(S_darkroom)) ||
 		       glyph_is_invisible(levl[x][y].glyph)) {
 		lev->glyph = (!cansee(x,y) && !lev->waslit) ? cmap_to_glyph(S_darkroom) :
 					   cmap_to_glyph(S_room);
 		show_glyph(x,y,lev->glyph);
 	    }
-	} else {
+	} else if (lev->seenv) {
 	    /* We feel it (I think hallways are the only things left). */
 	    map_background(x, y, 1);
 	    /* Corridors are never felt as lit (unless remembered that way) */
