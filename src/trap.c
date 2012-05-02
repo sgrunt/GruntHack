@@ -223,6 +223,7 @@ struct monst *victim;
 	    }
 	    return(TRUE);
 	}
+	costly_damage_obj(otmp);
 	if (erosion < MAX_ERODE) {
 	    if (type == 0 && otmp->omaterial == PAPER) {
 	        buf[0] = highc(buf[0]);

@@ -4217,6 +4217,45 @@ struct obj *obj;
 	return (char *)0;
 }
 
+void
+adjust_bill_val(obj)
+register struct obj *obj;
+{
+	register struct bill_x *bp = (struct bill_x *)0;
+	register struct monst *shkp;
+
+	if (!obj->unpaid) return;
+
+	for(shkp = next_shkp(fmon, TRUE); shkp;
+					shkp = next_shkp(shkp->nmon, TRUE))
+	    if ((bp = onbill(obj, shkp, TRUE)) != 0) break;
+
+	/* onbill() gave no message if unexpected problem occurred */
+	if(!bp) {
+	    impossible("adjust_bill_val: object wasn't on any bill!");
+	    return;
+	}
+
+	bp->price = get_cost(obj, shkp);
+}
+	
+void
+costly_damage_obj(obj)
+register struct obj *obj;
+{
+	if (flags.mon_moving) {
+	    adjust_bill_val(obj);
+	    return;
+	}
+	if (obj->unpaid) {
+	    register struct monst *shkp = shop_keeper(*u.ushops);
+	    if (shkp) {
+	        You("damage it, you pay for it!");
+		bill_dummy_object(obj);
+	    }
+	}
+}
+
 #endif /* OVL2 */
 #ifdef OVLB
 

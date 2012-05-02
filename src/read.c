@@ -848,6 +848,8 @@ register struct obj	*sobj;
 		s = sobj->cursed ? -1 :
 		    otmp->spe >= 9 ? (rn2(otmp->spe) == 0) :
 		    sobj->blessed ? rnd(3-otmp->spe/3) : 1;
+		if (s < 0)
+		    costly_damage_obj(otmp);
 		if (s >= 0 && otmp->otyp >= GRAY_DRAGON_SCALES &&
 					otmp->otyp <= YELLOW_DRAGON_SCALES) {
 			/* dragon scales get turned into dragon scale mail */
@@ -886,6 +888,9 @@ register struct obj	*sobj;
 			Your("%s suddenly %s %s.",
 				xname(otmp), otense(otmp, "vibrate"),
 				Blind ? "again" : "unexpectedly");
+		if (otmp->unpaid && s > 0) {
+		    adjust_bill_val(otmp);
+		}
 		break;
 	    }
 	case SCR_DESTROY_ARMOR:

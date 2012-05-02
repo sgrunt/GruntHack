@@ -645,6 +645,7 @@ boolean fade_scrolls;
 		target->otyp = SCR_BLANK_PAPER;
 		target->spe = 0;
 	    }
+	    return;
 	} else if (target->oerodeproof ||
 		(acid_dmg ? !is_corrodeable(target) : !is_rustprone(target))) {
 	    if (flags.verbose || !(target->oerodeproof && target->rknown)) {
@@ -656,7 +657,10 @@ boolean fade_scrolls;
 		/* no message if not carried */
 	    }
 	    if (target->oerodeproof) target->rknown = TRUE;
-	} else if (erosion < MAX_ERODE) {
+	    return;
+	}
+	costly_damage_obj(target);
+	if (erosion < MAX_ERODE) {
 	    if (victim == &youmonst)
 		Your("%s%s!", aobjnam(target, acid_dmg ? "corrode" : "rust"),
 		    /*erosion+1 == MAX_ERODE ? " completely" :*/
@@ -774,10 +778,11 @@ register int amount;
 		Your("weapon seems sharper now.");
 		uwep->cursed = 0;
 		if (otyp != STRANGE_OBJECT) makeknown(otyp);
-		return(1);
+		goto weapon_unpaid_fixup;
 	}
 
 	if(uwep->otyp == CRYSKNIFE && amount < 0) {
+		costly_damage_obj(uwep);
 		uwep->otyp = WORM_TOOTH;
 		uwep->oerodeproof = 0;
 		Your("weapon seems duller now.");
@@ -790,6 +795,8 @@ register int amount;
 		Your("%s %s.", aobjnam(uwep, "faintly glow"), color);
 	    return(1);
 	}
+	if (amount < 0)
+	    costly_damage_obj(uwep);
 	/* there is a (soft) upper and lower limit to uwep->spe */
 	if(((uwep->spe > 5 && amount >= 0) || (uwep->spe < -5 && amount < 0))
 								&& rn2(3)) {
@@ -832,6 +839,11 @@ register int amount;
 		&& (is_elven_weapon(uwep) || uwep->oartifact || !rn2(7)))
 	    Your("%s unexpectedly.",
 		aobjnam(uwep, "suddenly vibrate"));
+
+weapon_unpaid_fixup:
+	if (uwep->unpaid && (amount >= 0)) {
+            adjust_bill_val(uwep);
+	}
 
 	return(1);
 }
