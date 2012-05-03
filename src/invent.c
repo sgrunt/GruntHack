@@ -647,8 +647,8 @@ register struct obj *obj;
 	}
 	update_map = (obj->where == OBJ_FLOOR);
 	obj_extract_self(obj);
-        if( !OBJ_AT_LEV(obj->olev, obj->ox, obj->oy) &&
-            (mtmp = m_at(obj->olev, obj->ox, obj->oy)) &&
+        if( !OBJ_AT(obj->ox, obj->oy) &&
+            (mtmp = m_at(obj->ox, obj->oy)) &&
             mtmp->mundetected &&
             hides_under(mtmp->data) ) {
             mtmp->mundetected = 0;

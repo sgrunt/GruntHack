@@ -1213,7 +1213,7 @@ register struct obj	*sobj;
 
 		otmp = getobj(all_count, "charge", FALSE);
 		if (!otmp) return 1;
-		recharge(otmp, cval); 
+		recharge(otmp, cval, &youmonst); 
 		return 1;
 
 	case SCR_MAGIC_MAPPING:

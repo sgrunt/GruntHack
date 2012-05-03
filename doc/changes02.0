@@ -29,6 +29,7 @@ Additional third-party patches:
   100% CPU usage fix when terminal is closed at --more--,
   cursor keys don't escape from a text entry prompt,
   no longer crashes in a 20- or 21-line window.
+* Various vanilla bug fixes from NetHack 4, by Jared Minch
 * VS2008 compilation fix, from the NetHack dev team
 
 Bug fixes:
