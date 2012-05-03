@@ -665,10 +665,14 @@ int mode;
 		You("cannot pass that way.");
 	    return FALSE;
 	}
-	if (maybe_polyd(bigmonst(youmonst.data),
+	if (maybe_polyd((bigmonst(youmonst.data) && !can_ooze(&youmonst)),
 	                Race_if(PM_GIANT))) {
-	    if (mode == DO_MOVE)
-		Your("body is too large to fit through.");
+	    if (mode == DO_MOVE) {
+	        if(amorphous(youmonst.data))
+		    You("try to ooze through, but you can't squeeze your possessions through.");
+		else
+		    Your("body is too large to fit through.");
+	    }
 	    return FALSE;
 	}
 	if (invent && (inv_weight() + weight_cap() > 600)) {
