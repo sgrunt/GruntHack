@@ -1599,6 +1599,8 @@ register int	mmflags;
 		case S_LEPRECHAUN:
 			mtmp->msleeping = 1;
 			break;
+		case S_EYE:
+			if (mtmp->data != &mons[PM_BEHOLDER]) break;
 		case S_JABBERWOCK:
 		case S_NYMPH:
 			if (rn2(5) && !u.uhave.amulet) mtmp->msleeping = 1;
