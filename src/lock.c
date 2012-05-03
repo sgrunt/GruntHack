@@ -133,6 +133,8 @@ STATIC_PTR
 int
 forcelock(VOID_ARGS)	/* try to force a locked chest */
 {
+        struct monst *shkp;
+        boolean costly;
 
 	register struct obj *otmp;
 
@@ -168,13 +170,10 @@ forcelock(VOID_ARGS)	/* try to force a locked chest */
 	You("succeed in forcing the lock.");
 	xlock.box->olocked = 0;
 	xlock.box->obroken = 1;
+	costly = (*u.ushops && costly_spot(u.ux, u.uy));
+        shkp = costly ? shop_keeper(*u.ushops) : 0;
 	if(!xlock.picktyp && !rn2(3)) {
-	    struct monst *shkp;
-	    boolean costly;
-	    long loss = 0L;
-
-	    costly = (*u.ushops && costly_spot(u.ux, u.uy));
-	    shkp = costly ? shop_keeper(*u.ushops) : 0;
+            long loss = 0L;
 
 	    pline("In fact, you've totally destroyed %s.",
 		  the(xname(xlock.box)));
@@ -208,6 +207,14 @@ forcelock(VOID_ARGS)	/* try to force a locked chest */
 					     (boolean)shkp->mpeaceful, TRUE);
 	    if(loss) You("owe %ld %s for objects destroyed.", loss, currency(loss));
 	    delobj(xlock.box);
+	} else {
+	    if (costly) {
+	        struct obj *cobjbak = xlock.box->cobj;
+		xlock.box->cobj = (struct obj *)0;
+	        verbalize("You damage it, you bought it!");
+		bill_dummy_object(xlock.box);
+		xlock.box->cobj = cobjbak;
+	    }
 	}
 	exercise((xlock.picktyp) ? A_DEX : A_STR, TRUE);
 	return((xlock.usedtime = 0));
