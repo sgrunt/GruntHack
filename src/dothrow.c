@@ -221,7 +221,7 @@ dothrow()
 	shotlimit = (multi || save_cm) ? multi + 1 : 0;
 	multi = 0;		/* reset; it's been used up */
 
-	if (notake(youmonst.data)) {
+	if (notake(youmonst.data) || nohands(youmonst.data)) {
 	    You("are physically incapable of throwing anything.");
 	    return 0;
 	}
