@@ -1270,7 +1270,14 @@ boolean
 lined_up(mtmp)		/* is mtmp in position to use ranged attack? */
 	register struct monst *mtmp;
 {
-	boolean retval = linedup(mtmp->mux,mtmp->muy,mtmp->mx,mtmp->my);
+	boolean retval = FALSE; 
+	    
+	if (u.uundetected ||
+	    ((youmonst.data->mlet == S_MIMIC) &&
+	      (youmonst.m_ap_type != M_AP_NOTHING)))
+	      return FALSE;
+	      
+	retval = linedup(mtmp->mux,mtmp->muy,mtmp->mx,mtmp->my);
 
 	if (retval && ((mtmp->mconf && !rn2(5)) || mtmp->mstun)) {
 	    do {
