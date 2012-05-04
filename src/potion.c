@@ -338,8 +338,18 @@ ghost_from_bottle()
 		pline("As you open the bottle, %s emerges.", something);
 		return;
 	}
-	pline("As you open the bottle, an enormous %s emerges!",
-		Hallucination ? rndmonnam() : (const char *)"ghost");
+	if (Hallucination) {
+	    int name = rndmonidx();
+	    pline("As you open the bottle, %s emerges!",
+		      monnam_is_pname(name)
+		      ? the(monnam_for_index(name))
+		      : ((name < SPECIAL_PM) &&
+		         (mons[name].geno & G_UNIQ))
+			 ? monnam_for_index(name)
+			 : an(monnam_for_index(name)));
+	} else {
+	    pline("As you open the bottle, an enormous ghost emerges!");
+	}
 	frighten_player(3);
 }
 

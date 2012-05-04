@@ -1099,7 +1099,13 @@ opentin(VOID_ARGS)		/* called during each move whilst opening a tin */
 		r = ROTTEN_TIN;			/* some homemade tins go bad */
 	    which = 0;	/* 0=>plural, 1=>as-is, 2=>"the" prefix */
 	    if (Hallucination) {
-		what = rndmonnam();
+	    	int name = rndmonidx();
+		what = monnam_for_index(name);
+		if ((name < SPECIAL_PM) &&
+		    !!(mons[tin.tin->corpsenm].geno & G_UNIQ))
+		    which = type_is_pname(&mons[name]) ? 1 : 2;
+		else
+		    which = monnam_is_pname(name) ? 1 : 0;
 	    } else {
 		what = mons[tin.tin->corpsenm].mname;
 		if (mons[tin.tin->corpsenm].geno & G_UNIQ)

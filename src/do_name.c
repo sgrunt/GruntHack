@@ -884,8 +884,9 @@ boolean called;
 	/* Put the actual monster name or type into the buffer now */
 	/* Be sure to remember whether the buffer starts with a name */
 	if (do_hallu) {
-	    Strcat(buf, rndmonnam());
-	    name_at_start = FALSE;
+	    int name = rndmonidx();
+	    Strcat(buf, monnam_for_index(name));
+	    name_at_start = monnam_is_pname(name);
 	} else if (mtmp->mnamelth) {
 	    char *name = NAME(mtmp);
 
@@ -1090,68 +1091,182 @@ char *outbuf;
     return outbuf;
 }
 
-static const char * const bogusmons[] = {
-	"jumbo shrimp", "giant pigmy", "gnu", "killer penguin",
-	"giant cockroach", "giant slug", "maggot", "pterodactyl",
-	"tyrannosaurus rex", "basilisk", "beholder", "nightmare",
-	"efreeti", "marid", "rot grub", "bookworm", "master lichen",
-	"shadow", "hologram", "jester", "attorney", "sleazoid",
-	"killer tomato", "amazon", "robot", "battlemech",
-	"rhinovirus", "harpy", "lion-dog", "rat-ant", "Y2K bug",
-						/* misc. */
-	"grue", "Christmas-tree monster", "luck sucker", "paskald",
-	"brogmoid", "dornbeast",		/* Quendor (Zork, &c.) */
-	"Ancient Multi-Hued Dragon", "Evil Iggy",
-						/* Moria */
-	"emu", "kestrel", "xeroc", "venus flytrap",
-						/* Rogue */
-	"creeping coins",			/* Wizardry */
-	"hydra", "siren",			/* Greek legend */
-	"killer bunny",				/* Monty Python */
-	"rodent of unusual size",		/* The Princess Bride */
-	"Smokey the bear",	/* "Only you can prevent forest fires!" */
-	"Luggage",				/* Discworld */
-	"Ent",					/* Lord of the Rings */
-	"tangle tree", "nickelpede", "wiggle",	/* Xanth */
-	"white rabbit", "snark",		/* Lewis Carroll */
-	"pushmi-pullyu",			/* Dr. Dolittle */
-	"smurf",				/* The Smurfs */
-	"tribble", "Klingon", "Borg",		/* Star Trek */
-	"Ewok",					/* Star Wars */
-	"Totoro",				/* Tonari no Totoro */
-	"ohmu",					/* Nausicaa */
-	"youma",				/* Sailor Moon */
-	"nyaasu",				/* Pokemon (Meowth) */
-	"Godzilla", "King Kong",		/* monster movies */
-	"earthquake beast",			/* old L of SH */
-	"Invid",				/* Robotech */
-	"Terminator",				/* The Terminator */
-	"boomer",				/* Bubblegum Crisis */
-	"Dalek",				/* Dr. Who ("Exterminate!") */
-	"microscopic space fleet", "Ravenous Bugblatter Beast of Traal",
-						/* HGttG */
-	"teenage mutant ninja turtle",		/* TMNT */
-	"samurai rabbit",			/* Usagi Yojimbo */
-	"aardvark",				/* Cerebus */
-	"Audrey II",				/* Little Shop of Horrors */
-	"witch doctor", "one-eyed one-horned flying purple people eater",
-						/* 50's rock 'n' roll */
-	"Barney the dinosaur",			/* saccharine kiddy TV */
-	"Morgoth",				/* Angband */
-	"Vorlon",				/* Babylon 5 */
-	"questing beast",		/* King Arthur */
-	"Predator",				/* Movie */
-	"mother-in-law"				/* common pest */
+static struct {
+    const char *name;
+    const boolean pname;
+} bogusmons[] = {
+	/* misc. */
+	{"jumbo shrimp", FALSE},
+	{"giant pigmy", FALSE},
+	{"gnu", FALSE},
+	{"killer penguin", FALSE},
+
+	{"giant cockroach", FALSE},
+	{"giant slug", FALSE},
+	{"maggot", FALSE},
+	{"pterodactyl", FALSE},
+
+	{"tyrannosaurus rex", FALSE},
+	{"basilisk", FALSE},
+	{"beholder", FALSE},
+	{"nightmare", FALSE},
+
+	{"efreeti", FALSE},
+	{"marid", FALSE},
+	{"rot grub", FALSE},
+	{"bookworm", FALSE},
+	{"master lichen", FALSE},
+
+	{"shadow", FALSE},
+	{"hologram", FALSE},
+	{"jester", FALSE},
+	{"attorney", FALSE},
+	{"sleazoid", FALSE},
+
+	{"killer tomato", FALSE},
+	{"amazon", FALSE},
+	{"robot", FALSE},
+	{"battlemech", FALSE},
+
+	{"rhinovirus", FALSE},
+	{"harpy", FALSE},
+	{"lion-dog", FALSE},
+	{"rat-ant", FALSE},
+	{"Y2K bug", FALSE},
+
+	/* Quendor (Zork, &c.) */
+	{"grue", FALSE},
+	{"Christmas-tree monster", FALSE},
+	{"luck sucker", FALSE},
+	{"paskald", FALSE},
+	{"brogmoid", FALSE},
+	{"dornbeast", FALSE},		
+
+	/* Moria */
+	{"Ancient Multi-Hued Dragon", FALSE},
+	{"Evil Iggy", FALSE},
+
+	/* Rogue */
+	{"emu", FALSE},
+	{"kestrel", FALSE},
+	{"xeroc", FALSE},
+	{"venus flytrap", FALSE},
+	
+	/* Wizardry */
+	{"creeping coins", FALSE},
+
+	/* Greek legend */
+	{"hydra", FALSE},
+	{"siren", FALSE},
+
+	/* Monty Python */
+	{"killer bunny", FALSE},
+
+	/* The Princess Bride */
+	{"rodent of unusual size", FALSE},
+
+	/* "Only you can prevent forest fires!" */
+	{"Smokey the bear", TRUE},	
+
+	/* Discworld */
+	{"Luggage", FALSE},
+
+	/* Lord of the Rings */
+	{"Ent", FALSE},		
+
+	/* Xanth */
+	{"tangle tree", FALSE},
+	{"nickelpede", FALSE},
+	{"wiggle", FALSE},
+
+	/* Lewis Carroll */
+	{"white rabbit", FALSE},
+	{"snark", FALSE},
+
+	/* Dr. Dolittle */
+	{"pushmi-pullyu", FALSE},
+
+	/* The Smurfs */
+	{"smurf", FALSE},
+
+	/* Star Trek */
+	{"Borg", FALSE},
+
+	/* Star Wars */
+	{"Ewok", FALSE},
+
+	/* Tonari no Totoro */
+	{"Totoro", FALSE},
+
+	/* Nausicaa */
+	{"ohmu", FALSE},
+
+	/* Sailor Moon */
+	{"youma", FALSE},
+
+	/* Pokemon (Meowth) */
+	{"nyaasu", FALSE},
+
+	/* monster movies */
+	{"King Kong", TRUE},
+
+	/* old L of SH */
+	{"earthquake beast", FALSE},
+
+	/* Robotech */
+	{"Invid", FALSE},
+
+	/* The Terminator */
+	{"Terminator", FALSE},
+
+	/* Bubblegum Crisis */
+	{"boomer", FALSE},
+
+	/* Dr. Who ("Exterminate!") */
+	{"Dalek", FALSE},
+	
+	/* HGttG */
+	{"Ravenous Bugblatter Beast of Traal", FALSE},
+
+	/* TMNT */
+	{"teenage mutant ninja turtle", FALSE},
+
+	/* Usagi Yojimbo */
+	{"samurai rabbit", FALSE},
+
+	/* Cerebus */
+	{"aardvark", FALSE},
+
+	/* Little Shop of Horrors */
+	{"Audrey II", TRUE},
+	
+	/* 50's rock 'n' roll */
+	{"one-eyed one-horned flying purple people eater", FALSE},
+
+	/* saccharine kiddy TV */
+	{"Barney the dinosaur", TRUE},
+
+	/* Angband */
+	{"Morgoth", TRUE},
+
+	/* Babylon 5 */
+	{"Vorlon", FALSE},
+
+	/* King Arthur */
+	{"questing beast", FALSE},
+
+	/* Movie */
+	{"Predator", FALSE},
+
+	/* common pest */
+	{"mother-in-law", FALSE}	
 };
 
 
-/* Return a random monster name, for hallucination.
- * KNOWN BUG: May be a proper name (Godzilla, Barney), may not
- * (the Terminator, a Dalek).  There's no elegant way to deal
- * with this without radically modifying the calling functions.
+/* Functions for returning a random monster name, for hallucination.
  */
-const char *
-rndmonnam()
+int
+rndmonidx()
 {
 	int name;
 
@@ -1160,8 +1275,21 @@ rndmonnam()
 	} while (name < SPECIAL_PM &&
 	    (type_is_pname(&mons[name]) || (mons[name].geno & G_NOGEN)));
 
-	if (name >= SPECIAL_PM) return bogusmons[name - SPECIAL_PM];
+	return name;
+}
+
+const char *
+monnam_for_index(int name)
+{
+	if (name >= SPECIAL_PM) return (bogusmons[name - SPECIAL_PM].name);
 	return mons[name].mname;
+}
+
+boolean
+monnam_is_pname(int name)
+{
+	if (name >= SPECIAL_PM) return (bogusmons[name - SPECIAL_PM].pname);
+	return type_is_pname(&mons[name]);
 }
 
 #ifdef REINCARNATION

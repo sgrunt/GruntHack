@@ -264,9 +264,20 @@ struct obj *obj;
 			if (vis) pline("%s", empty);
 		    } else {
 			if (vis) {
-			    pline("As %s opens the bottle, an enormous %s emerges!",
-			       mon_nam(mon),
-			       Hallucination ? rndmonnam() : (const char *)"ghost");
+			    if (Hallucination) {
+			        int name = rndmonidx();
+			        pline("As %s opens the bottle, %s emerges!",
+			            mon_nam(mon),
+		      		    monnam_is_pname(name)
+				      ? the(monnam_for_index(name))
+				      : ((name < SPECIAL_PM) &&
+				         (mons[name].geno & G_UNIQ))
+					 ? monnam_for_index(name)
+					 : an(monnam_for_index(name)));
+			    } else {
+			        pline("As %s opens the bottle, an enormous ghost emerges!",
+			    	mon_nam(mon));
+			    }
 			    pline("%s is frightened to death, and unable to move.",
 				    Monnam(mon));
 			}

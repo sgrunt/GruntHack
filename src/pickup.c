@@ -2158,8 +2158,16 @@ struct obj *box;
 	    obj_extract_self(deadcat);
 	    (void) add_to_container(box, deadcat);
 	}
-	pline_The("%s inside the box is dead!",
-	    Hallucination ? rndmonnam() : "housecat");
+	if (Hallucination) {
+	    int name = rndmonidx();
+	    pline("%s inside the box is dead!",
+		      (((name >= SPECIAL_PM) ||
+		       (mons[name].geno & G_UNIQ)) &&
+		        !monnam_is_pname(name))
+			 ? monnam_for_index(name)
+			 : The(monnam_for_index(name)));
+	} else
+	    pline_The("housecat inside the box is dead!");
     }
     box->owt = weight(box);
     return;

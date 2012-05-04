@@ -248,9 +248,18 @@ priestname(mon, pname)
 register struct monst *mon;
 char *pname;		/* caller-supplied output buffer */
 {
-	const char *what = Hallucination ? rndmonnam() : mon->data->mname;
+	const char *what;
+	boolean do_the = TRUE;
+	if (Hallucination) {
+	    int name = rndmonidx();
+	    what = monnam_for_index(name);
+	    do_the = !monnam_is_pname(name);
+	} else {
+	    what = mon->data->mname;
+	}
 
-	Strcpy(pname, "the ");
+	if (do_the)
+		Strcpy(pname, "the ");
 	if (mon->minvis) Strcat(pname, "invisible ");
 	if (mon->ispriest || roamer_type(mon->data)) {
 		/* use epri */

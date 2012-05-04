@@ -131,8 +131,19 @@ slime_dialogue()
 		if (i == 4L) {	/* "you are turning green" */
 		    if (!Blind)	/* [what if you're already green?] */
 			pline(str, hcolor(NH_GREEN));
-		} else
-		    pline(str, an(Hallucination ? rndmonnam() : "green slime"));
+		} else {
+		    if (Hallucination) {
+		        int name = rndmonidx();
+			pline(str,
+			      monnam_is_pname(name)
+			      ? the(monnam_for_index(name))
+			      : ((name < SPECIAL_PM) &&
+			         (mons[name].geno & G_UNIQ))
+				 ? monnam_for_index(name)
+				 : an(monnam_for_index(name)));
+		    } else
+		        pline(str, "a green slime");
+		}
 	    } else
 		pline("%s", str);
 	}
