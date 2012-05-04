@@ -1659,8 +1659,14 @@ struct obj *obj, *otmp;
 #endif
 			1;
 		if (Is_container(obj) || obj->otyp == STATUE) {
+		    boolean quantum_cat = FALSE;
+		    if ((obj->spe == 1) && (obj->otyp != STATUE)) {
+		        observe_quantum_cat(obj);
+			quantum_cat = TRUE;
+		    }
 		    if (!obj->cobj)
-			pline("%s empty.", Tobjnam(obj, "are"));
+			pline("%s %sempty.", Tobjnam(obj, "are"),
+			      quantum_cat ? "now " : "");
 		    else {
 			struct obj *o;
 			/* view contents (not recursively) */
