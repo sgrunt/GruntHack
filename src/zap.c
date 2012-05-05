@@ -3126,7 +3126,7 @@ struct obj *obj;			/* object tossed/used */
 
 	if (weapon != ZAPPED_WAND && weapon != INVIS_BEAM
 #ifdef INVISIBLE_OBJECTS
-		&& (!obj->oinvis || See_invisible)
+		&& (!obj || (!obj->oinvis || See_invisible))
 #endif
 	) tmp_at(DISP_END, 0);
 
