@@ -2176,7 +2176,8 @@ create_particular()
 		    }
 		    else
 		    {
-		        if ((is_racial(whichpm) || is_were(whichpm))
+		        if (whichpm &&
+			    (is_racial(whichpm) || is_were(whichpm))
 			    && racemask)
 			{
 		            mtmp = makemon(whichpm, u.ux, u.uy,
