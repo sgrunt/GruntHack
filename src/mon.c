@@ -2429,7 +2429,7 @@ xkilled(mtmp, dest, how)
 		You("%s %s!", verb,
 		    !mtmp->mtame ? mon_nam(mtmp) :
 			x_monnam(mtmp,
-				 mtmp->mnamelth ? ARTICLE_NONE : ARTICLE_THE,
+				 ARTICLE_THE_OR_NONE,
 				 "poor",
 				 mtmp->mnamelth ? SUPPRESS_SADDLE : 0,
 				 FALSE));

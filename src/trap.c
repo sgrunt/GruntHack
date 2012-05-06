@@ -1068,7 +1068,7 @@ glovecheck:		(void) rust_dmg(uarmg, "gauntlets", 1, TRUE, &youmonst);
 		    if (u.usteed) {
 			pline("%s lands %s!",
 				upstart(x_monnam(u.usteed,
-					 u.usteed->mnamelth ? ARTICLE_NONE : ARTICLE_THE,
+					 ARTICLE_THE_OR_NONE,
 					 "poor", SUPPRESS_SADDLE, FALSE)),
 			      predicament);
 		    } else
@@ -1154,7 +1154,7 @@ glovecheck:		(void) rust_dmg(uarmg, "gauntlets", 1, TRUE, &youmonst);
 		    if (u.usteed)
 		   	Sprintf(verbbuf,"lead %s",
 				x_monnam(u.usteed,
-					 u.usteed->mnamelth ? ARTICLE_NONE : ARTICLE_THE,
+					 ARTICLE_THE_OR_NONE,
 				 	 "poor", SUPPRESS_SADDLE, FALSE));
 		    else
 #endif

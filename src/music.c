@@ -311,15 +311,7 @@ do_pit:		    chasm = maketrap(x,y,PIT);
 			    mselftouch(mtmp, "Falling, ", TRUE);
 			    if (mtmp->mhp > 0)
 				if ((mtmp->mhp -= rnd(6)) <= 0) {
-				    if(!cansee(x,y))
-					pline("It is destroyed!");
-				    else {
-					You("destroy %s!", mtmp->mtame ?
-					    x_monnam(mtmp, ARTICLE_THE, "poor",
-				mtmp->mnamelth ? SUPPRESS_SADDLE : 0, FALSE):
-					    mon_nam(mtmp));
-				    }
-				    xkilled(mtmp,0,AD_PHYS);
+				    xkilled(mtmp,1,AD_PHYS);
 				}
 			}
 		    } else if (x == u.ux && y == u.uy) {
