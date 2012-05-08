@@ -867,7 +867,6 @@ dodown()
 	        floating_above(known_stairs ? "stairs" :
 		               known_ladder ?  "ladder" :
 			       surface(u.ux, u.uy));
-	        pline("%d", levl[u.ux][u.uy].glyph);
 	    } else
 	        You("are floating high in the air.");
 	    return (0);   /* didn't move */
