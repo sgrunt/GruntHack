@@ -1116,7 +1116,10 @@ struct mkroom	*croom;
 			((pm->mflags2 & ((~M2_DWARF) & (~M2_GNOME) & (M2_RACEMASK)))
 			    == 0L) &&
 			(Race_if(PM_DWARF) || Race_if(PM_GNOME)) && rn2(3))
+	{
 	    pm = (struct permonst *) 0;
+	    racemask = 0;
+	}
 
 	x = m->x;
 	y = m->y;
