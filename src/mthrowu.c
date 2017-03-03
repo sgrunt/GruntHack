@@ -1136,13 +1136,13 @@ register struct attack *mattk;
 			otmp = mksobj(ACID_VENOM, TRUE, FALSE);
 			break;
 		}
-		if(!rn2(BOLT_LIM-distmin(mtmp->mx,mtmp->my,mtmp->mux,mtmp->muy))) {
+		if(!rn2(BOLT_LIM-distmin(mtmp->mx,mtmp->my,mdef->mx,mdef->my))) {
 		    if (canseemon(mtmp)) {
 			pline("%s spits venom!", Monnam(mtmp));
 		    nomul(0);
 		    }
 		    m_throw(mtmp, mtmp->mx, mtmp->my, sgn(tbx), sgn(tby),
-			distmin(mtmp->mx,mtmp->my,mtmp->mux,mtmp->muy), otmp,
+			distmin(mtmp->mx,mtmp->my,mdef->mx,mdef->my), otmp,
 			FALSE);
 		    return 0;
 		}
