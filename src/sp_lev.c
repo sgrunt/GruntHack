@@ -2867,7 +2867,7 @@ dlb *fd;
 		}
 		else
 		{
-		   if (x < 5 || x > COLNO-5 || y < 5 || y > COLNO - 5)
+		   if (x < 5 || x > COLNO-5 || y < 5 || y > ROWNO - 5)
 		       goto try_again;
 		   inv_pos.x = x, inv_pos.y = y;
 		}
