@@ -107,7 +107,9 @@ picklock(VOID_ARGS)	/* try to open/close a lock */
 
 	You("succeed in %s.", lock_action());
 	if (xlock.door) {
-	    if(xlock.door->doormask & D_TRAPPED) {
+	    if((xlock.door->doormask & D_TRAPPED) && !In_sokoban(&u.uz)) {
+                    /* In soko, the "trap" is that the other doors seal 
+                     * We don't want to spring this trap on [un]locking */
 	    	    boolean retval = !!(xlock.usedtime == 0);
 		    b_trapped("door", FINGER);
 		    /*xlock.door->doormask = D_NODOOR;*/
