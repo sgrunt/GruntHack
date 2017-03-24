@@ -120,8 +120,8 @@ picklock(VOID_ARGS)	/* try to open/close a lock */
 		    exercise(A_DEX, TRUE);
 		    return retval;
 	    } else if (xlock.door->doormask & D_LOCKED)
-		xlock.door->doormask = D_CLOSED;
-	    else xlock.door->doormask = D_LOCKED;
+                xlock.door->doormask = D_CLOSED | (xlock.door->doormask & D_TRAPPED);
+	    else xlock.door->doormask = D_LOCKED | (xlock.door->doormask & D_TRAPPED);
 	} else {
 	    xlock.box->olocked = !xlock.box->olocked;
 	    if(xlock.box->otrapped)	
