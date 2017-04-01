@@ -83,6 +83,7 @@ boolean restore;
 			if ((otmp->oclass == RING_CLASS)
 				|| (otmp->oclass == WAND_CLASS)) {
 			    otmp->omaterial = objects[otmp->otyp].oc_material;
+			}
 		} else {
 			/* do not zero out o_ids for ghost levels anymore */
 
