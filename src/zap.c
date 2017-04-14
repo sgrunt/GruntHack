@@ -4001,7 +4001,7 @@ boolean *shopdamage;
 		int new_doormask = -1;
 		const char *see_txt = 0, *sense_txt = 0, *hear_txt = 0;
 		rangemod = -1000;
-		if ((lev->doormask | D_TRAPPED) && In_sokoban(&u.uz))
+		if ((lev->doormask & D_TRAPPED) && In_sokoban(&u.uz))
 		    goto def_case;
 		switch(abstype) {
 		case ZT_FIRE:

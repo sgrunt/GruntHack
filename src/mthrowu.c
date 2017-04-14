@@ -783,7 +783,9 @@ struct monst *mtmp;
 
     struct monst *mat, *mret = (struct monst *)0, *oldmret = (struct monst *)0;
 
-    boolean conflicted = Conflict && !resist(mtmp, RING_CLASS, 0, 0);
+    boolean conflicted = Conflict && couldsee(mtmp->mx,mtmp->my) &&
+                                                (distu(mtmp->mx,mtmp->my) <= BOLT_LIM*BOLT_LIM) &&
+                                                !resist(mtmp, RING_CLASS, 0, 0);
 
     if (is_covetous(mtmp->data) && !mtmp->mtame)
     {
@@ -1136,13 +1138,13 @@ register struct attack *mattk;
 			otmp = mksobj(ACID_VENOM, TRUE, FALSE);
 			break;
 		}
-		if(!rn2(BOLT_LIM-distmin(mtmp->mx,mtmp->my,mtmp->mux,mtmp->muy))) {
+		if(!rn2(BOLT_LIM-distmin(mtmp->mx,mtmp->my,mdef->mx,mdef->my))) {
 		    if (canseemon(mtmp)) {
 			pline("%s spits venom!", Monnam(mtmp));
 		    nomul(0);
 		    }
 		    m_throw(mtmp, mtmp->mx, mtmp->my, sgn(tbx), sgn(tby),
-			distmin(mtmp->mx,mtmp->my,mtmp->mux,mtmp->muy), otmp,
+			distmin(mtmp->mx,mtmp->my,mdef->mx,mdef->my), otmp,
 			FALSE);
 		    return 0;
 		}

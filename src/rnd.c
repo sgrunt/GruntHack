@@ -22,16 +22,12 @@ int
 rn2(x)		/* 0 <= rn2(x) < x */
 register int x;
 {
-#ifdef DEBUG
 	if (x <= 0) {
 		impossible("rn2(%d) attempted", x);
 		return(0);
 	}
 	x = RND(x);
 	return(x);
-#else
-	return(RND(x));
-#endif
 }
 
 #endif /* OVL0 */
